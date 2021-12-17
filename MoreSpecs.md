@@ -58,6 +58,10 @@
  * Reduce Fund Holder shares, add borrowing shares
 
 ### V4
+
+* API Should be documented with Swagger
+* Documentation with JavaDoc for Java (https://dzone.com/articles/best-practices-of-code-documentation-in-java) or similar (Doxygen?) for PHP.
+
 #### API ACL
 * What: controls access to API
 * Data Input: Manual

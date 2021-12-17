@@ -46,13 +46,11 @@ The objective is to create a first MVP of a fund shares management system.
 * Tracks added asset, changed asset field (no price changes)
 
 #### Asset Price History
-* What: a log of price changes
-* Data Input: only through API
-* Assets have a price history (asset, price, date)
-
-#### Asset Price Update API
-* What: Sets asset price/date (adding to history)
-* Inputs: source_feed, feed_id, price, date
+* What: Adds price log and updates asset price
+* Data Input: API (add/delete by id)
+* Fields: source_feed, feed_id, price, date
+* Causes asset price to be updated on Assets table
+* No change in Asset Changelog
 
 #### Portfolio
 * What: represents a collection of investments on assets

@@ -44,11 +44,11 @@ The objective is to create a first MVP of a fund shares management system.
 * Has an asset changelog
 * Assets are global, independent of funds and portfolios
 
-### Asset Changelog
+#### Asset Changelog
 * Asset changes should be tracked on the change historical log 
 * Tracks added asset, changed asset field (no price changes)
 
-### Asset Price History
+#### Asset Price History
 * What: a log of price changes
 * Data Input: API
 * Assets have a price history (asset, price, date)

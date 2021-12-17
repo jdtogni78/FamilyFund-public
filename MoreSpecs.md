@@ -30,6 +30,19 @@
     * max sale % of increase - cant sell more than % of last year performance growth
     * min fund performance % - restrict (growth - min fund perf)
 
+| Fund | Growth | Max % Sale of Increase | Min Fund Increase | Can Sell |
+|-----:|-------:|-----------------------:|------------------:|---------:|
+| 1000 | 0      | 3%                     |                   | 0        |
+| 1000 | 10     | 3%                     |                   | 0        |
+| 1000 | 100    | 3%                     |                   | 30       |
+| 1000 | 0      |                        | 3%                | 0        |
+| 1000 | 10     |                        | 3%                | 0        |
+| 1000 | 100    |                        | 3%                | 70       |
+| 1000 | 0      | 3%                     | 3%                | 0        |
+| 1000 | 10     | 3%                     | 3%                | 0        |
+| 1000 | 100    | 3%                     | 3%                | 30       |
+| 1000 | 100    | 6%                     | 6%                | 40       |
+
 ### V3
 #### Infrastructure
 * SMS Setup

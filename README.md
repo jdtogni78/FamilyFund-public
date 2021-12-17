@@ -45,12 +45,13 @@ The objective is to create a first MVP of a fund shares management system.
 * Assets are global, independent of funds and portfolios
 
 #### Asset Changelog
+* Input: only through system activity
 * Asset changes should be tracked on the change historical log 
 * Tracks added asset, changed asset field (no price changes)
 
 #### Asset Price History
 * What: a log of price changes
-* Data Input: API
+* Data Input: only through API
 * Assets have a price history (asset, price, date)
 
 #### Asset Price Update API
@@ -76,52 +77,58 @@ The objective is to create a first MVP of a fund shares management system.
 * It can calculate its total value based on its portfolio
 * It can calculate the fund share price
 
-### Fund Changelog
+#### Fund Changelog
+* Input: only through activity
 * All changes to funds and portfolio should be tracked 
 * Track: changes to funds, changes to portfolios
 
 ### V2
 
 #### Funds (Updates)
-* Have sale restriction (%)
 * Has matching rules
 * It can calculate the unallocated funds (that don’t belong to Fund Holders)
 
 #### Matching Rules
-* Has Name, $ range, date period, match(%)
+* What: Rules that represent an incentive to share holders, additional shares to be added to fund share holders that purchase shares within a year.
+* Input: manual
+* Fields: Has Name, $ range, date period, restriction period, match(%)
+* Restriction period: if balance of sales or borrows is negative within this period, reduce from matching amount
 * Matching rules are global, independent of funds and portfolios
 
-#### Fund Share Holders
+#### Share Holders
+* Input: manual
 * Name, email, type (person/reserve)
 * CC email list (comma separated text, optional)
 
-#### Fund Holder Shares
-* Has Fund Holder, share type (purchase, borrow, sale), portfolio asset id, shares (double)
-* Have shares of Funds (not assets)
- * All changes should be tracked in a Fund Holder share history
-* Have borrowed shares of Funds - and a historical table
+#### Fund Shares Balance
+* Input: only through fund transactions
+* What: Represent how many shares each account holder owns and borrowed.
+* Fields: Has Fund Holder, share type (own, borrowed), Fund id, amount of shares (double), last update
 
 ### V3
-
 #### Infrastructure
 * SMS Setup
 * PDF Generation
 
+#### Funds (Updates)
+* Have sale restriction (%) - maximum amount of the fund that can be sold, further amounts must be borrowed
+
 #### Fund Holder Quarterly Report
-* Report will be triggered by command line
-* Output is PDF
-* Will be sent via email 
-* Matching rule status (if borrowing or sales last year, shows as on not available)
-* Borrowing status
-* Sale Restriction % 
-* Overall Fund Performance (includes line graph)
-* Last Year Fund Performance
-* Total shares/value
+* Report will be triggered by API
+* Output is an email with an attached PDF
+* PDF Content
+ * Matching rule status (if borrowing or sales last year, shows as on not available)
+ * Borrowing status
+ * Sale Restriction % 
+ * Overall Fund Performance (includes line graph)
+ * Last Year Fund Performance
+ * Total shares/value
 
 #### Fund Share Transactions
-* Fund Holders can borrow or purchase shares
-* Generates email
-* This actions will be performed by command line
+* What: Represent each change in fund shares
+* Input: API for adding transactions, which updates fund shares balance
+* Fields: Has Share Holder, share type (purchase, sale, borrow, repay), Fund id, amount of shares (double), date
+* Generates email with the change details
 * Purchases
  * Apply the matching rules - validate qualification, add extra shares
   * Matching is reduced by last years sales/borrowing amount

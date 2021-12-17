@@ -9,6 +9,7 @@ The objective is to create a first MVP of a fund shares management system.
 * Focus on code quality, good OO/separation of concepts 
 * Use Java or PHP.
 * Use Frameworks/ORM: Java Spring/Hibernate or some PHP Framework (Symfony/Laravel/Composer).
+* API Should be documented with Swagger
 * Documentation with JavaDoc for Java (https://dzone.com/articles/best-practices-of-code-documentation-in-java) or similar (Doxygen?) for PHP.
 * The database must be  MariaDB or MySQL. Use TLS 1.2 connection.
 * Unit tests with good coverage, using TestNG or similar.

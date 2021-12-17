@@ -27,13 +27,13 @@
 * Determine sale restrictions, further amounts must be borrowed
 * Sales can only apply to the amount the fund grew last year
 * Per year, sale restrictions are any combination of:
-    * max sale % of increase - cant sell more than % of last year performance growth
-    * min fund performance % - restrict (growth - min fund perf)
+    * max % sale of increase - cant sell more than % of last year performance growth
+    * min % fund performance - restrict (growth - min fund perf)
 
 | Fund | Growth | Max % Sale of Increase | Min Fund Increase | Can Sell |
 |-----:|-------:|-----------------------:|------------------:|---------:|
 | 1000 | 0      | 3%                     |                   | 0        |
-| 1000 | 10     | 3%                     |                   | 0        |
+| 1000 | 10     | 3%                     |                   | 10       |
 | 1000 | 100    | 3%                     |                   | 30       |
 | 1000 | 0      |                        | 3%                | 0        |
 | 1000 | 10     |                        | 3%                | 0        |

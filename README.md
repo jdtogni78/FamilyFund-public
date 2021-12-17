@@ -5,7 +5,7 @@ A simple system to manage fund shares and composition.
 
 The objective is to create a first MVP of a fund shares management system.
 * First goal in to have minimal functionality. 
-* No graphical interface (manual inputs for most, some command line parameters and one API).
+* No graphical interface (manual inputs for some, API for others).
 * Focus on code quality, good OO/separation of concepts 
 * Use Java or PHP.
 * Use Frameworks/ORM: Java Spring/Hibernate or some PHP Framework (Symfony/Laravel/Composer).

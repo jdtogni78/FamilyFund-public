@@ -29,20 +29,7 @@
 * Per year, sale restrictions are any combination of:
     * max % sale of increase - cant sell more than % of last year performance growth
     * min % fund performance - restrict (growth - min fund perf)
-
-Sales Restriction Examples:
-| Fund | Growth | Max % Sale of Increase | Min Fund Increase | Can Sell |
-|-----:|-------:|-----------------------:|------------------:|---------:|
-| 1000 | 0      | 3%                     |                   | 0        |
-| 1000 | 10     | 3%                     |                   | 10       |
-| 1000 | 100    | 3%                     |                   | 30       |
-| 1000 | 0      |                        | 3%                | 0        |
-| 1000 | 10     |                        | 3%                | 0        |
-| 1000 | 100    |                        | 3%                | 70       |
-| 1000 | 0      | 3%                     | 3%                | 0        |
-| 1000 | 10     | 3%                     | 3%                | 0        |
-| 1000 | 100    | 3%                     | 3%                | 30       |
-| 1000 | 100    | 6%                     | 6%                | 40       |
+* See Sales restriction examples bellow
 
 ### V3
 #### Infrastructure
@@ -71,9 +58,9 @@ Sales Restriction Examples:
     * Shares will be moved from the unallocated pool
     * There must be enough unallocated shares on the fund
 * Sales
-    * Restricted by the Fund (max %)
+    * Restricted Sale Restriction Rules
 * Borrowing
- * Reduce Fund Holder shares, add borrowing shares
+    * Reduce Fund Holder shares, add borrowing shares
 
 Purchase Examples:
 |  Matching Name | Range | Period | Restriction | Match | Borrowed 2021 | Deposited 2022 | Match 2022 | Total Deposit 2022 | Borrow Balance |
@@ -84,6 +71,22 @@ Purchase Examples:
 | 100% up to 100 | 0-100 | 2021   | 365         | 100   | 0             | 150            | 100        | 250                |                |
 | 200% up to 50  | 0-50  | 2021   | 365         | 200   | 0             | 55             | 100        | 55+200%*50=155     |                |
 | 200% up to 50  | 0-50  | 2021   | 365         | 200   | 55            | 45             | 0          | 0                  | 55-45=10       |
+
+
+Sales Restriction Examples:
+| Fund | Growth | Max % Sale of Increase | Min Fund Increase | Can Sell |
+|-----:|-------:|-----------------------:|------------------:|---------:|
+| 1000 | 0      | 3%                     |                   | 0        |
+| 1000 | 10     | 3%                     |                   | 10       |
+| 1000 | 100    | 3%                     |                   | 30       |
+| 1000 | 0      |                        | 3%                | 0        |
+| 1000 | 10     |                        | 3%                | 0        |
+| 1000 | 100    |                        | 3%                | 70       |
+| 1000 | 0      | 3%                     | 3%                | 0        |
+| 1000 | 10     | 3%                     | 3%                | 0        |
+| 1000 | 100    | 3%                     | 3%                | 30       |
+| 1000 | 100    | 6%                     | 6%                | 40       |
+
 
 ### V4
 

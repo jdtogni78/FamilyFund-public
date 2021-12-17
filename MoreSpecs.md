@@ -9,8 +9,8 @@
 #### Matching Rules
 * What: Rules that represent an incentive to share holders, additional shares to be added to fund share holders that purchase shares within a year.
 * Input: manual
-* Fields: Has Name, $ range, date period, restriction period, match(%)
-* Restriction period: if balance of sales or borrows is negative within this period, reduce from matching amount
+* Fields: Has Name, $ range, date period, restriction/clearance (days) , match(%)
+* Restriction/Clearance: if balance of sales or borrows is negative within the previous X days, reduce from matching amount
 * Matching rules are global, independent of funds and portfolios
 
 #### Share Holders
@@ -54,7 +54,7 @@
 * PDF Content
     * Matching rule status (if borrowing or sales last year, shows as on not available)
     * Borrowing status
-    * Sale Restriction % 
+    * Fund Trading Rules 
     * Overall Fund Performance (includes line graph)
     * Last Year Fund Performance
     * Total shares/value

@@ -25,36 +25,60 @@ The objective is to create a first MVP of a fund shares management system.
 ** App Server: unix, java or php
 * Project/Framework setup
 * Test setup with coverage analysis.
-* App/API server setup
+* App server setup
+
+#### API ACL
+* What: controls access to API
+* Data Input: Manual
+* Fields: Has roles, permissions (read/write), api/page/command line flag, URI 
+* Roles: admin, price update, account holder
 
 #### Assets
-* Data will be manually set on the database.
-* Have name, type (stock/digital coin/other), last price, last price date
-* source_feed(where data comes from), feed_id(id within the data feed)
-* Assets have a price history (asset, price, date)
-* Asset changes should be tracked on the change historical log (added asset, changed asset field)
+* What: Represents a stock ticker, digital currency name, real estate or other asset. Has historical prices.
+* Data Input:
+** API CRUD (where delete deactivates), no price on API (via price history api)
+* Fields: 
+** name, type (stock/digital coin/other), last price, last price date, active
+**  source_feed(where data comes from), feed_id(id within the data feed)
+* Has price history
+* Has an asset changelog
 * Assets are global, independent of funds and portfolios
 
+### Asset Changelog
+* Asset changes should be tracked on the change historical log 
+* Tracks added asset, changed asset field (no price changes)
+
+### Asset Price History
+* What: a log of price changes
+* Data Input: API
+* Assets have a price history (asset, price, date)
+
 #### Asset Price Update API
-* Sets asset price/date
+* What: Sets asset price/date (adding to history)
 * Inputs: source_feed, feed_id, price, date
 
 #### Portfolio
-* Data will be manually set on the database.
+* What: represents a collection of investments on assets
+* Input: CRUD API
 * Has assets
-* Each asset 
+* Each asset, for a portfolio: 
     * has id, quantity/shares
     * can calculate % of portfolio
 * Can calculate total value
 * Assets can only be registered once in a portfolio
+* Changes are tracked on fund changelog or 
 
 #### Funds (Investment Fund)
-* Data will be manually set on the database.
+* What: Associates a portfolio to fund holders and their shares.
+* Input: CRUD API
 * Have name, goal(long text), total shares (double)
-* All changes should be tracked in a historical change log (added fund,  changed fund field)
 * Has one portfolio
 * It can calculate its total value based on its portfolio
 * It can calculate the fund share price
+
+### Fund Changelog
+* All changes to funds and portfolio should be tracked 
+* Track: changes to funds, changes to portfolios
 
 ### V2
 

@@ -18,18 +18,22 @@
 * Name, email, type (person/reserve)
 * CC email list (comma separated text, optional)
 
-#### Fund Shares Balance
+#### Share Holders Balance
 * Input: only through fund transactions
 * What: Represent how many shares each account holder owns and borrowed.
 * Fields: Has Fund Holder, share type (own, borrowed), Fund id, amount of shares (double), last update
+
+#### Fund Trading Rules
+* Determine sale restrictions, further amounts must be borrowed
+* Sales can only apply to the amount the fund grew last year
+* Per year, sale restrictions are any combination of:
+    * max sale % of increase - cant sell more than % of last year performance growth
+    * min fund performance % - restrict (growth - min fund perf)
 
 ### V3
 #### Infrastructure
 * SMS Setup
 * PDF Generation
-
-#### Funds (Updates)
-* Have sale restriction (%) - maximum amount of the fund that can be sold, further amounts must be borrowed
 
 #### Fund Holder Quarterly Report
 * Report will be triggered by API

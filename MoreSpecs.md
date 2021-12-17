@@ -30,6 +30,7 @@
     * max % sale of increase - cant sell more than % of last year performance growth
     * min % fund performance - restrict (growth - min fund perf)
 
+Sales Restriction Examples:
 | Fund | Growth | Max % Sale of Increase | Min Fund Increase | Can Sell |
 |-----:|-------:|-----------------------:|------------------:|---------:|
 | 1000 | 0      | 3%                     |                   | 0        |
@@ -74,6 +75,7 @@
 * Borrowing
  * Reduce Fund Holder shares, add borrowing shares
 
+Purchase Examples:
 |  Matching Name | Range | Period | Restriction | Match | Borrowed 2021 | Deposited 2022 | Match 2022 | Total Deposit 2022 | Borrow Balance |
 |---------------:|------:|-------:|------------:|------:|---------------|----------------|------------|--------------------|----------------|
 | 100% up to 100 | 0-100 | 2021   | 365         | 100   | 0             | 105            | 100        | 105+100            | 0              |

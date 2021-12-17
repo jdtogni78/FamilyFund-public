@@ -13,16 +13,16 @@ The objective is to create a first MVP of a fund shares management system.
 * The database must be  MariaDB or MySQL. Use TLS 1.2 connection.
 * Unit tests with good coverage, using TestNG or similar.
 * Deliverable should be Docker-compose setup 
-    * With separate DB and app servers
-    * Ability to run tests & coverage analysis
+ * With separate DB and app servers
+ * Ability to run tests & coverage analysis
 * The delivery should be in phases, allowing for review.
 
 ## Versions
 ### V1 
 #### Infrastructure:
 * Docker setup
-** DB Server
-** App Server: unix, java or php
+ * DB Server
+ * App Server: unix, java or php
 * Project/Framework setup
 * Test setup with coverage analysis.
 * App server setup
@@ -36,10 +36,10 @@ The objective is to create a first MVP of a fund shares management system.
 #### Assets
 * What: Represents a stock ticker, digital currency name, real estate or other asset. Has historical prices.
 * Data Input:
-** API CRUD (where delete deactivates), no price on API (via price history api)
+ * API CRUD (where delete deactivates), no price on API (via price history api)
 * Fields: 
-** name, type (stock/digital coin/other), last price, last price date, active
-**  source_feed(where data comes from), feed_id(id within the data feed)
+ * name, type (stock/digital coin/other), last price, last price date, active
+ *  source_feed(where data comes from), feed_id(id within the data feed)
 * Has price history
 * Has an asset changelog
 * Assets are global, independent of funds and portfolios
@@ -62,8 +62,8 @@ The objective is to create a first MVP of a fund shares management system.
 * Input: CRUD API
 * Has assets
 * Each asset, for a portfolio: 
-    * has id, quantity/shares
-    * can calculate % of portfolio
+ * has id, quantity/shares
+ * can calculate % of portfolio
 * Can calculate total value
 * Assets can only be registered once in a portfolio
 * Changes are tracked on fund changelog or 
@@ -98,7 +98,7 @@ The objective is to create a first MVP of a fund shares management system.
 #### Fund Holder Shares
 * Has Fund Holder, share type (purchase, borrow, sale), portfolio asset id, shares (double)
 * Have shares of Funds (not assets)
-    * All changes should be tracked in a Fund Holder share history
+ * All changes should be tracked in a Fund Holder share history
 * Have borrowed shares of Funds - and a historical table
 
 ### V3
@@ -123,12 +123,12 @@ The objective is to create a first MVP of a fund shares management system.
 * Generates email
 * This actions will be performed by command line
 * Purchases
-    * Apply the matching rules - validate qualification, add extra shares
-        * Matching is reduced by last years sales/borrowing amount
-    * Shares will be moved from the unallocated pool
-    * There must be enough unallocated shares on the fund
+ * Apply the matching rules - validate qualification, add extra shares
+  * Matching is reduced by last years sales/borrowing amount
+ * Shares will be moved from the unallocated pool
+ * There must be enough unallocated shares on the fund
 * Sales
-    * Restricted by the Fund (max %)
+ * Restricted by the Fund (max %)
 * Borrowing
-    * Reduce Fund Holder shares, add borrowing shares
+ * Reduce Fund Holder shares, add borrowing shares
 

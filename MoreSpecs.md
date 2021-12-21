@@ -1,9 +1,6 @@
-## OUT OF SCOPE
-
 ### V2
 
 #### Funds (Updates)
-* Has matching rules
 * It can calculate the unallocated funds (that don’t belong to Fund Holders)
 
 #### Matching Rules
@@ -15,13 +12,17 @@
 
 #### Share Holders
 * Input: manual
-* Name, email, type (person/reserve)
-* CC email list (comma separated text, optional)
+* Fields: Name, email, type (person/reserve)
+
+#### Accounts
+* What: Associate share holders and funds. A share holder may have multiple accounts with different balances and rules.
+* Fields: Fund id, Share Holder, CC email list (comma separated text, optional)
+* Can be associated with multiple matching rules and trading rules
 
 #### Share Holders Balance
 * Input: only through fund transactions
 * What: Represent how many shares each account holder owns and borrowed.
-* Fields: Has Fund Holder, share type (own, borrowed), Fund id, amount of shares (double), last update
+* Fields: Account id, share type (own, borrowed), amount of shares (double), last update
 
 #### Fund Trading Rules
 * Determine sale restrictions, further amounts must be borrowed
@@ -30,6 +31,7 @@
     * max % sale of increase - cant sell more than % of last year performance growth
     * min % fund performance - restrict (growth - min fund perf)
 * See Sales restriction examples bellow
+* Trading Rules are global
 
 ### V3
 #### Infrastructure

@@ -6,6 +6,8 @@ See [Remaining Specs](specs/V99.spec.md)
 
 ## Docker
 
+See https://hub.docker.com/r/bitnami/laravel/
+
 * Go to main dir
 
 docker-compose up
@@ -26,6 +28,8 @@ mysqldump --column-statistics=FALSE familyfund --skip-add-locks --skip-lock-tabl
 
 ### Generate CRUD
 
+See https://github.com/awais-vteams/laravel-crud-generator
+
 ex: docker-compose exec myapp php artisan make:crud account_balances
 
 tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /dev/null | grep -v "+" | grep -v "failed_jobs\|migrations\|password_resets\|personal_access_tokens")
@@ -34,4 +38,10 @@ for t in $(echo $tables); do echo $t; docker-compose exec myapp php artisan make
 
 ### Add to Routes
 
-Route::resource('account_balances', 'App\Http\Controllers\AccountBalancesController');
+Ex: Route::resource('account_balances', 'App\Http\Controllers\AccountBalanceController');
+
+for t in $(echo $tables); do
+    arr=(${(s:_:)t})
+    c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed 's/.$//')
+    echo "Route::resource('${t}', 'App\Http\Controllers\\\\${c}Controller');"
+done;

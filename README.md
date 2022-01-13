@@ -18,11 +18,11 @@ docker-compose exec myapp composer install
 
 * First time setup database / reimport full db
 
-mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_only_dump.sql
+mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_dump.sql
 
 * Dump dev database on Mac
 
-mysqldump --column-statistics=FALSE familyfund --skip-add-locks --skip-lock-tables --user=root --host=127.0.0.1 --port=3306 -p123456 > familyfund_only_dump.sql
+mysqldump --column-statistics=FALSE familyfund --skip-add-locks --skip-lock-tables --user=root --host=127.0.0.1 --port=3306 -p123456 > familyfund_dump.sql
 
 * Create new lines to better see data changes:
 

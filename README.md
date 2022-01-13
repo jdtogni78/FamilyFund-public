@@ -24,6 +24,10 @@ mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_only_dump.sql
 
 mysqldump --column-statistics=FALSE familyfund --skip-add-locks --skip-lock-tables --user=root --host=127.0.0.1 --port=3306 -p123456 > familyfund_only_dump.sql
 
+* Create new lines to better see data changes:
+
+sed -e $'s/),(/),\\\n(/g' familyfund_dump.sql > familyfund_dump.sql
+
 ## Reverse engineer models
 
 tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /dev/null | grep -v "+" | grep -v "failed_jobs\|migrations\|password_resets\|personal_access_tokens")

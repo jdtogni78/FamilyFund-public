@@ -43,3 +43,4 @@ for f in $(ls coreui-generator/tests/Repositories/*sRepositoryTest.php); do
     rm $f 
 done
 
+

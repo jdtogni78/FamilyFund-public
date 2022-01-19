@@ -55,6 +55,7 @@ for t in $(echo $tables);
     docker-compose exec myapp php artisan infyom:api $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
     sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' coreui-generator/app/Http/Controllers/*Controller.php
 done;
+rm coreui-generator/app/Http/Controllers/*Controller.php.bkp
 
 
 ## Generate migrations (point to empty schema)

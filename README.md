@@ -45,6 +45,17 @@ for t in $(echo $tables);
     sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' coreui-generator/app/Http/Controllers/*Controller.php
 done;
 
+#### Generate from file
+
+for t in $(echo $tables); 
+    do echo $t; 
+    arr=(${(s:_:)t})
+    c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed "s/s$//")
+    docker-compose exec myapp php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
+    docker-compose exec myapp php artisan infyom:api $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
+    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' coreui-generator/app/Http/Controllers/*Controller.php
+done;
+
 
 ## Generate migrations (point to empty schema)
 

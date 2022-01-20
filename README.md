@@ -35,7 +35,7 @@ tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /
 
 ### Generate API CRUD
 
-See https://github.com/SoliDry/api-generator
+See https://infyom.com/open-source/laravelgenerator/docs/8.0/introduction
 
 for t in $(echo $tables); 
     do echo $t; 

@@ -371,7 +371,7 @@ CREATE TABLE `transactions` (
   `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
   `value` decimal(13,2) NOT NULL,
   `shares` decimal(19,4) DEFAULT NULL,
-  `timestamp` timestamp NOT NULL,
+  `timestamp` timestamp NULL DEFAULT current_timestamp(),
   `account_id` bigint(20) unsigned NOT NULL,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -413,4 +413,4 @@ CREATE TABLE `users` (
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-18 21:33:26
+-- Dump completed on 2022-01-19 23:11:02

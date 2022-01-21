@@ -3,3 +3,5 @@ datadir
 misc
 php_app/vendor
 leadconcept_app
+app1/AdminLTE
+app1/adminlte-generator

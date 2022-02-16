@@ -91,3 +91,12 @@ for t in $(echo $tables); do
     c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed 's/.$//')
     echo "Route::resource('${t}', 'App\Http\Controllers\\\\${c}Controller');"
 done;
+
+## PDF 
+
+### Docker
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.buster_amd64.deb
+sudo apt install ./wkhtmltox_0.12.6-1.buster_amd64.deb
+
+### Laravel
+https://github.com/barryvdh/laravel-snappy

@@ -68,29 +68,7 @@ for t in $(echo $tables);
     docker-compose exec myapp php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json --skip model,controllers,api_controller,scaffold_controller,repository,requests,api_requests,scaffold_requests,routes,api_routes,scaffold_routes,views,tests,menu,dump-autoload
 done;
 
-
 php artisan infyom:scaffold Sample --fieldsFile vendor\infyom\laravel-generator\samples\fields_sample.json
-### Generate UI CRUD
-
-See https://github.com/awais-vteams/laravel-crud-generator
-
-ex: docker-compose exec myapp php artisan make:crud account_balances
-
-for t in $(echo $tables); 
-    do echo $t; 
-    docker-compose exec myapp php artisan make:crud $t; 
-done;
-
-
-### Add to Routes
-
-Ex: Route::resource('account_balances', 'App\Http\Controllers\AccountBalanceController');
-
-for t in $(echo $tables); do
-    arr=(${(s:_:)t})
-    c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed 's/.$//')
-    echo "Route::resource('${t}', 'App\Http\Controllers\\\\${c}Controller');"
-done;
 
 ## PDF 
 

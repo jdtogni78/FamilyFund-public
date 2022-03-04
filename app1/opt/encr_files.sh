@@ -1,8 +1,8 @@
 #!/bin/bash
 
-. ~/dstrader_config.sh
-. $DSTRADER_DIR/opt/log.sh
-. $DSTRADER_DIR/opt/encr_files_lib.sh
+. ~/familyfund_config.sh
+. $DS_OPT_BASE/opt/log.sh
+. $DS_OPT_BASE/opt/encr_files_lib.sh
 
 # always try encrypting
 logInfo Always encrypt first to hide clear text file on first run
@@ -20,12 +20,10 @@ case "$1" in
     logInfo 'gpg --import private.key'
     ;;
   decrypt)
-    cd "$DSTRADER_DIR/$RUNTIME"   ; dstrader_encr mail.properties     ; dstrader_decr mail.properties
-    cd "$DSTRADER_DIR/auto_login" ; dstrader_encr dstrader.properties ; dstrader_decr dstrader.properties
+    cd "$DS_OPT_BASE/"   ; ds_encr .env     ; ds_decr .env
     ;;
   clear)
-    cd "$DSTRADER_DIR/$RUNTIME"   ; dstrader_encr mail.properties
-    cd "$DSTRADER_DIR/auto_login" ; dstrader_encr dstrader.properties
+    cd "$DS_OPT_BASE/"   ; ds_encr .env
     ;;
   *)
     logError "Usage: encr_files.sh {decrypt|clear}"

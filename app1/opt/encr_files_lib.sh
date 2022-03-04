@@ -1,6 +1,6 @@
 #!/bin/bash
-. ~/dstrader_config.sh
-. $DSTRADER_DIR/opt/log.sh
+. ~/familyfund_config.sh
+. $DS_OPT_DIR/opt/log.sh
 
 function validate_email() {
   if [ -z "${GPG_EMAIL}" ]; then
@@ -9,22 +9,22 @@ function validate_email() {
   fi
 }
 
-function dstrader_encr() {
+function ds_encr() {
   FILE=$1
   validate_email
   if [ -f ${FILE} ]; then
     logInfo "Encrypting ${FILE} with ${GPG_EMAIL}"
     rm -f ${FILE}.encr && \
     gpg --batch --yes -o ${FILE}.encr -e -r ${GPG_EMAIL} ${FILE} && \
-    dstrader_clear ${FILE}
+    ds_clear ${FILE}
   fi
 }
 
-function dstrader_decr() {
+function ds_decr() {
   FILE=$1
   validate_email
   # lets first encript when file is recreated
-  dstrader_encr ${FILE}
+  ds_encr ${FILE}
   # usually we will only decript though
 
   logInfo "Decrypting ${FILE}"
@@ -36,7 +36,7 @@ function dstrader_decr() {
   echo .
 }
 
-function dstrader_clear() {
+function ds_clear() {
   FILE=$1
   logInfo "Clear ${FILE}"
   shred -un 3 ${FILE}

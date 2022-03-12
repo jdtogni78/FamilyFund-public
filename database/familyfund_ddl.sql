@@ -90,6 +90,28 @@ CREATE TABLE `account_matching_rules` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `account_reports`
+--
+
+DROP TABLE IF EXISTS `account_reports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `account_reports` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_dt` date NOT NULL DEFAULT curdate(),
+  `end_dt` date NOT NULL DEFAULT '9999-12-31',
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `account_reports_account_id_foreign` (`account_id`),
+  CONSTRAINT `account_reports_account_id_foreign` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `accounts`
 --
 
@@ -167,13 +189,13 @@ DROP TABLE IF EXISTS `assets`;
 CREATE TABLE `assets` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source_feed` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `feed_id` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `assets_UN` (`name`,`type`,`source`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -194,6 +216,29 @@ CREATE TABLE `failed_jobs` (
   `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `fund_reports`
+--
+
+DROP TABLE IF EXISTS `fund_reports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `fund_reports` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fund_id` bigint(20) unsigned NOT NULL,
+  `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_dt` date NOT NULL DEFAULT curdate(),
+  `end_dt` date NOT NULL DEFAULT '9999-12-31',
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fund_reports_fund_id_foreign` (`fund_id`),
+  CONSTRAINT `fund_reports_fund_id_foreign` FOREIGN KEY (`fund_id`) REFERENCES `funds` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -323,11 +368,12 @@ DROP TABLE IF EXISTS `portfolios`;
 CREATE TABLE `portfolios` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fund_id` bigint(20) unsigned NOT NULL,
-  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `portfolios_UN` (`source`),
   KEY `portfolios_fund_id_foreign` (`fund_id`),
   CONSTRAINT `portfolios_fund_id_foreign` FOREIGN KEY (`fund_id`) REFERENCES `funds` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -413,4 +459,4 @@ CREATE TABLE `users` (
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-19 23:11:02
+-- Dump completed on 2022-03-11 21:26:25

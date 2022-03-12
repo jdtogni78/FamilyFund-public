@@ -1,0 +1,16 @@
+[
+    {
+        "name": "source",
+        "dbType": "string,30",
+        "validations": "required|string|max:30"
+    },
+    {
+        "name": "timestamp",
+        "dbType": "datetime",
+        "validations": "required"
+    },
+    {
+        "type": "relation",
+        "relation": "1tm,SymbolPosition"
+    }
+]

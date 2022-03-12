@@ -1,0 +1,21 @@
+[
+    {
+        "name": "name",
+        "dbType": "string,128",
+        "validations": "required|string|max:128"
+    },
+    {
+        "name": "type",
+        "dbType": "string,3",
+        "validations": "required|string|max:3"
+    },
+    {
+        "name": "price",
+        "dbType": "float",
+        "validations": "required|numeric"
+    },
+    {
+        "type": "relation",
+        "relation": "mt1,PriceUpdate"
+    }
+]

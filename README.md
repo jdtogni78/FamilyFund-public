@@ -1,7 +1,7 @@
 # Family Fund
 A simple system to manage fund shares and composition.
 
-See [V1 Specs](specs/V1.specs.md)
+See [V1 Specs](specs/V1.spec.md)
 See [Remaining Specs](specs/V99.spec.md)
 
 ## Docker
@@ -41,9 +41,9 @@ for t in $(echo $tables);
     do echo $t; 
     arr=(${(s:_:)t})
     c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed "s/s$//")
-    docker-compose exec myapp php artisan infyom:scaffold $c --fromTable --tableName $t --skip dump-autoload
-    docker-compose exec myapp php artisan infyom:api $c --fromTable --tableName $t --skip dump-autoload
-    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' coreui-generator/app/Http/Controllers/*Controller.php
+    php artisan infyom:scaffold $c --fromTable --tableName $t --skip dump-autoload
+    php artisan infyom:api $c --fromTable --tableName $t --skip dump-autoload
+    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' app/Http/Controllers/*Controller.php
 done;
 
 #### Generate from file
@@ -52,11 +52,11 @@ for t in $(echo $tables);
     do echo $t; 
     arr=(${(s:_:)t})
     c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed "s/s$//")
-    docker-compose exec myapp php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
-    docker-compose exec myapp php artisan infyom:api $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
-    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' coreui-generator/app/Http/Controllers/*Controller.php
+    php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
+    php artisan infyom:api $c --fieldsFile resources/model_schemas/$c.json --tableName $t --skip dump-autoload
+    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' app/Http/Controllers/*Controller.php
 done;
-rm coreui-generator/app/Http/Controllers/*Controller.php.bkp
+rm app/Http/Controllers/*Controller.php.bkp
 
 
 ## Generate migrations (point to empty schema)
@@ -79,3 +79,24 @@ sudo apt install ./wkhtmltox_0.12.6-1.buster_amd64.deb
 
 ### Laravel
 https://github.com/barryvdh/laravel-snappy
+
+
+## Mail
+
+We are using a separate container for MailHog, but we still need sendmail & mhsendmail on php server & local (unit tests).
+See Dockerfile & docker-compose.
+
+### Local setup
+// sudo apt-get update
+// sudo apt-get install -y sendmail golang-go git
+go get github.com/mailhog/mhsendmail
+sudo cp ~/go/bin/mhsendmail /usr/local/bin/
+
+#### /etc/hosts 
+echo "127.0.0.1 noreply.domain.com mailhog" | sudo tee -a /etc/hosts
+
+#### Update PHP.ini
+sendmail_path = "/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025"
+
+#### Test
+php tests/TestEmail.php

@@ -1,6 +1,6 @@
 {
-    "phpunit.phpunit": "/Users/dtogni/dev/FamilyFund/app1/coreui-generator/vendor/phpunit/phpunit/phpunit",
-    "phpunit.files": "app1/coreui-generator/Tests/**/*Test.php",
+    "phpunit.phpunit": "/Users/dtogni/dev/FamilyFund/app1/family-fund-app/vendor/phpunit/phpunit/phpunit",
+    "phpunit.files": "app1/family-fund-app/Tests/**/*Test.php",
     "phpunit.logpanel": true,
     "phpunit.clearOutputOnRun": false,
     "phpunit.relativeFilePath": true

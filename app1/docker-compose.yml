@@ -15,7 +15,7 @@ services:
 
   myapp:
     tty: true
-    image: docker.io/bitnami/laravel:8
+    build: .
     environment:
       - DB_HOST=mariadb
       - DB_USERNAME=root
@@ -25,6 +25,16 @@ services:
       - mariadb
     ports:
       - 3000:3000
+    extra_hosts:
+      - noreply.domain.com:127.0.0.1
     volumes:
-      - ./coreui-generator:/app
+      - ./family-fund-app:/app
     # privileged: true # Privileged mode could be required to run this container under Windows
+
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui

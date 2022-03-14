@@ -19,7 +19,7 @@ use Response;
 class FundReportAPIController extends AppBaseController
 {
     /** @var  FundReportRepository */
-    private $fundReportRepository;
+    protected $fundReportRepository;
 
     public function __construct(FundReportRepository $fundReportRepo)
     {

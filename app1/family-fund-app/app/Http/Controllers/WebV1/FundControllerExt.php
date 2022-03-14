@@ -23,12 +23,10 @@ class FundControllerExt extends FundController
 {
     use PerformanceTrait;
     use ChartBaseTrait;
-    private FundPDF $fundPDF;
 
     public function __construct(FundRepository $fundRepo)
     {
         parent::__construct($fundRepo);
-        $this->fundPDF = new FundPDF($this, false);
     }
 
     /**

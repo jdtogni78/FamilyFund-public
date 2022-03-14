@@ -1,9 +1,5 @@
 **/.DS_Store
 datadir
 misc
-php_app/vendor
-leadconcept_app
-app1/AdminLTE
-app1/adminlte-generator
-app1/coreui-generator/public/pdf_file.pdf
+app1/family-fund-app/public/pdf_file.pdf
 backups

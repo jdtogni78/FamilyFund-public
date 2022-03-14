@@ -64,5 +64,5 @@ Route::resource('portfolio_assets', PortfolioAssetAPIController::class);
 Route::resource('asset_change_logs', App\Http\Controllers\API\AssetChangeLogAPIController::class);
 Route::resource('transaction_matchings', App\Http\Controllers\API\TransactionMatchingAPIController::class);
 
-//Route::resource('fund_reports', App\Http\Controllers\API\FundReportAPIController::class);
-//Route::resource('account_reports', App\Http\Controllers\API\AccountReportAPIController::class);
+Route::resource('fund_reports', App\Http\Controllers\APIv1\FundReportAPIControllerExt::class);
+Route::resource('account_reports', App\Http\Controllers\API\AccountReportAPIController::class);

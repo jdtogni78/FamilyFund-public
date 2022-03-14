@@ -64,7 +64,7 @@ class FundExt extends Fund
         $query = $accountRepo->makeModel()->newQuery();
         $query->where('fund_id', $this->id);
         $accounts = $query->get(['*']);
-        
+
         $used = 0;
         $total = 0;
         foreach ($accounts as $account) {
@@ -75,7 +75,7 @@ class FundExt extends Fund
                 $total = $balance;
             }
         }
-    
+
         return $inverse? $total-$used : $used;
     }
 

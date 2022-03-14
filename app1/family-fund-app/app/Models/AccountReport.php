@@ -24,7 +24,7 @@ class AccountReport extends Model
     use HasFactory;
 
     public $table = 'account_reports';
-    
+
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
 
@@ -64,7 +64,7 @@ class AccountReport extends Model
         'start_dt' => 'required',
         'end_dt' => 'required',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
+        'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
 

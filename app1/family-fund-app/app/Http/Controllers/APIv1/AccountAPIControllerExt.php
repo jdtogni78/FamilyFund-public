@@ -5,17 +5,14 @@ namespace App\Http\Controllers\APIv1;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
 use App\Http\Controllers\API\AccountAPIController;
-use App\Http\Resources\AccountMatchingResource;
 use App\Http\Resources\AccountResource;
-use App\Models\Account;
-use App\Models\AccountBalance;
 use Carbon\Traits\Date;
 use Response;
 use Carbon\Carbon;
 use App\Models\PerformanceTrait;
 
 /**
- * Class AccountsController
+ * Class AccountAPIControllerExt
  * @package App\Http\Controllers\API
  */
 

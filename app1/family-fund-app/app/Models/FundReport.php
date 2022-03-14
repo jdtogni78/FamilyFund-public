@@ -25,7 +25,7 @@ class FundReport extends Model
     use HasFactory;
 
     public $table = 'fund_reports';
-    
+
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
 
@@ -68,7 +68,7 @@ class FundReport extends Model
         'start_dt' => 'required',
         'end_dt' => 'required',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
+        'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
 
@@ -77,6 +77,6 @@ class FundReport extends Model
      **/
     public function fund()
     {
-        return $this->belongsTo(\App\Models\Fund::class, 'fund_id');
+        return $this->belongsTo(\App\Models\FundExt::class, 'fund_id');
     }
 }

@@ -47,14 +47,17 @@ class PortfolioExt extends Portfolio
     }
 
     /**
-     * @return money
-     **/
-    public function valueAsOf($now, $verbose=false)
+     * @param $now
+     * @param bool $verbose
+     * @return float
+     */
+    public function valueAsOf($now, bool $verbose=false): float
     {
         $portfolioAssets = $this->assetsAsOf($now);
 
         $totalValue = 0;
         foreach ($portfolioAssets as $pa) {
+//            print_r("pa: " . json_encode($pa) . "\n");
             $position = $pa->position;
             $asset_id = $pa->asset_id;
             if ($position == 0)

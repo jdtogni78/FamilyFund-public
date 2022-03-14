@@ -35,29 +35,12 @@ class FundReportControllerExt extends FundReportController
     {
         $input = $request->all();
 
-        $fundReport = $this->fundReportRepository->create($input);
+        $this->createAndSendFundReport($input);
 
         Flash::success('Fund Report saved successfully.');
 
-        $fund = $fundReport->fund()->first();
-        $asOf = $fundReport->as_of;
-        $isAdmin = 'ADM' === $fundReport->type;
-
-        $fundController = new FundControllerExt(\App::make(FundRepository::class));
-        $arr = $fundController->createFundViewData($fund, $asOf, $isAdmin);
-        $pdf = new FundPDF($arr, $isAdmin);
-
-        foreach ($fund->accounts() as $account) {
-            if (
-                ($isAdmin && count($account->user()) == 0) ||
-                (!$isAdmin && count($account->user()) == 1)
-            ) {
-                Mail::to($account->email_cc)->send(new FundQuarterlyReport($pdf->file()));
-
-            }
-        }
-
-
         return redirect(route('fundReports.index'));
     }
+
+
 }

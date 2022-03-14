@@ -1,6 +1,7 @@
 <?php namespace Tests;
 
 use App\Models\AssetExt;
+use App\Models\AssetPrice;
 use App\Models\Transaction;
 use App\Models\TransactionMatching;
 use App\Models\User;
@@ -15,25 +16,40 @@ use App\Models\AccountMatchingRule;
 
 class DataFactory
 {
-    public $funds = array();
     public $userNum = 0;
     public $user;
     public $users = array();
     public $userAccount;
     public $userAccounts = array();
+
     public $matchingRules = array();
     public $accountMatching = array();
     public $transactionMatchings = array();
-    public $transactions = array();
-    public $portfolio;
+    public $matchTransaction;
+    public $matchingRule;
+
+    public $fund;
+    public $funds = array();
     public $fundAccount;
     public $fundTransaction;
     public $fundBalance;
-    public $cashPosition;
+
+    public $portfolio;
+    public $source;
+
     public $cash;
+    public $cashPosition;
     public $transaction;
-    public $matchTransaction;
-    public $matchingRule;
+    public $transactions = array();
+
+    public $asset;
+    public $assets = [];
+    public $assetPrice;
+    public $assetPrices = [];
+    public $portfolioAsset;
+    public $portfolioAssets = [];
+
+    public $verbose = true;
 
     public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01')
     {
@@ -41,10 +57,12 @@ class DataFactory
             ->has(Portfolio::factory()->count(1), 'portfolios')
             ->has(Account::factory()->count(1), 'accounts')
             ->create();
+        if ($this->verbose) print_r("this->fund: " . json_encode($this->fund) . "\n");
         $this->funds[] = $this->fund;
 
         $this->fundAccount = $this->fund->account();
         $this->portfolio = $this->fund->portfolio();
+        $this->source = $this->portfolio->source;
 
         $this->fundTransaction = Transaction::factory()
             ->for($this->fundAccount, 'account')
@@ -124,9 +142,44 @@ class DataFactory
 
     public function createAsset($source)
     {
-        return Asset::factory()->create([
+        if ($source == null) $source = $this->source;
+        $asset = Asset::factory()->create([
             'source' => $source,
         ]);
+        if ($this->verbose) print_r("asset: " . json_encode($asset) . "\n");
+        $this->assets[] = $this->asset = $asset;
+        return $asset;
+    }
+
+    protected function createAssetPrice($asset, $price=null)
+    {
+        $data = ['asset_id' => $asset];
+        if ($price != null) $data['price'] = $price;
+        $ap = AssetPrice::factory()->create($data);
+        if ($this->verbose) print_r("ap: " . json_encode($ap) . "\n");
+        $this->assetPrices[] = $this->assetPrice = $ap;
+        return $ap;
+    }
+
+    protected function createPortfolioAsset($asset, $position=null, $source=null)
+    {
+        $data = [
+            'asset_id' => $asset,
+            'portfolio_id' => $this->portfolio->id
+        ];
+        if ($position != null) $data['position'] = $position;
+        $pa = PortfolioAsset::factory()->create($data);
+        if ($this->verbose) print_r("pa: " . json_encode($pa) . "\n");
+        $this->portfolioAssets[] = $this->portfolioAsset = $pa;
+        return $pa;
+    }
+
+    public function createAssetWithPrice($price=null, $source=null, $position=null)
+    {
+        $asset = $this->createAsset($source);
+        $this->createAssetPrice($asset, $price);
+        $this->createPortfolioAsset($asset, $position, $source);
+        return $asset;
     }
 
     public function createFundWithMatching()

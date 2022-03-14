@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Eloquent as Model;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -22,7 +22,7 @@ class PositionUpdate extends Model
     use HasFactory;
 
     public $table = 'position_updates';
-    
+
 
     protected $dates = ['deleted_at'];
 

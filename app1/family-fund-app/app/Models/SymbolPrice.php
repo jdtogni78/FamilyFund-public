@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Eloquent as Model;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -23,7 +23,7 @@ class SymbolPrice extends Model
     use HasFactory;
 
     public $table = 'symbol_prices';
-    
+
 
     protected $dates = ['deleted_at'];
 

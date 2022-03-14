@@ -2,12 +2,6 @@
 
 namespace App\Models;
 
-use Eloquent as Model;
-use App\Models\Portfolio;
-use App\Models\PortfolioAsset;
-use App\Models\AssetExt;
-use App\Models\Utils;
-use App\Repositories\PortfolioRepository;
 use App\Repositories\PortfolioAssetRepository;
 use DB;
 use phpDocumentor\Reflection\Types\Collection;
@@ -19,7 +13,7 @@ use phpDocumentor\Reflection\Types\Collection;
 class PortfolioExt extends Portfolio
 {
     /**
-     * @return money
+     * @return float
      **/
     public function assetsAsOf($now, $assetId=null)
     {

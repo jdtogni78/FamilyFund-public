@@ -12,22 +12,26 @@ class PortfolioApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->verbose = false;
+    }
+
     public function _test_read_portfolio_as_of($id, $asOf, $assets)
     {
         $verbose = false;
         $portfolio = Portfolio::find($id);
 
-        $this->response = $this->json(
-            'GET',
-            '/api/portfolios/' . $portfolio->id . '/as_of/' . $asOf
-        );
+        $url = '/api/portfolios/' . $portfolio->id . '/as_of/' . $asOf;
+        $this->getAPI($url);
 
         $as = array();
         $total = 0;
         foreach($assets as $asset) {
             [$asset_id, $name, $price, $shares] = $asset;
             $a = array();
-            $a['asset_id'] = $asset_id;
+            $a['id'] = $asset_id;
             $a['name'] = $name;
             $a['price']  = Utils::currency($price);
             $a['position'] = Utils::position($shares);
@@ -59,22 +63,22 @@ class PortfolioApiGoldenDataTest extends TestCase
             [3, 'SOXL',     31.10, 54.58000000],
             [4, 'IAU',      36.26, 94.00000000],
             [6, 'FIPDX',    11.04, 598.5560000],
-            [7, 'ETH',     737.89, 0.40050685],
-            [8, 'BTC',   28990.08, 0.01752356],
-            [9, 'LTC',     124.42, 1.76610087],
+            [7, 'ETH',     731.80, 0.40050685],
+            [8, 'BTC',   29302.75, 0.01752356],
+            [9, 'LTC',     126.64, 1.76610087],
             [11,'XRP',       0.32, 885.16959200],
             [12,'XLM',       0.13, 911.52779760],
             [10,'CASH',      1.00, 5331.8372007],
         ];
         $a22 = [
-            [1, 'SPXL',    144.57, 67.628],
-            [2, 'TECL',     87.55, 40.42],
-            [3, 'SOXL',     68.36, 54.58],
-            [4, 'IAU',      34.57, 94],
+            [1, 'SPXL',    143.41, 67.628],
+            [2, 'TECL',     86.23, 40.42],
+            [3, 'SOXL',     68.01, 54.58],
+            [4, 'IAU',      34.81, 94],
             [6, 'FIPDX',    11.16, 598.556],
-            [7, 'ETH',    3792.43, 0.40050685],
-            [8, 'BTC',   48064.96, 0.01752356],
-            [9, 'LTC',     147.97, 1.76610087],
+            [7, 'ETH',    3645.90, 0.40050685],
+            [8, 'BTC',   45883.00, 0.01752356],
+            [9, 'LTC',     144.22, 1.76610087],
             [11,'XRP',       0.81, 885.169592],
             [12,'XLM',       0.27, 911.5277976],
             [10,'CASH',      1.00, 9275.4572008],

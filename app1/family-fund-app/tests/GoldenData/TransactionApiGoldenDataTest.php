@@ -12,13 +12,18 @@ class TransactionApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->verbose = false;
+    }
+
     /**
      * @test
      */
     public function test_transaction_share_value()
     {
-        $verbose = false;
-        $fixValues = false;
+        $fixValues = true;
 
         $transactions = Transaction::
             orderBy('created_at')
@@ -32,15 +37,15 @@ class TransactionApiGoldenDataTest extends TestCase
                 $accts[$transaction->account_id] = 0;
             $accts[$transaction->account_id] += $transaction->shares;
 
-            if ($verbose) print_r(json_encode($transaction->toArray()) . "\n");
+            if ($this->verbose) print_r("TRAN: " . json_encode($transaction->toArray()) . "\n");
 
             $account = $transaction->account()->first();
             $fund = $account->fund()->first();
             $asOf = substr($transaction->created_at,0,10);
-            $shareValue = $fund->shareValueAsOf($asOf);
-            $totalShares = $fund->sharesAsOf($asOf);
+            $shareValue = Utils::currency($fund->shareValueAsOf($asOf));
+            $totalShares = Utils::shares($fund->sharesAsOf($asOf));
 
-            if ($verbose) {
+            if ($this->verbose) {
                 $arr = array();
                 $arr['tc'] = $transaction->account()->count();
                 $arr['ac'] = $account->fund()->count();
@@ -55,18 +60,19 @@ class TransactionApiGoldenDataTest extends TestCase
                 $arr['asOf'] = $asOf;
                 print_r($arr);
             }
-            
+
             $portfolio = $fund->portfolio();
-            $assets = $portfolio->valueAsOf($asOf, $verbose);
+            $assets = $portfolio->valueAsOf($asOf, $this->verbose);
             if ($transaction->type != 'INI') {
                 if ($fixValues) {
                     if ($shareValue > 0) {
                         if (Utils::shares($transaction->value / $shareValue) != $transaction->shares) {
-                            print_r(json_encode([$transaction->id, Utils::shares($transaction->value / $shareValue)])."\n");
+                            $this->fixTransaction($transaction, $shareValue);
+                            continue;
                         }
                     }
                     if ($transaction->value != Utils::currency($shareValue * $transaction->shares)) {
-                        print_r(json_encode([$transaction->id, Utils::shares($transaction->value / $shareValue)])."\n");
+                        $this->fixTransaction($transaction, $shareValue);
                     }
                 } else {
                     if ($shareValue > 0) {
@@ -83,7 +89,6 @@ class TransactionApiGoldenDataTest extends TestCase
      */
     public function test_balance_share_value()
     {
-        $verbose = false;
         $fixValues = false;
 
         $balances = AccountBalance::
@@ -105,10 +110,10 @@ class TransactionApiGoldenDataTest extends TestCase
             $a[] = $tran_type = $tran->type;
             $a[] = $tran_shares = $tran->shares;
             $a[] = substr($balance->start_dt,0,10);
-            
+
             $key = $bal_type . $account_id;
             if (array_key_exists($key, $bals)) {
-                if ($verbose) {
+                if ($this->verbose) {
                     print("bo " . implode(', ', $bals[$key]) . "\n");
                     print("bn " . implode(', ', $a)."\n");
                 }
@@ -132,5 +137,17 @@ class TransactionApiGoldenDataTest extends TestCase
             }
             $bals[$key] = $a;
         }
+    }
+
+    private function fixTransaction(mixed $transaction, float $shareValue): void
+    {
+        print_r("FIX: " . json_encode([
+                $transaction->id,
+                $transaction->account_id,
+                Utils::shares($transaction->value / $shareValue),
+                $transaction->value,
+                $shareValue,
+                $transaction->shares,
+            ]) . "\n");
     }
 }

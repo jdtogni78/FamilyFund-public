@@ -21,7 +21,7 @@ class AccountApiGoldenDataTest extends TestCase
         return $balance;
     }
 
-    public function create_transaction($account_id, $tran_id, $shares, $value, $currentValue, $ref_tran_id, $date)
+    public function create_transaction($account_id, $tran_id, $shares, $total_shares, $value, $currentValue, $ref_tran_id, $date)
     {
         $transaction = array();
         $transaction['id'] = $tran_id;
@@ -34,7 +34,9 @@ class AccountApiGoldenDataTest extends TestCase
         // $transaction['account_id'] = 1;//$account_id;
         $transaction['type'] = 'PUR';
         $transaction['current_value'] = Utils::currency($currentValue);
-        
+        $transaction['current_performance'] = Utils::percent($currentValue/$value - 1);
+        $transaction['balances'] = ['OWN' => $total_shares];
+
         return $transaction;
     }
 
@@ -80,23 +82,19 @@ class AccountApiGoldenDataTest extends TestCase
         $arr['as_of'] = $asOf;
         $i = 0;
         foreach ($transactions as $transaction) {
-            [$tran_id, $shares, $value, $ref_tran_id, $date] = $transaction;
+            [$tran_id, $shares, $total_shares, $value, $ref_tran_id, $date] = $transaction;
             $currentValue = $currentValues[$i++];
-            $arr['transactions'][] = $this->create_transaction($id, $tran_id, $shares, $value, $currentValue, $ref_tran_id, $date);
+            $arr['transactions'][] = $this->create_transaction($id, $tran_id, $shares, $total_shares, $value, $currentValue, $ref_tran_id, $date);
         }
         // var_dump($arr);
         // print($this->response->getContent());
         $this->assertApiResponse($arr);
     }
 
-    public function account7_balances()
+    public function compareCurrency($a, $b)
     {
-        return [2000, 2567.49, 3533.84, 3456.18];
-    }
-    
-    public function compareFloats($a, $b)
-    {
-        return abs($a - $b) < 0.0001;
+        if ($this->verbose) print_r("comp float: " . json_encode([$a, $b]) . "\n");
+        return abs($a - $b) < 0.02;
     }
 
     /**
@@ -105,7 +103,7 @@ class AccountApiGoldenDataTest extends TestCase
     public function test_account_balance_as_of()
     {
         // $this->verbose = true;
-        $balance = $this->account7_balances();
+        $balance = [2000.56, 2970.39, 3513.27, 3486.17];
         $this->_test_account_balance_as_of(7, '2021-01-02', "Fidelity Fund", 2, 2000, $balance[0]);
         $this->_test_account_balance_as_of(7, '2021-07-02', "Fidelity Fund", 2, 2264.6098, $balance[1]);
         $this->_test_account_balance_as_of(7, '2022-01-02', "Fidelity Fund", 2, 2264.6098, $balance[2]);
@@ -118,27 +116,28 @@ class AccountApiGoldenDataTest extends TestCase
     public function test_account_transactions_as_of()
     {
         $time = 'T00:00:00.000000Z';
-        $t1 = [46,     2000, 2000, null, '2021-01-01' . $time];
-        $t2 = [42, 132.3049,  150, null, '2021-07-01' . $time];
-        $t3 = [44, 132.3049,  150,   42, '2021-07-01' . $time];
+        $allShares = 0;
+        $shares =     2000; $allShares += $shares; $t1 = [46, $shares, $allShares, 2000, null, '2021-01-01' . $time];
+        $shares = 132.3049; $allShares += $shares; $t2 = [42, $shares, $allShares,  150, null, '2021-07-01' . $time];
+        $shares = 132.3049; $allShares += $shares; $t3 = [44, $shares, $allShares,  150,   42, '2021-07-01' . $time];
         $time = 'T02:35:00.000000Z';
-        $t4 = [20,  37.0496,   50, null, '2022-01-09' . $time];
-        $t6 = [21,  37.0496,   50,   20, '2022-01-09' . $time];
-        $t5 = [22, 111.1489,  150, null, '2022-01-09' . $time];
-        $t7 = [23, 111.1489,  150,   22, '2022-01-09' . $time];
+        $shares =  37.0496; $allShares += $shares; $t4 = [20, $shares, $allShares,   50, null, '2022-01-09' . $time];
+        $shares =  37.0496; $allShares += $shares; $t6 = [21, $shares, $allShares,   50,   20, '2022-01-09' . $time];
+        $shares = 111.1489; $allShares += $shares; $t5 = [22, $shares, $allShares,  150, null, '2022-01-09' . $time];
+        $shares = 111.1489; $allShares += $shares; $t7 = [23, $shares, $allShares,  150,   22, '2022-01-09' . $time];
 
-        $balances = $this->account7_balances();
+        $balances = [2000.56, 2947.48, 3513.27, 3486.17];
         $this->_test_account_transactions_as_of(7, '2021-01-01', [$t1], [$balances[0]]);
-        $this->_test_account_transactions_as_of(7, '2021-07-01', [$t1, $t2, $t3], 
-            $values = [2267.49, 150, 150]);
-        $this->compareFloats(array_sum($values), $balances[1]); 
+        $this->_test_account_transactions_as_of(7, '2021-07-01', [$t1, $t2, $t3],
+            $values = [2603.08, 172.2, 172.2]);
+        $this->assertTrue($this->compareCurrency(array_sum($values), $balances[1]));
 
-        $this->_test_account_transactions_as_of(7, '2022-01-01', [$t1, $t2, $t3], 
-            $values = [3120.92, 206.46, 206.46]);
-        $this->compareFloats(array_sum($values), $balances[2]); 
-        $this->_test_account_transactions_as_of(7, '2022-01-15', [$t1, $t2, $t3, $t4, $t6, $t5, $t7], 
-            $values = [2699.08, 178.55, 178.55, 50, 50, 150, 150]);
-        $this->compareFloats(array_sum($values), $balances[3]); 
+        $this->_test_account_transactions_as_of(7, '2022-01-01', [$t1, $t2, $t3],
+            $values = [3102.76, 205.25, 205.25]);
+        $this->assertTrue($this->compareCurrency(array_sum($values), $balances[2]));
+        $this->_test_account_transactions_as_of(7, '2022-01-15', [$t1, $t2, $t3, $t4, $t6, $t5, $t7],
+            $values = [2722.5, 180.1, 180.1, 50.43, 50.43, 151.3, 151.3]);
+        $this->assertTrue($this->compareCurrency(array_sum($values), $balances[3]));
     }
 
     // TODO test account performance

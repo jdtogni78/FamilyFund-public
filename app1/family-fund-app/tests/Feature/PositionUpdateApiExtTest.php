@@ -2,21 +2,19 @@
 
 namespace Tests\Feature;
 
-use App\Models\Asset;
-use App\Models\AssetPrice;
 use App\Models\PortfolioExt;
 use App\Models\PositionUpdate;
 use App\Models\SymbolPosition;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Nette\Utils\DateTime;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use const null;
 
 class PositionUpdateApiExtTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, BulkStoreTest;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use BulkStoreTestTrait;
 
     protected function setUp(): void
     {

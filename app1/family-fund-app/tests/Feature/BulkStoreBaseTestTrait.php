@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
-trait BulkStoreBaseTest
+trait BulkStoreBaseTestTrait
 {
+    protected array $post;
 
     protected function postError(array $post=null, $error_code = 422): void
     {
         if ($post==null) $post = $this->post;
         if ($this->verbose) print_r("*** postError ".$this->api.": " . json_encode($post)."\n");
         $this->response = $this->json('POST', $this->api, $post);
-        $this->assertApiError($error_code);
+        $this->assertApiValidationError($error_code);
     }
 
     protected function postAPI(array $post=null): void

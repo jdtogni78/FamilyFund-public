@@ -1,27 +1,21 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
-use App\Http\Controllers\WebV1\FundControllerExt;
-use App\Http\Controllers\WebV1\FundPDF;
+use App\Http\Controllers\FundReportController;
+use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
-use App\Http\Requests\UpdateFundReportRequest;
-use App\Mail\FundQuarterlyReport;
-use App\Models\FundReport;
 use App\Repositories\FundReportRepository;
-use App\Http\Controllers\AppBaseController;
-use App\Repositories\PortfolioRepository;
-use Illuminate\Http\Request;
-use Flash;
+use Laracasts\Flash\Flash;
 use Response;
-use Illuminate\Support\Facades\Mail;
 
 class FundReportControllerExt extends FundReportController
 {
+    use FundTrait;
+
     public function __construct(FundReportRepository $fundReportRepo)
     {
-        $this->fundReportRepository = $fundReportRepo;
+        parent::__construct($fundReportRepo);
     }
 
     /**
@@ -37,8 +31,11 @@ class FundReportControllerExt extends FundReportController
 
         $this->createAndSendFundReport($input);
 
-        Flash::success('Fund Report saved successfully.');
-
+        if (count($this->err) == 0) {
+            Flash::success('Fund Report saved successfully.');
+        } else {
+            Flash::error(implode(",", $this->err));
+        }
         return redirect(route('fundReports.index'));
     }
 

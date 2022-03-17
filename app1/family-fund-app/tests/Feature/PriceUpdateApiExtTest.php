@@ -6,14 +6,13 @@ use App\Models\PriceUpdate;
 use App\Models\SymbolPrice;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use const null;
 
 class PriceUpdateApiExtTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, BulkStoreTest;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, BulkStoreTestTrait;
 
     protected function setUp(): void
     {

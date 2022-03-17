@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
@@ -44,7 +45,7 @@ class TransactionApiTest extends TestCase
             '/api/transactions', $transaction
         );
 
-        $this->assertApiError(422);
+        $this->assertApiValidationError(422);
     }
 
     // /**

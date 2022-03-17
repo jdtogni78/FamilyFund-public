@@ -3,20 +3,16 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\API\PortfolioAssetAPIController;
+use App\Http\Controllers\Traits\BulkStoreTrait;
 use App\Http\Requests\API\CreatePortfolioAssetAPIRequest;
 use App\Http\Requests\API\CreatePositionUpdateAPIRequest;
-use App\Models\AssetExt;
-use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
 use App\Models\PortfolioExt;
-use App\Models\PositionUpdate;
 use App\Repositories\PortfolioAssetRepository;
-use Nette\Schema\ValidationException;
-use function PHPUnit\Framework\isEmpty;
 
 class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
 {
-    use BulkStore;
+    use BulkStoreTrait;
 
     public function __construct(PortfolioAssetRepository $PortfolioAssetsRepo)
     {
@@ -39,7 +35,8 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
         $symbols = $request->collect('symbols')->toArray();
 
         $this->endDateRemovedAssets($source, $timestamp, $symbols);
-        return $this->genericBulkStore($request, 'position');
+        $this->genericBulkStore($request, 'position');
+        return $this->sendResponse([], 'Bulk price update successful!');
     }
 
     /**
@@ -85,6 +82,7 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
                     $asset = $pa->asset()->first();
                     if ($n['name'] == $asset->name && $n['type'] == $asset->type)
                         return $pa;
+                    return null;
                 }, $symbols)
             );
             if ($pa2 == null) {

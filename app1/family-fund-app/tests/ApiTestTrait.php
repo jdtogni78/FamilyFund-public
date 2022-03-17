@@ -1,5 +1,8 @@
 <?php namespace Tests;
 
+use App\Models\User;
+use Mockery\Exception;
+
 trait ApiTestTrait
 {
     private $response;
@@ -9,11 +12,22 @@ trait ApiTestTrait
 
     private $verbose = false;
 
-    public function assertApiResponse(Array $expectedData, Array $ignoredKeys = [])
+    public function loginWithFakeUser($email='admin@dev.familyfund.local')
+    {
+        $user = new User([
+            'id' => 1,
+            'name' => 'yish',
+            'email' => $email,
+        ]);
+
+        $this->be($user);
+    }
+
+    public function assertApiResponse($expectedData, Array $ignoredKeys = [])
     {
         if ($this->verbose) {
-            print_r(json_encode($ignoredKeys)."\n");
-            print_r(json_encode($expectedData)."\n");
+            print_r("IGNORE: ".json_encode($ignoredKeys)."\n");
+            print_r("EXPECT: ".json_encode($expectedData)."\n");
         }
 
         $this->assertApiSuccess();
@@ -25,7 +39,7 @@ trait ApiTestTrait
             print_r(json_encode($actualData)."\n");
 
         $this->assertNotEmpty($actualData['id']);
-        $this->assertModelData($actualData, $expectedData, $ignoredKeys, 'data');
+        $this->assertModelData($expectedData, $actualData, $ignoredKeys, 'data');
     }
 
     public function assertApiSuccess()
@@ -34,7 +48,7 @@ trait ApiTestTrait
         $this->response->assertJson(['success' => true]);
     }
 
-    public function assertApiError($code)
+    public function assertApiValidationError($code)
     {
         $this->response->assertStatus($code);
         $response = json_decode($this->response->getContent(), true);
@@ -42,7 +56,14 @@ trait ApiTestTrait
         $this->assertNotNull($response['errors']);
     }
 
-    public function assertModelData(Array $actualData, Array $expectedData, Array $ignoredKeys, $path)
+    public function assertApiError($code)
+    {
+        $this->response->assertStatus($code);
+        $response = json_decode($this->response->getContent(), true);
+        $this->response->assertJson(['success' => false]);
+    }
+
+    public function assertModelData(Array $expectedData, Array $actualData, Array $ignoredKeys, $path)
     {
         $all_keys = array_diff(
             array_merge(array_keys($actualData), array_keys($expectedData)),
@@ -56,18 +77,25 @@ trait ApiTestTrait
             if (!array_key_exists($key, $expectedData)) {
                 $this->fail("Unnexpected key on actual response: $p");
             }
-        $value = $actualData[$key];
+            $value = $actualData[$key];
             if (in_array($key, ['created_at', 'updated_at', 'deleted_at'])) {
                 continue;
             }
+            if ($this->verbose) print_r("** assert model: " . json_encode([$p, $expectedData[$key], $actualData[$key]]) . "\n");
             if (is_array($actualData[$key])) {
                 $ignored = [];
                 if (array_key_exists($key, $ignoredKeys)) {
                     $ignored = $ignoredKeys[$key];
                 }
-                $this->assertModelData($actualData[$key], $expectedData[$key], $ignored, $p);
+                $this->assertModelData($expectedData[$key], $actualData[$key], $ignored, $p);
             } else {
-                $this->assertEquals($actualData[$key], $expectedData[$key], $p);
+                if (preg_match('/data.transactions.*.current_performance/', $p)
+                        || preg_match('/data.balances.*.value/', $p)) {
+                    // TODO: use a registry of custom validations
+                    $this->assertTrue(abs($expectedData[$key]/$actualData[$key] - 1) < 0.02, $p);
+                } else {
+                    $this->assertEquals($expectedData[$key], $actualData[$key], $p);
+                }
             }
         }
     }
@@ -102,6 +130,17 @@ trait ApiTestTrait
         if (array_key_exists('data', $response)) {
             $this->data = $response['data'];
         }
-        if ($verbose) $this->p($response);
+        if ($verbose) print_r("response: " . json_encode($response) . "\n");
     }
+
+    private function getAPI(string $api): void
+    {
+        if ($this->verbose) print("*** API: $api\n");
+        $this->response = $this->json(
+            'GET',
+            $api
+        );
+        if ($this->verbose) print("RESPONSE: ".$this->response->getContent() . "\n");
+    }
+
 }

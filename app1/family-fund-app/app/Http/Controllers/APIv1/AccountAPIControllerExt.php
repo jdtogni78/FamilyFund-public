@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\APIv1;
 
+use App\Http\Controllers\Traits\PerformanceTrait;
+use App\Models\Account;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
 use App\Http\Controllers\API\AccountAPIController;
@@ -9,7 +11,6 @@ use App\Http\Resources\AccountResource;
 use Carbon\Traits\Date;
 use Response;
 use Carbon\Carbon;
-use App\Models\PerformanceTrait;
 
 /**
  * Class AccountAPIControllerExt
@@ -138,7 +139,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showAsOf($id, $asOf)
     {
-        /** @var Accounts $account */
+        /** @var Account $account */
         $account = $this->accountRepository->find($id);
 
         if (empty($account)) {

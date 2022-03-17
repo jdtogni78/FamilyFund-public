@@ -3,19 +3,17 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\API\AssetPriceAPIController;
+use App\Http\Controllers\Traits\BulkStoreTrait;
 use App\Http\Requests\API\CreateAssetPriceAPIRequest;
 use App\Http\Requests\API\CreatePriceUpdateAPIRequest;
-use App\Models\AssetExt;
+use App\Http\Resources\AssetPriceResource;
 use App\Models\AssetPrice;
-use App\Models\AssetPrices;
-use App\Models\PriceUpdate;
 use App\Repositories\AssetPriceRepository;
-use Nette\Schema\ValidationException;
-use function PHPUnit\Framework\isEmpty;
+use Response;
 
 class AssetPriceAPIControllerExt extends AssetPriceAPIController
 {
-    use BulkStore;
+    use BulkStoreTrait;
 
     public function __construct(AssetPriceRepository $assetPricesRepo)
     {
@@ -32,7 +30,8 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
      */
     public function bulkStore(CreatePriceUpdateAPIRequest $request)
     {
-        return $this->genericBulkStore($request, 'price');
+        $this->genericBulkStore($request, 'price');
+        return $this->sendResponse([], 'Bulk price update successful!');
     }
 
     /**

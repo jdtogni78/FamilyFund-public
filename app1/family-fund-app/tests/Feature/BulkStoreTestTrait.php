@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use App\Models\AssetExt;
 use Tests\DataFactory;
 
-trait BulkStoreTest
+trait BulkStoreTestTrait
 {
-    use TimestampTest;
-    use BulkStoreBaseTest;
+    use TimestampTestTrait;
+    use BulkStoreBaseTestTrait;
 
     protected $field;
     protected $symbols;
@@ -18,7 +18,6 @@ trait BulkStoreTest
     private $requestFactory;
     private $source;
     private $cashTimestamp;
-    private $verbose=false;
     private $df;
 
     // TEST: force not create asset?

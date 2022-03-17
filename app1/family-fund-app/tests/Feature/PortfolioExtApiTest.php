@@ -5,8 +5,6 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
-use App\Models\Portfolio;
-use App\Models\Fund;
 use Tests\DataFactory;
 
 class PortfolioExtApiTest extends TestCase

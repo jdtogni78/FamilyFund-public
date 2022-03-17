@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers\Traits;
 
 use App\Models\Utils;
 
@@ -64,5 +64,13 @@ trait PerformanceTrait
         }
 
         return array_reverse($arr);
+    }
+
+    /**
+     * @param mixed $perfObject
+     */
+    public function setPerfObject($perfObject): void
+    {
+        $this->perfObject = $perfObject;
     }
 }

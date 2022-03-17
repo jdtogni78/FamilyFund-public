@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\WebV1;
+namespace App\Http\Controllers\Traits;
 
 use App\Charts\BarChart;
 use App\Charts\DoughnutChart;
@@ -41,7 +41,7 @@ trait ChartBaseTrait
     public function createLineChart(array $values, array $labels, string $file, $title)
     {
         $chart = new LineChart();
-        Log::debug($labels);
+//        Log::debug($labels);
         $chart->values = $values;
         $chart->labels = $labels;
         $chart->titleValues = $title;

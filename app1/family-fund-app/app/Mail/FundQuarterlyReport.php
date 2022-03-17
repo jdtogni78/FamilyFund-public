@@ -13,15 +13,17 @@ class FundQuarterlyReport extends Mailable
 
     public $fund;
     public $pdf;
+    public $asOf;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($fund, $pdf)
+    public function __construct($fund, $asOf, $pdf)
     {
         $this->fund = $fund;
+        $this->asOf = $asOf;
         $this->pdf = $pdf;
     }
 
@@ -37,7 +39,7 @@ class FundQuarterlyReport extends Mailable
         return $this->view('emails.reports.fund_quarterly')
             ->with("api", $arr)
             ->attach($this->pdf, [
-                'as' => 'fund_report.pdf',
+                'as' => 'fund_report_'.$this->asOf.'.pdf',
                 'mime' => 'application/pdf',
             ]);
     }

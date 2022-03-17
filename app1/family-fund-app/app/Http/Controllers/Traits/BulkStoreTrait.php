@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\APIv1;
+namespace App\Http\Controllers\Traits;
 
 use App\Models\Asset;
 use App\Models\AssetExt;
@@ -8,7 +8,7 @@ use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
 use Nette\Schema\ValidationException;
 
-trait BulkStore
+trait BulkStoreTrait
 {
     protected abstract function getQuery($source, $asset, $timestamp);
     protected abstract function createChild($data, $source);
@@ -39,7 +39,6 @@ trait BulkStore
             }
             $this->insertHistorical($source, $asset->id, $timestamp, $symbol[$field], $field);
         }
-        return $this->sendResponse([], 'Bulk ' . $field . ' update successful!');
     }
 
     public function insertHistorical($source, $assetId, $timestamp, $newValue, $field): PortfolioAsset|AssetPrice

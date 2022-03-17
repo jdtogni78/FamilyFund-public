@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\WebV1;
 
 use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
 use App\Repositories\AccountReportRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
-use Flash;
+use Laracasts\Flash\Flash;
 use Response;
 
 class AccountReportController extends AppBaseController

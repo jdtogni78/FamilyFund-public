@@ -2,26 +2,18 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Charts\BarChart;
-use App\Charts\DoughnutChart;
-use App\Charts\LineChart;
+use App\Http\Controllers\Traits\ChartBaseTrait;
+use App\Http\Controllers\Traits\FundPDF;
 use App\Repositories\FundRepository;
-use Flash;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
-use Mockery\Exception;
+use Laracasts\Flash\Flash;
 use Response;
 use App\Http\Controllers\FundController;
-use App\Http\Controllers\APIv1\FundAPIControllerExt;
-use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
-use App\Models\PerformanceTrait;
-use App\Repositories\PortfolioRepository;
+use App\Http\Controllers\Traits\FundTrait;
 use Spatie\TemporaryDirectory\Exceptions\PathAlreadyExists;
-use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 class FundControllerExt extends FundController
 {
-    use PerformanceTrait;
+    use FundTrait;
     use ChartBaseTrait;
 
     public function __construct(FundRepository $fundRepo)
@@ -57,7 +49,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        $arr = $this->createFundViewData($fund, $asOf, $isAdmin);
+        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
 
         return view('funds.show_ext')
             ->with('api', $arr);
@@ -79,29 +71,9 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        $arr = $this->createFundViewData($fund, $asOf, $isAdmin);
+        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
         $pdf = new FundPDF($arr, $isAdmin, $debug_html);
 
         return $pdf->inline('fund.pdf');
     }
-
-    public function createFundViewData($fund, $asOf, $isAdmin = false) {
-        if ($asOf == null) $asOf = date('Y-m-d');
-
-        $api = new FundAPIControllerExt($this->fundRepository);
-        $arr = $api->createFundResponse($fund, $asOf);
-        $arr['monthly_performance'] = $api->createMonthlyPerformanceResponse($asOf);
-        $arr['yearly_performance'] = $api->createYearlyPerformanceResponse($asOf);
-        if ($isAdmin) {
-            $arr['balances'] = $api->createAccountBalancesResponse($fund, $asOf);
-        }
-
-        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
-        $portfolio = $fund->portfolios()->first();
-        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
-
-        $arr['as_of'] = $asOf;
-        return $arr;
-    }
-
 }

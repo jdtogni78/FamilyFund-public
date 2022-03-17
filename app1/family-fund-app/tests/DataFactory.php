@@ -49,7 +49,7 @@ class DataFactory
     public $portfolioAsset;
     public $portfolioAssets = [];
 
-    public $verbose = true;
+    public $verbose = false;
 
     public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01')
     {
@@ -95,6 +95,7 @@ class DataFactory
             ->create();
         $this->userAccounts[] = $this->userAccount = $this->user->accounts()->first();
         $this->users[] = $this->user;
+        $this->userNum = count($this->users)-1;
         return $this->user;
     }
 
@@ -189,13 +190,7 @@ class DataFactory
         $factory->createUser();
         $factory->createMatchingRule(150, 100);
         $factory->createAccountMatching();
-
-        $transaction = $factory->createTransaction();
-        $matching = $factory->userAccounts[$this->userNum]->accountMatchingRules()->first();
-
-        $this->matchTransaction = $factory->createTransaction($transaction->value/2, null, 'DIR', 'MAT');
-        $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction)
-        ;
+        $factory->createTransactionWithMatching();
     }
 
     public function createTransactionMatching($matching, $matchTran, $transaction)
@@ -207,5 +202,14 @@ class DataFactory
                 'reference_transaction_id' => $transaction->id
             ]);
         return $tm;
+    }
+
+    public function createTransactionWithMatching(): void
+    {
+        $transaction = $this->createTransaction();
+        $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
+
+        $this->matchTransaction = $this->createTransaction($transaction->value / 2, null, 'DIR', 'MAT');
+        $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction);
     }
 }

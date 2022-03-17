@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\WebV1;
+namespace App\Http\Controllers\Traits;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -76,6 +76,7 @@ class FundPDF
     {
         $name = 'assets_allocation.png';
         $arr = $api['portfolio']['assets'];
+//        print_r("arr alloc: " . json_encode($arr) . "\n");
         $labels = array_map(function ($v) {
             return $v['name'];
         }, $arr);

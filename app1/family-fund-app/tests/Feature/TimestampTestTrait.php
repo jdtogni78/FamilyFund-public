@@ -4,12 +4,13 @@ namespace Tests\Feature;
 
 use Nette\Utils\DateTime;
 
-trait TimestampTest
+trait TimestampTestTrait
 {
-    protected $date;
+    protected DateTime $date;
 
     public function setupTimestampTest($date = '2022-01-01') {
         $this->date = new DateTime($date);
+        return $this->timestamp();
     }
 
     protected function updateTimestamp()
@@ -19,12 +20,23 @@ trait TimestampTest
 
     public function timestamp(): string
     {
-        return $this->date->format('Y-m-d') . "T00:00:00";
+        return $this->date() . "T00:00:00";
+    }
+    public function date(): string
+    {
+        return $this->date->format('Y-m-d');
     }
 
     public function nextDay(int $days)
     {
         $this->date->modify('+'.$days.' day');
+        $this->updateTimestamp();
+        return $this->timestamp();
+    }
+
+    public function nextMonth(int $months=1)
+    {
+        $this->date->modify('+'.$months.' month');
         $this->updateTimestamp();
         return $this->timestamp();
     }
@@ -49,7 +61,7 @@ trait TimestampTest
 
     protected function assertInfinity(mixed $timestamp)
     {
-        return $this->assertTrue($this->isInfinity($timestamp));
+        $this->assertTrue($this->isInfinity($timestamp));
     }
 
     protected function assertDate(mixed $expected, mixed $actual)

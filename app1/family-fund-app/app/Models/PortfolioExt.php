@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Repositories\PortfolioAssetRepository;
 use DB;
+use Exception;
 use phpDocumentor\Reflection\Types\Collection;
 
 /**
@@ -12,10 +13,7 @@ use phpDocumentor\Reflection\Types\Collection;
  */
 class PortfolioExt extends Portfolio
 {
-    /**
-     * @return float
-     **/
-    public function assetsAsOf($now, $assetId=null)
+    public function assetsAsOf($now, $assetId=null): Collection
     {
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);
         $query = $portfolioAssetsRepo->makeModel()->newQuery()
@@ -27,10 +25,7 @@ class PortfolioExt extends Portfolio
         return $portfolioAssets;
     }
 
-    /**
-     * @return Collection
-     **/
-    public function assetHistory($assetId)
+    public function assetHistory($assetId): Collection
     {
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);
         $query = $portfolioAssetsRepo->makeModel()->newQuery()
@@ -57,7 +52,10 @@ class PortfolioExt extends Portfolio
             if ($position == 0)
                 continue;
 
-            $asset = AssetExt::findOrFail($asset_id);
+            $asset = AssetExt::find($asset_id);
+            if ($asset == null) {
+                throw new Exception("Cant find asset $asset_id");
+            }
             $assetPrice = $asset->pricesAsOf($now);
 
             if (count($assetPrice) == 1) {

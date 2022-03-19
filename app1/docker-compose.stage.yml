@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+  mariadb:
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - MARIADB_USER=famfun_prod
+      - MARIADB_DATABASE=familyfund_prod
+      - MARIADB_PASSWORD=4321
+      - MARIADB_ROOT_PASSWORD=654321
+    ports:
+      - 3307:3306
+
+  myapp:
+    environment:
+      - DB_DATABASE=familyfund_prod
+      - DB_USERNAME=famfun_prod
+      - DB_PASSWORD=4321
+      - APP_ENV=stage
+    ports:
+      - 3001:8000

@@ -76,8 +76,6 @@ class AccountAPIControllerExt extends AccountAPIController
 
     public function createTransactionsResponse($account, $asOf)
     {
-        $arr = array();
-
         // TODO: move this to a more appropriate place: model? AB controller?
 
         $fund = $account->fund()->first();
@@ -162,7 +160,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showPerformanceAsOf($id, $asOf)
     {
-        /** @var Accounts $account */
+        /** @var Account $account */
         $account = $this->accountRepository->find($id);
 
         if (empty($account)) {
@@ -187,7 +185,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showTransactionsAsOf($id, $asOf)
     {
-        /** @var Accounts $account */
+        /** @var Account $account */
         $account = $this->accountRepository->find($id);
 
         if (empty($account)) {
@@ -211,7 +209,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showReportAsOf($id, $asOf)
     {
-        /** @var Accounts $account */
+        /** @var Account $account */
         $account = $this->accountRepository->find($id);
 
         if (empty($account)) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
 use App\Repositories\FundRepository;
 use Laracasts\Flash\Flash;
+use Mockery\Exception;
 use Response;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\Traits\FundTrait;

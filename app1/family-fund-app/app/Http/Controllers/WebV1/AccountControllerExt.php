@@ -4,11 +4,10 @@ namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\APIv1\AccountAPIControllerExt;
+use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Repositories\AccountRepository;
 use Flash;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
-use Mockery\Exception;
+use Exception;
 use Response;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 

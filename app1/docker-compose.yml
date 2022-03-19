@@ -4,32 +4,19 @@ services:
   mariadb:
     image: docker.io/bitnami/mariadb:10.6
     environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MARIADB_USER=famfun
-      - MARIADB_DATABASE=familyfund
-      - MARIADB_PASSWORD=1234
-      - MARIADB_ROOT_PASSWORD=123456
-    ports:
-      - 3306:3306
+      - ALLOW_EMPTY_PASSWORD=no
 
   myapp:
     tty: true
     build: .
     environment:
       - DB_HOST=mariadb
-      - DB_USERNAME=root
-      - DB_DATABASE=familyfund
-      - DB_PASSWORD=123456
     depends_on:
       - mariadb
-    ports:
-      - 3000:3000
     extra_hosts:
       - noreply.domain.com:127.0.0.1
     volumes:
       - ./family-fund-app:/app
-    # privileged: true # Privileged mode could be required to run this container under Windows
 
   mailhog:
     image: mailhog/mailhog

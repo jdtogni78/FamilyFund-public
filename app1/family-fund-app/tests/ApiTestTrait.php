@@ -59,7 +59,7 @@ trait ApiTestTrait
     public function assertApiError($code)
     {
         $this->response->assertStatus($code);
-        $response = json_decode($this->response->getContent(), true);
+//        $response = json_decode($this->response->getContent(), true);
         $this->response->assertJson(['success' => false]);
     }
 

@@ -7,7 +7,7 @@ use App\Http\Requests\API\CreateFundReportAPIRequest;
 use App\Http\Resources\FundReportResource;
 use App\Repositories\FundReportRepository;
 use App\Http\Controllers\API\FundReportAPIController;
-use Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class FundReportAPIControllerExt
@@ -35,7 +35,7 @@ class FundReportAPIControllerExt extends FundReportAPIController
 //            print_r("result: " . json_encode($result->toArray($request)) . "\n");
             return $this->sendResponse($result, 'Fund Report saved successfully'."\n".implode($this->msgs));
         } else {
-            return $this->sendError(implode(",", $this->err), 415);
+            return $this->sendError(implode(",", $this->err), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 }

@@ -6,7 +6,9 @@ use App\Models\Asset;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
-use Nette\Schema\ValidationException;
+use Illuminate\Validation\ValidationException;
+use Nette\Utils\DateTime;
+use Exception;
 
 trait BulkStoreTrait
 {
@@ -24,7 +26,7 @@ trait BulkStoreTrait
     {
         $input = $request->all();
         $symbols = $request->collect('symbols')->toArray();
-        $timestamp = $input['timestamp'];
+        $timestamp = new DateTime($request->timestamp);
         $source = $input['source'];
 
         foreach ($symbols as $symbol) {
@@ -41,11 +43,14 @@ trait BulkStoreTrait
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function insertHistorical($source, $assetId, $timestamp, $newValue, $field): PortfolioAsset|AssetPrice
     {
         $asset = AssetExt::find($assetId);
         if ($asset == null) {
-            throw new ValidationException("Invalid asset provided: " . $assetId);
+            throw new Exception("Invalid asset provided: " . $assetId);
         }
         $query = $this->getQuery($source, $asset, $timestamp);
 
@@ -56,8 +61,20 @@ trait BulkStoreTrait
             $create = false;
             foreach ($query as $obj) {
                 if ($this->verbose) print_r("past obj: " . json_encode($obj) . "\n");
-                // value changed, lets end & create new
-                if ($obj->$field != $newValue) {
+                $tsDiff = $timestamp->getTimestamp() - $obj->start_dt->getTimestamp();
+                if ($this->verbose) print_r("ts: " . json_encode([$obj->start_dt, $timestamp, $tsDiff]) . "\n");
+                if ($tsDiff == 0 && $obj->$field != $newValue) {
+                    // There could have been updates of that amt that were
+                    // associated w this record, its not safe to change
+                    $symbol = $asset->name;
+                    if ($this->verbose) print_r("obj: " . json_encode($obj) . "\n");
+                    if ($this->verbose) print_r("asset: " . json_encode($asset) . "\n");
+                    throw new Exception("A '$symbol' record with this exact timestamp and different $field already exists");
+//                    $obj->$field = $newValue;
+//                    $obj->save();
+//                    $ret = $obj;
+                } else if ($obj->$field != $newValue) {
+                    // value changed, lets end & create new
                     $newEnd = $obj->end_dt; // in case thats not the last record
                     if ($this->verbose) print_r("newend: " . json_encode($obj) . "\n");
                     $obj->end_dt = $timestamp;

@@ -2,16 +2,24 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Http\Response;
+
 trait BulkStoreBaseTestTrait
 {
     protected array $post;
 
-    protected function postError(array $post=null, $error_code = 422): void
+    protected function postValidationError(array $post=null, $error_code = null): void
     {
-        if ($post==null) $post = $this->post;
-        if ($this->verbose) print_r("*** postError ".$this->api.": " . json_encode($post)."\n");
-        $this->response = $this->json('POST', $this->api, $post);
+        if ($error_code == null) $error_code = Response::HTTP_UNPROCESSABLE_ENTITY;
+        $this->postForError($post);
         $this->assertApiValidationError($error_code);
+    }
+
+    protected function postError(array $post=null, $error_code = null): void
+    {
+        if ($error_code == null) $error_code = Response::HTTP_UNPROCESSABLE_ENTITY;
+        $this->postForError($post, $error_code);
+        $this->assertApiError($error_code);
     }
 
     protected function postAPI(array $post=null): void
@@ -33,7 +41,7 @@ trait BulkStoreBaseTestTrait
     }
 
 
-    public function _testSetSymbol($key, $value, $errorCode, $err=0)
+    public function _testSetSymbol($key, $value, $errorCode, $errThreashold=0)
     {
         $this->createSampleReq(1, 0);
         foreach ($this->post['symbols'] as &$symbol) {
@@ -44,13 +52,15 @@ trait BulkStoreBaseTestTrait
             $this->postAPI();
             $asset = $this->getAsset($this->post['symbols'][0], $this->source);
             $child = $this->getChildren($asset, $this->source)->first();
-            if ($err == 0) {
+            if ($errThreashold == 0) {
                 $this->assertEquals($value, $child->$key);
             } else {
-                $this->assertTrue(abs($child->$key - $value) < $err);
+//                if ($this->verbose)
+//                    print_r("values: " . json_encode([$child->$key, $value, $errThreashold]) . "\n");
+                $this->assertTrue(abs($child->$key - $value) < $errThreashold);
             }
         } else {
-            $this->postError($this->post, $errorCode);
+            $this->postValidationError($this->post, $errorCode);
         }
     }
 
@@ -61,7 +71,7 @@ trait BulkStoreBaseTestTrait
             unset($symbol[$key]);
         }
 
-        $this->postError($this->post, $errorCode);
+        $this->postValidationError($this->post, $errorCode);
     }
 
     public function _testUnset($key, $errorCode)
@@ -69,7 +79,7 @@ trait BulkStoreBaseTestTrait
         $this->createSampleReq();
         unset($this->post[$key]);
 
-        $this->postError($this->post, $errorCode);
+        $this->postValidationError($this->post, $errorCode);
     }
 
     protected function makeSymbol($name=null, $type=null): array
@@ -78,6 +88,13 @@ trait BulkStoreBaseTestTrait
         if ($name) $values['name'] = $name;
         if ($type) $values['type'] = $type;
         return $this->symbolFactory->make($values)->toArray();
+    }
+
+    protected function postForError(?array $post)
+    {
+        if ($post == null) $post = $this->post;
+        if ($this->verbose) print_r("*** postError " . $this->api . ": " . json_encode($post) . "\n");
+        $this->response = $this->json('POST', $this->api, $post);
     }
 
     private function assertAssetSymbol($asset, mixed $symbol)

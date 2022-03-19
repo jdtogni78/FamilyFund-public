@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
@@ -45,7 +46,7 @@ class TransactionApiTest extends TestCase
             '/api/transactions', $transaction
         );
 
-        $this->assertApiValidationError(422);
+        $this->assertApiValidationError(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     // /**

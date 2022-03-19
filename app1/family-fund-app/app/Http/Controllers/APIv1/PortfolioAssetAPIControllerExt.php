@@ -6,9 +6,13 @@ use App\Http\Controllers\API\PortfolioAssetAPIController;
 use App\Http\Controllers\Traits\BulkStoreTrait;
 use App\Http\Requests\API\CreatePortfolioAssetAPIRequest;
 use App\Http\Requests\API\CreatePositionUpdateAPIRequest;
+use App\Http\Resources\PortfolioAssetResource;
 use App\Models\PortfolioAsset;
 use App\Models\PortfolioExt;
 use App\Repositories\PortfolioAssetRepository;
+use DB;
+use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
 {
@@ -17,6 +21,7 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
     public function __construct(PortfolioAssetRepository $PortfolioAssetsRepo)
     {
         parent::__construct($PortfolioAssetsRepo);
+        $this->verbose = false;
     }
 
     /**
@@ -34,8 +39,15 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
         $timestamp = $input['timestamp'];
         $symbols = $request->collect('symbols')->toArray();
 
+        DB::beginTransaction();
         $this->endDateRemovedAssets($source, $timestamp, $symbols);
-        $this->genericBulkStore($request, 'position');
+        try {
+            $this->genericBulkStore($request, 'position');
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         return $this->sendResponse([], 'Bulk price update successful!');
     }
 

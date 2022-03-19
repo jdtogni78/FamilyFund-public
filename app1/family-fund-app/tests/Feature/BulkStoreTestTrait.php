@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AssetExt;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 
 trait BulkStoreTestTrait
@@ -21,6 +22,8 @@ trait BulkStoreTestTrait
     private $df;
 
     // TEST: force not create asset?
+    private int $validationError = Response::HTTP_UNPROCESSABLE_ENTITY;
+
     protected function getAsset(mixed $name, $source)
     {
         return AssetExt::where('name', $name)
@@ -44,7 +47,7 @@ trait BulkStoreTestTrait
         $this->createSampleReq(1);
         $this->post['symbols'][0]['price'] = $value;
         $this->post['symbols'][0]['position'] = $value;
-        $this->postError();
+        $this->postValidationError();
     }
 
     private function setupBulkTest($field, $api, $symbolFactory, $reqFactory, $cashTs=null, $cashValue=null)
@@ -69,19 +72,19 @@ trait BulkStoreTestTrait
 
     public function testMissingFields()
     {
-        $this->_testUnset('timestamp', 422);
-        $this->_testUnset('source', 422);
-        $this->_testUnsetSymbol('name', 422);
-        $this->_testUnsetSymbol('type', 422);
-        $this->_testUnsetSymbol($this->field, 422);
+        $this->_testUnset('timestamp', $this->validationError);
+        $this->_testUnset('source', $this->validationError);
+        $this->_testUnsetSymbol('name', $this->validationError);
+        $this->_testUnsetSymbol('type', $this->validationError);
+        $this->_testUnsetSymbol($this->field, $this->validationError);
     }
 
     public function testNegativeFields()
     {
-        $this->_testSetSymbol($this->field, -1, 422);
-        $this->_testSetSymbol($this->field, null, 422);
-        $this->_testSetSymbol($this->field, "abc", 422);
-        $this->_testSetSymbol($this->field, 0, 422);
+        $this->_testSetSymbol($this->field, -1, $this->validationError);
+        $this->_testSetSymbol($this->field, null, $this->validationError);
+        $this->_testSetSymbol($this->field, "abc", $this->validationError);
+        $this->_testSetSymbol($this->field, 0, $this->validationError);
     }
 
     public function testExtraFields()
@@ -96,17 +99,32 @@ trait BulkStoreTestTrait
         $this->createSampleReq();
         $this->postAPI();
         $this->validateSampleRequest('validateUniqueHistorical');
+
+        $oldVal = $this->post['symbols'][1][$this->field];
+        $this->post['symbols'][1][$this->field] = 44.11;
+        $this->postError();
+
+        $this->post['symbols'][1][$this->field] = $oldVal;
+        $this->validateSampleRequest('validateUniqueHistorical');
+
+        $this->post['symbols'][0]['name'] = $this->post['symbols'][0]['name']."_2";
+        $this->post['symbols'][1][$this->field] = 44.11;
+        $this->postError();
+
+        $symbol = $this->post['symbols'][0];
+        $res = $this->getAssetOrCash($symbol['name'], $symbol['type']);
+        $this->assertCount(0, $res->toArray());
     }
 
     public function testNoSymbols()
     {
         $this->createSampleReq();
         $this->post['symbols'] = [];
-        $this->postError();
+        $this->postValidationError();
         $this->post['symbols'] = null;
-        $this->postError();
+        $this->postValidationError();
         unset($this->post['symbols']);
-        $this->postError();
+        $this->postValidationError();
     }
 
     public function testSameSymbolOtherSource()
@@ -207,7 +225,6 @@ trait BulkStoreTestTrait
         $value1 = $this->post['symbols'][0][$this->field];
         $value2 = $this->post['symbols'][0][$this->field] = 11.11;
         $this->postAPI();
-
         $this->validateSampleRequest('validate2Historical', $ts1, $value1);
 
         $this->post['symbols'] = [$p2];
@@ -326,8 +343,8 @@ trait BulkStoreTestTrait
         $count = 0;
         foreach ($collection as $obj) {
             if ($this->verbose) print_r(json_encode($obj)."\n");
-            if ($this->compareTimestamp($obj->start_dt, $timestamp)) {
-                $this->assertEquals($obj->{$field}, $expectedValue);
+            if ($this->compareTimestamp($timestamp, $obj->start_dt)) {
+                $this->assertEquals($expectedValue, $obj->{$field});
                 if ($value1 == "NOTINF") {
                     $this->assertDate($ts2, $obj->end_dt);
                 } else {

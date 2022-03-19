@@ -9,7 +9,9 @@ use App\Http\Requests\API\CreatePriceUpdateAPIRequest;
 use App\Http\Resources\AssetPriceResource;
 use App\Models\AssetPrice;
 use App\Repositories\AssetPriceRepository;
-use Response;
+use DB;
+use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class AssetPriceAPIControllerExt extends AssetPriceAPIController
 {
@@ -30,7 +32,14 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
      */
     public function bulkStore(CreatePriceUpdateAPIRequest $request)
     {
-        $this->genericBulkStore($request, 'price');
+        DB::beginTransaction();
+        try {
+            $this->genericBulkStore($request, 'price');
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         return $this->sendResponse([], 'Bulk price update successful!');
     }
 

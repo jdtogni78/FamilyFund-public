@@ -41,7 +41,7 @@ class FundControllerExt extends FundController
      *
      * @return Response
      */
-    public function showAsOf($id, $asOf=null, $isAdmin=false)
+    public function showAsOf($id, $asOf=null)
     {
         $fund = $this->fundRepository->find($id);
 
@@ -50,7 +50,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
+        $arr = $this->createFullFundResponse($fund, $asOf, $this->isAdmin());
 
         return view('funds.show_ext')
             ->with('api', $arr);
@@ -62,7 +62,7 @@ class FundControllerExt extends FundController
      * @return Response
      * @throws PathAlreadyExists
      */
-    public function showPDFAsOf($id, $asOf=null, $isAdmin=false)
+    public function showPDFAsOf($id, $asOf=null)
     {
         $debug_html = false;
         $fund = $this->fundRepository->find($id);
@@ -72,6 +72,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $isAdmin = $this->isAdmin();
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
         $pdf = new FundPDF($arr, $isAdmin, $debug_html);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\Traits\FundTrait;
 use App\Models\Fund;
+use App\Models\FundExt;
 use App\Repositories\FundRepository;
 use App\Http\Controllers\AppBaseController;
 use Response;
@@ -92,7 +93,7 @@ class FundAPIControllerExt extends AppBaseController
      */
     public function showAccountBalancesAsOf($id, $asOf)
     {
-        /** @var Fund $fund */
+        /** @var FundExt $fund */
         $fund = $this->fundRepository->find($id);
 
         if (empty($fund)) {
@@ -100,7 +101,9 @@ class FundAPIControllerExt extends AppBaseController
         }
 
         $arr = $this->createFundArray($fund, $asOf);
-        if ($this->isAdmin()) {
+        $isAdmin = $this->isAdmin();
+        if ($isAdmin) {
+            $arr['admin'] = true;
             $arr['balances'] = $this->createAccountBalancesResponse($fund, $asOf);
         }
 

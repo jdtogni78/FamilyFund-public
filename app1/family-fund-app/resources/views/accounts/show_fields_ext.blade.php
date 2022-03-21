@@ -25,6 +25,21 @@
     {!! Form::label($field, 'Email CC:') !!}
     {!! Form::text($field, $api[$field], $field_props) !!}
 </div>
+    <div class="form-group col-sm-6">
+        @php $field = 'shares'; @endphp
+        {!! Form::label($field, 'Shares:') !!}
+        <div class="input-group">
+            {!! Form::number($field, $api['balances'][0][$field],  $field_props) !!}
+        </div>
+    </div>
+    <div class="form-group col-sm-6">
+        @php $field = 'market_value'; @endphp
+        {!! Form::label($field, 'Market Value:') !!}
+        <div class="input-group">
+            <div class="input-group-text">$</div>
+            {!! Form::number($field, $api['balances'][0][$field],  $field_props) !!}
+        </div>
+    </div>
 <div class="form-group col-sm-6">
     @php $field = 'as_of'; @endphp
     {!! Form::label($field, 'As Of:') !!}

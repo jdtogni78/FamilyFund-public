@@ -8,7 +8,7 @@ var all_values   = api.transactions.map(function(e){return e.balances.OWN * e.sh
 const balances_labels = [...new Set(all_labels)].sort();
 var seen = {};
 balances_labels.forEach(function(l, p) {
-    all_labels.forEach(function(e, p2) { 
+    all_labels.forEach(function(e, p2) {
         if (l == e) {
             if (!seen[l]) seen[l] = all_balances[p2];
             seen[l] = Math.max(seen[l], all_balances[p2]);
@@ -18,7 +18,7 @@ balances_labels.forEach(function(l, p) {
 var balances = seen;
 seen = {};
 balances_labels.forEach(function(l, p) {
-    all_labels.forEach(function(e, p2) { 
+    all_labels.forEach(function(e, p2) {
         if (l == e) {
             if (!seen[l]) seen[l] = all_values[p2];
             seen[l] = Math.max(seen[l], all_values[p2]);
@@ -34,29 +34,29 @@ function createGraphConfig(d, l, c) {
       data: d,
       fill: false,
       borderColor: c,
+      stepped: true,
       tension: 0.1
     }]
   };
 
-  var _config = {
-    type: 'line',
-    data: _data,
-    options: {
-      scales: { x: {
-              type: 'time',
-              time: { unit: 'month' }}}
-    }
-  };
-  return _config;
+    let _config = {
+        type: 'line',
+        data: _data,
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {unit: 'month'}
+                }
+            }
+        }
+    };
+    return _config;
 }
 
 var myChart = new Chart(
   document.getElementById('balancesGraph'),
   createGraphConfig(balances, 'Balance', 'gray')
-);
-var myChart = new Chart(
-  document.getElementById('valuesGraph'),
-  createGraphConfig(values, 'Account Value', 'green')
 );
 </script>
 @endpush

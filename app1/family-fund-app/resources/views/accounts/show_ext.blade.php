@@ -34,31 +34,19 @@
                                 <strong>Performance</strong>
                             </div>
                             <div class="card-body">
-                                @include('accounts.performance_graph')
+                                @include('accounts.performance_line_graph')
                             </div>
                         </div>
                     </div>
                 </div>
               <div class="row">
-                  <div class="col-lg-12">
-                      <div class="card">
-                          <div class="card-header">
-                              <strong>Monthly Performance</strong>
-                          </div>
-                          <div class="card-body">
-                              @include('accounts.performance_table')
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              <div class="row">
-                  <div class="col-lg-12">
+                  <div class="col">
                       <div class="card">
                           <div class="card-header">
                               <strong>Yearly Performance</strong>
                           </div>
                           <div class="card-body">
-                              @include('accounts.performance_table')
+                              @include('accounts.performance_graph')
                           </div>
                       </div>
                   </div>
@@ -74,6 +62,32 @@
                                   <canvas id="balancesGraph"></canvas>
                               </div>
                               @include('accounts.balances_graph')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Yearly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'yearly_performance')
+                              @include('accounts.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Monthly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'monthly_performance')
+                              @include('accounts.performance_table')
                           </div>
                       </div>
                   </div>

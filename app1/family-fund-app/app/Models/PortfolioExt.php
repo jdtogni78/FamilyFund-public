@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Repositories\PortfolioAssetRepository;
 use DB;
 use Exception;
-use phpDocumentor\Reflection\Types\Collection;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class PortfolioExt

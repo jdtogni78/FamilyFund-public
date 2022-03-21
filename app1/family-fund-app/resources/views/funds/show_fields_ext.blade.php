@@ -46,6 +46,12 @@
         {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
     </div>
 </div>
+@isset($api['admin'])
+<div class="form-group col-sm-6">
+    @php $field = 'admin'; @endphp
+    {!! Form::label($field, 'Admin:') !!}
+</div>
+@endisset
 <div class="form-group col-sm-6">
     @php $field = 'as_of'; @endphp
     {!! Form::label($field, 'As Of:') !!}

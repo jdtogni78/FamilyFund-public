@@ -19,9 +19,7 @@
                              </div>
                              <div class="card-body">
                              {!! Form::open(['route' => ['funds.update', 1]]) !!}
-
                              @include('funds.show_fields_ext')
-
                              {!! Form::close() !!}
                              </div>
                          </div>
@@ -85,18 +83,32 @@
                     </div>
                     @endisset
                 </div>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <strong>Performance</strong>
-                            </div>
-                            <div class="card-body">
-                                @include('funds.performance_table')
-                            </div>
-                        </div>
-                    </div>
-                 </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Yearly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'yearly_performance')
+                              @include('funds.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Monthly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'monthly_performance')
+                              @include('funds.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
                  <div class="row">
                     <div class="col-lg-12">
                         <div class="card">

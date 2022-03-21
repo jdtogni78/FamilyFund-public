@@ -7,8 +7,10 @@ use App\Http\Resources\FundResource;
 use App\Mail\FundQuarterlyReport;
 use App\Models\FundExt;
 use App\Models\FundReport;
+use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\PortfolioRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 Trait FundTrait
@@ -81,7 +83,8 @@ Trait FundTrait
     }
 
     public function isAdmin() {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
         if ($user != null) {
             return $user->email == "admin@dev.familyfund.local";
         }
@@ -96,8 +99,10 @@ Trait FundTrait
         $arr['monthly_performance'] = $api->createMonthlyPerformanceResponse($asOf);
         $arr['yearly_performance'] = $api->createYearlyPerformanceResponse($asOf);
         if ($isAdmin) {
+            $arr['admin'] = true;
             $arr['balances'] = $api->createAccountBalancesResponse($fund, $asOf);
         }
+//        $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
         $portfolio = $fund->portfolios()->first();

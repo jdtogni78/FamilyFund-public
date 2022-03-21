@@ -15,10 +15,10 @@
                 <th scope="row">
                     <a href="{{ route('accounts.show', [$bals['account_id']]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i>
                     {{ $bals['nickname'] }}</a>
-                </td>
+                </th>
                 <td>{{ $bals['user']['name'] }}</td>
                 <td>{{ $bals['shares'] }}</td>
-                <td>{{ $bals['value'] }}</td>
+                <td>$ {{ $bals['value'] }}</td>
                 <td>{{ $bals['type'] }}</td>
             </tr>
         @endforeach

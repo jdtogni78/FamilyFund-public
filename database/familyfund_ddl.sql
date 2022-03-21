@@ -168,7 +168,7 @@ DROP TABLE IF EXISTS `asset_prices`;
 CREATE TABLE `asset_prices` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `asset_id` bigint(20) unsigned NOT NULL,
-  `price` decimal(13,2) NOT NULL,
+  `price` decimal(21,8) NOT NULL,
   `start_dt` date NOT NULL DEFAULT curdate(),
   `end_dt` date NOT NULL DEFAULT '9999-12-31',
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
@@ -419,6 +419,7 @@ CREATE TABLE `transactions` (
   `shares` decimal(19,4) DEFAULT NULL,
   `timestamp` timestamp NULL DEFAULT current_timestamp(),
   `account_id` bigint(20) unsigned NOT NULL,
+  `descr` varchar(255) COLLATE utf8mb4_unicode_ci,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,

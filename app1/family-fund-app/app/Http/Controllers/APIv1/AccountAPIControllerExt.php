@@ -92,6 +92,7 @@ class AccountAPIControllerExt extends AccountAPIController
             $tran['shares'] = Utils::shares($transaction->shares);
             $tran['value']  = Utils::currency($value = $transaction->value);
             $tran['share_price'] = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
+//            $tran['calculated_share_price'] = Utils::currency($fund->shareValueAsOf($transaction->timestamp));
 
             $matching = $transaction->transactionMatching()->first();
             if ($matching) {

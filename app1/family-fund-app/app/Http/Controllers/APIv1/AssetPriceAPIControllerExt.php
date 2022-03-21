@@ -24,11 +24,12 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
 
     /**
      * Store a newly created AssetPriceCollection in storage.
-     * POST /assetPriceBulkUpdate
+     * POST /api/asset_prices_bulk_update
      *
      * @param CreatePriceUpdateAPIRequest $request
      *
      * @return Response
+     * @throws Exception
      */
     public function bulkStore(CreatePriceUpdateAPIRequest $request)
     {
@@ -47,7 +48,7 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function store(CreateAssetPriceAPIRequest $request)
     {

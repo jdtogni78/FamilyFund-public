@@ -92,18 +92,30 @@
                       </div>
                   </div>
               </div>
-                 <div class="row">
-                    <div class="col-lg-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <strong>Transactions</strong>
-                            </div>
-                            <div class="card-body">
-                                @include('accounts.transactions_table')
-                            </div>
-                        </div>
-                    </div>
-                 </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Transactions</strong>
+                          </div>
+                          <div class="card-body">
+                              @include('accounts.transactions_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Matching Rules</strong>
+                          </div>
+                          <div class="card-body">
+                              @include('accounts.matching_rules_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
           </div>
     </div>
 @endsection

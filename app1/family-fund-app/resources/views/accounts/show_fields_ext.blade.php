@@ -40,6 +40,14 @@
             {!! Form::number($field, $api['balances'][0][$field],  $field_props) !!}
         </div>
     </div>
+    <div class="form-group col-sm-6">
+        @php $field = 'matching_available'; @endphp
+        {!! Form::label($field, 'Matching Available:') !!}
+        <div class="input-group">
+            <div class="input-group-text">$</div>
+            {!! Form::number($field, $api[$field],  $field_props) !!}
+        </div>
+    </div>
 <div class="form-group col-sm-6">
     @php $field = 'as_of'; @endphp
     {!! Form::label($field, 'As Of:') !!}

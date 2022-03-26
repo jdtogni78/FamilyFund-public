@@ -4,7 +4,9 @@ namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\APIv1\AccountAPIControllerExt;
+use App\Http\Controllers\Traits\AccountTrait;
 use App\Http\Controllers\Traits\ChartBaseTrait;
+use App\Http\Controllers\Traits\PerformanceTrait;
 use App\Repositories\AccountRepository;
 use Flash;
 use Exception;
@@ -15,6 +17,7 @@ use Spatie\TemporaryDirectory\TemporaryDirectory;
 class AccountControllerExt extends AccountController
 {
     use ChartBaseTrait;
+    use AccountTrait, PerformanceTrait;
 
     public function __construct(AccountRepository $accountRepo)
     {
@@ -30,7 +33,8 @@ class AccountControllerExt extends AccountController
      */
     public function show($id)
     {
-        return $this->showAsOf($id, null);
+        $now = date('Y-m-d');
+        return $this->showAsOf($id, $now);
     }
 
     /**
@@ -40,7 +44,7 @@ class AccountControllerExt extends AccountController
      *
      * @return Response
      */
-    public function showAsOf($id, $asOf=null)
+    public function showAsOf($id, $asOf)
     {
         $account = $this->accountRepository->find($id);
 
@@ -49,12 +53,12 @@ class AccountControllerExt extends AccountController
             return redirect(route('accounts.index'));
         }
 
-        $arr = $this->createAssetViewData($asOf, $account);
+        $arr = $this->createAccountViewData($asOf, $account);
 
         return view('accounts.show_ext')->with('api', $arr);
     }
 
-    public function showPdfAsOf($id, $asOf=null)
+    public function showPdfAsOf($id, $asOf)
     {
         $account = $this->accountRepository->find($id);
 
@@ -63,7 +67,7 @@ class AccountControllerExt extends AccountController
             return redirect(route('accounts.index'));
         }
 
-        $arr = $this->createAssetViewData($asOf, $account);
+        $arr = $this->createAccountViewData($asOf, $account);
 
         $pdf = App::make('snappy.pdf.wrapper')
             ->setOption("enable-local-file-access", true)
@@ -94,40 +98,7 @@ class AccountControllerExt extends AccountController
         ]);
         $pdf->save($tempDir->path('account.pdf'));
 
-        return $pdf->inline('account.pdf');    }
-
-    /**
-     * @param mixed $asOf
-     * @param $account
-     * @return array
-     */
-    protected function createAssetViewData(mixed $asOf, $account): array
-    {
-        if ($asOf == null) $asOf = date('Y-m-d');
-
-        $api = new AccountAPIControllerExt($this->accountRepository);
-        $arr = $api->createAccountResponse($account, $asOf);
-        $arr['monthly_performance'] = $api->createMonthlyPerformanceResponse($asOf);
-        $arr['yearly_performance'] = $api->createYearlyPerformanceResponse($asOf);
-        $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
-        $arr['as_of'] = $asOf;
-        return $arr;
+        return $pdf->inline('account.pdf');
     }
 
-    private function createAssetsLineChart(array $api, TemporaryDirectory $tempDir, array &$files)
-    {
-        $name = 'shares.png';
-        $arr = $api['transactions'];
-        $data = [];
-        foreach ($arr as $v) {
-            $data[substr($v['timestamp'], 0,10)] = $v['balances']['OWN'] * $v['share_price'];
-        };
-        asort($data);
-        Log::debug("data");
-        Log::debug($data);
-
-        $files[$name] = $file = $tempDir->path($name);
-        $labels1 = array_keys($data);
-        $this->createLineChart(array_values($data), $labels1, $file, "Shares");
-    }
 }

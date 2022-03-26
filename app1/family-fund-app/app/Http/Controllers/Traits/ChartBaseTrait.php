@@ -38,6 +38,23 @@ trait ChartBaseTrait
         $this->createLineChart($values, $labels, $file, "Performance");
     }
 
+    protected function createSharesLineChart(array $api, TemporaryDirectory $tempDir)
+    {
+        $name = 'shares.png';
+        $arr = $api['transactions'];
+        $data = [];
+        foreach ($arr as $v) {
+            $data[substr($v['timestamp'], 0,10)] = $v['balances']['OWN'] * $v['share_price'];
+        };
+        asort($data);
+//        Log::debug("data");
+//        Log::debug($data);
+
+        $this->files[$name] = $file = $tempDir->path($name);
+        $labels1 = array_keys($data);
+        $this->createStepChart(array_values($data), $labels1, $file, "Shares");
+    }
+
     public function createLineChart(array $values, array $labels, string $file, $title)
     {
         $chart = new LineChart();
@@ -47,6 +64,18 @@ trait ChartBaseTrait
         $chart->titleValues = $title;
         $chart->titleLabels = "Date";
         $chart->createChart();
+        $chart->saveAs($file);
+    }
+
+    public function createStepChart(array $values, array $labels, string $file, $title)
+    {
+        $chart = new LineChart();
+//        Log::debug($labels);
+        $chart->values = $values;
+        $chart->labels = $labels;
+        $chart->titleValues = $title;
+        $chart->titleLabels = "Date";
+        $chart->createStepChart();
         $chart->saveAs($file);
     }
 

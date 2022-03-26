@@ -75,9 +75,23 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <strong>Performance</strong>
+                              <strong>Yearly Performance</strong>
                             </div>
                             <div class="card-body">
+                              @php ($performance_key = 'yearly_performance')
+                              @include('funds.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row new-page">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Monthly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'monthly_performance')
                                 @include('funds.performance_table')
                             </div>
                         </div>

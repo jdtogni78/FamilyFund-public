@@ -24,7 +24,7 @@ var myChart = new Chart(
       options: {
         scales: {
           y: {
-            beginAtZero: true
+            beginAtZero: false
           }
         }
       },

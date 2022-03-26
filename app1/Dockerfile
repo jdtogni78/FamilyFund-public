@@ -6,8 +6,12 @@ RUN apt-get update && apt-get install -y \
     golang-go \
     sendmail
 
-RUN go get github.com/mailhog/mhsendmail && \
-    cp ~/go/bin/mhsendmail /usr/local/bin/
+RUN go get github.com/mailhog/mhsendmail \
+    && cp ~/go/bin/mhsendmail /usr/local/bin/
+
+RUN curl -sLO https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.buster_amd64.deb \
+    && apt install -y ./wkhtmltox_0.12.6-1.buster_amd64.deb \
+    && rm wkhtmltox_0.12.6-1.buster_amd64.deb
 
 RUN apt-get remove -y \
     git \

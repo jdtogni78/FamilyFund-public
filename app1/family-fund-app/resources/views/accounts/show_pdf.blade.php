@@ -29,7 +29,7 @@
                      <div class="col">
                          <div class="card">
                              <div class="card-header">
-                                 <strong>Performance</strong>
+                              <strong>Yearly Performance</strong>
                              </div>
                              <div class="card-body">
                                  <img src="{{$files['yearly_performance.png']}}" alt="Yearly Performance"/>
@@ -53,16 +53,30 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <strong>Performance</strong>
+                              <strong>Yearly Performance</strong>
                             </div>
                             <div class="card-body">
-                                @include('accounts.performance_table')
-                            </div>
-                        </div>
-                    </div>
-                 </div>
-                 <div class="row">
-                    <div class="col-lg-12">
+                              @php ($performance_key = 'yearly_performance')
+                              @include('accounts.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Monthly Performance</strong>
+                          </div>
+                          <div class="card-body">
+                              @php ($performance_key = 'monthly_performance')
+                              @include('accounts.performance_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                   <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
                                 <strong>Transactions</strong>
@@ -71,7 +85,18 @@
                                 @include('accounts.transactions_table')
                             </div>
                         </div>
-                    </div>
-                 </div>
-          </div>
+                   </div>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="card">
+                          <div class="card-header">
+                              <strong>Matching Rules</strong>
+                          </div>
+                          <div class="card-body">
+                              @include('accounts.matching_rules_table')
+                          </div>
+                      </div>
+                  </div>
+              </div>
 @endsection

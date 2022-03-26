@@ -121,21 +121,26 @@ Trait FundTrait
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
         $pdf = new FundPDF($arr, $isAdmin);
 
+        $this->emailReport($fund, $isAdmin, $pdf, $asOf);
+        return $fundReport;
+    }
+
+    protected function emailReport($fund, bool $isAdmin, FundPDF $pdf, $asOf): void
+    {
         $err = [];
         $msgs = [];
         $sendCount = 0;
         $accounts = $fund->accounts()->get();
         foreach ($accounts as $account) {
             $user = $account->user()->get();
-            if (
-                ($isAdmin && count($user) == 0) ||
+            if (($isAdmin && count($user) == 0) ||
                 (!$isAdmin && count($user) == 1)
             ) {
                 if (empty($account->email_cc)) {
                     $err[] = "Account " . $account->nickname . " has no email configured";
                 } else {
                     $sendCount++;
-                    $msgs[] = "Sending email to ".$account->email_cc;
+                    $msgs[] = "Sending email to " . $account->email_cc;
                     $pdfFile = $pdf->file();
                     if ($this->verbose) print_r("pdfFile: " . json_encode($pdfFile) . "\n");
                     if ($this->verbose) print_r("fund: " . json_encode($fund) . "\n");
@@ -149,7 +154,6 @@ Trait FundTrait
         }
         $this->err = $err;
         $this->msgs = $msgs;
-        return $fundReport;
     }
 
 }

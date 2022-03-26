@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Traits;
 
-use App\Http\Controllers\APIv1\AccountAPIControllerExt;
 use App\Http\Resources\AccountResource;
 use App\Models\Utils;
 use Carbon\Carbon;
 use Nette\Utils\DateTime;
-use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 trait AccountTrait
 {
@@ -123,26 +121,10 @@ trait AccountTrait
         return $arr;
     }
 
-    private function createAssetsLineChart(array $api, TemporaryDirectory $tempDir, array &$files)
-    {
-        $name = 'shares.png';
-        $arr = $api['transactions'];
-        $data = [];
-        foreach ($arr as $v) {
-            $data[substr($v['timestamp'], 0,10)] = $v['balances']['OWN'] * $v['share_price'];
-        };
-        asort($data);
-        Log::debug("data");
-        Log::debug($data);
-
-        $files[$name] = $file = $tempDir->path($name);
-        $labels1 = array_keys($data);
-        $this->createLineChart(array_values($data), $labels1, $file, "Shares");
-    }
-
     protected function createAccountMatchingResponse($account, $asOf): array
     {
-        $account = $this->accountRepository->with(['accountMatchingRules.matchingRule.transactionMatchings.transaction'])->find($account->id);
+//        $account = AccountExt::find($account->id);
+            //$this->accountRepository->with(['accountMatchingRules.matchingRule.transactionMatchings.transaction'])->find($account->id);
 //        print_r("data: " . json_encode($account) . "\n");
 //        print_r($account);
         $tsAsOf = (new DateTime($asOf))->getTimestamp();
@@ -167,7 +149,7 @@ trait AccountTrait
 
                     if ($tsAsOf < $mr->date_end->getTimestamp()) {
                         $range = $mr->dollar_range_end - $mr->dollar_range_start;
-                        $mrA['available'] = ($range * $mr->match_percent) - $used;
+                        $mrA['available'] = ($range * $mr->match_percent / 100.0) - $used;
                     }
 
                     $mrA['date_start'] = substr($mrA['date_start'],0,10);

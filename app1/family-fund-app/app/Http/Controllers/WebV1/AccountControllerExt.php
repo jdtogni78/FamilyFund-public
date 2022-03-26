@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\APIv1\AccountAPIControllerExt;
+use App\Http\Controllers\Traits\AccountPDF;
 use App\Http\Controllers\Traits\AccountTrait;
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\PerformanceTrait;
 use App\Repositories\AccountRepository;
 use Flash;
-use Exception;
 use Response;
-use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 
 class AccountControllerExt extends AccountController
@@ -68,35 +66,7 @@ class AccountControllerExt extends AccountController
         }
 
         $arr = $this->createAccountViewData($asOf, $account);
-
-        $pdf = App::make('snappy.pdf.wrapper')
-            ->setOption("enable-local-file-access", true)
-            ->setOption("print-media-type", true)
-        ;
-        $files = [];
-        $tempDir = (new TemporaryDirectory())->force();
-
-        try {
-            $tempDir->create();
-        } catch (Exception $e) {
-            print_r($e);
-        }
-        $this->createAssetsLineChart($arr, $tempDir, $files);
-        $this->createYearlyPerformanceGraph($arr, $tempDir, $files);
-        $this->createMonthlyPerformanceGraph($arr, $tempDir, $files);
-        $html = view('accounts.show_pdf')
-            ->with('api', $arr)
-            ->with('files', $files)
-            ->render()
-        ;
-        $myfile = fopen($tempDir->path('account.html'), "w") or die("Unable to open file!");
-        fwrite($myfile, $html);
-
-        $pdf->loadView('accounts.show_pdf', [
-            'api' => $arr,
-            'files' => $files
-        ]);
-        $pdf->save($tempDir->path('account.pdf'));
+        $pdf = new AccountPDF($arr, false);
 
         return $pdf->inline('account.pdf');
     }

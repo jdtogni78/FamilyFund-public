@@ -10,7 +10,7 @@ trait ApiTestTrait
     protected $message;
     protected $data;
 
-    private $verbose = false;
+    protected $verbose = false;
 
     public function loginWithFakeUser($email='admin@dev.familyfund.local')
     {

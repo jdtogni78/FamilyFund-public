@@ -17,10 +17,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.3.0/css/flag-icon.min.css">
 
     <style type="text/css">
-        .new-page {
-            overflow: hidden;
-            page-break-after: always;
+        table { page-break-after:auto }
+        td, tr {
             page-break-inside: avoid;
+            page-break-after: avoid;
+            page-break-before: avoid;
+            }
+        thead { display: table-row-group; }
+        tfoot { display: table-footer-group; }
+
+        .new-page {
+            /*overflow: hidden;*/
+            /*page-break-before: always;*/
+            /*page-break-inside: avoid;*/
         }
         label {
             min-width: 400px;
@@ -49,6 +58,7 @@
             width: 50%;
             float: right
         }
+
     </style>
 
 </head>

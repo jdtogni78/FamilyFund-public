@@ -13,7 +13,7 @@
                          </div>
                      </div>
                  </div>
-                 <div class="row new-page" style="display:block; clear:both; page-break-after:always;">
+                 <div class="row new-page">
                      <div class="col">
                         <div class="card">
                             <div class="card-header">

@@ -1,7 +1,7 @@
 @extends('layouts.pdf')
 
 @section('content')
-                 <div class="row">
+                 <div class="row" style="margin-top: 30px">
                      <div class="col">
                          <div class="card">
                              <div class="card-header">
@@ -13,7 +13,7 @@
                          </div>
                      </div>
                  </div>
-                 <div class="row">
+                 <div class="row new-page">
                      <div class="col">
                          <div class="card">
                              <div class="card-header">
@@ -37,7 +37,7 @@
                          </div>
                      </div>
                  </div>
-                <div class="row">
+                <div class="row new-page">
                     <div class="col">
                         <div class="card">
                             <div class="card-header">
@@ -49,7 +49,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row new-page">
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
@@ -62,7 +62,7 @@
                       </div>
                   </div>
               </div>
-              <div class="row">
+              <div class="row new-page">
                   <div class="col-lg-12">
                       <div class="card">
                           <div class="card-header">
@@ -75,7 +75,7 @@
                       </div>
                   </div>
               </div>
-              <div class="row">
+              <div class="row new-page">
                    <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
@@ -87,7 +87,7 @@
                         </div>
                    </div>
               </div>
-              <div class="row">
+              <div class="row new-page">
                   <div class="col-lg-12">
                       <div class="card">
                           <div class="card-header">

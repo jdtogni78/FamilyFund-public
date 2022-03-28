@@ -18,7 +18,6 @@ class CreateFundReportsTable extends Migration
             $table->bigInteger('id', true, true);
             $table->foreignId('fund_id')->constrained();
             $table->string('type', 3);
-            $table->string('file', 255)->nullable();
             $table->timestamp('as_of')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();

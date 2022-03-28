@@ -28,7 +28,7 @@ class FundReportAPIControllerExt extends FundReportAPIController
     {
         $input = $request->all();
 
-        $fundReport = $this->createAndSendFundReport($input);
+        $fundReport = $this->sendFundReport($input);
 
         if (count($this->err) == 0) {
             $result = new FundReportResource($fundReport);

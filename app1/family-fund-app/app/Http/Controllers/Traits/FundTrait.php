@@ -6,11 +6,11 @@ use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
 use App\Http\Resources\FundResource;
 use App\Mail\FundQuarterlyReport;
 use App\Models\FundExt;
-use App\Models\FundReport;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\PortfolioRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 Trait FundTrait
@@ -111,9 +111,8 @@ Trait FundTrait
         return $arr;
     }
 
-    public function createAndSendFundReport($input)
+    public function sendFundReport($fundReport)
     {
-        $fundReport = FundReport::create($input);
         $fund = $fundReport->fund()->first();
         $asOf = $fundReport->end_dt->format('Y-m-d');
         $isAdmin = 'ADM' === $fundReport->type;
@@ -137,20 +136,26 @@ Trait FundTrait
                 (!$isAdmin && count($user) == 1)
             ) {
                 if (empty($account->email_cc)) {
-                    $err[] = "Account " . $account->nickname . " has no email configured";
+                    $msg = "Account " . $account->nickname . " has no email configured";
+                    $err[] = $msg;
+                    Log::error($msg);
                 } else {
                     $sendCount++;
-                    $msgs[] = "Sending email to " . $account->email_cc;
+                    $msg = "Sending email to " . $account->email_cc;
+                    Log::info($msg);
+                    $msgs[] = $msg;
                     $pdfFile = $pdf->file();
-                    if ($this->verbose) print_r("pdfFile: " . json_encode($pdfFile) . "\n");
-                    if ($this->verbose) print_r("fund: " . json_encode($fund) . "\n");
+                    if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
+                    if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
                     $reportData = new FundQuarterlyReport($fund, $asOf, $pdfFile);
                     Mail::to($account->email_cc)->send($reportData);
                 }
             }
         }
         if ($sendCount == 0) {
-            $err[] = "No emails sent";
+            $msg = "No emails sent";
+            Log::error($msg);
+            $err[] = $msg;
         }
         $this->err = $err;
         $this->msgs = $msgs;

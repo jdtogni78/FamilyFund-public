@@ -5,15 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
 use App\Repositories\FundReportRepository;
-use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
+
 use Response;
 
 class FundReportController extends AppBaseController
 {
     /** @var FundReportRepository $fundReportRepository*/
-    private $fundReportRepository;
+    protected $fundReportRepository;
 
     public function __construct(FundReportRepository $fundReportRepo)
     {

@@ -71,7 +71,7 @@ Route::resource('fundReports', App\Http\Controllers\FundReportController::class)
 Route::resource('accountReports', App\Http\Controllers\AccountReportController::class);
 
 
-Route::resource('fundReports', App\Http\Controllers\FundReportController::class);
+Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
 
 
-Route::resource('accountReports', App\Http\Controllers\AccountReportController::class);
+Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);

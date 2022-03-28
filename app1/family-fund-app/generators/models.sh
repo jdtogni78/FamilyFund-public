@@ -1,12 +1,14 @@
 #!/bin/bash
 
 tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /dev/null | grep -v "+" | grep -v "failed_jobs\|migrations\|password_resets\|personal_access_tokens")
-tables="fund_report account_report"
+tables="fund_reports account_reports"
 
 for t in $tables; do
     echo $t
-    c=$(echo $t | sed "s/ //g" | sed "s/s$//" | perl -pe 's/\S+/\u$&/g')
+    c=$(echo $t | sed "s/ //g" | sed "s/s$//" | perl -pe 's/_(\w)/\U$1/g' | perl -pe 's/^(.)/\U$1/')
     echo $c
+
+    # FROM TABLE
     php artisan infyom:scaffold $c --fromTable --tableName $t --skip dump-autoload
     php artisan infyom:api $c --fromTable --tableName $t --skip dump-autoload
     php artisan infyom:scaffold $c --fromTable --tableName $t \

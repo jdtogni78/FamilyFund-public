@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\FundReportController;
-use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
+use App\Jobs\SendFundReport;
 use App\Models\FundReport;
 use App\Repositories\FundReportRepository;
 use Laracasts\Flash\Flash;
@@ -13,8 +13,6 @@ use Response;
 
 class FundReportControllerExt extends FundReportController
 {
-    use FundTrait;
-    protected $verbose = true;
 
     public function __construct(FundReportRepository $fundReportRepo)
     {
@@ -33,7 +31,7 @@ class FundReportControllerExt extends FundReportController
         $input = $request->all();
 
         $fundReport = FundReport::create($input);
-        $this->processReport($fundReport);
+        SendFundReport::dispatch($fundReport);
         return redirect(route('fundReports.index'));
     }
 
@@ -48,20 +46,15 @@ class FundReportControllerExt extends FundReportController
         }
 
         $fundReport = $this->fundReportRepository->update($request->all(), $id);
-        $this->processReport($fundReport);
+        SendFundReport::dispatch($fundReport);
 
         return redirect(route('fundReports.index'));
     }
 
-    protected function processReport($fundReport): void
-    {
-        $this->sendFundReport($fundReport);
-
-        if (count($this->err) == 0) {
-            Flash::success('Fund Report saved successfully.');
-        } else {
-            Flash::error(implode("</br>", $this->err));
-        }
-    }
+//        if (count($this->err) == 0) {
+//            Flash::success('Fund Report saved successfully.');
+//        } else {
+//            Flash::error(implode("</br>", $this->err));
+//        }
 
 }

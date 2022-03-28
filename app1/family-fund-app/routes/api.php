@@ -5,7 +5,6 @@ use App\Http\Controllers\APIv1\PortfolioAssetAPIControllerExt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\APIv1\AssetPriceAPIControllerExt;
-use App\Http\Controllers\APIv1\AssetAPIControllerExt;
 use App\Http\Controllers\API\PortfolioAssetAPIController;
 use App\Http\Controllers\APIv1\AccountAPIControllerExt;
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
@@ -65,4 +64,4 @@ Route::resource('asset_change_logs', App\Http\Controllers\API\AssetChangeLogAPIC
 Route::resource('transaction_matchings', App\Http\Controllers\API\TransactionMatchingAPIController::class);
 
 Route::resource('fund_reports', App\Http\Controllers\APIv1\FundReportAPIControllerExt::class);
-Route::resource('account_reports', App\Http\Controllers\API\AccountReportAPIController::class);
+Route::resource('account_reports', App\Http\Controllers\APIv1\AccountReportAPIControllerExt::class);

@@ -93,6 +93,7 @@ Trait FundTrait
 
     public function createFullFundResponse($fund, $asOf, $isAdmin = false) {
         if ($asOf == null) $asOf = date('Y-m-d');
+        $fund = FundExt::find($fund->id);
 
         $api = $this;
         $arr = $api->createFundResponse($fund, $asOf);
@@ -114,7 +115,7 @@ Trait FundTrait
     public function sendFundReport($fundReport)
     {
         $fund = $fundReport->fund()->first();
-        $asOf = $fundReport->end_dt->format('Y-m-d');
+        $asOf = $fundReport->as_of->format('Y-m-d');
         $isAdmin = 'ADM' === $fundReport->type;
 
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
@@ -131,9 +132,9 @@ Trait FundTrait
         $sendCount = 0;
         $accounts = $fund->accounts()->get();
         foreach ($accounts as $account) {
-            $user = $account->user()->get();
-            if (($isAdmin && count($user) == 0) ||
-                (!$isAdmin && count($user) == 1)
+            $users = $account->user()->get();
+            if (($isAdmin && count($users) == 0) ||
+                (!$isAdmin && count($users) == 1)
             ) {
                 if (empty($account->email_cc)) {
                     $msg = "Account " . $account->nickname . " has no email configured";
@@ -147,7 +148,8 @@ Trait FundTrait
                     $pdfFile = $pdf->file();
                     if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
                     if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
-                    $reportData = new FundQuarterlyReport($fund, $asOf, $pdfFile);
+                    $user = $users->first();
+                    $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
                     Mail::to($account->email_cc)->send($reportData);
                 }
             }

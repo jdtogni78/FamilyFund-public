@@ -65,12 +65,6 @@ Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController
 Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
 
 
-Route::resource('fundReports', App\Http\Controllers\FundReportController::class);
-
-
-Route::resource('accountReports', App\Http\Controllers\AccountReportController::class);
-
-
 Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
 
 

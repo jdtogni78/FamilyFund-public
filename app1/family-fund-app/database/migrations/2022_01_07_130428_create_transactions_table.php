@@ -22,7 +22,7 @@ class CreateTransactionsTable extends Migration
             $table->decimal('shares', 19, 4)->nullable();
             $table->timestamp('timestamp')->useCurrent();
             $table->foreignId('account_id')->constrained();
-            $table->string('descr', 255);
+            $table->string('descr', 255)->nullable();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();
             $table->softDeletes();

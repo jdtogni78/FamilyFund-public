@@ -36,19 +36,7 @@
         "inView": true
     },
     {
-        "name": "start_dt",
-        "dbType": "date",
-        "htmlType": "date",
-        "validations": "required",
-        "searchable": true,
-        "fillable": true,
-        "primary": false,
-        "inForm": true,
-        "inIndex": true,
-        "inView": true
-    },
-    {
-        "name": "end_dt",
+        "name": "as_of",
         "dbType": "date",
         "htmlType": "date",
         "validations": "required",

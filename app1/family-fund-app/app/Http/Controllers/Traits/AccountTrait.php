@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Traits;
 
 use App\Http\Resources\AccountResource;
+use App\Mail\AccountQuarterlyReport;
+use App\Models\AccountExt;
 use App\Models\Utils;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Nette\Utils\DateTime;
 
 trait AccountTrait
 {
+    use PerformanceTrait;
     protected $verbose=false;
 
     public function createAccountArray($account)
@@ -169,4 +174,48 @@ trait AccountTrait
         }
         return $available;
     }
+
+    public function sendAccountReport($accountReport)
+    {
+        $account = $accountReport->account()->first();
+        $account = AccountExt::find($account->id);
+        $asOf = $accountReport->as_of->format('Y-m-d');
+//        $isAdmin = 'ADM' === $accountReport->type;
+
+        $arr = $this->createAccountViewData($asOf, $account);
+        $pdf = new AccountPDF($arr, $asOf);
+
+        $this->emailReport($account, $pdf, $asOf);
+        return $accountReport;
+    }
+
+    protected function emailReport($account, AccountPDF $pdf, $asOf): void
+    {
+        $err = [];
+        $msgs = [];
+        $sendCount = 0;
+        if (empty($account->email_cc)) {
+            $msg = "Account " . $account->nickname . " has no email configured";
+            $err[] = $msg;
+            Log::error($msg);
+        } else {
+            $sendCount++;
+            $msg = "Sending email to " . $account->email_cc;
+            Log::info($msg);
+            $msgs[] = $msg;
+            $pdfFile = $pdf->file();
+            if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
+            if ($this->verbose) Log::debug("account: " . json_encode($account) . "\n");
+            $reportData = new AccountQuarterlyReport($account, $asOf, $pdfFile);
+            Mail::to($account->email_cc)->send($reportData);
+        }
+        if ($sendCount == 0) {
+            $msg = "No emails sent";
+            Log::error($msg);
+            $err[] = $msg;
+        }
+        $this->err = $err;
+        $this->msgs = $msgs;
+    }
+
 }

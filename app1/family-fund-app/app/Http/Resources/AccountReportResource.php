@@ -18,8 +18,7 @@ class AccountReportResource extends JsonResource
             'id' => $this->id,
             'account_id' => $this->account_id,
             'type' => $this->type,
-            'start_dt' => $this->start_dt,
-            'end_dt' => $this->end_dt,
+            'as_of' => $this->as_of,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at

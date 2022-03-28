@@ -32,9 +32,9 @@ DROP TABLE IF EXISTS `transaction_matchings`;
 
 -- MySQL dump 10.13  Distrib 8.0.27, for macos11 (x86_64)
 --
--- Host: 127.0.0.1    Database: familyfund
+-- Host: 127.0.0.1    Database: familyfund_dev
 -- ------------------------------------------------------
--- Server version	5.5.5-10.6.5-MariaDB
+-- Server version	5.5.5-10.6.7-MariaDB
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -100,8 +100,7 @@ CREATE TABLE `account_reports` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `account_id` bigint(20) unsigned NOT NULL,
   `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `start_dt` date NOT NULL DEFAULT curdate(),
-  `end_dt` date NOT NULL DEFAULT '9999-12-31',
+  `as_of` date NOT NULL DEFAULT curdate(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
@@ -188,14 +187,14 @@ DROP TABLE IF EXISTS `assets`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `assets` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `source` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UNKNOWN',
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `assets_UN` (`name`,`type`,`source`)
+  UNIQUE KEY `unique_asset` (`source`,`name`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -230,9 +229,7 @@ CREATE TABLE `fund_reports` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fund_id` bigint(20) unsigned NOT NULL,
   `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `start_dt` date NOT NULL DEFAULT curdate(),
-  `end_dt` date NOT NULL DEFAULT '9999-12-31',
+  `as_of` date NOT NULL DEFAULT curdate(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
@@ -373,9 +370,29 @@ CREATE TABLE `portfolios` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `portfolios_UN` (`source`),
+  UNIQUE KEY `portfolios_source_unique` (`source`),
   KEY `portfolios_fund_id_foreign` (`fund_id`),
   CONSTRAINT `portfolios_fund_id_foreign` FOREIGN KEY (`fund_id`) REFERENCES `funds` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sessions`
+--
+
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sessions` (
+  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payload` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -417,9 +434,9 @@ CREATE TABLE `transactions` (
   `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
   `value` decimal(13,2) NOT NULL,
   `shares` decimal(19,4) DEFAULT NULL,
-  `timestamp` timestamp NULL DEFAULT current_timestamp(),
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
   `account_id` bigint(20) unsigned NOT NULL,
-  `descr` varchar(255) COLLATE utf8mb4_unicode_ci,
+  `descr` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
@@ -451,7 +468,7 @@ CREATE TABLE `users` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping routines for database 'familyfund'
+-- Dumping routines for database 'familyfund_dev'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -460,4 +477,4 @@ CREATE TABLE `users` (
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-03-11 21:26:25
+-- Dump completed on 2022-03-27 23:25:17

@@ -9,13 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class AccountReport
  * @package App\Models
- * @version February 28, 2022, 6:36 am UTC
+ * @version March 28, 2022, 2:48 am UTC
  *
  * @property \App\Models\Account $account
  * @property integer $account_id
  * @property string $type
- * @property string $start_dt
- * @property string $end_dt
+ * @property string $as_of
  */
 class AccountReport extends Model
 {
@@ -36,8 +35,7 @@ class AccountReport extends Model
     public $fillable = [
         'account_id',
         'type',
-        'start_dt',
-        'end_dt'
+        'as_of'
     ];
 
     /**
@@ -49,8 +47,7 @@ class AccountReport extends Model
         'id' => 'integer',
         'account_id' => 'integer',
         'type' => 'string',
-        'start_dt' => 'date',
-        'end_dt' => 'date'
+        'as_of' => 'date'
     ];
 
     /**
@@ -61,8 +58,7 @@ class AccountReport extends Model
     public static $rules = [
         'account_id' => 'required',
         'type' => 'required|string|max:3',
-        'start_dt' => 'required',
-        'end_dt' => 'required',
+        'as_of' => 'required',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'

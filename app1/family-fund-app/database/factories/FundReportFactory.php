@@ -24,9 +24,7 @@ class FundReportFactory extends Factory
         return [
             'fund_id' => $this->faker->word,
         'type' => $this->faker->word,
-        'file' => $this->faker->word,
-        'start_dt' => $this->faker->word,
-        'end_dt' => $this->faker->word,
+        'as_of' => $this->faker->word,
         'updated_at' => $this->faker->date('Y-m-d H:i:s'),
         'created_at' => $this->faker->date('Y-m-d H:i:s'),
         'deleted_at' => $this->faker->date('Y-m-d H:i:s')

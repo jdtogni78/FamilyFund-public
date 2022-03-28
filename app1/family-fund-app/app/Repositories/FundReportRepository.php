@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class FundReportRepository
  * @package App\Repositories
- * @version February 28, 2022, 6:36 am UTC
+ * @version March 28, 2022, 2:48 am UTC
 */
 
 class FundReportRepository extends BaseRepository
@@ -19,9 +19,7 @@ class FundReportRepository extends BaseRepository
     protected $fieldSearchable = [
         'fund_id',
         'type',
-        'file',
-        'start_dt',
-        'end_dt'
+        'as_of'
     ];
 
     /**

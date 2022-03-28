@@ -9,14 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class FundReport
  * @package App\Models
- * @version February 28, 2022, 6:36 am UTC
+ * @version March 28, 2022, 2:48 am UTC
  *
  * @property \App\Models\Fund $fund
  * @property integer $fund_id
  * @property string $type
- * @property string $file
- * @property string $start_dt
- * @property string $end_dt
+ * @property string $as_of
  */
 class FundReport extends Model
 {
@@ -37,9 +35,7 @@ class FundReport extends Model
     public $fillable = [
         'fund_id',
         'type',
-        'file',
-        'start_dt',
-        'end_dt'
+        'as_of'
     ];
 
     /**
@@ -51,9 +47,7 @@ class FundReport extends Model
         'id' => 'integer',
         'fund_id' => 'integer',
         'type' => 'string',
-        'file' => 'string',
-        'start_dt' => 'date',
-        'end_dt' => 'date'
+        'as_of' => 'date'
     ];
 
     /**
@@ -64,9 +58,7 @@ class FundReport extends Model
     public static $rules = [
         'fund_id' => 'required',
         'type' => 'required|string|max:3',
-        'file' => 'nullable|string|max:255',
-        'start_dt' => 'required',
-        'end_dt' => 'required',
+        'as_of' => 'required',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -77,6 +69,6 @@ class FundReport extends Model
      **/
     public function fund()
     {
-        return $this->belongsTo(\App\Models\FundExt::class, 'fund_id');
+        return $this->belongsTo(\App\Models\Fund::class, 'fund_id');
     }
 }

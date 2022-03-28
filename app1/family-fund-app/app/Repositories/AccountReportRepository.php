@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class AccountReportRepository
  * @package App\Repositories
- * @version February 28, 2022, 6:36 am UTC
+ * @version March 28, 2022, 2:48 am UTC
 */
 
 class AccountReportRepository extends BaseRepository
@@ -19,8 +19,7 @@ class AccountReportRepository extends BaseRepository
     protected $fieldSearchable = [
         'account_id',
         'type',
-        'start_dt',
-        'end_dt'
+        'as_of'
     ];
 
     /**

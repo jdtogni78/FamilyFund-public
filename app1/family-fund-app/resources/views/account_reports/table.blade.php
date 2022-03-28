@@ -4,8 +4,7 @@
             <tr>
                 <th>Account Id</th>
         <th>Type</th>
-        <th>Start Dt</th>
-        <th>End Dt</th>
+        <th>As Of</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -14,8 +13,7 @@
             <tr>
                 <td>{{ $accountReport->account_id }}</td>
             <td>{{ $accountReport->type }}</td>
-            <td>{{ $accountReport->start_dt }}</td>
-            <td>{{ $accountReport->end_dt }}</td>
+            <td>{{ $accountReport->as_of }}</td>
                 <td>
                     {!! Form::open(['route' => ['accountReports.destroy', $accountReport->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

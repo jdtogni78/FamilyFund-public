@@ -18,9 +18,7 @@ class FundReportResource extends JsonResource
             'id' => $this->id,
             'fund_id' => $this->fund_id,
             'type' => $this->type,
-            'file' => $this->file,
-            'start_dt' => $this->start_dt,
-            'end_dt' => $this->end_dt,
+            'as_of' => $this->as_of,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at

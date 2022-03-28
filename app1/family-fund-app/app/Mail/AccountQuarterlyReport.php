@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -11,14 +10,20 @@ class AccountQuarterlyReport extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $account;
+    public $pdf;
+    public $asOf;
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($account, $asOf, $pdf)
     {
-        //
+        $this->account = $account;
+        $this->asOf = $asOf;
+        $this->pdf = $pdf;
     }
 
     /**
@@ -28,6 +33,17 @@ class AccountQuarterlyReport extends Mailable
      */
     public function build()
     {
-        return $this->view('view.name');
+        $arr = [
+            'to' => $this->account->user()->get()->first()->name,
+            'report_name' => 'Account Quarterly Report',
+        ];
+
+        return $this->view('emails.reports.quarterly_report')
+            ->with("api", $arr)
+            ->subject("Account Quarterly Report - ". $this->asOf)
+            ->attach($this->pdf, [
+                'as' => 'account_report_'.$this->asOf.'.pdf',
+                'mime' => 'application/pdf',
+            ]);
     }
 }

@@ -10,15 +10,9 @@
     <p>{{ $accountReport->type }}</p>
 </div>
 
-<!-- Start Dt Field -->
+<!-- As Of Field -->
 <div class="form-group">
-    {!! Form::label('start_dt', 'Start Dt:') !!}
-    <p>{{ $accountReport->start_dt }}</p>
-</div>
-
-<!-- End Dt Field -->
-<div class="form-group">
-    {!! Form::label('end_dt', 'End Dt:') !!}
-    <p>{{ $accountReport->end_dt }}</p>
+    {!! Form::label('as_of', 'As Of:') !!}
+    <p>{{ $accountReport->as_of }}</p>
 </div>
 

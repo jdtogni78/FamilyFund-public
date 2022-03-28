@@ -7,13 +7,13 @@ use App\Http\Requests\UpdateAccountReportRequest;
 use App\Repositories\AccountReportRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
-use Flash;
+use Laracasts\Flash\Flash;
 use Response;
 
 class AccountReportController extends AppBaseController
 {
     /** @var AccountReportRepository $accountReportRepository*/
-    private $accountReportRepository;
+    protected $accountReportRepository;
 
     public function __construct(AccountReportRepository $accountReportRepo)
     {

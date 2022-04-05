@@ -2,12 +2,14 @@ version: '2'
 
 services:
   mariadb:
+    container_name: db
     image: docker.io/bitnami/mariadb:10.6
     environment:
       - ALLOW_EMPTY_PASSWORD=no
 
   myapp:
     tty: true
+    container_name: familyfund
     build: .
     environment:
       - DB_HOST=mariadb
@@ -20,6 +22,7 @@ services:
 
   mailhog:
     image: mailhog/mailhog
+    container_name: mail
     logging:
       driver: 'none'  # disable saving logs
     restart: on-failure

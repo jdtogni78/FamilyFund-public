@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Traits;
 
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
 use App\Http\Resources\FundResource;
+use App\Jobs\SendAccountReport;
 use App\Mail\FundQuarterlyReport;
+use App\Models\AccountReport;
 use App\Models\FundExt;
 use App\Models\User;
 use App\Models\Utils;
@@ -114,6 +116,8 @@ Trait FundTrait
 
     public function sendFundReport($fundReport)
     {
+        $this->createAccountReports($fundReport);
+
         $fund = $fundReport->fund()->first();
         $asOf = $fundReport->as_of->format('Y-m-d');
         $isAdmin = 'ADM' === $fundReport->type;
@@ -122,7 +126,29 @@ Trait FundTrait
         $pdf = new FundPDF($arr, $isAdmin);
 
         $this->emailReport($fund, $isAdmin, $pdf, $asOf);
+
         return $fundReport;
+    }
+
+    protected function createAccountReports($fundReport)
+    {
+        $fund = $fundReport->fund()->first();
+        Log::info("sending report to all ".$fundReport->type);
+        if ($fundReport->type === 'ALL') {
+            $accounts = $fund->accounts()->get();
+            foreach ($accounts as $account) {
+                $users = $account->user()->get();
+                Log::info("* sending report to acct ".$account->nickname);
+                if (count($users) == 1) {
+                    $accountReport = AccountReport::create([
+                        'account_id' => $account->id,
+                        'type' => $fundReport->type,
+                        'as_of' => $fundReport->as_of
+                    ]);
+                    SendAccountReport::dispatch($accountReport);
+                }
+            }
+        }
     }
 
     protected function emailReport($fund, bool $isAdmin, FundPDF $pdf, $asOf): void
@@ -150,7 +176,10 @@ Trait FundTrait
                     if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
                     $user = $users->first();
                     $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
-                    Mail::to($account->email_cc)->send($reportData);
+
+                    $emails = explode(",", $account->email_cc);
+                    $to = array_shift($emails);
+                    Mail::to($to)->cc($emails)->send($reportData);
                 }
             }
         }

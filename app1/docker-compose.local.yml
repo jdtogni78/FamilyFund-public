@@ -10,6 +10,8 @@ services:
       - MARIADB_ROOT_PASSWORD=123456
     ports:
       - 3306:3306
+    volumes:
+      - ./datadir_dev:/var/lib/mysql
 
   myapp:
     environment:

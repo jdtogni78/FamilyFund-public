@@ -13,7 +13,7 @@ services:
     volumes:
       - ./datadir_prod:/var/lib/mysql
 
-  myapp:
+  familyfund:
     environment:
       - DB_DATABASE=familyfund_prod
       - DB_USERNAME=famfun_prod

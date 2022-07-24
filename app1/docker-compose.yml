@@ -7,7 +7,7 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=no
 
-  myapp:
+  familyfund:
     tty: true
     container_name: familyfund
     build: .

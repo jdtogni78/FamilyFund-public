@@ -1,7 +1,7 @@
 #!/bin/bash
 
 tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /dev/null | grep -v "+" | grep -v "failed_jobs\|migrations\|password_resets\|personal_access_tokens")
-tables="fund_reports account_reports"
+tables="trade_portfolios change_log trade_portfolio_items"
 
 for t in $tables; do
     echo $t
@@ -16,3 +16,5 @@ for t in $tables; do
 
     sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' app/Http/Controllers/*Controller.php
 done;
+
+# To generate migrations see: https://github.com/aljorhythm/sql-to-laravel-migrations.git

@@ -11,14 +11,15 @@ See https://hub.docker.com/r/bitnami/laravel/
 
 * Go to main dir
 
-docker-compose up
+docker-compose -f docker-compose.yml -f docker-compose.${MYENV}.yml up
 
 * First time run composer accepting errors:
 
-docker-compose exec myapp composer install
+docker-compose exec familyfund composer install
 
 * First time setup database / reimport full db
 
+docker-compose exec familyfund php artisan migrate:fresh
 mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_dump.sql
 
 * Dump dev database on Mac
@@ -37,15 +38,7 @@ tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /
 ### Generate API CRUD
 
 See https://infyom.com/open-source/laravelgenerator/docs/8.0/introduction
-
-for t in $(echo $tables); 
-    do echo $t; 
-    arr=(${(s:_:)t})
-    c=$(printf %s "${(C)arr}" | sed "s/ //g" | sed "s/s$//")
-    php artisan infyom:scaffold $c --fromTable --tableName $t --skip dump-autoload
-    php artisan infyom:api $c --fromTable --tableName $t --skip dump-autoload
-    sed -i.bkp -e 's/private \($.*Repository;\)/protected \1/' app/Http/Controllers/*Controller.php
-done;
+See generators/models.sh
 
 #### Generate from file
 
@@ -66,7 +59,7 @@ for t in $(echo $tables);
     do echo $t; 
     arr=(${(s:_:)t})
     c=$(printf %s "${(C)arr}" | sed "s/ //g")
-    docker-compose exec myapp php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json \
+    docker-compose exec familyfund php artisan infyom:scaffold $c --fieldsFile resources/model_schemas/$c.json \
         --skip model,controllers,api_controller,scaffold_controller,repository,requests,api_requests,scaffold_requests,routes,api_routes,scaffold_routes,views,tests,menu,dump-autoload
 done;
 
@@ -101,3 +94,28 @@ sendmail_path = "/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025"
 
 #### Test
 php tests/TestEmail.php
+
+for f in run_report.log.*.gz; do gunzip -c $f | sed '0,/^.*## Positions$/d' | sed  -n '/.*## Report/q;p'; done|grep SPXL|sort
+{"timestamp": "2022-04-01 19:46:50" "source": "FFIB" "symbols": {
+{"name": "SPXL" "type": "STK" "position": 41.0}
+{"name": "SOXL" "type": "STK" "position": 119.0}
+{"name": "TECL" "type": "STK" "position": 82.0}
+{"name": "FTBFX" "type": "FUND" "position": 149.851}
+{"name": "IAU" "type": "STK" "position": 85.0}
+{"name": "BTC" "type": "CRYPTO" "position": 0.02229813}
+{"name": "ETH" "type": "CRYPTO" "position": 0.52756584}
+{"name": "FIPDX" "type": "FUND" "position": 563.964}
+{"name": "LTC" "type": "CRYPTO" "position": 5.67880488}
+{"name": "CASH", "type": "CSH", position: 3212.43}
+}
+
+#### Start sending reports (email)
+
+php artisan queue:work
+
+### Change Password Command Line
+
+php artisan tinker
+    $user = App\Models\UserExt::where('email', 'admin@dev.familyfund.local')->first();
+    $user->password = Hash::make('new_password');
+    $user->save();

@@ -48,7 +48,7 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
             DB::rollback();
             return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        return $this->sendResponse([], 'Bulk price update successful!');
+        return $this->sendResponse([], 'Bulk position update successful!');
     }
 
     /**

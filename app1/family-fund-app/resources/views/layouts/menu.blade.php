@@ -88,3 +88,21 @@
         <span>Account Reports</span>
     </a>
 </li>
+<li class="nav-item {{ Request::is('changeLogs*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('changeLogs.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Change Logs</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('tradePortfolios.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Trade Portfolios</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('tradePortfolioItems*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('tradePortfolioItems.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Trade Portfolio Items</span>
+    </a>
+</li>

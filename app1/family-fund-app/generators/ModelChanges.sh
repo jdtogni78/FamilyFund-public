@@ -12,7 +12,7 @@ done
 # do not mess with auto generated fields from db
 # do not set random value for foreign keys
 for f in $(ls \
-        database/Factories/*Factory.php); do
+        database/factories/*Factory.php); do
     for c (deleted_at created_at updated_at); do
         sed -i.bkp -e "s/\([']$c\)/\/\/\1/" $f
         rm $f.bkp

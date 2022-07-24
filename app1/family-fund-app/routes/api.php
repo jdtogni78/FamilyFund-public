@@ -34,7 +34,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::get('account_matching/{account_id}/as_of/{as_of}', [AccountAPIControllerExt::class, 'accountMatching']);
 
 Route::get('portfolios/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\PortfolioAPIControllerExt@showAsOf');
-Route::post('portfolios/{code}/assets_update', [PortfolioAPIControllerExt::class, 'assetsUpdate']);
+//Route::post('portfolios/{code}/assets_update', [PortfolioAPIControllerExt::class, 'assetsUpdate']);
 Route::post('asset_prices_bulk_update', [AssetPriceAPIControllerExt::class, 'bulkStore']);
 Route::post('portfolio_assets_bulk_update', [PortfolioAssetAPIControllerExt::class, 'bulkStore']);
 
@@ -65,3 +65,7 @@ Route::resource('transaction_matchings', App\Http\Controllers\API\TransactionMat
 
 Route::resource('fund_reports', App\Http\Controllers\APIv1\FundReportAPIControllerExt::class);
 Route::resource('account_reports', App\Http\Controllers\APIv1\AccountReportAPIControllerExt::class);
+
+Route::resource('change_logs', App\Http\Controllers\API\ChangeLogAPIController::class);
+Route::resource('trade_portfolios', App\Http\Controllers\APIv1\TradePortfolioAPIControllerExt::class);
+Route::resource('trade_portfolio_items', App\Http\Controllers\API\TradePortfolioItemAPIController::class);

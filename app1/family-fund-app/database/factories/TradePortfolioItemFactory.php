@@ -2,17 +2,17 @@
 
 namespace Database\Factories;
 
-use App\Models\AccountReport;
+use App\Models\TradePortfolioItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class AccountReportFactory extends Factory
+class TradePortfolioItemFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = AccountReport::class;
+    protected $model = TradePortfolioItem::class;
 
     /**
      * Define the model's default state.
@@ -22,12 +22,13 @@ class AccountReportFactory extends Factory
     public function definition()
     {
         return [
-            //'account_id' => $this->faker->word,
+            //'trade_portfolio_id' => $this->faker->word,
+        'symbol' => $this->faker->word,
         'type' => $this->faker->word,
-        'as_of' => $this->faker->word,
+        'target_share' => $this->faker->word,
+        'deviation_trigger' => $this->faker->word,
         //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+        //'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

@@ -4,3 +4,4 @@ misc
 app1/family-fund-app/public/pdf_file.pdf
 backups
 /.phpunit.result.cache
+/tutorials/

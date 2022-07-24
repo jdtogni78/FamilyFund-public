@@ -69,3 +69,12 @@ Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerEx
 
 
 Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
+
+
+Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
+
+
+Route::resource('tradePortfolios', App\Http\Controllers\TradePortfolioController::class);
+
+
+Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);

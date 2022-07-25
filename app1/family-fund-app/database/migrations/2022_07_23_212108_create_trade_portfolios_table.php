@@ -25,6 +25,7 @@ class CreateTradeportfoliosTable extends Migration
             $table->integer('rebalance_period')->default('90');
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();
+            $table->softDeletes();
         });
     }
 

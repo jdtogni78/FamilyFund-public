@@ -5,3 +5,5 @@ app1/family-fund-app/public/pdf_file.pdf
 backups
 /.phpunit.result.cache
 /tutorials/
+/app1/datadir_dev/
+/app1/datadir_prod/

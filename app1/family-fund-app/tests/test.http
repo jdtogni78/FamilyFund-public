@@ -1,5 +1,5 @@
 ### GET prod account
-GET http://localhost:3001/api/trade_portfolios/U0000010
+GET http://10.0.0.86:3001/api/trade_portfolios/U0000010
 Accept: application/json
 
 ### GET dev account

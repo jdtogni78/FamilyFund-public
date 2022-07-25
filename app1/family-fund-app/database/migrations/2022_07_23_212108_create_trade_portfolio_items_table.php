@@ -24,6 +24,7 @@ class CreateTradeportfolioitemsTable extends Migration
             $table->decimal('deviation_trigger', 8, 5)->default('0.00500');
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();
+            $table->softDeletes();
             $table->index(["trade_portfolio_id"]);
         });
     }

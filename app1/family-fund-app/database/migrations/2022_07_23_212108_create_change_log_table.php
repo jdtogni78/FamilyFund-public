@@ -20,6 +20,7 @@ class CreateChangelogTable extends Migration
             $table->string('object', 50);
             $table->text('content');
             $table->timestamp('created_at')->useCurrent();
+            $table->softDeletes();
         });
     }
 

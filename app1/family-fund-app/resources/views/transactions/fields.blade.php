@@ -1,13 +1,13 @@
-<!-- Source Field -->
-<div class="form-group col-sm-6">
-    {!! Form::label('source', 'Source:') !!}
-    {!! Form::text('source', null, ['class' => 'form-control','maxlength' => 3]) !!}
-</div>
-
 <!-- Type Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
     {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3]) !!}
+</div>
+
+<!-- Status Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('status', 'Status:') !!}
+    {!! Form::text('status', null, ['class' => 'form-control','maxlength' => 1]) !!}
 </div>
 
 <!-- Value Field -->
@@ -22,10 +22,37 @@
     {!! Form::number('shares', null, ['class' => 'form-control']) !!}
 </div>
 
+<!-- Timestamp Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('timestamp', 'Timestamp:') !!}
+    {!! Form::text('timestamp', null, ['class' => 'form-control','id'=>'timestamp']) !!}
+</div>
+
+@push('scripts')
+   <script type="text/javascript">
+           $('#timestamp').datetimepicker({
+               format: 'YYYY-MM-DD HH:mm:ss',
+               useCurrent: true,
+               icons: {
+                   up: "icon-arrow-up-circle icons font-2xl",
+                   down: "icon-arrow-down-circle icons font-2xl"
+               },
+               sideBySide: true
+           })
+       </script>
+@endpush
+
+
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('account_id', 'Account Id:') !!}
     {!! Form::number('account_id', null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Descr Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('descr', 'Descr:') !!}
+    {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255]) !!}
 </div>
 
 <!-- Submit Field -->

@@ -7,7 +7,6 @@ use App\Models\Transaction;
 
 class UpdateTransactionRequest extends FormRequest
 {
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -26,7 +25,7 @@ class UpdateTransactionRequest extends FormRequest
     public function rules()
     {
         $rules = Transaction::$rules;
-        
+
         return $rules;
     }
 }

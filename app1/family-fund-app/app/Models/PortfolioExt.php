@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class PortfolioExt extends Portfolio
 {
+    private mixed $verbose = false;
+
     public function assetsAsOf($now, $assetId=null): Collection
     {
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);
@@ -40,7 +42,7 @@ class PortfolioExt extends Portfolio
      * @param bool $verbose
      * @return float
      */
-    public function valueAsOf($now, bool $verbose=false): float
+    public function valueAsOf($now): float
     {
         $portfolioAssets = $this->assetsAsOf($now);
 
@@ -62,14 +64,13 @@ class PortfolioExt extends Portfolio
                 $price = $assetPrice[0]['price'];
                 $value = $position * $price;
                 $totalValue += $value;
-                if ($verbose)
-                    print_r("values: ".json_encode([$asset_id, $position, $price, $value])."\n");
+                if ($this->verbose) print_r("values: ".json_encode([$asset_id, $position, $price, $value])."\n");
             } else {
                 # TODO printf("No price for $asset_id\n");
             }
         }
         // $totalValue = round($totalValue,4);
-        if ($verbose) {
+        if ($this->verbose) {
             print('id '.$this->id."\n");
             print('asOf '.$now."\n");
             print('totalvalue '.$totalValue."\n");

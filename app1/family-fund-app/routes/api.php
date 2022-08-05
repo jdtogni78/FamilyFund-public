@@ -51,7 +51,7 @@ Route::get('accounts/{id}/report_as_of/{as_of}', 'App\Http\Controllers\APIv1\Acc
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class);
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class);
 Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class);
-Route::resource('transactions', App\Http\Controllers\API\TransactionAPIController::class);
+Route::resource('transactions', App\Http\Controllers\APIv1\TransactionAPIControllerExt::class);
 
 Route::resource('asset_prices', AssetPriceAPIControllerExt::class);
 Route::resource('assets', AssetAPIController::class);

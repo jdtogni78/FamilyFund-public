@@ -11,7 +11,7 @@ use App\Models\TransactionMatching;
 use DB;
 use Tests\DataFactory;
 
-class TransactionExtApiTest extends TestCase
+class TransactionApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
@@ -99,8 +99,7 @@ class TransactionExtApiTest extends TestCase
         $fund = $factory->createFund($data['fund']['shares'], $data['fund']['value']);
         $user = $factory->createUser();
         if ($data['match']) {
-            $matching = $factory->createMatchingRule($data['match']['limit'], $data['match']['match']);
-            $factory->createAccountMatching();
+            $matching = $factory->createMatching($data['match']['limit'], $data['match']['match']);
         }
         print_r(json_encode($fund->toArray())."\n");
         print_r(json_encode($user->toArray())."\n");

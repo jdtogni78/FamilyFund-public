@@ -119,11 +119,11 @@ class TransactionApiGoldenDataTest extends TestCase
                 }
                 $old_shares = $bals[$key][4];
                 if ($bal_type == 'OWN') {
-                    if (! ($tran_type == 'PUR' || $tran_type == 'REP')) {
+                    if (! ($tran_type == 'PUR' || $tran_type == 'REP' || $tran_type == 'MAT')) {
                         $tran_shares *= -1;
                     }
                 } elseif ($bal_type == 'BOR') {
-                    if ($tran_type == 'PUR' || $tran_type == 'REP') {
+                    if ($tran_type == 'PUR' || $tran_type == 'REP' || $tran_type == 'MAT') {
                         $tran_shares *= -1;
                     }
                 }

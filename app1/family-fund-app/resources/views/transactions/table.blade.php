@@ -2,22 +2,26 @@
     <table class="table table-striped" id="transactions-table">
         <thead>
             <tr>
-                <th>Source</th>
-        <th>Type</th>
+                <th>Type</th>
+        <th>Status</th>
         <th>Value</th>
         <th>Shares</th>
+        <th>Timestamp</th>
         <th>Account Id</th>
+        <th>Descr</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($transactions as $transaction)
             <tr>
-                <td>{{ $transaction->source }}</td>
-            <td>{{ $transaction->type }}</td>
+                <td>{{ $transaction->type }}</td>
+            <td>{{ $transaction->status }}</td>
             <td>{{ $transaction->value }}</td>
             <td>{{ $transaction->shares }}</td>
+            <td>{{ $transaction->timestamp }}</td>
             <td>{{ $transaction->account_id }}</td>
+            <td>{{ $transaction->descr }}</td>
                 <td>
                     {!! Form::open(['route' => ['transactions.destroy', $transaction->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

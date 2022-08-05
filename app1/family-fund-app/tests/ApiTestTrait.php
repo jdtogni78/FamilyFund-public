@@ -112,35 +112,36 @@ trait ApiTestTrait
      * @param mixed $response
      * @param $verbose
      */
-    public function setResponse($response, $verbose=false): void
+    public function setResponse($response): void
     {
         $this->response = $response;
 
-        $response = json_decode($this->getResponse()->body(), true);
+        $response = json_decode($this->response->getContent(), true);
         $this->data = null;
         $this->success = null;
         if (array_key_exists('success', $response)) {
             $this->success = $response['success'];
-            print_r("SUCCESS: " . $this->success . "\n");
+            if ($this->verbose) print_r("SUCCESS: " . ($this->success?"TRUE":"false") . "\n");
         }
         if (array_key_exists('message', $response)) {
             $this->message = $response['message'];
-            print_r("MESSAGE: " . $this->message . "\n");
+            if ($this->verbose) print_r("MESSAGE: " . $this->message . "\n");
         }
         if (array_key_exists('data', $response)) {
             $this->data = $response['data'];
         }
-        if ($verbose) print_r("response: " . json_encode($response) . "\n");
+        if ($this->verbose) print_r("response: " . $this->response->getStatusCode() . " " . json_encode($response) . "\n");
     }
 
-    private function getAPI(string $api): void
+    public function postAPI(string $api, array $data) {
+        if ($this->verbose) print("*** POST API: $api\n*** DATA:" . json_encode($data) ."\n");
+        $this->setResponse($this->json('POST', $api, $data));
+    }
+
+    public function getAPI(string $api): void
     {
-        if ($this->verbose) print("*** API: $api\n");
-        $this->response = $this->json(
-            'GET',
-            $api
-        );
-        if ($this->verbose) print("RESPONSE: ".$this->response->getContent() . "\n");
+        if ($this->verbose) print("*** GET API: $api\n");
+        $this->setResponse($this->json('GET', $api));
     }
 
 }

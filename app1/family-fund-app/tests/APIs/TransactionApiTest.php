@@ -2,8 +2,6 @@
 
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Symfony\Component\HttpFoundation\Response;
-use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
@@ -17,10 +15,7 @@ class TransactionApiTest extends TestCase
      */
     public function test_create_transaction()
     {
-        $factory = new DataFactory();
-        $factory->createFund();
-        $factory->createUser();
-        $transaction = $factory->makeTransaction()->toArray();
+        $transaction = Transaction::factory()->make()->toArray();
 
         $this->response = $this->json(
             'POST',
@@ -33,72 +28,53 @@ class TransactionApiTest extends TestCase
     /**
      * @test
      */
-    public function test_create_transaction_error()
+    public function test_read_transaction()
     {
-        $factory = new DataFactory();
-        $factory->createFund();
-        $factory->createUser();
-        $transaction = $factory->makeTransaction()->toArray();
-        $transaction['type'] = '123';
+        $transaction = Transaction::factory()->create();
 
         $this->response = $this->json(
-            'POST',
-            '/api/transactions', $transaction
+            'GET',
+            '/api/transactions/'.$transaction->id
         );
 
-        $this->assertApiValidationError(Response::HTTP_UNPROCESSABLE_ENTITY);
+        $this->assertApiResponse($transaction->toArray());
     }
 
-    // /**
-    //  * @test
-    //  */
-    // public function test_read_transaction()
-    // {
-    //     $transaction = Transaction::factory()->create();
+    /**
+     * @test
+     */
+    public function test_update_transaction()
+    {
+        $transaction = Transaction::factory()->create();
+        $editedTransaction = Transaction::factory()->make()->toArray();
 
-    //     $this->response = $this->json(
-    //         'GET',
-    //         '/api/transactions/'.$transaction->id
-    //     );
+        $this->response = $this->json(
+            'PUT',
+            '/api/transactions/'.$transaction->id,
+            $editedTransaction
+        );
 
-    //     $this->assertApiResponse($transaction->toArray());
-    // }
+        $this->assertApiResponse($editedTransaction);
+    }
 
-    // /**
-    //  * @test
-    //  */
-    // public function test_update_transaction()
-    // {
-    //     $transaction = Transaction::factory()->create();
-    //     $editedTransaction = Transaction::factory()->make()->toArray();
+    /**
+     * @test
+     */
+    public function test_delete_transaction()
+    {
+        $transaction = Transaction::factory()->create();
 
-    //     $this->response = $this->json(
-    //         'PUT',
-    //         '/api/transactions/'.$transaction->id,
-    //         $editedTransaction
-    //     );
+        $this->response = $this->json(
+            'DELETE',
+             '/api/transactions/'.$transaction->id
+         );
 
-    //     $this->assertApiResponse($editedTransaction);
-    // }
+        $this->assertApiSuccess();
+        $this->response = $this->json(
+            'GET',
+            '/api/transactions/'.$transaction->id
+        );
 
-    // /**
-    //  * @test
-    //  */
-    // public function test_delete_transaction()
-    // {
-    //     $transaction = Transaction::factory()->create();
-
-    //     $this->response = $this->json(
-    //         'DELETE',
-    //          '/api/transactions/'.$transaction->id
-    //      );
-
-    //     $this->assertApiSuccess();
-    //     $this->response = $this->json(
-    //         'GET',
-    //         '/api/transactions/'.$transaction->id
-    //     );
-
-    //     $this->response->assertStatus(404);
-    // }
+        $this->response->assertStatus(404);
+    }
 }

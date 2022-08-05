@@ -9,16 +9,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class Transaction
  * @package App\Models
- * @version January 14, 2022, 4:54 am UTC
+ * @version August 1, 2022, 4:46 am UTC
  *
  * @property \App\Models\Account $account
- * @property \App\Models\MatchingRule $matchingRule
  * @property \Illuminate\Database\Eloquent\Collection $accountBalances
- * @property string $source
+ * @property \Illuminate\Database\Eloquent\Collection $transactionMatchings
+ * @property \Illuminate\Database\Eloquent\Collection $transactionMatching1s
  * @property string $type
+ * @property string $status
  * @property number $value
  * @property number $shares
+ * @property string|\Carbon\Carbon $timestamp
  * @property integer $account_id
+ * @property string $descr
  */
 class Transaction extends Model
 {
@@ -37,11 +40,13 @@ class Transaction extends Model
 
 
     public $fillable = [
-        'source',
         'type',
+        'status',
         'value',
         'shares',
-        'account_id'
+        'timestamp',
+        'account_id',
+        'descr'
     ];
 
     /**
@@ -51,12 +56,13 @@ class Transaction extends Model
      */
     protected $casts = [
         'id' => 'integer',
-        'source' => 'string',
         'type' => 'string',
+        'status' => 'string',
         'value' => 'decimal:2',
         'shares' => 'decimal:4',
         'timestamp' => 'datetime',
-        'account_id' => 'integer'
+        'account_id' => 'integer',
+        'descr' => 'string'
     ];
 
     /**
@@ -65,12 +71,13 @@ class Transaction extends Model
      * @var array
      */
     public static $rules = [
-        'source' => 'in:SPO,DIR,MAT',
-        'type' => 'in:PUR,BOR,SAL,REP,INI',
+        'type' => 'in:PUR,BOR,SAL,REP,MAT,INI',
+        'status' => 'in:C,P',
         'value' => 'required|numeric',
         'shares' => 'nullable|numeric',
-        'timestamp' => 'nullable',
+        'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
+        'descr' => 'nullable|string|max:255',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -99,12 +106,11 @@ class Transaction extends Model
     {
         return $this->hasOne(\App\Models\TransactionMatching::class, 'reference_transaction_id');
     }
-
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      **/
-    public function accountBalances()
+    public function accountBalance()
     {
-        return $this->hasMany(\App\Models\AccountBalance::class, 'transaction_id');
+        return $this->hasOne(\App\Models\AccountBalance::class, 'transaction_id');
     }
 }

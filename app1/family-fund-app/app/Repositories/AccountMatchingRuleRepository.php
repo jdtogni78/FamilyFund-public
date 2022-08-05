@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\AccountMatchingRule;
+use App\Models\AccountMatchingRuleExt;
 use App\Repositories\BaseRepository;
 
 /**
@@ -36,6 +36,6 @@ class AccountMatchingRuleRepository extends BaseRepository
      **/
     public function model()
     {
-        return AccountMatchingRule::class;
+        return AccountMatchingRuleExt::class;
     }
 }

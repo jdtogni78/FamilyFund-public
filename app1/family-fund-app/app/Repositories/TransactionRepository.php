@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TransactionRepository
  * @package App\Repositories
- * @version January 14, 2022, 4:54 am UTC
+ * @version August 1, 2022, 4:46 am UTC
 */
 
 class TransactionRepository extends BaseRepository
@@ -17,11 +17,13 @@ class TransactionRepository extends BaseRepository
      * @var array
      */
     protected $fieldSearchable = [
-        'source',
         'type',
+        'status',
         'value',
         'shares',
-        'account_id'
+        'timestamp',
+        'account_id',
+        'descr'
     ];
 
     /**

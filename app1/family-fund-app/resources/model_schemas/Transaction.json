@@ -12,10 +12,10 @@
         "inView": false
     },
     {
-        "name": "source",
+        "name": "type",
         "dbType": "string,3",
         "htmlType": "text",
-        "validations": "required|string|max:3",
+        "validations": "in:PUR,SAL,BOR,REP,MAT",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -24,10 +24,10 @@
         "inView": true
     },
     {
-        "name": "type",
-        "dbType": "string,3",
+        "name": "status",
+        "dbType": "string,1",
         "htmlType": "text",
-        "validations": "required|string|max:3",
+        "validations": "in:C|P",
         "searchable": true,
         "fillable": true,
         "primary": false,

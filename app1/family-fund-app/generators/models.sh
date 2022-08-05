@@ -1,7 +1,7 @@
 #!/bin/bash
 
 tables=$(mysql -h 127.0.0.1 -u famfun -p1234 familyfund -N -e "show tables" 2> /dev/null | grep -v "+" | grep -v "failed_jobs\|migrations\|password_resets\|personal_access_tokens")
-tables="trade_portfolios change_log trade_portfolio_items"
+tables="transactions"
 
 for t in $tables; do
     echo $t

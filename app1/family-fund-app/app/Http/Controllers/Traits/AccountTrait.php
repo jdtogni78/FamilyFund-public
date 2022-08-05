@@ -128,37 +128,28 @@ trait AccountTrait
 
     protected function createAccountMatchingResponse($account, $asOf): array
     {
-//        $account = AccountExt::find($account->id);
-            //$this->accountRepository->with(['accountMatchingRules.matchingRule.transactionMatchings.transaction'])->find($account->id);
-//        print_r("data: " . json_encode($account) . "\n");
-//        print_r($account);
+        if ($this->verbose) print_r("amresp: " . json_encode($account) . " " . $asOf . "\n");
         $tsAsOf = (new DateTime($asOf))->getTimestamp();
         $arr = [];
         foreach ($account->accountMatchingRules()->get() as $amr) {
+            // TODO: filter deleted / ignore pending trans
             foreach ($amr->matchingRule()->get() as $mr) {
-                $used = 0;
+                if ($this->verbose) print_r("mr: " . $mr->name . "\n");
                 if ($tsAsOf >= $mr->date_start->getTimestamp()) {
-                    foreach ($mr->transactionMatchings()->get() as $tm) {
-                        foreach ($tm->transaction()->get() as $transaction) {
-                            if ($tsAsOf >= $transaction->timestamp->getTimestamp() &&
-                                $transaction->account_id == $account->id) {
-                                if ($this->verbose)
-                                    print_r("vals: " . json_encode([$tsAsOf, $transaction->toArray()]) . "\n");
-                                $used += $transaction->value;
-                            }
-                        }
-                    }
                     $mrA = $mr->toArray();
                     $mrA['available'] = 0;
-                    $mrA['used'] = $used;
+                    $range = $mr->dollar_range_end - $mr->dollar_range_start;
+                    $granted = $amr->getMatchGrantedAsOf(new DateTime($asOf)); // may be more than range with a big tran
+                    $mrA['granted'] = $granted;
+                    $considered = $amr->getMatchConsideredAsOf(new DateTime($asOf)); // may be more than range with a big tran
+                    $mrA['used'] = min($considered, $range);
 
-                    if ($tsAsOf < $mr->date_end->getTimestamp()) {
-                        $range = $mr->dollar_range_end - $mr->dollar_range_start;
-                        $mrA['available'] = ($range * $mr->match_percent / 100.0) - $used;
+                    if ($tsAsOf < $mr->date_end->getTimestamp()) { // dont remove old matchings
+                        $mrA['available'] = $range - $mrA['used'];
                     }
 
-                    $mrA['date_start'] = substr($mrA['date_start'],0,10);
-                    $mrA['date_end'] = substr($mrA['date_end'],0,10);
+                    $mrA['date_start'] = substr($mrA['date_start'], 0, 10);
+                    $mrA['date_end'] = substr($mrA['date_end'], 0, 10);
                     unset($mrA['transaction_matchings']);
                     $arr[] = $mrA;
                 }

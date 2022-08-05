@@ -105,7 +105,7 @@ class Account extends Model
      **/
     public function accountMatchingRules()
     {
-        return $this->hasMany(\App\Models\AccountMatchingRule::class, 'account_id');
+        return $this->hasMany(\App\Models\AccountMatchingRuleExt::class, 'account_id');
     }
 
     /**

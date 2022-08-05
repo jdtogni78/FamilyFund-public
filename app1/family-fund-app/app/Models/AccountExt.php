@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Http\Resources\AccountBalanceResource;
 use App\Models\Account;
 use App\Repositories\AccountBalanceRepository;
+use App\Repositories\TransactionRepository;
+use Illuminate\Support\Facades\Date;
+use Nette\Utils\DateTime;
 
 /**
  * Class AccountExt
@@ -23,8 +27,38 @@ class AccountExt extends Account
     {
         return $this->hasMany(\App\Models\TransactionExt::class, 'account_id')
             ->orderBy('created_at')
-            // ->orderBy('matching_rule_id')
             ;
+    }
+
+    public function depositedValueBetween($start, $end)
+    {
+        $transactionsRepo = \App::make(TransactionRepository::class);
+        $query = $transactionsRepo->makeModel()->newQuery()
+            ->where('account_id', $this->id)
+            ->whereDate('timestamp', '>', $start)
+            ->whereDate('timestamp', '<', $end);
+        $trans = $query->get();
+        $value = 0;
+        foreach ($trans as $tran) {
+            if ($tran->status == 'P') continue;
+
+//            'type' => 'in:PUR,BOR,SAL,REP,MAT,INI',
+            switch ($tran->type) {
+                case 'PUR':
+                case 'REP':
+                    $value += $tran->value;
+                    break;
+                case 'BOR':
+                case 'SAL':
+                    $value -= $tran->value;
+                    break;
+                case 'MAT': // dont account for
+                case 'INI': // dont account for
+                    break;
+
+            }
+        }
+        return $value;
     }
 
     /**
@@ -53,7 +87,9 @@ class AccountExt extends Account
 
     public function sharesAsOf($now) {
         $accountBalances = $this->allSharesAsOf($now);
+//        print_r($accountBalances->count());
         foreach ($accountBalances as $balance) {
+//            print_r(json_encode($balance->toArray()));
             if ($balance->type == 'OWN') {
                 return $balance->shares;
             }

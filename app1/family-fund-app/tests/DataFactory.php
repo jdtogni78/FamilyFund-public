@@ -13,6 +13,7 @@ use App\Models\Asset;
 use App\Models\PortfolioAsset;
 use App\Models\MatchingRule;
 use App\Models\AccountMatchingRule;
+use Nette\Utils\DateTime;
 
 class DataFactory
 {
@@ -70,8 +71,11 @@ class DataFactory
 
         $this->fundBalance = AccountBalance::factory()
             ->for($this->fundTransaction, 'transaction')
+            ->for($this->fundAccount, 'account')
             ->create([
                 'type' => 'OWN',
+                'start_dt' => $timestamp,
+                'end_dt' => '9999-12-31',
                 'shares' => $shares
             ]);
 
@@ -99,30 +103,46 @@ class DataFactory
         return $this->user;
     }
 
-    public function createMatchingRule($limit=100, $match=100) {
+    public function createMatching($dollar_end=100, $match=100, $start='2000-01-01', $end='9999-12-31', $dollar_start = 0)
+    {
+        $mr = $this->createMatchingRule($dollar_end, $match, $start, $end, $dollar_start);
+        $this->createAccountMatching();
+        return $mr;
+    }
+
+    public function createMatchingRule($dollar_end=100, $match=100, $start='2000-01-01', $end='9999-12-31', $dollar_start = 0) {
         $this->matchingRule = MatchingRule::factory()->create([
-            'dollar_range_start' => 0,
-            'dollar_range_end' => $limit,
-            'match_percent' => $match
+            'dollar_range_start' => $dollar_start,
+            'dollar_range_end' => $dollar_end,
+            'match_percent' => $match,
+            "date_start" => $start,
+            "date_end" => $end,
         ]);
+        if ($this->verbose) print_r("mr: " . json_encode($this->matchingRule) . "\n");
+
         $this->matchingRules[] = $this->matchingRule;
         return $this->matchingRule;
     }
 
     public function createAccountMatching() {
-        return $this->accountMatching[] = AccountMatchingRule::factory()
+        $amr = AccountMatchingRule::factory()
             ->for($this->userAccounts[$this->userNum], 'account')
             ->for($this->matchingRule)
-            ->create();
+            ->create([
+            ]);
+        if ($this->verbose) print_r("amr: " . json_encode($amr) . "\n");
+        $this->accountMatching[] = $amr;
+        return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type='PUR', $source='DIR') {
-        $tran = $this->makeTransaction($value, $account, $type, $source);
+    public function createTransaction($value=100, $account=null, $type='PUR', $status='C') {
+        $tran = $this->makeTransaction($value, $account, $type, $status);
         $tran->save();
+        if ($this->verbose) print_r("tran: " . json_encode($tran) . "\n");
         return $tran;
     }
 
-    public function makeTransaction($value=100, $account=null, $type='PUR', $source='DIR') {
+    public function makeTransaction($value=100, $account=null, $type='PUR', $status='C', $timestamp=null, $shares=null) {
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -130,13 +150,18 @@ class DataFactory
                 $account = $this->fundAccount;
             }
         }
+
+        $arr = [
+            'type' => $type,
+            'status' => $status,
+            'value' => $value,
+        ];
+        if ($shares) $arr['shares'] = $shares;
+        if ($timestamp) $arr['timestamp'] = $timestamp;
+
         $this->transaction = Transaction::factory()
             ->for($account, 'account')
-            ->make([
-                'type' => $type,
-                'source' => $source,
-                'value' => $value
-            ]);
+            ->make($arr);
         $this->transactions[] = $this->transaction;
         return $this->transaction;
     }
@@ -188,9 +213,8 @@ class DataFactory
         $factory = $this;
         $factory->createFund();
         $factory->createUser();
-        $factory->createMatchingRule(150, 100);
-        $factory->createAccountMatching();
-        $factory->createTransactionWithMatching();
+        $factory->createMatching(100, 50);
+        $factory->createTransactionWithMatching(50, 25);
     }
 
     public function createTransactionMatching($matching, $matchTran, $transaction)
@@ -204,12 +228,12 @@ class DataFactory
         return $tm;
     }
 
-    public function createTransactionWithMatching(): void
+    public function createTransactionWithMatching($value1, $value2): void
     {
-        $transaction = $this->createTransaction();
+        $transaction = $this->createTransaction($value1);
         $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
 
-        $this->matchTransaction = $this->createTransaction($transaction->value / 2, null, 'DIR', 'MAT');
+        $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C');
         $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction);
     }
 }

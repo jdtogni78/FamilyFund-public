@@ -46,7 +46,6 @@ class FundExt extends Fund
     public function valueAsOf($now, $verbose=false)
     {
         $portfolio = $this->portfolio();
-        // print_r(['port',$portfolio->id,$this->id]);
         return $portfolio->valueAsOf($now, $verbose);
     }
 
@@ -54,7 +53,7 @@ class FundExt extends Fund
     {
         $value = $this->valueAsOf($now);
         $shares = $this->sharesAsOf($now);
-        // print_r([$value,$shares,$now,$this->id]);
+//        print_r(json_encode([$value,$shares,$now->toDatetimeString(),$this->id])."\n");
         if ($shares == 0) return 0;
         return $value / $shares;
     }

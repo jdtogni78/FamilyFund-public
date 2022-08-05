@@ -7,7 +7,6 @@ use App\Models\Transaction;
 
 class CreateTransactionRequest extends FormRequest
 {
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -25,6 +24,8 @@ class CreateTransactionRequest extends FormRequest
      */
     public function rules()
     {
-        return Transaction::$rules;
+        $rules = Transaction::$rules;
+        $rules['shares'] = 'prohibited';
+        return $rules;
     }
 }

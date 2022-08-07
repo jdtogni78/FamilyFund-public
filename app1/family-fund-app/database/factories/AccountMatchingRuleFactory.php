@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\AccountMatchingRule;
+use App\Models\AccountMatchingRuleExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AccountMatchingRuleFactory extends Factory
@@ -12,7 +12,7 @@ class AccountMatchingRuleFactory extends Factory
      *
      * @var string
      */
-    protected $model = AccountMatchingRule::class;
+    protected $model = AccountMatchingRuleExt::class;
 
     /**
      * Define the model's default state.

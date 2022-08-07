@@ -4,6 +4,7 @@ use App\Http\Resources\TransactionResource;
 use CpChart\Data;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 use Tests\TestCase;
@@ -78,6 +79,24 @@ class TransactionApiExtTest extends TestCase
         $this->assertEquals($transactions->count(), 1);
     }
 
+    /**
+     * @test
+     */
+    public function test_fund_tran()
+    {
+        $factory = $this->factory;
+        $timestamp = '2022-01-01';
+//        $factory->dumpTransactions($factory->fundAccount);
+        $transactions = $factory->fundAccount->transactions();
+
+        // pending tran without match > clear
+        $this->postPurchase(1000, $timestamp, 1000, $factory->fundAccount);
+//        $factory->dumpTransactions($factory->fundAccount);
+        $this->assertEquals($transactions->count(), 2);
+        $this->validateTran($this->tranRes, 1000, 1000, 2000);
+
+    }
+
     public function test_matching()
     {
         $factory = $this->factory;
@@ -122,7 +141,7 @@ class TransactionApiExtTest extends TestCase
         $factory->createMatching(10, 200);
 
         // add matching
-        $factory->createMatching(100, 50, '2000-01-01', '2022-01-01', 50);
+        $mr3 = $factory->createMatching(100, 50, '2000-01-01', '2022-01-01', 50);
 
         // pending tran with match
         //   (extra pending tran to be ignored)
@@ -141,16 +160,36 @@ class TransactionApiExtTest extends TestCase
         $this->validateTran($tm[1]->transaction()->first(), 25, 25, 275);
     }
 
-    private function dumpTrans() {
-        $userAccount = $this->factory->userAccount;
-        print_r(["TRANSACTIONS", $userAccount->id]);
-//        foreach ($this->factory->userAccount->transactions() as $t) {
-        foreach ($userAccount->transactions()->get() as $t) {
-            print_r("** TRAN " . json_encode($t->toArray()) . "\n");
-            foreach ($t->referenceTransactionMatching()->get() as $r) {
-                print_r("**** REF " . json_encode($r->toArray()) . "\n");
-            }
-        }
+    public function test_periods()
+    {
+        $factory = $this->factory;
+        // add matching
+        $mr3 = $factory->createMatching(100, 50, '2020-01-01', '2022-01-01', 50);
+
+//        $factory->dumpMatchingRules();
+        $amr = $mr3->accountMatchingRules()->first();
+
+        // Not report, checking if a match at that time should be considered
+        $this->assertFalse($amr->isInPeriod(new Carbon('2019-12-31'), false));
+        $this->assertTrue($amr->isInPeriod(new Carbon('2020-01-01'), false));
+        $this->assertTrue($amr->isInPeriod(new Carbon('2022-01-01'), false));
+        $this->assertFalse($amr->isInPeriod(new Carbon('2022-01-02'), false));
+
+        // ... tran ts, now
+        $this->assertTrue($amr->isTransactionInTime(false, new Carbon('2020-01-01'), new Carbon('2020-01-01')));
+        $this->assertTrue($amr->isTransactionInTime(false, new Carbon('2020-01-02'), new Carbon('2020-01-01')));
+        $this->assertTrue($amr->isTransactionInTime(false, new Carbon('2020-01-01'), new Carbon('2020-01-02')));
+
+        // Now, if its a report...
+        $this->assertFalse($amr->isInPeriod(new Carbon('2019-12-31'), true));
+        $this->assertTrue($amr->isInPeriod(new Carbon('2020-01-01'), true));
+        $this->assertTrue($amr->isInPeriod(new Carbon('2022-01-01'), true));
+        $this->assertTrue($amr->isInPeriod(new Carbon('2022-01-02'), true));
+
+        // ... tran ts, now
+        $this->assertTrue($amr->isTransactionInTime(true, new Carbon('2020-01-01'), new Carbon('2020-01-01')));
+        $this->assertFalse($amr->isTransactionInTime(true, new Carbon('2020-01-02'), new Carbon('2020-01-01')));
+        $this->assertTrue($amr->isTransactionInTime(true, new Carbon('2020-01-01'), new Carbon('2020-01-02')));
     }
 
 //    pending tran and other apis / methods
@@ -162,9 +201,9 @@ class TransactionApiExtTest extends TestCase
         $this->assertApiError($code);
     }
 
-    protected function postTransaction($value, $type, $status, $timestamp=null, $shares=null): void
+    protected function postTransaction($value, $type, $status, $timestamp=null, $shares=null, $account=null): void
     {
-        $transaction = $this->factory->makeTransaction($value, null, $type, $status, $timestamp, $shares)->toArray();
+        $transaction = $this->factory->makeTransaction($value, $account, $type, $status, $timestamp, $shares)->toArray();
         $url = '/api/transactions';
         $this->postAPI($url, $transaction);
         if ($this->data != null && array_key_exists('id', $this->data)) {
@@ -172,9 +211,9 @@ class TransactionApiExtTest extends TestCase
         }
     }
 
-    private function postPurchase(float $value, $timestamp=null, float $shares)
+    private function postPurchase(float $value, $timestamp=null, float $shares, $account=null)
     {
-        $this->postTransaction($value, 'PUR', 'P', $timestamp);
+        $this->postTransaction($value, 'PUR', 'P', $timestamp, null, $account);
         $this->assertApiSuccess();
         $this->assertEquals($value, $this->data['value']);
         $this->assertEquals($shares, $this->data['shares']);

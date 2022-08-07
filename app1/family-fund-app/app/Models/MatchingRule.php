@@ -81,7 +81,7 @@ class MatchingRule extends Model
      **/
     public function accountMatchingRules()
     {
-        return $this->hasMany(\App\Models\AccountMatchingRule::class, 'matching_rule_id');
+        return $this->hasMany(\App\Models\AccountMatchingRuleExt::class, 'matching_rule_id');
     }
 
     /**

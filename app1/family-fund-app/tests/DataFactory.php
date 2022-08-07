@@ -65,9 +65,7 @@ class DataFactory
         $this->portfolio = $this->fund->portfolio();
         $this->source = $this->portfolio->source;
 
-        $this->fundTransaction = Transaction::factory()
-            ->for($this->fundAccount, 'account')
-            ->create();
+        $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', $timestamp);
 
         $this->fundBalance = AccountBalance::factory()
             ->for($this->fundTransaction, 'transaction')
@@ -135,8 +133,8 @@ class DataFactory
         return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type='PUR', $status='C') {
-        $tran = $this->makeTransaction($value, $account, $type, $status);
+    public function createTransaction($value=100, $account=null, $type='PUR', $status='C', $timestamp=null) {
+        $tran = $this->makeTransaction($value, $account, $type, $status, $timestamp);
         $tran->save();
         if ($this->verbose) print_r("tran: " . json_encode($tran) . "\n");
         return $tran;
@@ -236,4 +234,31 @@ class DataFactory
         $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C');
         $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction);
     }
+
+    public function dumpTransactions($account = null) {
+        if ($account == null) $account = $this->userAccount;
+        print_r(["TRANSACTIONS", $account->id]);
+//        foreach ($this->factory->account->transactions() as $t) {
+        foreach ($account->transactions()->get() as $t) {
+            print_r("** TRAN " . json_encode($t->toArray()) . "\n");
+            print_r("**** BAL " . json_encode($t->accountBalance()->first()->toArray()) . "\n");
+            foreach ($t->referenceTransactionMatching()->get() as $r) {
+                print_r("**** REF " . json_encode($r->toArray()) . "\n");
+            }
+        }
+    }
+
+    public function dumpMatchingRules()
+    {
+        print_r("[MatchingRules]\n");
+        foreach ($this->matchingRules as $mr) {
+            $accts = [];
+            foreach ($mr->accountMatchingRules()->get() as $amr) {
+                $accts[] = $amr->account()->first()->id;
+            }
+            print_r("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts)."\n");
+
+        }
+    }
+
 }

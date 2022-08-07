@@ -15,47 +15,6 @@ use Nette\Utils\DateTime;
  */
 class TransactionExt extends Transaction
 {
-    // /**
-    //  * Transaction types
-    //  *
-    //  * @var array
-    //  */
-    // public const TYPES = [
-    //     1 => 'purchase',
-    //     2 => 'sale',
-    //     3 => 'borrow',
-    //     4 => 'repay'
-    // ];
-
-    // /**
-    //  * returns the id of a given type
-    //  *
-    //  * @param string $type  transaction type
-    //  * @return int typeID
-    //  */
-    // public static function getTypeID($type)
-    // {
-    //     return array_search($type, self::TYPES);
-    // }
-
-    // /**
-    //  * get transaction type
-    //  */
-    // public function getTypeAttribute()
-    // {
-    //     return self::TYPES[ $this->attributes['type'] ];
-    // }
-
-    // /**
-    //  * set transaction type
-    //  */
-    // public function setTypeAttribute($value)
-    // {
-    //     $typeID = self::getTypeID($value);
-    //     if ($typeID) {
-    //        $this->attributes['type_id'] = $typeID;
-    //     }
-    // }
     /**
      * @throws \Exception
      */
@@ -71,22 +30,19 @@ class TransactionExt extends Transaction
         $accountBalanceRepo = \App::make(AccountBalanceRepository::class);
         $account_id = $this->account()->first()->id;
 
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
-            ->where('type', 'OWN')
-            ->whereDate('end_dt', '=', '9999-12-31');
-        $bal = $query->first();
-        $oldShares = 0;
+        // TODO: move it to balance classes
+        $otherBalance = $this->validateBalanceOverlap($accountBalanceRepo, $account_id);
+        $bal = $this->validateLatestBalance($accountBalanceRepo, $account_id);
 
+        $oldShares = 0;
         if ($bal != null) {
-            if ($bal->start_dt > $this->timestamp) {
-                throw new Exception("Cannot add balance at " . $this->timestamp
-                    . " before previous balance " . $bal->start_dt);
-            }
             $oldShares = $bal->shares;
             $bal->end_dt = $this->timestamp;
             $bal->save();
             if ($this->verbose) print_r("OLD BAL " . json_encode($bal) . "\n");
+        } else {
+            // has lingering balances that is not infinity
+            throw new Exception("Unexpected: There are existent balances that were end-dated - not safe to proceed");
         }
 
         $newBal = $accountBalanceRepo
@@ -152,6 +108,46 @@ class TransactionExt extends Transaction
 
         $this->status = 'C';
         $this->save();
+    }
+
+    protected function validateBalanceOverlap(mixed $accountBalanceRepo, mixed $account_id): mixed
+    {
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '<=', $this->timestamp)
+            ->whereDate('start_dt', '>=', $this->timestamp);
+        $bal2 = $query->first();
+        if ($bal2 != null) {
+            print_r("There is already a balance on this period " . $this->timestamp .
+                ": " . json_encode($bal2->toArray()) . " \n");
+            throw new Exception("Cannot add balance at " . $this->timestamp
+                . " as there is already a balance on this period " . $bal2->id);
+        }
+
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '<', '9999-12-31');
+        $bal2 = $query->first();
+        return $bal2;
+    }
+
+    protected function validateLatestBalance(mixed $accountBalanceRepo, mixed $account_id): mixed
+    {
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '=', '9999-12-31');
+        $bal = $query->first();
+
+        if ($bal != null) {
+            if ($bal->start_dt > $this->timestamp) {
+                throw new Exception("Cannot add balance at " . $this->timestamp
+                    . " before previous balance " . $bal->start_dt);
+            }
+        }
+        return $bal;
     }
 
 }

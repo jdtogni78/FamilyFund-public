@@ -9,3 +9,8 @@ Accept: application/json
 ### GET fail account
 GET http://localhost:3000/api/trade_portfolios/AAA
 Accept: application/json
+
+### GET share price
+GET http://localhost:3000/api/accounts/1/share_value_as_of/2022-08-06
+Accept: application/json
+

@@ -46,7 +46,7 @@
         <li class="nav-item dropdown">
             <a class="nav-link" style="margin-right: 10px" data-toggle="dropdown" href="#" role="button"
                aria-haspopup="true" aria-expanded="false">
-                {{ Auth::user()? Auth::user()->name : '' }}
+                {{ Auth::user()? Auth::user()->name : 'NOT LOGGED IN' }}
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <div class="dropdown-header text-center">

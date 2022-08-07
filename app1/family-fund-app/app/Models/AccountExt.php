@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Http\Resources\AccountBalanceResource;
 use App\Models\Account;
 use App\Repositories\AccountBalanceRepository;
+use App\Repositories\AccountRepository;
 use App\Repositories\TransactionRepository;
 use Illuminate\Support\Facades\Date;
 use Nette\Utils\DateTime;
@@ -19,6 +20,16 @@ class AccountExt extends Account
     // {
     //     return parent::fund()->get()->first();
     // }
+    public static function accountMap()
+    {
+        $accountRepo = \App::make(AccountRepository::class);
+        $recs = $accountRepo->all([], null, null, ['id', 'nickname'])->toArray();
+        $out = [];
+        foreach ($recs as $row) {
+            $out[$row['id']] = $row['nickname'];
+        }
+        return $out;
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -99,10 +110,14 @@ class AccountExt extends Account
     }
 
     public function valueAsOf($now) {
-        $shareValue = $this->fund()->first()->shareValueAsOf($now);
+        $shareValue = $this->shareValueAsOf($now);
         $shares = $this->sharesAsOf($now);
         $value = $shareValue * $shares;
         return $value;
+    }
+
+    public function shareValueAsOf($asOf) {
+        return $this->fund()->first()->shareValueAsOf($asOf);
     }
 
     public function remainingMatchings() {

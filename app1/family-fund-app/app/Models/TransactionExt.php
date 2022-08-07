@@ -121,6 +121,7 @@ class TransactionExt extends Transaction
         $input = $rss->toArray(null);
 
         $input['type'] = 'MAT';
+        $descr = "Match transaction $this->id";
         $repo = \App::make(TransactionRepository::class);
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
@@ -129,15 +130,17 @@ class TransactionExt extends Transaction
                 print_r("MR ".json_encode($amr->matchingRule()->get())."\n");
             }
             if ($matchValue > 0) {
+                $mr = $amr->matchingRule()->first();
                 $input['value'] = $matchValue;
                 $input['status'] = 'C';
                 $input['shares'] = $matchValue / $share_value;
+                $input['descr'] = "$descr with $mr->name ($mr->id)";
 
                 if ($this->verbose) print_r("MATCHTRAN ".json_encode($input)."\n");
                 $matchTran = $repo->create($input);
                 $matchTran->createBalance();
                 $match = TransactionMatching::factory()
-                    ->for($amr->matchingRule()->first())
+                    ->for($mr)
                     // ->forReferenceTransaction([$this]) // dont work??
                     // ->for($this, 'referenceTransaction') // dont work??
                     ->create([

@@ -9,6 +9,7 @@
             <th>End $</th>
             <th>Match %</th>
             <th>Used</th>
+            <th>Granted</th>
         </tr>
         </thead>
         <tbody>
@@ -21,6 +22,7 @@
                 <td>$ {{ $match['dollar_range_end'] }}</td>
                 <td>{{ $match['match_percent'] }}%</td>
                 <td>$ {{ $match['used'] }}</td>
+                <td>$ {{ $match['granted'] }}</td>
             </tr>
         @endforeach
         </tbody>

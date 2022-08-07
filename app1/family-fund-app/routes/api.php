@@ -47,6 +47,8 @@ Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPI
 Route::get('accounts/{id}/transactions_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@showTransactionsAsOf');
 Route::get('accounts/{id}/performance_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@showPerformanceAsOf');
 Route::get('accounts/{id}/report_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@showReportAsOf');
+Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@shareValueAsOf')
+    ->name('accounts.share_value');
 
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class);
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class);

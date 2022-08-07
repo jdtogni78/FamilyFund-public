@@ -25,7 +25,7 @@
 @push('scripts')
    <script type="text/javascript">
            $('#date_start').datetimepicker({
-               format: 'YYYY-MM-DD HH:mm:ss',
+               format: 'YYYY-MM-DD',
                useCurrent: true,
                icons: {
                    up: "icon-arrow-up-circle icons font-2xl",
@@ -46,7 +46,7 @@
 @push('scripts')
    <script type="text/javascript">
            $('#date_end').datetimepicker({
-               format: 'YYYY-MM-DD HH:mm:ss',
+               format: 'YYYY-MM-DD',
                useCurrent: true,
                icons: {
                    up: "icon-arrow-up-circle icons font-2xl",

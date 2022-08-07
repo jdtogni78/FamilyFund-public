@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateTradeportfolioitemsTable extends Migration
+class CreateTradePortfolioItemsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -17,7 +17,7 @@ class CreateTradeportfolioitemsTable extends Migration
     {
         Schema::create('trade_portfolio_items', function (Blueprint $table) {
             $table->bigInteger('id', true, true);
-            $table->biginteger('trade_portfolio_id');
+            $table->foreignId('trade_portfolio_id')->constrained();
             $table->string('symbol', 50);
             $table->string('type', 50);
             $table->decimal('target_share', 5, 2)->default('0.10');
@@ -25,7 +25,6 @@ class CreateTradeportfolioitemsTable extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();
             $table->softDeletes();
-            $table->index(["trade_portfolio_id"]);
         });
     }
 

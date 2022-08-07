@@ -24,9 +24,10 @@ mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_dump.sql
 
 * Dump dev database on Mac
 
-cat ../../database/drop_all.sql > ../../database/familyfund_dump.sql;  
-mysqldump --column-statistics=FALSE familyfund --no-tablespaces --skip-add-locks --skip-set-charset --tz-utc --routines --user=root --host=127.0.0.1 --port=3306 -p123456 | sed -e $'s/),(/),\\\n(/g' -e 's/ AUTO_INCREMENT=[0-9]*//g' >> ../../database/familyfund_dump.sql
+generators/dump_ddl.sh
+generators/dump_data.sh
 
+ 
 * Create new lines to better see data changes:
 
 sed -e $'s/),(/),\\\n(/g' familyfund_dump.sql > familyfund_dump.sql

@@ -24,8 +24,7 @@ class CreateTransactionAPIRequest extends BaseAPIRequest
      */
     public function rules()
     {
-        $rules = Transaction::$rules;
-        $rules['shares'] = 'prohibited';
+        $rules = Transaction::$create_rules;
         return $rules;
     }
 }

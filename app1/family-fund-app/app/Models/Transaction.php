@@ -37,6 +37,14 @@ class Transaction extends Model
 
     protected $dates = ['deleted_at'];
 
+    public static array $typeMap = [
+        'PUR' => 'Purchase',
+        'INI' => 'Initial Value',
+    ];
+    public static array $statusMap = [
+        'P' => 'Pending',
+        'C' => 'Cleared',
+        ];
 
 
     public $fillable = [
@@ -81,6 +89,15 @@ class Transaction extends Model
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
+    ];
+    public static $create_rules = [
+        'type' => 'in:PUR',
+        'status' => 'in:P',
+        'value' => 'required|numeric',
+        'shares' => 'prohibited',
+        'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
+        'account_id' => 'required',
+        'descr' => 'nullable|string|max:255',
     ];
 
     /**

@@ -20,7 +20,6 @@ class CreatePortfoliosTable extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();
             $table->softDeletes();
-
         });
     }
 

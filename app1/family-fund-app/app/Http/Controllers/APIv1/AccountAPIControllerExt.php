@@ -5,6 +5,7 @@ namespace App\Http\Controllers\APIv1;
 use App\Http\Controllers\Traits\AccountTrait;
 use App\Http\Controllers\Traits\PerformanceTrait;
 use App\Models\Account;
+use App\Models\AccountExt;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
 use App\Http\Controllers\API\AccountAPIController;
@@ -160,5 +161,24 @@ class AccountAPIControllerExt extends AccountAPIController
 
         return $this->sendResponse($arr, 'Record fetched successfully');
     }
+
+    /**
+     * GET|HEAD /funds/{id}/share_value_as_of/{date}
+     * @param int $id
+     * @return Response
+     */
+    public function shareValueAsOf($id, $asOf=null)
+    {
+        /** @var AccountExt $account */
+        $account = $this->accountRepository->find($id);
+
+        if (empty($account)) {
+            return $this->sendError('Account not found');
+        }
+
+        $arr = ['share_price' => $account->shareValueAsOf($asOf)];
+        return $this->sendResponse($arr, 'Share value retrieved successfully');
+    }
+
 
 }

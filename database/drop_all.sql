@@ -5,8 +5,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-DROP TABLE IF EXISTS `accounts`;
-DROP TABLE IF EXISTS `transactions`;
 DROP TABLE IF EXISTS `account_balances`;
 DROP TABLE IF EXISTS `account_matching_rules`;
 DROP TABLE IF EXISTS `account_reports`;
@@ -14,17 +12,23 @@ DROP TABLE IF EXISTS `accounts`;
 DROP TABLE IF EXISTS `asset_change_logs`;
 DROP TABLE IF EXISTS `asset_prices`;
 DROP TABLE IF EXISTS `assets`;
+DROP TABLE IF EXISTS `change_log`;
 DROP TABLE IF EXISTS `failed_jobs`;
-DROP TABLE IF EXISTS `funds`;
 DROP TABLE IF EXISTS `fund_reports`;
+DROP TABLE IF EXISTS `funds`;
+DROP TABLE IF EXISTS `jobs`;
 DROP TABLE IF EXISTS `matching_rules`;
 DROP TABLE IF EXISTS `migrations`;
 DROP TABLE IF EXISTS `password_resets`;
 DROP TABLE IF EXISTS `personal_access_tokens`;
 DROP TABLE IF EXISTS `portfolio_assets`;
 DROP TABLE IF EXISTS `portfolios`;
-DROP TABLE IF EXISTS `transactions`;
+DROP TABLE IF EXISTS `sessions`;
+DROP TABLE IF EXISTS `trade_portfolio_items`;
+DROP TABLE IF EXISTS `trade_portfolios`;
 DROP TABLE IF EXISTS `transaction_matchings`;
+DROP TABLE IF EXISTS `transactions`;
+DROP TABLE IF EXISTS `users`;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

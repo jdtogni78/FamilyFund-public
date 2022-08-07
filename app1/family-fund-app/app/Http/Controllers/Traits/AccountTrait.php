@@ -94,7 +94,7 @@ trait AccountTrait
             $tran['timestamp'] = $transaction->timestamp;
 
             $bals = [];
-            foreach ($transaction->accountBalances()->get() as $balance) {
+            foreach ($transaction->accountBalance()->get() as $balance) {
                 $bals[$balance->type] = $balance->shares;
             }
             $tran['balances'] = $bals;

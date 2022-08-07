@@ -5,8 +5,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-TRUNCATE TABLE `accounts`;
-TRUNCATE TABLE `transactions`;
 TRUNCATE TABLE `account_balances`;
 TRUNCATE TABLE `account_matching_rules`;
 TRUNCATE TABLE `account_reports`;
@@ -14,17 +12,23 @@ TRUNCATE TABLE `accounts`;
 TRUNCATE TABLE `asset_change_logs`;
 TRUNCATE TABLE `asset_prices`;
 TRUNCATE TABLE `assets`;
+TRUNCATE TABLE `change_log`;
 TRUNCATE TABLE `failed_jobs`;
 TRUNCATE TABLE `fund_reports`;
 TRUNCATE TABLE `funds`;
+TRUNCATE TABLE `jobs`;
 TRUNCATE TABLE `matching_rules`;
 TRUNCATE TABLE `migrations`;
 TRUNCATE TABLE `password_resets`;
 TRUNCATE TABLE `personal_access_tokens`;
 TRUNCATE TABLE `portfolio_assets`;
 TRUNCATE TABLE `portfolios`;
-TRUNCATE TABLE `transactions`;
+TRUNCATE TABLE `sessions`;
+TRUNCATE TABLE `trade_portfolio_items`;
+TRUNCATE TABLE `trade_portfolios`;
 TRUNCATE TABLE `transaction_matchings`;
+TRUNCATE TABLE `transactions`;
+TRUNCATE TABLE `users`;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

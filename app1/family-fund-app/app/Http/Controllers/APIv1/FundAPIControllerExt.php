@@ -120,7 +120,7 @@ class FundAPIControllerExt extends AppBaseController
      */
     public function showReportAsOf($id, $asOf)
     {
-        /** @var Fund $fund */
+        /** @var FundExt $fund */
         $fund = $this->fundRepository->find($id);
 
         if (empty($fund)) {

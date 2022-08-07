@@ -5,24 +5,30 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-DROP TABLE IF EXISTS `accounts`;
-DROP TABLE IF EXISTS `transactions`;
 DROP TABLE IF EXISTS `account_balances`;
 DROP TABLE IF EXISTS `account_matching_rules`;
+DROP TABLE IF EXISTS `account_reports`;
 DROP TABLE IF EXISTS `accounts`;
 DROP TABLE IF EXISTS `asset_change_logs`;
 DROP TABLE IF EXISTS `asset_prices`;
 DROP TABLE IF EXISTS `assets`;
+DROP TABLE IF EXISTS `change_log`;
 DROP TABLE IF EXISTS `failed_jobs`;
+DROP TABLE IF EXISTS `fund_reports`;
 DROP TABLE IF EXISTS `funds`;
+DROP TABLE IF EXISTS `jobs`;
 DROP TABLE IF EXISTS `matching_rules`;
 DROP TABLE IF EXISTS `migrations`;
 DROP TABLE IF EXISTS `password_resets`;
 DROP TABLE IF EXISTS `personal_access_tokens`;
 DROP TABLE IF EXISTS `portfolio_assets`;
 DROP TABLE IF EXISTS `portfolios`;
-DROP TABLE IF EXISTS `transactions`;
+DROP TABLE IF EXISTS `sessions`;
+DROP TABLE IF EXISTS `trade_portfolio_items`;
+DROP TABLE IF EXISTS `trade_portfolios`;
 DROP TABLE IF EXISTS `transaction_matchings`;
+DROP TABLE IF EXISTS `transactions`;
+DROP TABLE IF EXISTS `users`;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -35,6 +41,11 @@ DROP TABLE IF EXISTS `transaction_matchings`;
 -- Host: 127.0.0.1    Database: familyfund_dev
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.6.7-MariaDB
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -199,6 +210,23 @@ CREATE TABLE `assets` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `change_log`
+--
+
+DROP TABLE IF EXISTS `change_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `change_log` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `object` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `failed_jobs`
 --
 
@@ -254,6 +282,26 @@ CREATE TABLE `funds` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `jobs`
+--
+
+DROP TABLE IF EXISTS `jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attempts` tinyint(3) unsigned NOT NULL,
+  `reserved_at` int(10) unsigned DEFAULT NULL,
+  `available_at` int(10) unsigned NOT NULL,
+  `created_at` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -397,6 +445,51 @@ CREATE TABLE `sessions` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `trade_portfolio_items`
+--
+
+DROP TABLE IF EXISTS `trade_portfolio_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `trade_portfolio_items` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `trade_portfolio_id` bigint(20) unsigned NOT NULL,
+  `symbol` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_share` decimal(5,2) NOT NULL DEFAULT 0.10,
+  `deviation_trigger` decimal(8,5) NOT NULL DEFAULT 0.00500,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `trade_portfolio_items_trade_portfolio_id_foreign` (`trade_portfolio_id`),
+  CONSTRAINT `trade_portfolio_items_trade_portfolio_id_foreign` FOREIGN KEY (`trade_portfolio_id`) REFERENCES `trade_portfolios` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `trade_portfolios`
+--
+
+DROP TABLE IF EXISTS `trade_portfolios`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `trade_portfolios` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cash_target` decimal(5,2) NOT NULL DEFAULT 0.15,
+  `cash_reserve_target` decimal(5,2) NOT NULL DEFAULT 0.05,
+  `max_single_order` decimal(5,2) NOT NULL DEFAULT 0.20,
+  `minimum_order` decimal(13,2) NOT NULL DEFAULT 100.00,
+  `rebalance_period` int(11) NOT NULL DEFAULT 90,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `transaction_matchings`
 --
 
@@ -430,8 +523,8 @@ DROP TABLE IF EXISTS `transactions`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `transactions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `source` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
   `type` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(1) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'P',
   `value` decimal(13,2) NOT NULL,
   `shares` decimal(19,4) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -475,6 +568,9 @@ CREATE TABLE `users` (
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-03-27 23:25:17
+-- Dump completed on 2022-08-06 14:03:23

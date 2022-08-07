@@ -192,4 +192,8 @@ class TransactionApiExtTest extends TestCase
         $this->assertEquals($endDate, $bal->end_dt->toDateString());
     }
 
+
+    // Test inPeriod vs consider tran
+    // TODO Test show all past matching & considered values
+    // TODO Test finds correct matchings while transaction
 }

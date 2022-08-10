@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\FundReport;
+use App\Models\FundReportExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FundReportFactory extends Factory
@@ -12,7 +12,7 @@ class FundReportFactory extends Factory
      *
      * @var string
      */
-    protected $model = FundReport::class;
+    protected $model = FundReportExt::class;
 
     /**
      * Define the model's default state.

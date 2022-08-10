@@ -22,7 +22,7 @@ class AssetFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word,
+            'name' => $this->faker->word . "_" . $this->faker->randomNumber(5),
         'type' => $this->faker->word,
         'source' => $this->faker->word,
         //'updated_at' => $this->faker->date('Y-m-d H:i:s'),

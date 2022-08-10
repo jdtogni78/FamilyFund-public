@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 
 class AccountMatchingRuleExt extends AccountMatchingRule
 {
-    public function getMatchValueAsOf($now, $isDatedReport, $func, $name): mixed
+    public function getMatchValueAsOf(Carbon $now, $isDatedReport, $func, $name): mixed
     {
         $value = 0;
         $mr = $this->matchingRule()->first();
@@ -29,11 +29,11 @@ class AccountMatchingRuleExt extends AccountMatchingRule
         if ($this->verbose) print_r("{$name}: $value\n");
         return $value;
     }
-    public function getMatchGrantedAsOf($now, $isDatedReport = true): mixed
+    public function getMatchGrantedAsOf(Carbon $now, $isDatedReport = true): mixed
     {
         return $this->getMatchValueAsOf($now, $isDatedReport, 'transaction', "getMatchGrantedAsOf");
     }
-    public function getMatchConsideredAsOf($now, $isDatedReport = true): mixed
+    public function getMatchConsideredAsOf(Carbon $now, $isDatedReport = true): mixed
     {
         return $this->getMatchValueAsOf($now, $isDatedReport, 'referenceTransaction', "getMatchConsideredAsOf");
     }

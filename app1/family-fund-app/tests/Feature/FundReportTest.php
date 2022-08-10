@@ -5,6 +5,7 @@ use App\Mail\FundQuarterlyReport;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
@@ -13,16 +14,14 @@ class FundReportTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    public $startDt;
-    public $endDt;
+    public $asOf;
     public $fund;
     public array $post;
 
     public function setUp(): void
     {
         parent::setUp();
-        $this->startDt = '2022-01-01';
-        $this->endDt   = '2022-03-01';
+        $this->asOf   = '2022-03-01';
         $this->verbose = false;
     }
 
@@ -43,12 +42,11 @@ class FundReportTest extends TestCase
                 $mail->hasTo($email);
         });
 
-
         $factory->fundAccount->email_cc = null;
         $factory->fundAccount->save();
 
         Mail::fake();
-        $this->postAPI('ADM', 415);
+        $this->postAPI('ADM', Response::HTTP_UNPROCESSABLE_ENTITY);
         Mail::assertNotSent(FundQuarterlyReport::class);
 
 
@@ -56,7 +54,7 @@ class FundReportTest extends TestCase
         $email = $factory->userAccount->email_cc;
         $factory->userAccount->email_cc = null;
         $factory->userAccount->save();
-        $this->postAPI('REG', 415);
+        $this->postAPI('REG', Response::HTTP_UNPROCESSABLE_ENTITY);
         Mail::assertNotSent(FundQuarterlyReport::class);
 
         Mail::fake();
@@ -81,8 +79,7 @@ class FundReportTest extends TestCase
         $this->post = [
             'fund_id'   => $this->fund->id,
             'type'      => $type,
-            'start_dt'  => $this->startDt,
-            'end_dt'    => $this->endDt,
+            'as_of'     => $this->asOf,
         ];
 
         if ($this->verbose) print_r("*** POST ".json_encode($this->post)."\n");

@@ -20,6 +20,7 @@ class TransactionExt extends Transaction
      */
     public function createBalance()
     {
+        $verbose=false;
         if ($this->shares == null || $this->shares == 0) {
             throw new Exception("Balances need transactions with shares");
         }
@@ -39,8 +40,9 @@ class TransactionExt extends Transaction
             $oldShares = $bal->shares;
             $bal->end_dt = $this->timestamp;
             $bal->save();
-            if ($this->verbose) print_r("OLD BAL " . json_encode($bal) . "\n");
-        } else {
+            if ($verbose) print_r("OLD BAL " . json_encode($bal) . "\n");
+        } else if ($otherBalance != null) {
+            print_r("BALANCE FOUND: ".json_encode($otherBalance->toArray())."\n");
             // has lingering balances that is not infinity
             throw new Exception("Unexpected: There are existent balances that were end-dated - not safe to proceed");
         }
@@ -54,7 +56,7 @@ class TransactionExt extends Transaction
                 'start_dt' => $this->timestamp,
                 'end_dt' => '9999-12-31',
             ]);
-        if ($this->verbose) print_r("NEW BAL " . json_encode($newBal)."\n");
+        if ($verbose) print_r("NEW BAL " . json_encode($newBal)."\n");
     }
 
     /**
@@ -62,15 +64,21 @@ class TransactionExt extends Transaction
      */
     public function processPending(): void
     {
+        $verbose = false;
         $account = $this->account()->first();
         $fund = $account->fund()->first();
-        $share_value = $fund->shareValueAsOf($this->timestamp);
+        $shareValue = $fund->shareValueAsOf($this->timestamp);
+        $availableShares = $fund->unallocatedShares($this->timestamp);
 
-        if ($share_value == 0) {
+        if ($shareValue == 0) {
             throw new Exception("Cannot Process Transaction: Share price not available for fund " .
                 $fund->name . " at " . $this->timestamp);
         }
-        $this->shares = $this->value / $share_value;
+        $this->shares = $this->value / $shareValue;
+        $allShares = $this->shares;
+        if ($availableShares < $allShares) {
+            throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
+        }
         $this->createBalance();
 
         $rss = new TransactionResource($this);
@@ -81,7 +89,7 @@ class TransactionExt extends Transaction
         $repo = \App::make(TransactionRepository::class);
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
-            if ($this->verbose) {
+            if ($verbose) {
                 print_r("AMR ".json_encode($amr)." " . $matchValue . "\n");
                 print_r("MR ".json_encode($amr->matchingRule()->get())."\n");
             }
@@ -89,10 +97,14 @@ class TransactionExt extends Transaction
                 $mr = $amr->matchingRule()->first();
                 $input['value'] = $matchValue;
                 $input['status'] = 'C';
-                $input['shares'] = $matchValue / $share_value;
+                $input['shares'] = $matchValue / $shareValue;
                 $input['descr'] = "$descr with $mr->name ($mr->id)";
+                $allShares += $input['shares'];
+                if ($availableShares < $allShares) {
+                    throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
+                }
 
-                if ($this->verbose) print_r("MATCHTRAN ".json_encode($input)."\n");
+                if ($verbose) print_r("MATCHTRAN ".json_encode($input)."\n");
                 $matchTran = $repo->create($input);
                 $matchTran->createBalance();
                 $match = TransactionMatching::factory()
@@ -115,7 +127,7 @@ class TransactionExt extends Transaction
         $query = $accountBalanceRepo->makeModel()->newQuery()
             ->where('account_id', $account_id)
             ->where('type', 'OWN')
-            ->whereDate('end_dt', '<=', $this->timestamp)
+            ->whereDate('end_dt', '<', $this->timestamp)
             ->whereDate('start_dt', '>=', $this->timestamp);
         $bal2 = $query->first();
         if ($bal2 != null) {

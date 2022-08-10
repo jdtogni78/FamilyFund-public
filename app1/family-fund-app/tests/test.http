@@ -14,3 +14,7 @@ Accept: application/json
 GET http://localhost:3000/api/accounts/1/share_value_as_of/2022-08-06
 Accept: application/json
 
+### GET share price
+GET http://localhost:3000/api/fund_reports/1
+Accept: application/json
+

@@ -34,7 +34,7 @@ class TransactionControllerExt extends TransactionController
         $api = [
             'typeMap' => Transaction::$typeMap,
             'statusMap' => Transaction::$statusMap,
-            'accountMap' => AccountExt::accountMap()
+            'accountMap' => AccountExt::accountMap(),
         ];
         return view('transactions.create')->with('api', $api);
     }

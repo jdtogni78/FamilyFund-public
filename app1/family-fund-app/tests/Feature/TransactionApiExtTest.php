@@ -91,9 +91,16 @@ class TransactionApiExtTest extends TestCase
 
         // pending tran without match > clear
         $this->postPurchase(1000, $timestamp, 1000, $factory->fundAccount);
-//        $factory->dumpTransactions($factory->fundAccount);
         $this->assertEquals($transactions->count(), 2);
         $this->validateTran($this->tranRes, 1000, 1000, 2000);
+
+        $transactions = $factory->userAccount->transactions();
+        $this->postTransactionError(1001, 'PUR', 'P', $timestamp); // not enough fund shares
+        $this->assertEquals($transactions->count(), 0);
+
+        $this->postPurchase(1000, $timestamp, 2000);
+        $this->assertEquals($transactions->count(), 1);
+        $this->validateTran($this->tranRes, 1000, 2000, 2000);
 
     }
 
@@ -145,6 +152,9 @@ class TransactionApiExtTest extends TestCase
 
         // pending tran with match
         //   (extra pending tran to be ignored)
+//        $factory->dumpTransactions();
+//        $factory->dumpBalances();
+
         $this->postPurchase(30, $timestamp, 30);
 //        $this->dumpTrans();
         $this->assertEquals($transactions->count(), 3);

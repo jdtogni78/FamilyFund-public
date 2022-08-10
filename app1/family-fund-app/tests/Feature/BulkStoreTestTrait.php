@@ -97,7 +97,7 @@ trait BulkStoreTestTrait
     {
         // test new asset
         $this->createSampleReq();
-        $this->postAPI();
+        $this->postBulkAPI();
         $this->validateSampleRequest('validateUniqueHistorical');
 
         $oldVal = $this->post['symbols'][1][$this->field];
@@ -130,7 +130,7 @@ trait BulkStoreTestTrait
     public function testSameSymbolOtherSource()
     {
         $this->createSampleReq(1);
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $this->nextDay(3);
 
@@ -147,7 +147,7 @@ trait BulkStoreTestTrait
         $this->assertFalse(AssetExt::where('name', $name)
                 ->where('source', $source)->exists());
 
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $asset2 = $this->getAsset($name, $source);
         $this->assertNotNull($asset2, $source);
@@ -157,7 +157,7 @@ trait BulkStoreTestTrait
 
     public function testRemoveSymbol() {
         $this->createSampleReq(2);
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $symbol2 = $this->post['symbols'][1];
         $asset = $this->getAsset($symbol2['name'], $this->source);
@@ -167,7 +167,7 @@ trait BulkStoreTestTrait
         $this->nextDay(3);
         unset($this->post['symbols'][2]);
         unset($this->post['symbols'][1]);
-        $this->postAPI();
+        $this->postBulkAPI();
         $this->assertCount(1, $this->getChildren($asset, $this->source));
         if ($this->field == 'position') {
             $this->assertDate($this->timestamp(), $this->getChildren($asset, $this->source)->first()->end_dt);
@@ -178,7 +178,7 @@ trait BulkStoreTestTrait
 
     public function testAddBefore() {
         $this->createSampleReq(1);
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $name = $this->symbols[0]['name'];
         $asset = $this->getAsset($name, $this->source);
@@ -193,7 +193,7 @@ trait BulkStoreTestTrait
         $this->setupTimestampTest($child->start_dt);
         $this->prevDay();
         $this->createSampleReq(1);
-        $this->postAPI();
+        $this->postBulkAPI();
         $children = $this->getChildren($asset, $this->source);
 
         $child = $children->first();
@@ -205,7 +205,7 @@ trait BulkStoreTestTrait
     public function testHistory()
     {
         $this->createSampleReq();
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $ts1 = $this->timestamp();
         $p1 = $this->post['symbols'][0];
@@ -216,7 +216,7 @@ trait BulkStoreTestTrait
             $pCash = $this->post['symbols'][2];
 
         $this->nextDay(4);
-        $this->postAPI();
+        $this->postBulkAPI();
         $this->validateSampleRequest('validateUniqueHistorical', $ts1);
 
         $this->nextDay(1);
@@ -224,7 +224,7 @@ trait BulkStoreTestTrait
         unset($this->post['symbols'][1]);
         $value1 = $this->post['symbols'][0][$this->field];
         $value2 = $this->post['symbols'][0][$this->field] = 11.11;
-        $this->postAPI();
+        $this->postBulkAPI();
         $this->validateSampleRequest('validate2Historical', $ts1, $value1);
 
         $this->post['symbols'] = [$p2];
@@ -241,7 +241,7 @@ trait BulkStoreTestTrait
             $this->post['symbols'][] = $pCash;
 
         $this->post['symbols'][0][$this->field] = 55.55;
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $this->validateSampleRequest('validate3Historical', $ts1, $value1, $ts2, $value2);
     }

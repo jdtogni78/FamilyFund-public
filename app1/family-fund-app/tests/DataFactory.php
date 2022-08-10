@@ -133,14 +133,14 @@ class DataFactory
         return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type='PUR', $status='C', $timestamp=null) {
+    public function createTransaction($value=100, $account=null, $type='PUR', $status='P', $timestamp=null) {
         $tran = $this->makeTransaction($value, $account, $type, $status, $timestamp);
         $tran->save();
         if ($this->verbose) print_r("tran: " . json_encode($tran) . "\n");
         return $tran;
     }
 
-    public function makeTransaction($value=100, $account=null, $type='PUR', $status='C', $timestamp=null, $shares=null) {
+    public function makeTransaction($value=100, $account=null, $type='PUR', $status='P', $timestamp=null, $shares=null) {
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -206,13 +206,13 @@ class DataFactory
         return $asset;
     }
 
-    public function createFundWithMatching()
+    public function createFundWithMatching($dollar_end=100, $match=50, $value=50)
     {
         $factory = $this;
         $factory->createFund();
         $factory->createUser();
-        $factory->createMatching(100, 50);
-        $factory->createTransactionWithMatching(50, 25);
+        $factory->createMatching($dollar_end, $match);
+        $factory->createTransactionWithMatching($value, $value * $match / 100.0);
     }
 
     public function createTransactionMatching($matching, $matchTran, $transaction)
@@ -226,7 +226,7 @@ class DataFactory
         return $tm;
     }
 
-    public function createTransactionWithMatching($value1, $value2): void
+    public function createTransactionWithMatching($value1=100, $value2=50): void
     {
         $transaction = $this->createTransaction($value1);
         $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
@@ -241,7 +241,8 @@ class DataFactory
 //        foreach ($this->factory->account->transactions() as $t) {
         foreach ($account->transactions()->get() as $t) {
             print_r("** TRAN " . json_encode($t->toArray()) . "\n");
-            print_r("**** BAL " . json_encode($t->accountBalance()->first()->toArray()) . "\n");
+            $bal = $t->accountBalance()->first();
+            if ($bal) print_r("**** BAL " . json_encode($bal->toArray()) . "\n");
             foreach ($t->referenceTransactionMatching()->get() as $r) {
                 print_r("**** REF " . json_encode($r->toArray()) . "\n");
             }
@@ -258,6 +259,17 @@ class DataFactory
             }
             print_r("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts)."\n");
 
+        }
+    }
+
+    public function dumpBalances()
+    {
+        $accounts = array_merge([$this->fundAccount], $this->userAccounts);
+        print_r("[BALANCES]\n");
+        foreach ($accounts as $account) {
+            foreach ($account->accountBalances()->get() as $bal) {
+                print_r("** " . json_encode($bal) . "\n");
+            }
         }
     }
 

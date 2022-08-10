@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Traits;
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
 use App\Http\Resources\FundResource;
 use App\Jobs\SendAccountReport;
+use App\Jobs\SendFundReport;
 use App\Mail\FundQuarterlyReport;
 use App\Models\AccountReport;
 use App\Models\FundExt;
+use App\Models\FundReport;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\PortfolioRepository;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -20,6 +23,7 @@ Trait FundTrait
     use PerformanceTrait;
     protected $err = [];
     protected $msgs = [];
+    private $noEmailMessage = "The following accounts have no email: ";
 
     public function createAccountBalancesResponse(FundExt $fund, $asOf)
     {
@@ -120,12 +124,12 @@ Trait FundTrait
 
         $fund = $fundReport->fund()->first();
         $asOf = $fundReport->as_of->format('Y-m-d');
-        $isAdmin = 'ADM' === $fundReport->type;
+        $isAdmin = $fundReport->isAdmin();
 
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
         $pdf = new FundPDF($arr, $isAdmin);
 
-        $this->emailReport($fund, $isAdmin, $pdf, $asOf);
+        $this->fundEmailReport($fundReport, $pdf);
 
         return $fundReport;
     }
@@ -151,45 +155,95 @@ Trait FundTrait
         }
     }
 
-    protected function emailReport($fund, bool $isAdmin, FundPDF $pdf, $asOf): void
+    protected function reportUsers($fund, bool $isAdmin): array
     {
-        $err = [];
-        $msgs = [];
-        $sendCount = 0;
+        $ret = [];
         $accounts = $fund->accounts()->get();
         foreach ($accounts as $account) {
             $users = $account->user()->get();
             if (($isAdmin && count($users) == 0) ||
                 (!$isAdmin && count($users) == 1)
             ) {
-                if (empty($account->email_cc)) {
-                    $msg = "Account " . $account->nickname . " has no email configured";
-                    $err[] = $msg;
-                    Log::error($msg);
-                } else {
-                    $sendCount++;
-                    $msg = "Sending email to " . $account->email_cc;
-                    Log::info($msg);
-                    $msgs[] = $msg;
-                    $pdfFile = $pdf->file();
-                    if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
-                    if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
-                    $user = $users->first();
-                    $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
-
-                    $emails = explode(",", $account->email_cc);
-                    $to = array_shift($emails);
-                    Mail::to($to)->cc($emails)->send($reportData);
-                }
+                $ret[] = $account;
             }
+        }
+        return $ret;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function validateReportEmails($fundReport)
+    {
+        $fund = $fundReport->fund()->first();
+        $isAdmin = $fundReport->isAdmin();
+        $noEmail = [];
+        $accounts = $this->reportUsers($fund, $isAdmin);
+        foreach ($accounts as $account) {
+            $err = $this->validateHasEmail($account);
+            if ($err) $noEmail[] = $err;
+        }
+        if (count($noEmail) > 0)
+            throw new Exception($this->noEmailMessage . implode(", ", $noEmail));
+    }
+
+    protected function fundEmailReport($fundReport, FundPDF $pdf): void
+    {
+        $fund = $fundReport->fund()->first();
+        $asOf = $fundReport->as_of->format('Y-m-d');
+        $isAdmin = $fundReport->isAdmin();
+
+        $errs = [];
+        $noEmail = [];
+        $msgs = [];
+        $sendCount = 0;
+        $accounts = $this->reportUsers($fund, $isAdmin);
+        foreach ($accounts as $account) {
+            $err = $this->validateHasEmail($account);
+            if ($err != null) {
+                $noEmail[] = $err;
+            } else {
+                $sendCount++;
+                $msg = "Sending email to " . $account->email_cc;
+                Log::info($msg);
+                $msgs[] = $msg;
+                $pdfFile = $pdf->file();
+                if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
+                if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
+                $user = $account->user()->first();
+                $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
+
+                $emails = explode(",", $account->email_cc);
+                $to = array_shift($emails);
+                Mail::to($to)->cc($emails)->send($reportData);
+            }
+        }
+        if (count($noEmail)) {
+            $errs[] = $this->noEmailMessage . implode(", ", $noEmail);
         }
         if ($sendCount == 0) {
             $msg = "No emails sent";
             Log::error($msg);
-            $err[] = $msg;
+            $errs[] = $msg;
         }
-        $this->err = $err;
+        $this->err = $errs;
         $this->msgs = $msgs;
     }
 
+    protected function validateHasEmail(mixed $account): ?string
+    {
+        if (empty($account->email_cc)) {
+            return $account->nickname;
+        }
+        return null;
+    }
+
+    protected function createFundReport(array $input)
+    {
+        $fundReport = FundReport::factory()->make($input);
+        $this->validateReportEmails($fundReport);
+        $fundReport->save();
+        SendFundReport::dispatch($fundReport);
+        return $fundReport;
+    }
 }

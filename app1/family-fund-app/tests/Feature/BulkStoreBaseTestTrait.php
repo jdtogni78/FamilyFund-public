@@ -22,11 +22,12 @@ trait BulkStoreBaseTestTrait
         $this->assertApiError($error_code);
     }
 
-    protected function postAPI(array $post=null): void
+    protected function postBulkAPI(array $post=null): void
     {
         if ($post==null) $post = $this->post;
-        if ($this->verbose) print_r("*** postAPI ".$this->api.": " . json_encode($post)."\n");
+        if ($this->verbose) print_r("*** postBulkAPI ".$this->api.": " . json_encode($post)."\n");
         $this->response = $this->json('POST', $this->api, $post);
+        if ($this->verbose) print_r("*** response: " . json_encode($this->response)."\n");
         $this->assertEmptyData();
         $this->assertApiSuccess();
     }
@@ -47,17 +48,19 @@ trait BulkStoreBaseTestTrait
         foreach ($this->post['symbols'] as &$symbol) {
             $symbol[$key] = $value;
         }
+        unset($symbol);
 
         if ($errorCode == 200) {
-            $this->postAPI();
+            $this->postBulkAPI();
             $asset = $this->getAsset($this->post['symbols'][0], $this->source);
             $child = $this->getChildren($asset, $this->source)->first();
             if ($errThreashold == 0) {
                 $this->assertEquals($value, $child->$key);
             } else {
-//                if ($this->verbose)
-//                    print_r("values: " . json_encode([$child->$key, $value, $errThreashold]) . "\n");
-                $this->assertTrue(abs($child->$key - $value) < $errThreashold);
+                $check = abs($child->$key - $value) < $errThreashold;
+                if ($this->verbose)
+                    print_r("values: " . json_encode([$child->$key, $value, $errThreashold, $check]) . "\n");
+                $this->assertTrue($check);
             }
         } else {
             $this->postValidationError($this->post, $errorCode);

@@ -167,7 +167,7 @@ class AccountAPIControllerExt extends AccountAPIController
      * @param int $id
      * @return Response
      */
-    public function shareValueAsOf($id, $asOf=null)
+    public function shareValueAsOf($id, $asOf)
     {
         /** @var AccountExt $account */
         $account = $this->accountRepository->find($id);
@@ -176,7 +176,10 @@ class AccountAPIControllerExt extends AccountAPIController
             return $this->sendError('Account not found');
         }
 
-        $arr = ['share_price' => $account->shareValueAsOf($asOf)];
+        $arr = [
+            'share_price' => $account->shareValueAsOf($asOf),
+            'available_shares' => $account->fund()->first()->unallocatedShares($asOf),
+        ];
         return $this->sendResponse($arr, 'Share value retrieved successfully');
     }
 

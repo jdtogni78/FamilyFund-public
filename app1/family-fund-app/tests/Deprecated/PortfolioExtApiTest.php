@@ -40,11 +40,12 @@ class PortfolioExtApiTest extends TestCase
         if ($preValidate) {
             // $this->validateAssets($portfolio, $preValidate);
         }
-        print_r('/api/portfolios/'.$portfolio->code.'/update_assets/');
+        $url = '/api/asset_prices_bulk_update';
+        print_r("\n$url\n");
         print_r(json_encode($data));
         $this->response = $this->json(
             'POST',
-            '/api/portfolios/'.$portfolio->code.'/update_assets/', $data['post']
+            $url, $data['post']
         );
 
         $this->assertApiResponse($portfolio);

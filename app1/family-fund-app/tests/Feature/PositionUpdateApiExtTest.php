@@ -45,7 +45,7 @@ class PositionUpdateApiExtTest extends TestCase
         $this->postError();
 
         $this->nextDay(1);
-        $this->postAPI();
+        $this->postBulkAPI();
 
         $this->post['symbols'][2] = $this->makeSymbol('CASH');
         $this->postError();

@@ -6,10 +6,9 @@ use App\Http\Resources\AccountResource;
 use App\Mail\AccountQuarterlyReport;
 use App\Models\AccountExt;
 use App\Models\Utils;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Nette\Utils\DateTime;
 
 trait AccountTrait
 {
@@ -129,7 +128,7 @@ trait AccountTrait
     protected function createAccountMatchingResponse($account, $asOf): array
     {
         if ($this->verbose) print_r("amresp: " . json_encode($account) . " " . $asOf . "\n");
-        $tsAsOf = (new DateTime($asOf))->getTimestamp();
+        $tsAsOf = (new Carbon($asOf))->getTimestamp();
         $arr = [];
         foreach ($account->accountMatchingRules()->get() as $amr) {
             // TODO: filter deleted / ignore pending trans
@@ -139,9 +138,9 @@ trait AccountTrait
                     $mrA = $mr->toArray();
                     $mrA['available'] = 0;
                     $range = $mr->dollar_range_end - $mr->dollar_range_start;
-                    $granted = $amr->getMatchGrantedAsOf(new DateTime($asOf)); // may be more than range with a big tran
+                    $granted = $amr->getMatchGrantedAsOf(new Carbon($asOf)); // may be more than range with a big tran
                     $mrA['granted'] = $granted;
-                    $considered = $amr->getMatchConsideredAsOf(new DateTime($asOf)); // may be more than range with a big tran
+                    $considered = $amr->getMatchConsideredAsOf(new Carbon($asOf)); // may be more than range with a big tran
                     $mrA['used'] = min($considered, $range);
 
                     if ($tsAsOf < $mr->date_end->getTimestamp()) { // dont remove old matchings
@@ -176,11 +175,11 @@ trait AccountTrait
         $arr = $this->createAccountViewData($asOf, $account);
         $pdf = new AccountPDF($arr, $asOf);
 
-        $this->emailReport($account, $pdf, $asOf);
+        $this->accountEmailReport($account, $pdf, $asOf);
         return $accountReport;
     }
 
-    protected function emailReport($account, AccountPDF $pdf, $asOf): void
+    protected function accountEmailReport($account, AccountPDF $pdf, $asOf): void
     {
         $err = [];
         $msgs = [];

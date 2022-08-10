@@ -56,7 +56,7 @@ class PDFTest extends TestCase
         $arr = $this->createAccountViewData($asOf, $account);
         $pdf = new AccountPDF($arr, true);
         $pdfFile = $pdf->file();
-        print_r($pdfFile);
+//        print_r($pdfFile);
     }
 
 }

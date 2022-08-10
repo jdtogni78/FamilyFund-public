@@ -122,7 +122,7 @@ class Account extends Model
     public function fetchRepository($query)
     {
         return $query->with('accountMatchingRules')->with('matchingRule');
-}
+    }
     // public function accountMatchings(){
     //     return $this->hasOneThrough(MatchingRule::class,AccountMatchingRule::class);
     // }

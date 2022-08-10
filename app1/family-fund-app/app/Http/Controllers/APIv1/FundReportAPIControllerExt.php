@@ -7,6 +7,7 @@ use App\Http\Requests\API\CreateFundReportAPIRequest;
 use App\Http\Resources\FundReportResource;
 use App\Repositories\FundReportRepository;
 use App\Http\Controllers\API\FundReportAPIController;
+use Exception;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -26,16 +27,13 @@ class FundReportAPIControllerExt extends FundReportAPIController
 
     public function store(CreateFundReportAPIRequest $request)
     {
-        $input = $request->all();
-
-        $fundReport = $this->sendFundReport($input);
-
-        if (count($this->err) == 0) {
+        try {
+            $fundReport = $this->createFundReport($request->all());
             $result = new FundReportResource($fundReport);
-//            print_r("result: " . json_encode($result->toArray($request)) . "\n");
-            return $this->sendResponse($result, 'Fund Report saved successfully'."\n".implode($this->msgs));
-        } else {
-            return $this->sendError(implode(",", $this->err), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->sendResponse($result, 'Fund Report saved successfully' . "\n" . implode($this->msgs));
+        } catch (Exception $e) {
+            report($e);
+            return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 }

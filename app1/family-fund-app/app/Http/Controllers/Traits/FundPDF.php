@@ -49,7 +49,7 @@ class FundPDF
             return $v['name'];
         }, $arr);
         $values = array_map(function ($v) {
-            return $v['value'];
+            return array_key_exists('value', $v) ? $v['value'] : 0;
         }, $arr);
 
         $this->files[$name] = $file = $tempDir->path($name);

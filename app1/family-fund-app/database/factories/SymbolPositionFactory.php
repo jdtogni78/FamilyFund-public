@@ -22,7 +22,7 @@ class SymbolPositionFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word,
+            'name' => $this->faker->word . "_" . $this->faker->randomNumber(5),
         'type' => $this->faker->word,
 //            $table->decimal('position', 21, 8);
         // TODO: php max dig is 14?!?!

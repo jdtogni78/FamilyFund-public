@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\API;
 
+use App\Http\Controllers\Traits\CashValidator;
 use App\Models\AssetPrice;
-use InfyOm\Generator\Request\APIRequest;
 
 class CreateAssetPriceAPIRequest extends BaseAPIRequest
 {

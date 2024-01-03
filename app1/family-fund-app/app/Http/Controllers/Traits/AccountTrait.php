@@ -170,7 +170,6 @@ trait AccountTrait
         $account = $accountReport->account()->first();
         $account = AccountExt::find($account->id);
         $asOf = $accountReport->as_of->format('Y-m-d');
-//        $isAdmin = 'ADM' === $accountReport->type;
 
         $arr = $this->createAccountViewData($asOf, $account);
         $pdf = new AccountPDF($arr, $asOf);

@@ -57,7 +57,7 @@ class AccountReport extends Model
      */
     public static $rules = [
         'account_id' => 'required',
-        'type' => 'required|string|max:3',
+        'type' => 'required|in:ALL',
         'as_of' => 'required',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',

@@ -9,7 +9,7 @@ use App\Jobs\SendFundReport;
 use App\Mail\FundQuarterlyReport;
 use App\Models\AccountReport;
 use App\Models\FundExt;
-use App\Models\FundReport;
+use App\Models\FundReportExt;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\PortfolioRepository;
@@ -240,7 +240,7 @@ Trait FundTrait
 
     protected function createFundReport(array $input)
     {
-        $fundReport = FundReport::factory()->make($input);
+        $fundReport = FundReportExt::create($input);
         $this->validateReportEmails($fundReport);
         $fundReport->save();
         SendFundReport::dispatch($fundReport);

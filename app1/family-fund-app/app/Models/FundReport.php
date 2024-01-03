@@ -57,7 +57,7 @@ class FundReport extends Model
      */
     public static $rules = [
         'fund_id' => 'required',
-        'type' => 'required|string|max:3',
+        'type' => 'required|in:ALL,ADM',
         'as_of' => 'required',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',

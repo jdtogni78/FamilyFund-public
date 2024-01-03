@@ -27,7 +27,7 @@
         "name": "type",
         "dbType": "string,3",
         "htmlType": "text",
-        "validations": "required|string|max:3|string|max:3",
+        "validations": "required|in:ALL,ADM",
         "searchable": true,
         "fillable": true,
         "primary": false,

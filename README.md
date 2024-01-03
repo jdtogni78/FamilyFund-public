@@ -114,9 +114,27 @@ for f in run_report.log.*.gz; do gunzip -c $f | sed '0,/^.*## Positions$/d' | se
 
 php artisan queue:work
 
+docker exec -it familyfund php artisan queue:work
+
+#### Run FamilyFund App on prod
+
+docker-compose -f docker-compose.yml -f docker-compose.${RUNTIME}.yml up mariadb familyfund
+
 ### Change Password Command Line
 
 php artisan tinker
     $user = App\Models\UserExt::where('email', 'admin@dev.familyfund.local')->first();
     $user->password = Hash::make('new_password');
     $user->save();
+
+### Jumpbox
+
+JUMPBOXDNS=REDACTED.example.invalid
+JUMPBOX=REDACTED_JUMP_HOST
+FFSERVER=192.168.68.120
+
+ssh -J dstrader@${JUMPBOXDNS}:60004 jdtogni@${FFSERVER} -p 22
+ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
+
+ssh -J dstrader@${JUMPBOX}:22332 jdtogni@${FFSERVER} -p 22
+ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000

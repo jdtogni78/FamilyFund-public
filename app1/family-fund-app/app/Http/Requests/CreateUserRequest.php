@@ -25,6 +25,7 @@ class CreateUserRequest extends FormRequest
      */
     public function rules()
     {
-        return User::$rules;
+//         return User::$rules;
+        return [];
     }
 }

@@ -9,7 +9,8 @@ for t in $tables; do
     echo $c
 
     # FROM TABLE
-    php artisan infyom:scaffold $c --fromTable --tableName $t --skip dump-autoload
+#    php artisan infyom:scaffold $c --fromTable --tableName $t \
+#            --skip dump-autoload
     php artisan infyom:api $c --fromTable --tableName $t --skip dump-autoload
     php artisan infyom:scaffold $c --fromTable --tableName $t \
             --skip=migration,api_controller,api_routes,controller,scaffold_controller,scaffold_requests,routes,scaffold_routes,views,menu,dump-autoload

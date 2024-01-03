@@ -28,7 +28,8 @@ class FundReportAPIControllerExt extends FundReportAPIController
     public function store(CreateFundReportAPIRequest $request)
     {
         try {
-            $fundReport = $this->createFundReport($request->all());
+            $input = $request->all();
+            $fundReport = $this->createFundReport($input);
             $result = new FundReportResource($fundReport);
             return $this->sendResponse($result, 'Fund Report saved successfully' . "\n" . implode($this->msgs));
         } catch (Exception $e) {

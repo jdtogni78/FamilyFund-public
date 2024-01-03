@@ -26,7 +26,7 @@ class Utils
     {
         return round($value * 100,2);
     }
-    
+
     public static function decreaseYearMonth($yearMonth)
     {
         $month = $yearMonth[1];
@@ -50,5 +50,13 @@ class Utils
     public static function yearMonthInt($yearMonth)
     {
         return $yearMonth[0]*100 + $yearMonth[1];
+    }
+
+    public static function asOfAddYear($asOf, int $param)
+    {
+        $year = substr($asOf,0,4) - 1;
+        $prevYearAsOf = $year . substr($asOf, 4);
+        print_r("prev year: " . $prevYearAsOf . " " . $asOf);
+        return $prevYearAsOf;
     }
 }

@@ -49,6 +49,9 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $rss = new TradePortfolioResource($tradePortfolio);
         $ret = $rss->toArray(NULL);
 
+        $fund = $tradePortfolio->fund();
+        $arr['max_cash_value'] = $fund->portfolio()->maxCashBetween($prevYearAsOf, $asOf);
+
         $ret['items'] = array();
         $items = $tradePortfolio->tradePortfolioItems()->get();
         foreach ($items as $tpi) {

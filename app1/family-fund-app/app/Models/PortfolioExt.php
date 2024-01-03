@@ -27,6 +27,22 @@ class PortfolioExt extends Portfolio
         return $portfolioAssets;
     }
 
+    public function maxCashBetween($start, $end): Collection
+    {
+        $cash = AssetExt::getCashAsset();
+        $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);
+        $query = $portfolioAssetsRepo->makeModel()->newQuery()
+            ->where('portfolio_id', $this->id)
+            ->where('asset_id', $cash->id)
+            ->whereDate('start_dt', '>=', $start)
+            ->whereDate('end_dt', '<=', $end);
+
+        $max = $query->max('position');
+        if ($this->verbose) print_r("max cash: ".json_encode([$this->id, $cash->id, $max])."\n");
+
+        return $max;
+    }
+
     public function assetHistory($assetId): Collection
     {
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);

@@ -17,6 +17,7 @@ class TradePortfolioResource extends JsonResource
         return [
             'id' => $this->id,
             'account_name' => $this->account_name,
+            'fund_id' => $this->fund_id,
             'cash_target' => $this->cash_target,
             'cash_reserve_target' => $this->cash_reserve_target,
             'max_single_order' => $this->max_single_order,

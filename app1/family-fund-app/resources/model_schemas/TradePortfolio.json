@@ -24,6 +24,18 @@
         "inView": true
     },
     {
+        "name": "fund_id",
+        "dbType": "bigInteger,false,true",
+        "htmlType": null,
+        "validations": "required",
+        "searchable": true,
+        "fillable": true,
+        "primary": false,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
         "name": "cash_target",
         "dbType": "decimal,5,2",
         "htmlType": null,
@@ -110,5 +122,9 @@
     {
         "type": "relation",
         "relation": "1tm,TradePortfolioItem,trade_portfolio_id"
+    },
+    {
+        "type": "relation",
+        "relation": "mt1,Fund,fund_id"
     }
 ]

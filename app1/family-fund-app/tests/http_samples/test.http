@@ -6,6 +6,10 @@ Accept: application/json
 GET http://localhost:3000/api/trade_portfolios/DU3740548
 Accept: application/json
 
+### GET dev account
+GET http://localhost:3000/api/trade_portfolios
+Accept: application/json
+
 ### GET fail account
 GET http://localhost:3000/api/trade_portfolios/AAA
 Accept: application/json

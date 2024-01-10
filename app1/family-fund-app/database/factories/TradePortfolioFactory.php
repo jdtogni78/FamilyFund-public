@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TradePortfolio;
+use App\Models\TradePortfolioExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TradePortfolioFactory extends Factory
@@ -12,7 +12,7 @@ class TradePortfolioFactory extends Factory
      *
      * @var string
      */
-    protected $model = TradePortfolio::class;
+    protected $model = TradePortfolioExt::class;
 
     /**
      * Define the model's default state.
@@ -23,13 +23,16 @@ class TradePortfolioFactory extends Factory
     {
         return [
             'account_name' => $this->faker->word,
-        'cash_target' => $this->faker->word,
-        'cash_reserve_target' => $this->faker->word,
-        'max_single_order' => $this->faker->word,
-        'minimum_order' => $this->faker->word,
-        'rebalance_period' => $this->faker->randomDigitNotNull,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s')
+            'fund_id' => $this->faker->word,
+            'cash_target' => $this->faker->word,
+            'cash_reserve_target' => $this->faker->word,
+            'max_single_order' => $this->faker->word,
+            'minimum_order' => $this->faker->word,
+            'rebalance_period' => $this->faker->randomDigitNotNull,
+            'start_dt' => $this->faker->date('Y-m-d H:i:s'),
+            'end_dt' => $this->faker->date('Y-m-d H:i:s'),
+//            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+//            'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

@@ -19,13 +19,13 @@
 <!-- Target Share Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('target_share', 'Target Share:') !!}
-    {!! Form::number('target_share', null, ['class' => 'form-control']) !!}
+    {!! Form::number('target_share', null, ['class' => 'form-control', 'step' => 0.01]) !!}
 </div>
 
 <!-- Deviation trigger Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('deviation_trigger', 'Deviation trigger:') !!}
-    {!! Form::number('deviation_trigger', null, ['class' => 'form-control']) !!}
+    {!! Form::number('deviation_trigger', null, ['class' => 'form-control', 'step' => 0.0001]) !!}
 </div>
 
 <!-- Submit Field -->

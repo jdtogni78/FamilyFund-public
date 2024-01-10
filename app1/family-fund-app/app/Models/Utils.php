@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * Class Utils
  * @package App\Models
@@ -52,11 +54,10 @@ class Utils
         return $yearMonth[0]*100 + $yearMonth[1];
     }
 
-    public static function asOfAddYear($asOf, int $param)
+    public static function asOfAddYear($asOf, int $offset)
     {
-        $year = substr($asOf,0,4) - 1;
+        $year = substr($asOf,0,4) + $offset;
         $prevYearAsOf = $year . substr($asOf, 4);
-        print_r("prev year: " . $prevYearAsOf . " " . $asOf);
         return $prevYearAsOf;
     }
 }

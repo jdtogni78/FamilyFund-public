@@ -77,7 +77,7 @@ class DataFactory
                 'shares' => $shares
             ]);
 
-        $this->cash = AssetExt::getCashAsset()->first();
+        $this->cash = AssetExt::getCashAsset();
 
         $this->cashPosition = PortfolioAsset::factory()
             ->for($this->portfolio, 'portfolio')

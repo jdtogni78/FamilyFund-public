@@ -18,7 +18,7 @@
 
 <!-- Start Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('start_dt', 'Start Dt:') !!}
+    {!! Form::label('start_dt', 'Start Date:') !!}
     {!! Form::text('start_dt', null, ['class' => 'form-control','id'=>'start_dt']) !!}
 </div>
 
@@ -39,7 +39,7 @@
 
 <!-- End Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('end_dt', 'End Dt:') !!}
+    {!! Form::label('end_dt', 'End Date:') !!}
     {!! Form::text('end_dt', null, ['class' => 'form-control','id'=>'end_dt']) !!}
 </div>
 

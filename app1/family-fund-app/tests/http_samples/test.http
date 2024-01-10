@@ -3,11 +3,11 @@ GET http://10.0.0.86:3001/api/trade_portfolios/U0000010
 Accept: application/json
 
 ### GET dev account
-GET http://localhost:3000/api/trade_portfolios/DU3740548
+GET http://localhost:3000/api/trade_portfolios/acct2
 Accept: application/json
 
 ### GET dev account
-GET http://localhost:3000/api/trade_portfolios
+GET http://localhost:3000/api/trade_portfolios/
 Accept: application/json
 
 ### GET fail account

@@ -23,11 +23,12 @@ class AssetExt extends Asset
         return $input['name'] == 'CASH' || $input['type'] == 'CSH';
     }
 
-    public static function getCashAsset()
+    public static function getCashAsset(): AssetExt
     {
         return AssetExt::
             where('name', 'CASH')
-            ->orWhere('type', 'CSH')->get();
+            ->orWhere('type', 'CSH')
+            ->get()->first();
     }
 
     public function isCash():bool {

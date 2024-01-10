@@ -6,6 +6,7 @@ use App\Repositories\PortfolioAssetRepository;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class PortfolioExt
@@ -27,18 +28,18 @@ class PortfolioExt extends Portfolio
         return $portfolioAssets;
     }
 
-    public function maxCashBetween($start, $end): Collection
+    public function maxCashBetween($start, $end): float
     {
         $cash = AssetExt::getCashAsset();
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);
         $query = $portfolioAssetsRepo->makeModel()->newQuery()
             ->where('portfolio_id', $this->id)
             ->where('asset_id', $cash->id)
-            ->whereDate('start_dt', '>=', $start)
-            ->whereDate('end_dt', '<=', $end);
+            ->whereDate('end_dt', '>', $start)
+            ->whereDate('start_dt', '<', $end);
 
         $max = $query->max('position');
-        if ($this->verbose) print_r("max cash: ".json_encode([$this->id, $cash->id, $max])."\n");
+        Log::debug("max cash: ".json_encode([$this->id, $cash->id, $max])."\n");
 
         return $max;
     }

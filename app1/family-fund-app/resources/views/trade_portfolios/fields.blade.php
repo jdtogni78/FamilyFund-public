@@ -4,10 +4,56 @@
     {!! Form::text('account_name', null, ['class' => 'form-control','maxlength' => 50,'maxlength' => 50]) !!}
 </div>
 
+<!-- Fund Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('fund_id', 'Fund Id:') !!}
+    {!! Form::number('fund_id', null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Start Date Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('start_dt', 'Start Date:') !!}
+    {!! Form::date('start_dt', null, ['class' => 'form-control', 'id'=>'start_dt']) !!}
+</div>
+
+@push('scripts')
+<script type="text/javascript">
+    $('#start_dt').datepicker({
+        format: 'YYYY-MM-DD',
+        useCurrent: true,
+        icons: {
+            up: "icon-arrow-up-circle icons font-2xl",
+            down: "icon-arrow-down-circle icons font-2xl"
+        },
+        sideBySide: true
+    })
+</script>
+@endpush
+
+<!-- End Date Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('end_dt', 'End Date:') !!}
+    {!! Form::date('end_dt', null, ['class' => 'form-control', 'id'=>'end_dt']) !!}
+</div>
+
+@push('scripts')
+    <script type="text/javascript">
+        $('#end_dt').datepicker({
+            format: 'YYYY-MM-DD',
+            useCurrent: true,
+            icons: {
+                up: "icon-arrow-up-circle icons font-2xl",
+                down: "icon-arrow-down-circle icons font-2xl"
+            },
+            sideBySide: true
+        })
+    </script>
+@endpush
+
 <!-- Cash Target Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('cash_target', 'Cash Target:') !!}
-    {!! Form::number('cash_target', null, ['class' => 'form-control']) !!}
+    {!! Form::number('cash_target', null, ['class' => 'form-control', 'step' => 0.01]) !!}
 </div>
 
 <!-- Cash Reserve Target Field -->
@@ -19,7 +65,7 @@
 <!-- Max Single Order Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('max_single_order', 'Max Single Order:') !!}
-    {!! Form::number('max_single_order', null, ['class' => 'form-control']) !!}
+    {!! Form::number('max_single_order', null, ['class' => 'form-control', 'step' => 0.01]) !!}
 </div>
 
 <!-- Minimum Order Field -->

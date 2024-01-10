@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AssetExt;
+use Ramsey\Collection\Collection;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 
@@ -33,7 +34,9 @@ trait BulkStoreTestTrait
     protected function getAssetOrCash($name, $type)
     {
         if (AssetExt::isCashInput(['name' => $name, 'type' => $type])) {
-            return AssetExt::getCashAsset();
+            $c = new Collection();
+            $c->add(AssetExt::getCashAsset());
+            return $c;
         } else {
             return AssetExt::where('name', $name)
                 ->where('type', $type)

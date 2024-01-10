@@ -1,25 +1,35 @@
 <div class="table-responsive-sm">
     <table class="table table-striped" id="tradePortfolios-table">
         <thead>
-            <tr>
-                <th>Account Name</th>
-        <th>Cash Target</th>
-        <th>Cash Reserve Target</th>
-        <th>Max Single Order</th>
-        <th>Minimum Order</th>
-        <th>Rebalance Period</th>
-                <th colspan="3">Action</th>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <th>Account Name</th>
+            <th>Fund Id</th>
+            <th>Fund Name</th>
+            <th>Cash Target</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Cash Reserve Target</th>
+            <th>Max Single Order</th>
+            <th>Minimum Order</th>
+            <th>Rebalance Period</th>
+            <th colspan="3">Action</th>
+        </tr>
         </thead>
         <tbody>
         @foreach($tradePortfolios as $tradePortfolio)
             <tr>
+                <td>{{ $tradePortfolio->id }}</td>
                 <td>{{ $tradePortfolio->account_name }}</td>
-            <td>{{ $tradePortfolio->cash_target }}</td>
-            <td>{{ $tradePortfolio->cash_reserve_target }}</td>
-            <td>{{ $tradePortfolio->max_single_order }}</td>
-            <td>{{ $tradePortfolio->minimum_order }}</td>
-            <td>{{ $tradePortfolio->rebalance_period }}</td>
+                <td>{{ $tradePortfolio->fund_id }}</td>
+                <td>{{ $tradePortfolio->fund()->first()->name }}</td>
+                <td>{{ $tradePortfolio->start_dt }}</td>
+                <td>{{ $tradePortfolio->end_dt }}</td>
+                <td>{{ $tradePortfolio->cash_target }}</td>
+                <td>{{ $tradePortfolio->cash_reserve_target }}</td>
+                <td>{{ $tradePortfolio->max_single_order }}</td>
+                <td>{{ $tradePortfolio->minimum_order }}</td>
+                <td>{{ $tradePortfolio->rebalance_period }}</td>
                 <td>
                     {!! Form::open(['route' => ['tradePortfolios.destroy', $tradePortfolio->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

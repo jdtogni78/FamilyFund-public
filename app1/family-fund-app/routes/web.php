@@ -43,6 +43,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
-    Route::resource('tradePortfolios', App\Http\Controllers\TradePortfolioController::class);
+    Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);
 });

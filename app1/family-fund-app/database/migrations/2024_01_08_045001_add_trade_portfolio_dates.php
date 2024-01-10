@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddTradePortfolioFund extends Migration
+class AddTradePortfolioDates extends Migration
 {
 
     /**
@@ -15,10 +15,9 @@ class AddTradePortfolioFund extends Migration
     public function up()
     {
         Schema::table('trade_portfolios', function (Blueprint $table) {
-//            $table->dropConstrainedForeignId('fund_id');
-            $table->foreignId('fund_id')->after('account_name')->nullable()->constrained();
+            $table->date('start_dt')->default(DB::raw('curdate()'));
+            $table->date('end_dt')->default('9999-12-31');
         });
-        DB::statement("UPDATE trade_portfolios SET fund_id = (SELECT id FROM funds LIMIT 1)");
     }
 
     /**
@@ -29,7 +28,8 @@ class AddTradePortfolioFund extends Migration
     public function down()
     {
         Schema::table('trade_portfolios', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('fund_id');
+            $table->dropColumn('start_dt');
+            $table->dropColumn('end_dt');
         });
     }
 }

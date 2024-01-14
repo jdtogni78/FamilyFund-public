@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TradePortfolioRepository
  * @package App\Repositories
- * @version January 3, 2024, 3:56 pm UTC
+ * @version January 11, 2024, 1:40 pm UTC
 */
 
 class TradePortfolioRepository extends BaseRepository
@@ -24,6 +24,7 @@ class TradePortfolioRepository extends BaseRepository
         'max_single_order',
         'minimum_order',
         'rebalance_period',
+        'mode',
         'start_dt',
         'end_dt'
     ];

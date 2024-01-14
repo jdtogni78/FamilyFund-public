@@ -96,6 +96,18 @@
         "inView": true
     },
     {
+        "name": "mode",
+        "dbType": "string,3",
+        "htmlType": "text",
+        "validations": "required|in:STD,MAX",
+        "searchable": true,
+        "fillable": true,
+        "primary": false,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
         "name": "start_dt",
         "dbType": "date",
         "htmlType": "date",

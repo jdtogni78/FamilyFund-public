@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class TradePortfolio
  * @package App\Models
- * @version January 3, 2024, 3:56 pm UTC
+ * @version January 11, 2024, 1:40 pm UTC
  *
  * @property \Illuminate\Database\Eloquent\Collection $tradePortfolioItems
  * @property \App\Models\Fund $fund
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property number $max_single_order
  * @property number $minimum_order
  * @property integer $rebalance_period
+ * @property string $mode
  * @property string $start_dt
  * @property string $end_dt
  */
@@ -30,9 +31,6 @@ class TradePortfolio extends Model
     use HasFactory;
 
     public $table = 'trade_portfolios';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = 'updated_at';
 
 
     protected $dates = ['deleted_at'];
@@ -47,6 +45,7 @@ class TradePortfolio extends Model
         'max_single_order',
         'minimum_order',
         'rebalance_period',
+        'mode',
         'start_dt',
         'end_dt'
     ];
@@ -65,6 +64,7 @@ class TradePortfolio extends Model
         'max_single_order' => 'decimal:2',
         'minimum_order' => 'decimal:2',
         'rebalance_period' => 'integer',
+        'mode' => 'string',
         'start_dt' => 'date',
         'end_dt' => 'date'
     ];
@@ -82,6 +82,9 @@ class TradePortfolio extends Model
         'max_single_order' => 'required|numeric',
         'minimum_order' => 'required|numeric',
         'rebalance_period' => 'required|integer|integer',
+        'mode' => 'required|in:STD,MAX',
+        'start_dt' => 'required',
+        'end_dt' => 'required',
         'updated_at' => 'nullable',
         'created_at' => 'nullable'
     ];

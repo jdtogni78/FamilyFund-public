@@ -29,10 +29,11 @@ class TradePortfolioFactory extends Factory
             'max_single_order' => $this->faker->word,
             'minimum_order' => $this->faker->word,
             'rebalance_period' => $this->faker->randomDigitNotNull,
+            'mode' => $this->faker->word,
             'start_dt' => $this->faker->date('Y-m-d H:i:s'),
             'end_dt' => $this->faker->date('Y-m-d H:i:s'),
-//            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-//            'created_at' => $this->faker->date('Y-m-d H:i:s')
+//        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+//        'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

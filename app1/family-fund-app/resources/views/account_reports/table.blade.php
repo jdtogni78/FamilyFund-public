@@ -3,8 +3,9 @@
         <thead>
             <tr>
                 <th>Account Id</th>
-        <th>Type</th>
-        <th>As Of</th>
+                <th>Type</th>
+                <th>As Of</th>
+                <th>Created At</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -12,8 +13,9 @@
         @foreach($accountReports as $accountReport)
             <tr>
                 <td>{{ $accountReport->account_id }}</td>
-            <td>{{ $accountReport->type }}</td>
-            <td>{{ $accountReport->as_of }}</td>
+                <td>{{ $accountReport->type }}</td>
+                <td>{{ $accountReport->as_of }}</td>
+                <td>{{ $accountReport->created_at }}</td>
                 <td>
                     {!! Form::open(['route' => ['accountReports.destroy', $accountReport->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

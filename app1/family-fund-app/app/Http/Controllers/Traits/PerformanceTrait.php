@@ -41,7 +41,10 @@ trait PerformanceTrait
             $arr[$monthStart] = $yp;
         }
 
-        return array_reverse($arr);
+        $ret = $this->removeEmptyStart($arr);
+        $ret = array_reverse($ret, true);
+        $ret = $this->removeEmptyStart($ret);
+        return $ret;
     }
 
     public function createYearlyPerformanceResponse($asOf)
@@ -63,7 +66,10 @@ trait PerformanceTrait
             $arr[$yearStart] = $yp;
         }
 
-        return array_reverse($arr);
+        $ret = $this->removeEmptyStart($arr);
+        $ret = array_reverse($ret);
+        $ret = $this->removeEmptyStart($ret);
+        return $ret;
     }
 
     /**
@@ -72,5 +78,17 @@ trait PerformanceTrait
     public function setPerfObject($perfObject): void
     {
         $this->perfObject = $perfObject;
+    }
+
+    protected function removeEmptyStart(array $ret): array
+    {
+        foreach ($ret as $key => $values) {
+            if ($values['shares'] == 0) {
+                unset($ret[$key]);
+            } else {
+                break;
+            }
+        }
+        return $ret;
     }
 }

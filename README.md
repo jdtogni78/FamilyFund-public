@@ -138,3 +138,9 @@ ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3
 
 ssh -J dstrader@${JUMPBOX}:22332 jdtogni@${FFSERVER} -p 22
 ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
+
+### Adding an account
+
+* Create a user via the web interface
+* Create an account for that user
+* Add a transaction - this will create a balance for the account

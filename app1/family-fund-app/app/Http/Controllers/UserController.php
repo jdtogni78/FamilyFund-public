@@ -6,6 +6,7 @@ use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Repositories\UserRepository;
 use App\Http\Controllers\AppBaseController;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Flash;
 use Response;

@@ -80,7 +80,9 @@ class AccountExt extends Account
         $query = $accountBalanceRepo->makeModel()->newQuery()
             ->where('account_id', $this->id)
             ->whereDate('start_dt', '<=', $now)
-            ->whereDate('end_dt', '>', $now);
+            ->whereDate('end_dt', '>', $now)
+            ->orderBy('start_dt', 'asc')
+            ->orderBy('end_dt', 'asc');
         $accountBalances = $query->get();
         $typeCount = array();
         $typeCount['OWN'] = 0;

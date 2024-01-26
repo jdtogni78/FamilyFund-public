@@ -2,22 +2,28 @@
     <table class="table table-striped" id="portfolioAssets-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Portfolio Id</th>
-        <th>Asset Id</th>
-        <th>Position</th>
-        <th>Start Dt</th>
-        <th>End Dt</th>
+                <th>Fund Name</th>
+                <th>Asset Id</th>
+                <th>Asset Symbol</th>
+                <th>Position</th>
+                <th>Start Dt</th>
+                <th>End Dt</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($portfolioAssets as $portfolioAsset)
             <tr>
+                <td>{{ $portfolioAsset->id }}</td>
                 <td>{{ $portfolioAsset->portfolio_id }}</td>
-            <td>{{ $portfolioAsset->asset_id }}</td>
-            <td>{{ $portfolioAsset->position }}</td>
-            <td>{{ $portfolioAsset->start_dt }}</td>
-            <td>{{ $portfolioAsset->end_dt }}</td>
+                <td>{{ $portfolioAsset->portfolio()->first()->fund()->first()->name }}</td>
+                <td>{{ $portfolioAsset->asset_id }}</td>
+                <td>{{ $portfolioAsset->asset()->first()->name }}</td>
+                <td>{{ $portfolioAsset->position }}</td>
+                <td>{{ $portfolioAsset->start_dt }}</td>
+                <td>{{ $portfolioAsset->end_dt }}</td>
                 <td>
                     {!! Form::open(['route' => ['portfolioAssets.destroy', $portfolioAsset->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

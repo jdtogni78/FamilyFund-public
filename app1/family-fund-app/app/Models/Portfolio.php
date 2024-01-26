@@ -76,4 +76,12 @@ class Portfolio extends Model
     {
         return $this->hasMany(\App\Models\PortfolioAsset::class, 'portfolio_id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function tradePortfolios()
+    {
+        return $this->hasMany(\App\Models\TradePortfolioExt::class, 'portfolio_id');
+    }
 }

@@ -7,6 +7,7 @@
                 <th scope="col">Position</th>
                 <th scope="col">Price</th>
                 <th scope="col">Market Value</th>
+                <th scope="col">%</th>
             </tr>
         </thead>
         <tbody>
@@ -28,7 +29,14 @@
                         $ {{ $asset['value'] }}
                     @else
                         <div class="alert alert-danger" role="alert">
-                        N/A
+                            N/A
+                        </div>
+                    @endisset</td>
+                <td>@isset($asset['value'])
+                        {{ round(($asset['value'] / $api['summary']['value']) * 100.0, 2) }}%
+                    @else
+                        <div class="alert alert-danger" role="alert">
+                            N/A
                         </div>
                     @endisset</td>
             </tr>

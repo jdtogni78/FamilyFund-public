@@ -19,9 +19,7 @@
                           </div>
                           <div class="card-body">
                               {!! Form::model($transaction, ['route' => ['transactions.update', $transaction->id], 'method' => 'patch']) !!}
-
-                              @include('transactions.fields')
-
+                              @include('transactions.edit_fields')
                               {!! Form::close() !!}
                             </div>
                         </div>

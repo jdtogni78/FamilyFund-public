@@ -19,6 +19,7 @@ class AccountBalanceResource extends JsonResource
             'type' => $this->type,
             'shares' => $this->shares,
             'account_id' => $this->account_id,
+            'account' => $this->account(),
             'transaction_id' => $this->transaction_id,
             'start_dt' => $this->start_dt,
             'end_dt' => $this->end_dt,

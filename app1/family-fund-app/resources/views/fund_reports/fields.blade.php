@@ -7,7 +7,7 @@
 <!-- Type Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3,'maxlength' => 3]) !!}
+    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3]) !!}
 </div>
 
 <!-- As Of Field -->

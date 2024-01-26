@@ -79,18 +79,32 @@ trait AccountTrait
                 continue;
             $tran['id']     = $transaction->id;
             $tran['type']   = $transaction->type;
+            $tran['status'] = $transaction->status;
             $tran['shares'] = Utils::shares($transaction->shares);
             $tran['value']  = Utils::currency($value = $transaction->value);
             $tran['share_price'] = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
 //            $tran['calculated_share_price'] = Utils::currency($fund->shareValueAsOf($transaction->timestamp));
-
-            $matching = $transaction->transactionMatching()->first();
-            if ($matching) {
-                $tran['reference_transaction'] = $matching->referenceTransaction()->first()->id;
-            }
             $tran['current_value'] = Utils::currency($current = $transaction->shares * $shareValue);
             $tran['current_performance'] = Utils::percent($current/$value - 1);
             $tran['timestamp'] = $transaction->timestamp;
+
+            $matching = $transaction->transactionMatching()->first();
+            if ($matching) {
+                Log::debug('tran id: ' . $transaction->id . ' matching id: ' . $matching->id);
+                $tran['reference_transaction'] = $matching->referenceTransaction()->first()->id;
+                $tran['current_value'] = Utils::currency(0);
+                $tran['current_performance'] = Utils::percent(0);
+            }
+
+            $refMatch = $transaction->referenceTransactionMatching()->first();
+            if ($refMatch) {
+                Log::debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
+                $refTrans = $refMatch->referenceTransaction()->first();
+                $refValue = $refTrans->shares * $shareValue;
+                $current = $transaction->shares * $shareValue;
+                $tran['current_value'] = Utils::currency($refValue + $current);
+                $tran['current_performance'] = Utils::percent(($refValue + $current)/$value - 1);
+            }
 
             $bals = [];
             foreach ($transaction->accountBalance()->get() as $balance) {
@@ -120,6 +134,7 @@ trait AccountTrait
         $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
         $arr['matching_rules'] = $api->createAccountMatchingResponse($account, $asOf);
         $arr['matching_available'] = $this->getTotalAvailableMatching($arr['matching_rules']);
+        $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
 
         $arr['as_of'] = $asOf;
         return $arr;

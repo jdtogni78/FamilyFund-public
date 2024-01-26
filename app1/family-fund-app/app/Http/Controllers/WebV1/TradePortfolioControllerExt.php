@@ -33,7 +33,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
      *
      * @param int $id
      *
-     * @return Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function showAsOf($id, $asOf=null)
     {
@@ -46,11 +46,21 @@ class TradePortfolioControllerExt extends TradePortfolioController
         }
 
         Log::info($tradePortfolio->tradePortfolioItems()->count()."\r");
-        return view('trade_portfolios.show',
-                [
-                    'tradePortfolio' => $tradePortfolio,
-                    'fund' => $tradePortfolio->fund()->first(),
-                    'tradePortfolioItems' => $tradePortfolio->tradePortfolioItems()->get()
-                ]);
+        $tradePortfolio['items'] = $tradePortfolio->tradePortfolioItems()->get();
+
+        // sum total shares
+        $total = $tradePortfolio['cash_target'];
+        $tradePortfolio->items->each(function ($item) use (&$total) {
+            $total += $item->target_share;
+        });
+        $tradePortfolio['total_shares'] = $total * 100.0;
+
+        $api = [
+            'tradePortfolio' => $tradePortfolio,
+            'portfolio' => $tradePortfolio->portfolio(),
+            'tradePortfolioItems' => $tradePortfolio->tradePortfolioItems()->get(),
+        ];
+        $api['api'] = $api;
+        return view('trade_portfolios.show', $api);
     }
 }

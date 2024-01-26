@@ -22,6 +22,7 @@ class TransactionResource extends JsonResource
             'shares' => $this->shares,
             'timestamp' => $this->timestamp,
             'account_id' => $this->account_id,
+            'account' => $this->account(),
             'descr' => $this->descr,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,

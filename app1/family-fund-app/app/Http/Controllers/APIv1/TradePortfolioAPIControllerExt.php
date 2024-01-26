@@ -31,11 +31,15 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
             $request->get('skip'),
             $request->get('limit')
         )
-            ->where('fund_id', '>', 0)
+            ->where('portfolio_id', '>', 0)
             ->where('start_dt', '<=', $asOf)
             ->where('end_dt', '>', $asOf);
 
-        return $this->sendResponse(TradePortfolioResource::collection($tradePortfolios), 'Trade Portfolios retrieved successfully');
+        $arr = [];
+        foreach ($tradePortfolios as $tradePortfolio) {
+            $arr[] = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
+        }
+        return $this->sendResponse($arr, 'Trade Portfolios retrieved successfully');
     }
 
     /**
@@ -70,12 +74,12 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $rss = new TradePortfolioResource($tradePortfolio);
         $ret = $rss->toArray(NULL);
 
-        $fund = $tradePortfolio->fund();
+        $port = $tradePortfolio->portfolio()->first();
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
-        if ($fund != null) {
-            $portfolio = $fund->portfolio();
-            $maxCash = $portfolio->maxCashBetween($prevYearAsOf, $asOf);
+        if ($port != null) {
+            $maxCash = $port->maxCashBetween($prevYearAsOf, $asOf);
             $ret['max_cash_last_year'] = Utils::currency($maxCash);
+            $ret['source'] = $port['source'];
         }
 
         $ret['items'] = TradePortfolioItemResource::collection($tradePortfolio->tradePortfolioItems);

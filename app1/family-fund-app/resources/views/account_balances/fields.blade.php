@@ -7,7 +7,7 @@
 <!-- Shares Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('shares', 'Shares:') !!}
-    {!! Form::number('shares', null, ['class' => 'form-control']) !!}
+    {!! Form::number('shares', null, ['class' => 'form-control', 'step' => 0.0001]) !!}
 </div>
 
 <!-- Account Id Field -->

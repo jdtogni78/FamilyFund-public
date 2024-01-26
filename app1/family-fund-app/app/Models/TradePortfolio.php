@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class TradePortfolio
  * @package App\Models
- * @version January 11, 2024, 1:40 pm UTC
+ * @version January 18, 2024, 2:10 am UTC
  *
  * @property \Illuminate\Database\Eloquent\Collection $tradePortfolioItems
- * @property \App\Models\Fund $fund
+ * @property \App\Models\Portfolio $portfolio
  * @property string $account_name
- * @property integer $fund_id
+ * @property integer $portfolio_id
  * @property number $cash_target
  * @property number $cash_reserve_target
  * @property number $max_single_order
@@ -39,7 +39,7 @@ class TradePortfolio extends Model
 
     public $fillable = [
         'account_name',
-        'fund_id',
+        'portfolio_id',
         'cash_target',
         'cash_reserve_target',
         'max_single_order',
@@ -58,7 +58,7 @@ class TradePortfolio extends Model
     protected $casts = [
         'id' => 'integer',
         'account_name' => 'string',
-        'fund_id' => 'integer',
+        'portfolio_id' => 'integer',
         'cash_target' => 'decimal:2',
         'cash_reserve_target' => 'decimal:2',
         'max_single_order' => 'decimal:2',
@@ -76,7 +76,7 @@ class TradePortfolio extends Model
      */
     public static $rules = [
         'account_name' => 'nullable|string|max:50|nullable|string|max:50',
-        'fund_id' => 'required',
+        'portfolio_id' => 'required',
         'cash_target' => 'required|numeric:between:0,0.99',
         'cash_reserve_target' => 'required|numeric:between:0,0.99',
         'max_single_order' => 'required|numeric',
@@ -100,8 +100,8 @@ class TradePortfolio extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
-    public function fund()
+    public function portfolio()
     {
-        return $this->belongsTo(\App\Models\FundExt::class, 'fund_id');
+        return $this->belongsTo(\App\Models\PortfolioExt::class, 'portfolio_id');
     }
 }

@@ -2,18 +2,20 @@
     <table class="table table-striped" id="assets-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Name</th>
-        <th>Type</th>
-        <th>Source</th>
+                <th>Type</th>
+                <th>Source</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($assets as $asset)
             <tr>
+                <td>{{ $asset->id }}</td>
                 <td>{{ $asset->name }}</td>
-            <td>{{ $asset->type }}</td>
-            <td>{{ $asset->source }}</td>
+                <td>{{ $asset->type }}</td>
+                <td>{{ $asset->source }}</td>
                 <td>
                     {!! Form::open(['route' => ['assets.destroy', $asset->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

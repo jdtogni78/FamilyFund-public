@@ -2,16 +2,20 @@
     <table class="table table-striped" id="portfolios-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Fund Id</th>
-        <th>Source</th>
+                <th>Fund Name</th>
+                <th>Source</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($portfolios as $portfolio)
             <tr>
+                <td>{{ $portfolio->id }}</td>
                 <td>{{ $portfolio->fund_id }}</td>
-            <td>{{ $portfolio->source }}</td>
+                <td>{{ $portfolio->fund()->first()->name }}</td>
+                <td>{{ $portfolio->source }}</td>
                 <td>
                     {!! Form::open(['route' => ['portfolios.destroy', $portfolio->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

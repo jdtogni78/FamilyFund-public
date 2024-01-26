@@ -1,19 +1,19 @@
 <!-- Account Name Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('account_name', 'Account Name:') !!}
-    {!! Form::text('account_name', null, ['class' => 'form-control','maxlength' => 50,'maxlength' => 50]) !!}
+    {!! Form::text('account_name', null, ['class' => 'form-control','maxlength' => 50]) !!}
 </div>
 
 <!-- Fund Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('fund_id', 'Fund Id:') !!}
-    {!! Form::number('fund_id', null, ['class' => 'form-control']) !!}
+    {!! Form::label('portfolio_id', 'Portfolio Id:') !!}
+    {!! Form::number('portfolio_id', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Start Date Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('start_dt', 'Start Date:') !!}
-    {!! Form::date('start_dt', null, ['class' => 'form-control', 'id'=>'start_dt']) !!}
+    {!! Form::date('start_dt', $tradePortfolio->start_dt->format('Y-m-d'), ['class' => 'form-control', 'id'=>'start_dt']) !!}
 </div>
 
 @push('scripts')
@@ -33,7 +33,7 @@
 <!-- End Date Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('end_dt', 'End Date:') !!}
-    {!! Form::date('end_dt', null, ['class' => 'form-control', 'id'=>'end_dt']) !!}
+    {!! Form::date('end_dt', $tradePortfolio->end_dt->format('Y-m-d'), ['class' => 'form-control', 'id'=>'end_dt']) !!}
 </div>
 
 @push('scripts')
@@ -59,7 +59,7 @@
 <!-- Cash Reserve Target Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('cash_reserve_target', 'Cash Reserve Target:') !!}
-    {!! Form::number('cash_reserve_target', null, ['class' => 'form-control']) !!}
+    {!! Form::number('cash_reserve_target', null, ['class' => 'form-control', 'step' => 0.01]) !!}
 </div>
 
 <!-- Max Single Order Field -->
@@ -71,13 +71,19 @@
 <!-- Minimum Order Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('minimum_order', 'Minimum Order:') !!}
-    {!! Form::number('minimum_order', null, ['class' => 'form-control']) !!}
+    {!! Form::number('minimum_order', null, ['class' => 'form-control', 'step' => 0.01]) !!}
 </div>
 
 <!-- Rebalance Period Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('rebalance_period', 'Rebalance Period:') !!}
-    {!! Form::number('rebalance_period', null, ['class' => 'form-control']) !!}
+    {!! Form::number('rebalance_period', null, ['class' => 'form-control', 'step' => 1]) !!}
+</div>
+
+<!-- Mode Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('mode', 'Mode:') !!}
+    {!! Form::text('mode', null, ['class' => 'form-control','maxlength' => 3]) !!}
 </div>
 
 <!-- Submit Field -->

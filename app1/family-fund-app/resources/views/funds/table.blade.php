@@ -2,16 +2,18 @@
     <table class="table table-striped" id="funds-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Name</th>
-        <th>Goal</th>
+                <th>Goal</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($funds as $fund)
             <tr>
+                <td>{{ $fund->id }}</td>
                 <td>{{ $fund->name }}</td>
-            <td>{{ $fund->goal }}</td>
+                <td>{{ $fund->goal }}</td>
                 <td>
                     {!! Form::open(['route' => ['funds.destroy', $fund->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

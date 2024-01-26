@@ -18,15 +18,18 @@ var assets_shares = api.portfolio.assets.map(function(e) {return e.value;});
     // label: 'My First Dataset',
     data: assets_shares,
     backgroundColor: [
-      'blue',
-      'red',
-      'green',
-      'yellow',
-      'cyan',
-      'orange',
-      'gray',
-      'magenta',
-      'brown'
+        'blue',
+        'red',
+        'green',
+        'yellow',
+        'cyan',
+        'orange',
+        'gray',
+        'magenta',
+        'lime',
+        'teal',
+        'maroon',
+        'silver',
     ],
     hoverOffset: 3
   }]

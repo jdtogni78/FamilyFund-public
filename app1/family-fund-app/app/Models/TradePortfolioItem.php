@@ -52,7 +52,7 @@ class TradePortfolioItem extends Model
         'trade_portfolio_id' => 'integer',
         'symbol' => 'string',
         'type' => 'string',
-        'target_share' => 'decimal:2',
+        'target_share' => 'decimal:3',
         'deviation_trigger' => 'decimal:5'
     ];
 

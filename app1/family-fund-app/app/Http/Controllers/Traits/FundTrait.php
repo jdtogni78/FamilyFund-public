@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Traits;
 
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
+use App\Http\Controllers\WebV1\AccountControllerExt;
 use App\Http\Resources\FundResource;
 use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
@@ -12,6 +13,7 @@ use App\Models\FundExt;
 use App\Models\FundReportExt;
 use App\Models\User;
 use App\Models\Utils;
+use App\Repositories\AccountRepository;
 use App\Repositories\PortfolioRepository;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -113,11 +115,23 @@ Trait FundTrait
             $arr['admin'] = true;
             $arr['balances'] = $api->createAccountBalancesResponse($fund, $asOf);
         }
-//        $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
+
+        $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
+        $account = $fund->fundAccount();
+        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+
+        $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
         $portfolio = $fund->portfolios()->first();
         $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
+
+        $yearAgo = Utils::asOfAddYear($asOf, -1);
+        $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
+        $arr['tradePortfolios'] = $tradePortfolios;
+        foreach ($tradePortfolios as $tradePortfolio) {
+            $tradePortfolio->items = $tradePortfolio->tradePortfolioItems()->get();
+        }
 
         return $arr;
     }

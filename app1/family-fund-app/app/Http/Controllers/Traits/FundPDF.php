@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Traits;
 
+use CpChart\Data;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Mockery\Exception;
@@ -23,6 +24,7 @@ class FundPDF
         $this->createAssetsAllocationGraph($arr, $tempDir);
         $this->createYearlyPerformanceGraph($arr, $tempDir);
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
+        $this->createTradePortfoliosGraph($arr, $tempDir);
 
         $view = 'funds.show_pdf';
         $pdfFile = 'fund.pdf';
@@ -75,5 +77,25 @@ class FundPDF
         $this->createDoughnutChart($values, $labels, $file);
     }
 
+    public function createTradePortfoliosGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        $arr = $api['tradePortfolios'];
+        foreach ($arr as $tradePortfolio) {
+            $name = 'trade_portfolios_' . $tradePortfolio->id . '.png';
+
+            $labels = array_map(function ($v) {
+                return $v['symbol'];
+            }, $tradePortfolio->items->toArray());
+            // sum up all shares from items
+
+            $labels[] = 'Cash';
+            $values[] = $tradePortfolio['cash_target'] * 100.0;
+            Log::debug("labels: " . json_encode($labels));
+            Log::debug("values: " . json_encode($values));
+
+            $this->files[$name] = $file = $tempDir->path($name);
+            $this->createDoughnutChart($values, $labels, $file);
+        }
+    }
 
 }

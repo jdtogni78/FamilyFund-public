@@ -27,4 +27,3 @@
     {!! Form::label('deviation_trigger', 'Deviation trigger:') !!}
     <p>{{ $tradePortfolioItem->deviation_trigger }}</p>
 </div>
-

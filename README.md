@@ -144,3 +144,39 @@ ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
 * Create a user via the web interface
 * Create an account for that user
 * Add a transaction - this will create a balance for the account
+
+### Adding a fund
+
+* Create an account with no user id for the fund
+* Create an initial transaction for the fund
+
+### Making an investment into a fund
+
+* Create a transaction for the fund
+* When should the new cash be available
+* Making transaction before cash was recognized caused miscalculation and validation error
+
+### Deploying DSTrader to prod
+
+FFSERVER=192.168.68.120
+
+* Copy DSTrader.jar from stage to prod
+* Review properties in stage and prod
+* Verify changes:
+  * rsync -avnc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ jdtogni@${FFSERVER}:~/dev/dstrader-docker/
+* Copy files:
+  * rsync -avc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ jdtogni@${FFSERVER}:~/dev/dstrader-docker/
+
+### Deploying FamilyFund to prod
+
+FFSERVER=192.168.68.120
+
+* Verify changes
+  * rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ jdtogni@${FFSERVER}:~/dev/FamilyFund/app1/
+* Change ownership on server
+  * sudo chown jdtogni:jdtogni app1/family-fund-app/ -R
+* Transfer content of app1
+  * rsync -avc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ jdtogni@${FFSERVER}:~/dev/FamilyFund/app1/
+* Restore ownership on server
+  * sudo chown dockeruser:dockeruser app1/family-fund-app/ -R
+  

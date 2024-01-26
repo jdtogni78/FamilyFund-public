@@ -8,11 +8,11 @@ namespace App\Models;
  */
 class TradePortfolioExt extends TradePortfolio
 {
-    public function fund()
+    public function portfolio()
     {
-        $funds = TradePortfolio::fund($this);
-        if ($funds->count() > 1)
-            throw new \Exception("Every trade portfosio must have at most 1 fund (found " . $funds->count() . ")");
-        return $funds->first();
+        $portfolios = TradePortfolio::portfolio($this);
+        if ($portfolios->count() > 1)
+            throw new \Exception("Every trade portfolio must have at most 1 portfolio (found " . $portfolios->count() . ")");
+        return $portfolios->first();
     }
 }

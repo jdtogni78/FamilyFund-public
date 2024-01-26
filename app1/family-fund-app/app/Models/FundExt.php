@@ -106,5 +106,8 @@ class FundExt extends Fund
         return $accountBalances;
     }
 
-
+    public function fundAccount()
+    {
+        return $this->accounts()->where('user_id', null)->first();
+    }
 }

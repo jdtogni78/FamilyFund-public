@@ -24,7 +24,7 @@
         "inView": true
     },
     {
-        "name": "fund_id",
+        "name": "portfolio_id",
         "dbType": "bigInteger,false,true",
         "htmlType": null,
         "validations": "required",
@@ -161,6 +161,6 @@
     },
     {
         "type": "relation",
-        "relation": "mt1,Fund,fund_id"
+        "relation": "mt1,Portfolio,portfolio_id"
     }
 ]

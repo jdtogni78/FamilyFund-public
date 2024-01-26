@@ -19,7 +19,7 @@
 <!-- Target Share Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('target_share', 'Target Share:') !!}
-    {!! Form::number('target_share', null, ['class' => 'form-control', 'step' => 0.01]) !!}
+    {!! Form::number('target_share', null, ['class' => 'form-control', 'step' => 0.001]) !!}
 </div>
 
 <!-- Deviation trigger Field -->

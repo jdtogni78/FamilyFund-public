@@ -12,7 +12,8 @@ use App\Repositories\TransactionRepository;
 use App\Http\Controllers\AppBaseController;
 use Exception;
 use Illuminate\Http\Request;
-use Flash;
+use Laracasts\Flash\Flash;
+use Illuminate\Support\Facades\Log;
 use Response;
 
 class TransactionControllerExt extends TransactionController
@@ -53,6 +54,7 @@ class TransactionControllerExt extends TransactionController
         try {
             $this->createTransaction($input);
         } catch (Exception $e) {
+            Log::error($e);
             Flash::error($e->getMessage());
             return back()->withError($e->getMessage())->withInput();
         }
@@ -98,8 +100,15 @@ class TransactionControllerExt extends TransactionController
 
             return redirect(route('transactions.index'));
         }
+        $api = [
+            'typeMap' => Transaction::$typeMap,
+            'statusMap' => Transaction::$statusMap,
+            'accountMap' => AccountExt::accountMap(),
+        ];
 
-        return view('transactions.edit')->with('transaction', $transaction);
+        return view('transactions.edit')
+            ->with('transaction', $transaction)
+            ->with('api', $api);
     }
 
 }

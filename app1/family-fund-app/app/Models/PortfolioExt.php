@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Repositories\PortfolioAssetRepository;
+use App\Repositories\TradePortfolioRepository;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,6 +29,18 @@ class PortfolioExt extends Portfolio
         return $portfolioAssets;
     }
 
+    public function tradePortfoliosBetween($start, $end): Collection
+    {
+        $tradePortfolioAssetsRepo = \App::make(TradePortfolioRepository::class);
+        $query = $tradePortfolioAssetsRepo->makeModel()->newQuery()
+            ->where('portfolio_id', $this->id)
+            ->whereDate('end_dt', '>=', $start)
+            ->whereDate('start_dt', '<=', $end);
+
+        $tradePortfolios = $query->get();
+        return $tradePortfolios;
+    }
+
     public function maxCashBetween($start, $end): float
     {
         $cash = AssetExt::getCashAsset();
@@ -40,6 +53,7 @@ class PortfolioExt extends Portfolio
 
         $max = $query->max('position');
         Log::debug("max cash: ".json_encode([$this->id, $cash->id, $max])."\n");
+        if ($max == null) $max = 0.0;
 
         return $max;
     }

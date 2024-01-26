@@ -34,6 +34,7 @@ class PortfolioAPIControllerExt extends AppBaseController
         $arr = [];
         $arr['assets'] = $this->createAssetsResponse($portfolio, $as_of);
         $arr['total_value'] = Utils::currency($this->totalValue);
+        $arr['source'] = $portfolio->source;
         return $arr;
     }
 

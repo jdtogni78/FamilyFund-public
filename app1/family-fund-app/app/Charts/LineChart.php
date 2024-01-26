@@ -12,8 +12,8 @@ class LineChart extends BaseChart
         $labelHeight = $this->fonts["labels"]["size"] * $this->longestLabel / 3;
         $chartHeight = $this->height - 2 * $this->margin - $legendHeight - $labelHeight;
         $chartWidth = $this->width - 2 * $this->margin;
-        $chartX = $this->margin + ($this->longestValue * $this->fonts["labels"]["size"])/2;
-        $chartY = $this->margin * 1.5 + $legendHeight;
+        $chartX = $this->margin + ($this->longestValue * $this->fonts["labels"]["size"])/2 + 40;
+        $chartY = $this->margin * 1.5 + $legendHeight + 10;
 
         $this->image->setGraphArea($chartX, $chartY, $chartWidth, $chartHeight);
 
@@ -26,11 +26,12 @@ class LineChart extends BaseChart
             "Mode" => $mode,
         ]);
 
-        // $this->data->Data["Series"]["Title"]["Color"] = [
-        //     "R" => 155,
-        //     "G" => 155,
-        //     "B" => 155,
-        // ];
+        $this->data->Data["Series"][$this->seriesName1]["Color"] = [
+            "R" => 0,
+            "G" => 0,
+            "B" => 255,
+            "Alpha" => 100,
+        ];
         $legendWidth = $this->longestLabel * $this->fonts["legend"]["size"];
         $legendX = ($this->width - $legendWidth)/2;
         $this->setFont("legend");
@@ -44,8 +45,8 @@ class LineChart extends BaseChart
     {
         $this->createBaseChart(45, SCALE_MODE_FLOATING);
 
-        // $this->data->setSerieTicks("Title", 4);
-        $this->data->setSerieWeight("Title", 1.5);
+//        $this->data->setSerieWeight($this->seriesName1, 1.5);
+//        $this->data->setSerieWeight($this->seriesName2, 1.5);
         $this->setFont("labels");
         $this->image->drawLineChart([
             // "DisplayValues" => true,
@@ -57,8 +58,8 @@ class LineChart extends BaseChart
     {
         $this->createBaseChart(45, SCALE_MODE_FLOATING);
 
-        // $this->data->setSerieTicks("Title", 4);
-        $this->data->setSerieWeight("Title", 1.5);
+        // $this->data->setSerieTicks($this->seriesName1, 4);
+//        $this->data->setSerieWeight($this->seriesName1, 1.5);
         $this->setFont("labels");
         $this->image->drawStepChart([
             // "DisplayValues" => true,

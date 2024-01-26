@@ -13,7 +13,7 @@
 <!-- Position Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('position', 'Position:') !!}
-    {!! Form::number('position', null, ['class' => 'form-control']) !!}
+    {!! Form::number('position', null, ['class' => 'form-control', 'step' => 0.0001]) !!}
 </div>
 
 <!-- Start Dt Field -->

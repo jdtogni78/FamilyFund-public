@@ -25,6 +25,20 @@
             </div>
             <div class="row">
                 <div class="col">
+                   <div class="card">
+                       <div class="card-header">
+                           <strong>Target %</strong>
+                       </div>
+                       <div class="card-body">
+                           @if($tradePortfolio = $api['tradePortfolio'])
+                           @include('trade_portfolios.graph')
+                           @endif
+                       </div>
+                   </div>
+               </div>
+            </div>
+            <div class="row">
+                <div class="col">
                     <div class="card">
                         <div class="card-header">
                             <strong>Trade Portfolio Items</strong>

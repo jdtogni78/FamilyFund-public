@@ -19,9 +19,7 @@
                              </div>
                              <div class="card-body">
                              {!! Form::open(['route' => ['accounts.update', 1]]) !!}
-
                              @include('accounts.show_fields_ext')
-
                              {!! Form::close() !!}
                              </div>
                          </div>
@@ -34,7 +32,9 @@
                                 <strong>Performance</strong>
                             </div>
                             <div class="card-body">
+                                @php($addSP500 = true)
                                 @include('accounts.performance_line_graph')
+                                @php($addSP500 = false)
                             </div>
                         </div>
                     </div>

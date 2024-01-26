@@ -3,10 +3,10 @@
         <thead>
             <tr>
                 <th>Trade Portfolio Id</th>
-        <th>Symbol</th>
-        <th>Type</th>
-        <th>Target Share</th>
-        <th>Deviation trigger</th>
+                <th>Symbol</th>
+                <th>Type</th>
+                <th>Target Share</th>
+                <th>Deviation trigger</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -14,10 +14,10 @@
         @foreach($tradePortfolioItems as $tradePortfolioItem)
             <tr>
                 <td>{{ $tradePortfolioItem->trade_portfolio_id }}</td>
-            <td>{{ $tradePortfolioItem->symbol }}</td>
-            <td>{{ $tradePortfolioItem->type }}</td>
-            <td>{{ $tradePortfolioItem->target_share }}</td>
-            <td>{{ $tradePortfolioItem->deviation_trigger }}</td>
+                <td>{{ $tradePortfolioItem->symbol }}</td>
+                <td>{{ $tradePortfolioItem->type }}</td>
+                <td>{{ $tradePortfolioItem->target_share * 100 }}%</td>
+                <td>{{ $tradePortfolioItem->deviation_trigger * 100}}%</td>
                 <td>
                     {!! Form::open(['route' => ['tradePortfolioItems.destroy', $tradePortfolioItem->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

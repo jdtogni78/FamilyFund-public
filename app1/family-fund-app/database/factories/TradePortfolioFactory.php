@@ -23,15 +23,15 @@ class TradePortfolioFactory extends Factory
     {
         return [
             'account_name' => $this->faker->word,
-            'fund_id' => $this->faker->word,
-            'cash_target' => $this->faker->word,
-            'cash_reserve_target' => $this->faker->word,
-            'max_single_order' => $this->faker->word,
-            'minimum_order' => $this->faker->word,
-            'rebalance_period' => $this->faker->randomDigitNotNull,
-            'mode' => $this->faker->word,
-            'start_dt' => $this->faker->date('Y-m-d H:i:s'),
-            'end_dt' => $this->faker->date('Y-m-d H:i:s'),
+        'portfolio_id' => $this->faker->word,
+        'cash_target' => $this->faker->word,
+        'cash_reserve_target' => $this->faker->word,
+        'max_single_order' => $this->faker->word,
+        'minimum_order' => $this->faker->word,
+        'rebalance_period' => $this->faker->randomDigitNotNull,
+        'mode' => $this->faker->word,
+            'start_dt' => $this->faker->date('Y-m-d'),
+            'end_dt' => $this->faker->date('Y-m-d'),
 //        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
 //        'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];

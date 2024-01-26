@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Repositories\AssetPriceRepository;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class AssetExt
@@ -23,12 +25,28 @@ class AssetExt extends Asset
         return $input['name'] == 'CASH' || $input['type'] == 'CSH';
     }
 
+    public static function getSP500Asset(): AssetExt {
+        $symbol = "SPY";
+        $asset = AssetExt::
+            where('name', $symbol)
+            ->where('type', 'STK')
+            ->get()->first();
+        if ($asset == null) {
+            throw new Exception("Cant find asset {$symbol}");
+        }
+        return $asset;
+    }
+
     public static function getCashAsset(): AssetExt
     {
-        return AssetExt::
+        $asset = AssetExt::
             where('name', 'CASH')
             ->orWhere('type', 'CSH')
             ->get()->first();
+        if ($asset == null) {
+            throw new Exception("Cant find asset CASH");
+        }
+        return $asset;
     }
 
     public function isCash():bool {
@@ -37,14 +55,22 @@ class AssetExt extends Asset
 
     /**
      **/
-    public function pricesAsOf($now)
+    public function pricesAsOf($now, $debug=false)
     {
         $assetPricesRepo = \App::make(AssetPriceRepository::class);
         $query = $assetPricesRepo->makeModel()->newQuery();
         $query->where('asset_id', $this->id)
             ->whereDate('start_dt', '<=', $now)
             ->whereDate('end_dt', '>', $now);
+
         $assetPrices = $query->get();
+        if ($debug) {
+            Log::debug($query->toSql());
+            // log all query parameters
+            foreach ($query->getBindings() as $i => $binding) {
+                Log::debug("Binding $i is $binding");
+            }
+        }
         if ($assetPrices->count() > 1) {
             print_r($assetPrices->toArray());
             throw new \Exception("There should only be one asset price (found " . $assetPrices->count() . ") for asset " . $this->id . ' at ' . $now);

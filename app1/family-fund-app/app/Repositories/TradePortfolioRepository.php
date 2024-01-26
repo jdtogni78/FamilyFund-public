@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TradePortfolioRepository
  * @package App\Repositories
- * @version January 11, 2024, 1:40 pm UTC
+ * @version January 18, 2024, 2:10 am UTC
 */
 
 class TradePortfolioRepository extends BaseRepository
@@ -18,7 +18,7 @@ class TradePortfolioRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'account_name',
-        'fund_id',
+        'portfolio_id',
         'cash_target',
         'cash_reserve_target',
         'max_single_order',

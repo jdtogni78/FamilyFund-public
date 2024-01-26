@@ -1,5 +1,9 @@
 ### GET prod account
-GET http://10.0.0.86:3001/api/trade_portfolios/U0000010
+GET http://192.168.68.120:3001/api/trade_portfolios/
+Accept: application/json
+
+### GET prod account
+GET http://192.168.68.120:3001/api/trade_portfolios/U0000012
 Accept: application/json
 
 ### GET dev account

@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class Transaction
  * @package App\Models
- * @version August 1, 2022, 4:46 am UTC
+ * @version February 4, 2024, 7:18 pm UTC
  *
  * @property \App\Models\Account $account
+ * @property \App\Models\TransactionMatching $transaction
+ * @property \App\Models\TransactionMatching $referenceTransaction
  * @property \Illuminate\Database\Eloquent\Collection $accountBalances
- * @property \Illuminate\Database\Eloquent\Collection $transactionMatchings
- * @property \Illuminate\Database\Eloquent\Collection $transactionMatching1s
  * @property string $type
  * @property string $status
  * @property number $value
@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string|\Carbon\Carbon $timestamp
  * @property integer $account_id
  * @property string $descr
+ * @property string $flags
  */
 class Transaction extends Model
 {
@@ -30,9 +31,6 @@ class Transaction extends Model
     use HasFactory;
 
     public $table = 'transactions';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = 'updated_at';
 
 
     protected $dates = ['deleted_at'];
@@ -44,7 +42,11 @@ class Transaction extends Model
     public static array $statusMap = [
         'P' => 'Pending',
         'C' => 'Cleared',
-        ];
+    ];
+    public static array $flagMap = [
+        'A' => 'Add Cash Position',
+        'C' => 'Cash Already Added',
+    ];
 
 
     public $fillable = [
@@ -54,7 +56,8 @@ class Transaction extends Model
         'shares',
         'timestamp',
         'account_id',
-        'descr'
+        'descr',
+        'flags'
     ];
 
     /**
@@ -70,7 +73,8 @@ class Transaction extends Model
         'shares' => 'decimal:4',
         'timestamp' => 'datetime',
         'account_id' => 'integer',
-        'descr' => 'string'
+        'descr' => 'string',
+        'flags' => 'string'
     ];
 
     /**
@@ -79,15 +83,16 @@ class Transaction extends Model
      * @var array
      */
     public static $rules = [
-        'type' => 'in:PUR,BOR,SAL,REP,MAT,INI',
-        'status' => 'in:C,P',
+        'type' => 'required|in:PUR,SAL,BOR,REP,MAT,INI',
+        'status' => 'required|in:C,P',
         'value' => 'required|numeric',
         'shares' => 'nullable|numeric',
         'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
+        'flags' => 'nullable|string|in:A,C',
         'updated_at' => 'nullable',
-        'created_at' => 'nullable',
+        'created_at' => 'required',
         'deleted_at' => 'nullable'
     ];
     public static $create_rules = [
@@ -98,6 +103,7 @@ class Transaction extends Model
         'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
+        'flags' => 'nullable|string|in:A,C',
     ];
 
     /**
@@ -123,6 +129,7 @@ class Transaction extends Model
     {
         return $this->hasOne(\App\Models\TransactionMatching::class, 'reference_transaction_id');
     }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      **/

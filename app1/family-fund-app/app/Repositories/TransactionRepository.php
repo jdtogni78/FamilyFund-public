@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TransactionRepository
  * @package App\Repositories
- * @version August 1, 2022, 4:46 am UTC
+ * @version February 4, 2024, 7:18 pm UTC
 */
 
 class TransactionRepository extends BaseRepository
@@ -23,7 +23,8 @@ class TransactionRepository extends BaseRepository
         'shares',
         'timestamp',
         'account_id',
-        'descr'
+        'descr',
+        'flags'
     ];
 
     /**

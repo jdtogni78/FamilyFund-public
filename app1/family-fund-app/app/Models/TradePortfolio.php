@@ -75,8 +75,8 @@ class TradePortfolio extends Model
      * @var array
      */
     public static $rules = [
-        'account_name' => 'nullable|string|max:50|nullable|string|max:50',
-        'portfolio_id' => 'required',
+        'account_name' => 'nullable|string|max:50',
+        'portfolio_id' => 'nullable|integer',
         'cash_target' => 'required|numeric:between:0,0.99',
         'cash_reserve_target' => 'required|numeric:between:0,0.99',
         'max_single_order' => 'required|numeric',

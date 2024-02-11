@@ -9,6 +9,7 @@ use App\Repositories\TradePortfolioRepository;
 use App\Http\Resources\TradePortfolioResource;
 use App\Http\Resources\TradePortfolioItemResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 
 /**
@@ -35,6 +36,7 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
             ->where('start_dt', '<=', $asOf)
             ->where('end_dt', '>', $asOf);
 
+        Log::debug("TRADE PORTFOLIOS: " . json_encode($tradePortfolios) . "\n");
         $arr = [];
         foreach ($tradePortfolios as $tradePortfolio) {
             $arr[] = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
@@ -74,12 +76,12 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $rss = new TradePortfolioResource($tradePortfolio);
         $ret = $rss->toArray(NULL);
 
-        $port = $tradePortfolio->portfolio()->first();
+        $port = $tradePortfolio->portfolio();
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
         if ($port != null) {
             $maxCash = $port->maxCashBetween($prevYearAsOf, $asOf);
             $ret['max_cash_last_year'] = Utils::currency($maxCash);
-            $ret['source'] = $port['source'];
+            $ret['source'] = $port->source;
         }
 
         $ret['items'] = TradePortfolioItemResource::collection($tradePortfolio->tradePortfolioItems);

@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Nette\Utils\DateTime;
 use Exception;
@@ -32,7 +33,7 @@ trait BulkStoreTrait
         foreach ($symbols as $symbol) {
             $symbol['source'] = $source;
             $input = array_intersect_key($symbol, array_flip((new AssetExt())->fillable));
-            if ($this->verbose) print_r("input: " . json_encode($input) . "\n");
+            if ($this->verbose) Log::debug("input: " . json_encode($input) . "\n");
             if (AssetExt::isCashInput($input)) {
                 unset($input['source']);
                 $asset = Asset::orWhere($input)->firstOrFail();
@@ -60,15 +61,15 @@ trait BulkStoreTrait
         if (!$query->isEmpty()) {
             $create = false;
             foreach ($query as $obj) {
-                if ($this->verbose) print_r("past obj: " . json_encode($obj) . "\n");
+                if ($this->verbose) Log::debug("past obj: " . json_encode($obj) . "\n");
                 $tsDiff = $timestamp->getTimestamp() - $obj->start_dt->getTimestamp();
-                if ($this->verbose) print_r("ts: " . json_encode([$obj->start_dt, $timestamp, $tsDiff]) . "\n");
+                if ($this->verbose) Log::debug("ts: " . json_encode([$obj->start_dt, $timestamp, $tsDiff]) . "\n");
                 if ($tsDiff == 0 && $obj->$field != $newValue) {
                     // There could have been updates of that amt that were
                     // associated w this record, its not safe to change
                     $symbol = $asset->name;
-                    if ($this->verbose) print_r("obj: " . json_encode($obj) . "\n");
-                    if ($this->verbose) print_r("asset: " . json_encode($asset) . "\n");
+                    if ($this->verbose) Log::debug("obj: " . json_encode($obj) . "\n");
+                    if ($this->verbose) Log::debug("asset: " . json_encode($asset) . "\n");
                     throw new Exception("A '$symbol' record with this exact timestamp and different $field already exists");
 //                    $obj->$field = $newValue;
 //                    $obj->save();
@@ -76,7 +77,7 @@ trait BulkStoreTrait
                 } else if ($obj->$field != $newValue) {
                     // value changed, lets end & create new
                     $newEnd = $obj->end_dt; // in case thats not the last record
-                    if ($this->verbose) print_r("newend: " . json_encode($obj) . "\n");
+                    if ($this->verbose) Log::debug("newend: " . json_encode($obj) . "\n");
                     $obj->end_dt = $timestamp;
                     $obj->save();
                     $create = true;
@@ -91,10 +92,10 @@ trait BulkStoreTrait
             if (!$query->isEmpty()) {
                 $create = false;
                 foreach ($query as $obj) {
-                    if ($this->verbose) print_r("future obj: " . json_encode($obj) . "\n");
+                    if ($this->verbose) Log::debug("future obj: " . json_encode($obj) . "\n");
                     if ($obj->$field != $newValue) {
                         $newEnd = $obj->start_dt; // in case we are not the last record
-                        if ($this->verbose) print_r("newEnd: " . json_encode($obj) . "\n");
+                        if ($this->verbose) Log::debug("newEnd: " . json_encode($obj) . "\n");
                         $create = true;
                     } else {
                         $ret = $obj;
@@ -105,7 +106,7 @@ trait BulkStoreTrait
             }
             if ($create) {
                 $data = $this->getChildData($asset, $newValue, $timestamp, $newEnd, $field);
-                if ($this->verbose) print_r("create child: " . json_encode($data) . "\n");
+                if ($this->verbose) Log::debug("create child: " . json_encode($data) . "\n");
                 $ret = $this->createChild($data, $source);
             }
         }

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\APIv1\PortfolioAssetAPIControllerExt;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
 use App\Repositories\AccountBalanceRepository;
+use App\Repositories\PortfolioAssetRepository;
 use App\Repositories\TransactionRepository;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Nette\Utils\DateTime;
 
 /**
@@ -15,13 +18,25 @@ use Nette\Utils\DateTime;
  */
 class TransactionExt extends Transaction
 {
+    public static array $typeMap = [
+        'PUR' => 'Purchase',
+        'INI' => 'Initial Value',
+    ];
+    public static array $statusMap = [
+        'P' => 'Pending',
+        'C' => 'Cleared',
+    ];
+    public static array $flagsMap = [
+        'A' => 'Add Cash Position',
+        'C' => 'Cash Already Added',
+    ];
+
     /**
      * @throws \Exception
      */
-    public function createBalance()
+    public function createBalance($shares, $timestamp, $verbose=false)
     {
-        $verbose=false;
-        if ($this->shares == null || $this->shares == 0) {
+        if ($shares == null || $shares == 0) {
             throw new Exception("Balances need transactions with shares");
         }
         if ($this->accountBalance()->first() != null) {
@@ -32,17 +47,17 @@ class TransactionExt extends Transaction
         $account_id = $this->account()->first()->id;
 
         // TODO: move it to balance classes
-        $otherBalance = $this->validateBalanceOverlap($accountBalanceRepo, $account_id);
-        $bal = $this->validateLatestBalance($accountBalanceRepo, $account_id);
+        $otherBalance = $this->validateBalanceOverlap($accountBalanceRepo, $account_id, $timestamp);
+        $bal = $this->validateLatestBalance($accountBalanceRepo, $account_id, $timestamp);
 
         $oldShares = 0;
         if ($bal != null) {
             $oldShares = $bal->shares;
-            $bal->end_dt = $this->timestamp;
+            $bal->end_dt = $timestamp;
             $bal->save();
-            if ($verbose) print_r("OLD BAL " . json_encode($bal) . "\n");
+            if ($verbose) Log::debug("OLD BAL " . json_encode($bal) . "\n");
         } else if ($otherBalance != null) {
-            print_r("BALANCE FOUND: ".json_encode($otherBalance->toArray())."\n");
+            Log::debug("BALANCE FOUND: ".json_encode($otherBalance->toArray())."\n");
             // has lingering balances that is not infinity
             throw new Exception("Unexpected: There are existent balances that were end-dated - not safe to proceed");
         }
@@ -52,11 +67,11 @@ class TransactionExt extends Transaction
                 'account_id' => $account_id,
                 'transaction_id' => $this->id,
                 'type' => 'OWN',
-                'shares' => $oldShares + $this->shares,
-                'start_dt' => $this->timestamp,
+                'shares' => $oldShares + $shares,
+                'start_dt' => $timestamp,
                 'end_dt' => '9999-12-31',
             ]);
-        if ($verbose) print_r("NEW BAL " . json_encode($newBal)."\n");
+        if ($verbose) Log::debug("NEW BAL " . json_encode($newBal)."\n");
     }
 
     /**
@@ -67,20 +82,141 @@ class TransactionExt extends Transaction
         $verbose = false;
         $account = $this->account()->first();
         $fund = $account->fund()->first();
-        $shareValue = $fund->shareValueAsOf($this->timestamp);
-        $availableShares = $fund->unallocatedShares($this->timestamp);
+        $timestamp = $this->timestamp;
+        $value = $this->value;
+
+        $shareValue = $fund->shareValueAsOf($timestamp);
+        $availableShares = $fund->unallocatedShares($timestamp);
 
         if ($shareValue == 0) {
             throw new Exception("Cannot Process Transaction: Share price not available for fund " .
-                $fund->name . " at " . $this->timestamp);
+                $fund->name . " at " . $timestamp);
         }
-        $this->shares = $this->value / $shareValue;
+        $isFundTrans = $account->user_id == null;
+        $this->shares = $value / $shareValue;
         $allShares = $this->shares;
-        if ($availableShares < $allShares) {
-            throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
-        }
-        $this->createBalance();
+        if (!$isFundTrans) {
+            if ($this->flags != null) {
+                throw new Exception("Unexpected: Regular transactions dont support flags");
+            }
+            // check if fund has enough shares (unless its a fund transaction)
+            if ($availableShares < $allShares) {
+                throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
+            }
+        } else {
+            // validate that flags are in (A, C)
+            // calculate shares, considering the value is added to the fund first
+            switch ($this->flags) {
+                case 'A': // add cash position
+                    // share value is correct, no need to recalculate
+                    // just need to add the cash to cash position
+                    $this->addCashToFund($fund, $value, $timestamp);
+                    break;
 
+                case 'C': // cash already added
+                    // recalculate share value, discounting the value
+                    // a deposit was already made to the fund, artificially increasing its share value
+                    $fundShares = $fund->sharesAsOf($timestamp);
+                    $fundValue = $fund->valueAsOf($timestamp);
+                    $shareValue = ($fundValue - $value) / $fundShares;
+                    $this->shares = $value / $shareValue;
+                    $allShares = $this->shares;
+                    break;
+
+                default:
+                    $flagString = implode(',', array_keys(self::$flagsMap));
+                    throw new Exception("Unexpected: Fund transactions must have flags: " . $flagString);
+            }
+        }
+        $this->createBalance($this->shares, $timestamp);
+
+        if (!$isFundTrans) {
+            $this->createMatching($account, $verbose, $shareValue, $allShares, $availableShares);
+        }
+
+        $this->status = 'C';
+        $this->save();
+    }
+
+    protected function validateBalanceOverlap(mixed $accountBalanceRepo, mixed $account_id, $timestamp): mixed
+    {
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '<', $timestamp)
+            ->whereDate('start_dt', '>=', $timestamp);
+        $bal2 = $query->first();
+        if ($bal2 != null) {
+            Log::debug("There is already a balance on this period " . $timestamp .
+                ": " . json_encode($bal2->toArray()) . " \n");
+            throw new Exception("Cannot add balance at " . $timestamp
+                . " as there is already a balance on this period " . $bal2->id);
+        }
+
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '<', '9999-12-31');
+        $bal2 = $query->first();
+        return $bal2;
+    }
+
+    public function balanceAsOf($asOf) {
+        $accountBalanceRepo = \App::make(AccountBalanceRepository::class);
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $this->account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '<', $asOf)
+            ->whereDate('start_dt', '>=', $asOf);
+        $bal = $query->first();
+        return $bal;
+    }
+
+    protected function validateLatestBalance(mixed $accountBalanceRepo, mixed $account_id, $timestamp): mixed
+    {
+        $query = $accountBalanceRepo->makeModel()->newQuery()
+            ->where('account_id', $account_id)
+            ->where('type', 'OWN')
+            ->whereDate('end_dt', '=', '9999-12-31');
+        $bal = $query->first();
+
+        if ($bal != null) {
+            if ($bal->start_dt > $timestamp) {
+                throw new Exception("Cannot add balance at " . $timestamp
+                    . " before previous balance " . $bal->start_dt);
+            }
+        }
+        return $bal;
+    }
+
+    private function addCashToFund(Fund $fund, $value, \Carbon\Carbon|string $timestamp)
+    {
+        Log::debug("Adding cash (" . $value . ") to fund " . $fund->id . " at " . $timestamp);
+        $timestamp = $this->timestamp;
+        $port = $fund->portfolios()->first();
+        $source = $port->source;
+
+        // get cash asset
+        $cashAsset = AssetExt::getCashAsset();
+        Log::debug("Cash asset: " . json_encode($cashAsset));
+
+        // create an portfolio assets api object
+        $controller = app(PortfolioAssetAPIControllerExt::class);
+
+        // create a new portfolio asset
+        $pa = $controller->getQuery($source, $cashAsset->id, $timestamp);
+        // validate if pa end date is high date
+        if ($pa->end_dt != '9999-12-31') {
+            throw new Exception("Cannot add cash to fund " . $fund->id . " at " . $timestamp
+                . " as its not the latest position:  " . json_encode($pa));
+        }
+        Log::debug("Portfolio asset: " . json_encode($pa));
+        $curValue = $pa->value;
+        $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value + $curValue, 'position');
+    }
+
+    protected function createMatching(AccountExt $account, bool $verbose, float $shareValue, float $allShares, float $availableShares): void
+    {
         $rss = new TransactionResource($this);
         $input = $rss->toArray(null);
 
@@ -90,8 +226,8 @@ class TransactionExt extends Transaction
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
             if ($verbose) {
-                print_r("AMR ".json_encode($amr)." " . $matchValue . "\n");
-                print_r("MR ".json_encode($amr->matchingRule()->get())."\n");
+                Log::debug("AMR " . json_encode($amr) . " " . $matchValue . "\n");
+                Log::debug("MR " . json_encode($amr->matchingRule()->get()) . "\n");
             }
             if ($matchValue > 0) {
                 $mr = $amr->matchingRule()->first();
@@ -104,7 +240,7 @@ class TransactionExt extends Transaction
                     throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
                 }
 
-                if ($verbose) print_r("MATCHTRAN ".json_encode($input)."\n");
+                if ($verbose) Log::debug("MATCHTRAN " . json_encode($input) . "\n");
                 $matchTran = $repo->create($input);
                 $matchTran->createBalance();
                 $match = TransactionMatching::factory()
@@ -117,49 +253,6 @@ class TransactionExt extends Transaction
                     ]);
             }
         }
-
-        $this->status = 'C';
-        $this->save();
-    }
-
-    protected function validateBalanceOverlap(mixed $accountBalanceRepo, mixed $account_id): mixed
-    {
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
-            ->where('type', 'OWN')
-            ->whereDate('end_dt', '<', $this->timestamp)
-            ->whereDate('start_dt', '>=', $this->timestamp);
-        $bal2 = $query->first();
-        if ($bal2 != null) {
-            print_r("There is already a balance on this period " . $this->timestamp .
-                ": " . json_encode($bal2->toArray()) . " \n");
-            throw new Exception("Cannot add balance at " . $this->timestamp
-                . " as there is already a balance on this period " . $bal2->id);
-        }
-
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
-            ->where('type', 'OWN')
-            ->whereDate('end_dt', '<', '9999-12-31');
-        $bal2 = $query->first();
-        return $bal2;
-    }
-
-    protected function validateLatestBalance(mixed $accountBalanceRepo, mixed $account_id): mixed
-    {
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
-            ->where('type', 'OWN')
-            ->whereDate('end_dt', '=', '9999-12-31');
-        $bal = $query->first();
-
-        if ($bal != null) {
-            if ($bal->start_dt > $this->timestamp) {
-                throw new Exception("Cannot add balance at " . $this->timestamp
-                    . " before previous balance " . $bal->start_dt);
-            }
-        }
-        return $bal;
     }
 
 }

@@ -104,6 +104,7 @@
                       </div>
                   </div>
               </div>
+              @if($api['matching_available'] != 0)
               <div class="row">
                   <div class="col-lg-12">
                       <div class="card">
@@ -116,6 +117,7 @@
                       </div>
                   </div>
               </div>
+              @endif
           </div>
     </div>
 @endsection

@@ -2,10 +2,6 @@
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
     {!! Form::select('type', $api['typeMap'], 'PUR', ['class' => 'form-control']);  !!}
-{{--    'SAL' => 'Sale',--}}
-{{--    'BOR' => 'Borrow',--}}
-{{--    'REP' => 'Repay',--}}
-{{--    'MAT' => 'Match',--}}
 </div>
 
 <!-- Status Field -->
@@ -18,6 +14,12 @@
 <div class="form-group col-sm-6">
     {!! Form::label('value', 'Value:') !!}
     {!! Form::number('value', null, ['class' => 'form-control', 'step' => 'any']) !!}
+</div>
+
+<!-- Flags Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('flags', 'Flags:') !!}
+    {!! Form::select('flags', $api['flagsMap'], null, ['class' => 'form-control']);  !!}
 </div>
 
 <!-- Timestamp Field -->

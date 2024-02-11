@@ -24,6 +24,7 @@ class TransactionResource extends JsonResource
             'account_id' => $this->account_id,
             'account' => $this->account(),
             'descr' => $this->descr,
+            'flags' => $this->flags,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at

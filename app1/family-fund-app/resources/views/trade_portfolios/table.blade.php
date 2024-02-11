@@ -22,7 +22,7 @@
                 <td>{{ $tradePortfolio->id }}</td>
                 <td>{{ $tradePortfolio->account_name }}</td>
                 <td>{{ $tradePortfolio->portfolio_id }}</td>
-                <td>{{ $tradePortfolio->portfolio_id? $tradePortfolio->portfolio()->first()->source : "N/A" }}</td>
+                <td>{{ $tradePortfolio->portfolio_id? $tradePortfolio->portfolio()->source : "N/A" }}</td>
                 <td>{{ $tradePortfolio->start_dt }}</td>
                 <td>{{ $tradePortfolio->end_dt }}</td>
                 <td>{{ $tradePortfolio->cash_target * 100 }}%</td>

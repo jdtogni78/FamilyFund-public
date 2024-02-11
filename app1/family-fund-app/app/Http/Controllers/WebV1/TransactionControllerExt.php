@@ -8,6 +8,7 @@ use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\AccountExt;
 use App\Models\Transaction;
+use App\Models\TransactionExt;
 use App\Repositories\TransactionRepository;
 use App\Http\Controllers\AppBaseController;
 use Exception;
@@ -33,8 +34,9 @@ class TransactionControllerExt extends TransactionController
     public function create()
     {
         $api = [
-            'typeMap' => Transaction::$typeMap,
-            'statusMap' => Transaction::$statusMap,
+            'typeMap' => TransactionExt::$typeMap,
+            'statusMap' => TransactionExt::$statusMap,
+            'flagsMap' => TransactionExt::$flagsMap,
             'accountMap' => AccountExt::accountMap(),
         ];
         return view('transactions.create')->with('api', $api);
@@ -101,8 +103,9 @@ class TransactionControllerExt extends TransactionController
             return redirect(route('transactions.index'));
         }
         $api = [
-            'typeMap' => Transaction::$typeMap,
-            'statusMap' => Transaction::$statusMap,
+            'typeMap' => TransactionExt::$typeMap,
+            'statusMap' => TransactionExt::$statusMap,
+            'flagsMap' => TransactionExt::$flagsMap,
             'accountMap' => AccountExt::accountMap(),
         ];
 

@@ -50,7 +50,7 @@
     {
         "name": "shares",
         "dbType": "decimal,19,4",
-        "htmlType": null,
+        "htmlType": "decimal:4",
         "validations": "nullable|numeric",
         "searchable": true,
         "fillable": true,
@@ -63,7 +63,7 @@
         "name": "timestamp",
         "dbType": "datetime",
         "htmlType": "date",
-        "validations": "required",
+        "validations": "required|after:last year|before_or_equal:tomorrow",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -87,7 +87,7 @@
         "name": "descr",
         "dbType": "string,255",
         "htmlType": null,
-        "validations": "nullable",
+        "validations": "nullable|string|max:255",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -149,14 +149,14 @@
     },
     {
         "type": "relation",
-        "relation": "mt1,TransactionMatching:transactionMatching,transaction_id"
+        "relation": "1t1,TransactionMatching:transactionMatching,transaction_id"
     },
     {
         "type": "relation",
-        "relation": "mt1,TransactionMatching:referenceTransactionMatching,reference_transaction_id"
+        "relation": "1t1,TransactionMatching:referenceTransactionMatching,reference_transaction_id"
     },
     {
         "type": "relation",
-        "relation": "1tm,AccountBalance,transaction_id"
+        "relation": "1t1,AccountBalance,transaction_id"
     }
 ]

@@ -99,15 +99,16 @@ trait AccountTrait
             $refMatch = $transaction->referenceTransactionMatching()->first();
             if ($refMatch) {
                 Log::debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
-                $refTrans = $refMatch->referenceTransaction()->first();
-                $refValue = $refTrans->shares * $shareValue;
-                $current = $transaction->shares * $shareValue;
-                $tran['current_value'] = Utils::currency($refValue + $current);
-                $tran['current_performance'] = Utils::percent(($refValue + $current)/$value - 1);
+                $refTrans = $refMatch->transaction()->first();
+                $current = ($refTrans->shares + $transaction->shares) * $shareValue;
+                Log::debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
+                Log::debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
+                $tran['current_value'] = Utils::currency($current);
+                $tran['current_performance'] = Utils::percent(($current)/$value - 1);
             }
 
             $bals = [];
-            foreach ($transaction->accountBalance()->get() as $balance) {
+            foreach ($transaction->accountBalances()->get() as $balance) {
                 $bals[$balance->type] = $balance->shares;
             }
             $tran['balances'] = $bals;

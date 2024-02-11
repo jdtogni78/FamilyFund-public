@@ -2,13 +2,13 @@
 
 namespace App\Repositories;
 
-use App\Models\TransactionExt;
+use App\Models\Transaction;
 use App\Repositories\BaseRepository;
 
 /**
  * Class TransactionRepository
  * @package App\Repositories
- * @version February 4, 2024, 7:18 pm UTC
+ * @version February 4, 2024, 7:42 pm UTC
 */
 
 class TransactionRepository extends BaseRepository

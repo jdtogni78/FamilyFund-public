@@ -26,3 +26,17 @@ Accept: application/json
 GET http://localhost:3000/api/fund_reports/1
 Accept: application/json
 
+### Post bulk update
+POST http://192.168.68.120:3001/api/portfolio_assets_bulk_update
+Content-Type: application/json
+
+{"source":"DWGIB","symbols":[
+{"name":"CASH","position":2034.34,"type":"CSH"},
+{"name":"SPXL","position":"14.00000000","type":"STK"},
+{"name":"SOXL","position":"36.00000000","type":"STK"},
+{"name":"TECL","position":"16.00000000","type":"STK"},
+{"name":"IAU","position":"39.00000000","type":"STK"},
+{"name":"IUSB","position":"43.00000000","type":"STK"},
+{"name":"ETH","position":"0.21860894","type":"CRYPTO"},
+{"name":"BTC","position":"0.00505033","type":"CRYPTO"}],
+"timestamp":"2024-01-26T12:52:06.946234984"}

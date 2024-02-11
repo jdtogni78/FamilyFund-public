@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Transaction
  * @package App\Models
- * @version February 4, 2024, 7:18 pm UTC
+ * @version February 4, 2024, 7:42 pm UTC
  *
  * @property \App\Models\Account $account
- * @property \App\Models\TransactionMatching $transaction
- * @property \App\Models\TransactionMatching $referenceTransaction
- * @property \Illuminate\Database\Eloquent\Collection $accountBalances
+ * @property \App\Models\TransactionMatching $transactionMatching
+ * @property \App\Models\TransactionMatching $transactionMatching1
+ * @property \App\Models\AccountBalance $accountBalance
  * @property string $type
  * @property string $status
  * @property number $value
@@ -34,20 +34,6 @@ class Transaction extends Model
 
 
     protected $dates = ['deleted_at'];
-
-    public static array $typeMap = [
-        'PUR' => 'Purchase',
-        'INI' => 'Initial Value',
-    ];
-    public static array $statusMap = [
-        'P' => 'Pending',
-        'C' => 'Cleared',
-    ];
-    public static array $flagMap = [
-        'A' => 'Add Cash Position',
-        'C' => 'Cash Already Added',
-    ];
-
 
     public $fillable = [
         'type',

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class ReportSchedule
  * @package App\Models
- * @version February 11, 2024, 6:45 pm UTC
+ * @version February 11, 2024, 7:23 pm UTC
  *
  * @property \Illuminate\Database\Eloquent\Collection $fundReportSchedules
  * @property string $descr
@@ -23,7 +23,10 @@ class ReportSchedule extends Model
     use HasFactory;
 
     public $table = 'report_schedules';
-    
+
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+
 
     protected $dates = ['deleted_at'];
 
@@ -56,8 +59,8 @@ class ReportSchedule extends Model
         'descr' => 'nullable|string|max:255',
         'type' => 'required|in:DOM',
         'value' => 'required|string|max:255',
+        'created_at' => 'nullable',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
         'deleted_at' => 'nullable'
     ];
 

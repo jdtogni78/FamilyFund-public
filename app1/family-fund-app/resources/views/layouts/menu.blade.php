@@ -4,6 +4,24 @@
         <span>Funds</span>
     </a>
 </li>
+<li class="nav-item {{ Request::is('accounts*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('accounts.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Accounts</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('tradePortfolios.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Trade Portfolios</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('users*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('users.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Users</span>
+    </a>
+</li>
 <li class="nav-item {{ Request::is('accountBalances*') ? 'active' : '' }}">
     <a class="nav-link" href="{{ route('accountBalances.index') }}">
         <i class="nav-icon icon-cursor"></i>
@@ -14,12 +32,6 @@
     <a class="nav-link" href="{{ route('accountMatchingRules.index') }}">
         <i class="nav-icon icon-cursor"></i>
         <span>Account Matching Rules</span>
-    </a>
-</li>
-<li class="nav-item {{ Request::is('accounts*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('accounts.index') }}">
-        <i class="nav-icon icon-cursor"></i>
-        <span>Accounts</span>
     </a>
 </li>
 <li class="nav-item {{ Request::is('assetPrices*') ? 'active' : '' }}">
@@ -58,12 +70,6 @@
         <span>Transactions</span>
     </a>
 </li>
-<li class="nav-item {{ Request::is('users*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('users.index') }}">
-        <i class="nav-icon icon-cursor"></i>
-        <span>Users</span>
-    </a>
-</li>
 <li class="nav-item {{ Request::is('assetChangeLogs*') ? 'active' : '' }}">
     <a class="nav-link" href="{{ route('assetChangeLogs.index') }}">
         <i class="nav-icon icon-cursor"></i>
@@ -88,16 +94,22 @@
         <span>Account Reports</span>
     </a>
 </li>
+<li class="nav-item {{ Request::is('fundReportSchedules*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('fundReportSchedules.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Fund Report Schedules</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('reportSchedules*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('reportSchedules.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Report Schedules</span>
+    </a>
+</li>
 <li class="nav-item {{ Request::is('changeLogs*') ? 'active' : '' }}">
     <a class="nav-link" href="{{ route('changeLogs.index') }}">
         <i class="nav-icon icon-cursor"></i>
         <span>Change Logs</span>
-    </a>
-</li>
-<li class="nav-item {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('tradePortfolios.index') }}">
-        <i class="nav-icon icon-cursor"></i>
-        <span>Trade Portfolios</span>
     </a>
 </li>
 <li class="nav-item {{ Request::is('tradePortfolioItems*') ? 'active' : '' }}">

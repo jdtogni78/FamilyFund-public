@@ -60,7 +60,7 @@
         "inView": true
     },
     {
-        "name": "updated_at",
+        "name": "created_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
         "validations": "nullable|nullable",
@@ -72,10 +72,10 @@
         "inView": false
     },
     {
-        "name": "created_at",
-        "dbType": "datetime",
+        "name": "updated_at",
+        "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "required",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -97,10 +97,10 @@
     },
     {
         "type": "relation",
-        "relation": "1tm,FundReport,fund_report_id"
+        "relation": "mt1,FundReport,fund_report_id"
     },
     {
         "type": "relation",
-        "relation": "1tm,ReportSchedule,schedule_id"
+        "relation": "mt1,ReportSchedule,schedule_id"
     }
 ]

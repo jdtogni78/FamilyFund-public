@@ -45,4 +45,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);
+    Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
+    Route::resource('reportSchedules', App\Http\Controllers\ReportScheduleController::class);
+    Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
 });

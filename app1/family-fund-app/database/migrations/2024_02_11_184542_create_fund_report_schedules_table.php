@@ -17,7 +17,7 @@ class CreateFundReportSchedulesTable extends Migration
         Schema::create('fund_report_schedules', function (Blueprint $table) {
             $table->bigInteger('id', true, true);
             $table->foreignId('fund_report_id')->constrained();
-            $table->foreignId('schedule_id')->constrained();
+            $table->foreignId('schedule_id')->constrained('report_schedules');
             $table->date('start_dt');
             $table->date('end_dt');
             $table->timestamps();

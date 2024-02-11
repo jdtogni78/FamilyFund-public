@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class FundReportSchedule
  * @package App\Models
- * @version February 11, 2024, 7:02 pm UTC
+ * @version February 11, 2024, 7:23 pm UTC
  *
- * @property \Illuminate\Database\Eloquent\Collection $fundReports
- * @property \Illuminate\Database\Eloquent\Collection $reportSchedules
+ * @property \App\Models\FundReport $fundReport
+ * @property \App\Models\ReportSchedule $schedule
  * @property integer $fund_report_id
  * @property integer $schedule_id
  * @property string $start_dt
@@ -25,6 +25,9 @@ class FundReportSchedule extends Model
     use HasFactory;
 
     public $table = 'fund_report_schedules';
+    
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
 
 
     protected $dates = ['deleted_at'];
@@ -61,24 +64,24 @@ class FundReportSchedule extends Model
         'schedule_id' => 'required',
         'start_dt' => 'required',
         'end_dt' => 'required',
+        'created_at' => 'nullable',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
         'deleted_at' => 'nullable'
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
-    public function fundReports()
+    public function fundReport()
     {
-        return $this->hasMany(\App\Models\FundReport::class, 'fund_report_id');
+        return $this->belongsTo(\App\Models\FundReport::class, 'fund_report_id');
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
-    public function reportSchedules()
+    public function schedule()
     {
-        return $this->hasMany(\App\Models\ReportSchedule::class, 'schedule_id');
+        return $this->belongsTo(\App\Models\ReportSchedule::class, 'schedule_id');
     }
 }

@@ -14,7 +14,7 @@
     {
         "name": "descr",
         "dbType": "string,255",
-        "htmlType": null,
+        "htmlType": "text",
         "validations": "nullable|string|max:255",
         "searchable": true,
         "fillable": true,
@@ -38,7 +38,7 @@
     {
         "name": "value",
         "dbType": "string,255",
-        "htmlType": null,
+        "htmlType": "text",
         "validations": "required|string|max:255",
         "searchable": true,
         "fillable": true,
@@ -48,7 +48,7 @@
         "inView": true
     },
     {
-        "name": "updated_at",
+        "name": "created_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
         "validations": "nullable",
@@ -60,10 +60,10 @@
         "inView": false
     },
     {
-        "name": "created_at",
-        "dbType": "datetime",
+        "name": "updated_at",
+        "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "required",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,

@@ -121,6 +121,7 @@ Trait FundTrait
         $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
 
         $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
+        $arr['cash'] = $api->createCashPerformanceResponse($asOf, $arr['transactions']);
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
         $portfolio = $fund->portfolios()->first();

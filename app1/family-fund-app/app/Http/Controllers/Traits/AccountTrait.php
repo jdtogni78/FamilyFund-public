@@ -108,7 +108,7 @@ trait AccountTrait
             }
 
             $bals = [];
-            foreach ($transaction->accountBalances()->get() as $balance) {
+            foreach ($transaction->accountBalance()->get() as $balance) {
                 $bals[$balance->type] = $balance->shares;
             }
             $tran['balances'] = $bals;
@@ -136,6 +136,7 @@ trait AccountTrait
         $arr['matching_rules'] = $api->createAccountMatchingResponse($account, $asOf);
         $arr['matching_available'] = $this->getTotalAvailableMatching($arr['matching_rules']);
         $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
+        $arr['cash'] = $api->createCashPerformanceResponse($asOf, $arr['transactions']);
 
         $arr['as_of'] = $asOf;
         return $arr;

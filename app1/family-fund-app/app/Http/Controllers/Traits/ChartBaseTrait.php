@@ -39,8 +39,16 @@ trait ChartBaseTrait
             return $v['value'];
         }, $arr);
 
+        $arr = $api['cash'];
+        $values3 = array_map(function ($v) {
+            return $v['value'];
+        }, $arr);
+
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->createLineChart($file, $labels, "Performance", $values1, "SP500", $values2);
+        $this->createLineChart($file, $labels,
+            "Performance", $values1,
+            "SP500", $values2,
+            "Cash", $values3);
     }
 
     protected function createSharesLineChart(array $api, TemporaryDirectory $tempDir)
@@ -60,7 +68,10 @@ trait ChartBaseTrait
         $this->createStepChart(array_values($data), $labels1, $file, "Shares");
     }
 
-    public function createLineChart(string $file, array $labels, $title1, array $values1, $title2, array $values2=null)
+    public function createLineChart(string $file, array $labels,
+                                    $title1, array $values1,
+                                    $title2, array $values2=null,
+                                    $title3, array $values3=null)
     {
         $chart = new LineChart();
 //        Log::debug($labels);
@@ -71,6 +82,9 @@ trait ChartBaseTrait
 
         $chart->title2 = $title2;
         $chart->series2Values = $values2;
+
+        $chart->title3 = $title3;
+        $chart->series3Values = $values3;
 
         $chart->createChart();
         $chart->saveAs($file);

@@ -14,6 +14,7 @@ let datasets = [{
     backgroundColor: ['blue'],
     borderColor: ['blue'],
 }];
+
 let addSP500 = {!! $addSP500 !!};
 if (addSP500) {
     let sp500 = Object.values(api.sp500_monthly_performance).map(function(e) {return e.value;});
@@ -24,6 +25,14 @@ if (addSP500) {
         borderColor: ['red'],
     });
 }
+
+datasets.push({
+    label: 'Cash',
+    data: Object.values(api.cash).map(function(e) {return e.value;}),
+    backgroundColor: ['green'],
+    borderColor: ['green'],
+});
+
 var myChart = new Chart(
     document.getElementById('perfGraph2'),
     {

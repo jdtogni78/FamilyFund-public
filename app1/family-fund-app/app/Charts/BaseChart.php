@@ -12,11 +12,14 @@ class BaseChart
 
     public $title2="title2";
     public $series2Values;
+    public $title3="title3";
+    public $series3Values;
 
     private $title1Labels = "Date";
 
     protected string $seriesName1;
     protected string $seriesName2;
+    protected string $seriesName3;
 
     public $fonts =
     [
@@ -74,7 +77,12 @@ class BaseChart
             $this->seriesName2 = "Series2";
             $this->data->addPoints($this->series2Values, $this->seriesName2);
             $this->data->setSerieDescription($this->seriesName2, $this->title2);
-//            $this->data->setAxisName(1, $this->title2);
+        }
+
+        if (isset($this->series3Values)) {
+            $this->seriesName3 = "Series3";
+            $this->data->addPoints($this->series3Values, $this->seriesName3);
+            $this->data->setSerieDescription($this->seriesName3, $this->title3);
         }
 
         /* Define the absissa serie */

@@ -29,7 +29,7 @@
                      <div class="col">
                         <div class="card">
                             <div class="card-header">
-                                <strong>Performance</strong>
+                                <strong>Monthly Performance</strong>
                             </div>
                             <div class="card-body">
                                 @php($addSP500 = true)

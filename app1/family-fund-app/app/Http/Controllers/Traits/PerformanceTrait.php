@@ -12,9 +12,7 @@ use Laracasts\Flash\Flash;
 trait PerformanceTrait
 {
     protected $perfObject;
-    protected $sp500Trans;
     private AssetExt $sp500Asset;
-    private array $sp500Shares;
 
     public function createPeformanceArray($start, $asOf)
     {
@@ -27,21 +25,21 @@ trait PerformanceTrait
         return $yp;
     }
 
-    public function prepSP500Shares($asOf)
+    public function prepSP500Shares($asOf, $trans)
     {
         $shares = 0;
         $allShares = array();
         try {
             $this->sp500Asset = AssetExt::getSP500Asset();
-            foreach ($this->sp500Trans as $trans) {
-                if ($trans['timestamp'] <= $asOf) {
-                    $sp500Price = $this->sp500Asset->pricesAsOf($trans['timestamp'])->first();
-                    $shares += $trans['value'] / $sp500Price->price;
+            foreach ($trans as $tran) {
+                if ($tran['timestamp'] <= $asOf) {
+                    $sp500Price = $this->sp500Asset->pricesAsOf($tran['timestamp'])->first();
+                    $shares += $tran['value'] / $sp500Price->price;
                     $allShares[] = [
-                        'timestamp' => $trans['timestamp'],
+                        'timestamp' => $tran['timestamp'],
                         'shares' => $shares
                     ];
-                    Log::debug("sp500 value: " . $trans['value'] . " price: $sp500Price->price >> shares: $shares at " . $trans['timestamp']);
+                    Log::debug("sp500 value: " . $tran['value'] . " price: $sp500Price->price >> shares: $shares at " . $tran['timestamp']);
                 }
             }
         } catch (\Exception $e) {
@@ -51,13 +49,13 @@ trait PerformanceTrait
         return $allShares;
     }
 
-    public function createSP500PeformanceArray($start, $asOf)
+    public function createSP500PeformanceArray($start, $asOf, $all_shares)
     {
         $value = 0;
         $sp500Shares = 0;
         try {
             // find sp500Shares with latest timestamp before asOf
-            foreach ($this->sp500Shares as $shares) {
+            foreach ($all_shares as $shares) {
                 if ($shares['timestamp'] <= $asOf) {
                     $sp500Shares = $shares['shares'];
                 } else {
@@ -76,19 +74,56 @@ trait PerformanceTrait
         return $yp;
     }
 
+    public function createCashPeformanceArray($start, $asOf, $cash)
+    {
+        $value = 0;
+        // find cash with latest timestamp before asOf
+        foreach ($cash as $timestamp => $value_tmp) {
+            if ($timestamp <= $asOf) {
+                $value = $value_tmp;
+            } else {
+                break;
+            }
+        }
+        $yp = array();
+        $yp['value'] = Utils::currency($value);
+        return $yp;
+    }
+
     public function createSP500MonthlyPerformanceResponse($asOf, $trans)
     {
-        $this->sp500Trans = $trans;
-        $this->sp500Shares = $this->prepSP500Shares($asOf);
-        return $this->createMonthlyPerformanceResponseFor($asOf, 'createSP500PeformanceArray');
+        $shares = $this->prepSP500Shares($asOf, $trans);
+        return $this->createMonthlyPerformanceResponseFor($asOf, $shares,
+            'createSP500PeformanceArray');
+    }
+
+    public function prepCash($asOf, $trans)
+    {
+        $allValues = array();
+        $total = 0;
+        foreach ($trans as $tran) {
+            if ($tran['timestamp'] <= $asOf) {
+                $timestamp = substr("" . $tran['timestamp'],0,10);
+                Log::debug("cash value: " . $tran['value'] . " at " . $timestamp);
+                $total += $tran['value'];
+                $allValues[$timestamp] = $total;
+            }
+        }
+        return $allValues;
+    }
+
+    public function createCashPerformanceResponse($asOf, $trans)
+    {
+        $cash = $this->prepCash($asOf, $trans);
+        return $this->createMonthlyPerformanceResponseFor($asOf, $cash, 'createCashPeformanceArray');
     }
 
     public function createMonthlyPerformanceResponse($asOf)
     {
-        return $this->createMonthlyPerformanceResponseFor($asOf, 'createPeformanceArray');
+        return $this->createMonthlyPerformanceResponseFor($asOf, null, 'createPeformanceArray');
     }
 
-    public function createMonthlyPerformanceResponseFor($asOf, $func)
+    public function createMonthlyPerformanceResponseFor($asOf, $shares, $func)
     {
         $arr = array();
 
@@ -98,7 +133,7 @@ trait PerformanceTrait
         $monthStart = $year.'-'.sprintf("%02d", $month).'-01';
 
         if ($asOf != $monthStart) {
-            $yp = $this->$func($monthStart, $asOf);
+            $yp = $this->$func($monthStart, $asOf, $shares);
             $arr[$asOf] = $yp;
         }
 
@@ -106,7 +141,7 @@ trait PerformanceTrait
             $monthStart = $ym[0].'-'.sprintf("%02d", $ym[1]).'-01';
             $prevYM = Utils::decreaseYearMonth($ym);
             $prevMonthStart = $prevYM[0].'-'.sprintf("%02d", $prevYM[1]).'-01';
-            $yp = $this->$func($prevMonthStart, $monthStart);
+            $yp = $this->$func($prevMonthStart, $monthStart, $shares);
             $arr[$monthStart] = $yp;
         }
 
@@ -152,10 +187,13 @@ trait PerformanceTrait
     protected function removeEmptyStart(array $ret): array
     {
         foreach ($ret as $key => $values) {
-            if ($values['shares'] == 0) {
-                unset($ret[$key]);
-            } else {
-                break;
+            // check if key exists
+            if (array_key_exists('shares', $values)) {
+                if ($values['value'] == 0) {
+                    unset($ret[$key]);
+                } else {
+                    break;
+                }
             }
         }
         return $ret;

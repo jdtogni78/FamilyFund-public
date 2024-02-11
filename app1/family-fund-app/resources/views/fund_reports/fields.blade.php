@@ -4,10 +4,10 @@
     {!! Form::number('fund_id', null, ['class' => 'form-control']) !!}
 </div>
 
-<!-- Type Field -->
+<!-- Type Field with typeMap in api -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3]) !!}
+    {!! Form::select('type', $api['typeMap'], 'ADM', ['class' => 'form-control']) !!}
 </div>
 
 <!-- As Of Field -->

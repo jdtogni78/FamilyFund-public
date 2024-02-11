@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\ReportSchedule;
+use App\Models\ReportScheduleExt;
 use App\Repositories\BaseRepository;
 
 /**
@@ -37,6 +37,6 @@ class ReportScheduleRepository extends BaseRepository
      **/
     public function model()
     {
-        return ReportSchedule::class;
+        return ReportScheduleExt::class;
     }
 }

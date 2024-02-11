@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class FundReportExt extends FundReport
 {
+    // typeMap
+    public static array $typeMap = [
+        'ADM' => 'Admin',
+        'ALL' => 'All',
+    ];
+
     /**
      **/
     public function isAdmin(): bool

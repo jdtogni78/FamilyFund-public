@@ -5,8 +5,10 @@ namespace App\Http\Controllers\APIv1;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\API\CreateFundReportAPIRequest;
 use App\Http\Resources\FundReportResource;
+use App\Models\FundReportSchedule;
 use App\Repositories\FundReportRepository;
 use App\Http\Controllers\API\FundReportAPIController;
+use App\Repositories\FundReportScheduleRepository;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,5 +38,24 @@ class FundReportAPIControllerExt extends FundReportAPIController
             report($e);
             return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+    }
+
+    public function scheduleReports()
+    {
+        // create fund report schedules repo
+        $schedulesRepo = \App::make(FundReportScheduleRepository::class);
+        $schedules = $schedulesRepo->all();
+
+        foreach ($schedules as $schedule) {
+            // check if schedule is due
+            if ($schedule->isDue($schedule)) {
+                // create fund report
+                $fundReport = $this->createFundReportFromSchedule($schedule);
+                $this->msgs[] = 'Fund Report saved successfully';
+            }
+            $fundReport = $this->createFundReport($schedule->toArray());
+            $this->msgs[] = 'Fund Report saved successfully';
+        }
+        return $fundReport;
     }
 }

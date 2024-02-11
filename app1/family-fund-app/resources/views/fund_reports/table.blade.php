@@ -1,17 +1,19 @@
 <div class="table-responsive-sm">
     <table class="table table-striped" id="fundReports-table">
         <thead>
-            <tr>
-                <th>Fund Id</th>
-                <th>Type</th>
-                <th>As Of</th>
-                <th>Created At</th>
-                <th colspan="3">Action</th>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <th>Fund Id</th>
+            <th>Type</th>
+            <th>As Of</th>
+            <th>Created At</th>
+            <th colspan="3">Action</th>
+        </tr>
         </thead>
         <tbody>
         @foreach($fundReports as $fundReport)
             <tr>
+                <td>{{ $fundReport->id }}</td>
                 <td>{{ $fundReport->fund_id }}</td>
                 <td>{{ $fundReport->type }}</td>
                 <td>{{ $fundReport->as_of }}</td>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
 use App\Jobs\SendFundReport;
+use App\Models\FundReportExt;
 use App\Repositories\FundReportRepository;
 use Laracasts\Flash\Flash;
 use Response;
@@ -20,13 +21,34 @@ class FundReportControllerExt extends FundReportController
         parent::__construct($fundReportRepo);
     }
 
-    /**
-     * Store a newly created FundReport in storage.
-     *
-     * @param CreateFundReportRequest $request
-     *
-     * @return Response
-     */
+    public function create()
+    {
+        $api = [
+            'typeMap' => FundReportExt::$typeMap,
+        ];
+
+        return view('fund_reports.create')
+            ->with('api', $api);
+    }
+
+    public function edit($id)
+    {
+        $fundReport = $this->fundReportRepository->find($id);
+
+        if (empty($fundReport)) {
+            Flash::error('Fund Report not found');
+
+            return redirect(route('fundReports.index'));
+        }
+        $api = [
+            'typeMap' => FundReportExt::$typeMap,
+        ];
+
+        return view('fund_reports.edit')
+            ->with('fundReport', $fundReport)
+            ->with('api', $api);
+    }
+
     public function store(CreateFundReportRequest $request)
     {
         try {
@@ -55,11 +77,5 @@ class FundReportControllerExt extends FundReportController
 
         return redirect(route('fundReports.index'));
     }
-
-//        if (count($this->err) == 0) {
-//            Flash::success('Fund Report saved successfully.');
-//        } else {
-//            Flash::error(implode("</br>", $this->err));
-//        }
 
 }

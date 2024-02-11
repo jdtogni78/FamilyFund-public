@@ -50,6 +50,8 @@ Route::get('accounts/{id}/report_as_of/{as_of}', 'App\Http\Controllers\APIv1\Acc
 Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@shareValueAsOf')
     ->name('accounts.share_value');
 
+Route::post('schedule_reports', 'App\Http\Controllers\APIv1\FundReportAPIControllerExt@scheduleReports');
+
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class);
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class);
 Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class);

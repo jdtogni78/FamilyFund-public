@@ -4,10 +4,10 @@
     {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255,'maxlength' => 255]) !!}
 </div>
 
-<!-- Type Field -->
+<!-- Type Field using typeMap -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3,'maxlength' => 3]) !!}
+    {!! Form::select('type', $api['typeMap'], 'DOM', ['class' => 'form-control']);  !!}
 </div>
 
 <!-- Value Field -->

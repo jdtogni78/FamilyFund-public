@@ -139,16 +139,12 @@ Trait FundTrait
 
     public function sendFundReport($fundReport)
     {
+        // ignore if as_of is high date
+        $isHighDate = $fundReport->as_of->format('Y-m-d') == '9999-12-31';
+        $isAll = $fundReport->type === 'ALL';
+
         $this->createAccountReports($fundReport);
-
-        $fund = $fundReport->fund()->first();
-        $asOf = $fundReport->as_of->format('Y-m-d');
-        $isAdmin = $fundReport->isAdmin();
-
-        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
-        $pdf = new FundPDF($arr, $isAdmin);
-
-        $this->fundEmailReport($fundReport, $pdf);
+        $this->sendFundEmailReport($fundReport);
 
         return $fundReport;
     }
@@ -157,7 +153,8 @@ Trait FundTrait
     {
         $fund = $fundReport->fund()->first();
         Log::info("sending report to all ".$fundReport->type);
-        if ($fundReport->type === 'ALL') {
+        $isAll = $fundReport->type === 'ALL';
+        if ($isAll) {
             $accounts = $fund->accounts()->get();
             foreach ($accounts as $account) {
                 $users = $account->user()->get();
@@ -171,6 +168,8 @@ Trait FundTrait
                     SendAccountReport::dispatch($accountReport);
                 }
             }
+        } else {
+            Log::warning("No account reports sent for report type ".$fundReport->type);
         }
     }
 
@@ -202,6 +201,7 @@ Trait FundTrait
             $err = $this->validateHasEmail($account);
             if ($err) $noEmail[] = $err;
         }
+        // the fund account has no email
         if (count($noEmail) > 0)
             throw new Exception($this->noEmailMessage . implode(", ", $noEmail));
     }
@@ -251,7 +251,8 @@ Trait FundTrait
 
     protected function validateHasEmail(mixed $account): ?string
     {
-        if (empty($account->email_cc)) {
+        // fund accounts have no user, so they are fine, others must have email
+        if (empty($account->email_cc) && $account->user()->count() > 0) {
             return $account->nickname;
         }
         return null;
@@ -264,5 +265,17 @@ Trait FundTrait
         $fundReport->save();
         SendFundReport::dispatch($fundReport);
         return $fundReport;
+    }
+
+    protected function sendFundEmailReport($fundReport): void
+    {
+        $fund = $fundReport->fund()->first();
+        $asOf = $fundReport->as_of->format('Y-m-d');
+        $isAdmin = $fundReport->isAdmin();
+
+        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
+        $pdf = new FundPDF($arr, $isAdmin);
+
+        $this->fundEmailReport($fundReport, $pdf);
     }
 }

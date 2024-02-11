@@ -12,10 +12,10 @@
         "inView": false
     },
     {
-        "name": "fund_id",
-        "dbType": "bigInteger,false,true",
+        "name": "descr",
+        "dbType": "string,255",
         "htmlType": null,
-        "validations": "required",
+        "validations": "nullable|string|max:255",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -27,7 +27,7 @@
         "name": "type",
         "dbType": "string,3",
         "htmlType": "text",
-        "validations": "required|in:ALL,ADM",
+        "validations": "required|in:DOM",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -36,10 +36,10 @@
         "inView": true
     },
     {
-        "name": "as_of",
-        "dbType": "date",
-        "htmlType": "date",
-        "validations": "required",
+        "name": "value",
+        "dbType": "string,255",
+        "htmlType": null,
+        "validations": "required|string|max:255",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -51,7 +51,7 @@
         "name": "updated_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "nullable|nullable",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -75,7 +75,7 @@
         "name": "deleted_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "nullable|nullable",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -85,10 +85,6 @@
     },
     {
         "type": "relation",
-        "relation": "mt1,Fund,fund_id"
-    },
-    {
-        "type": "relation",
-        "relation": "1tm,FundReportSchedule,fund_report_id"
+        "relation": "1tm,FundReportSchedule,schedule_id"
     }
 ]

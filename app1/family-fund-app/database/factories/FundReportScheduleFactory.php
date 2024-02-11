@@ -22,9 +22,10 @@ class FundReportScheduleFactory extends Factory
     public function definition()
     {
         return [
-            'template_fund_report_id' => $this->faker->word,
-        'day_of_month' => $this->faker->randomDigitNotNull,
-        'frequency' => $this->faker->randomDigitNotNull,
+//            'fund_report_id' => $this->faker->word,
+        'schedule_id' => $this->faker->word,
+        'start_dt' => $this->faker->date('Y-m-d'),
+        'end_dt' => $this->faker->date('Y-m-d'),
         'updated_at' => $this->faker->date('Y-m-d H:i:s'),
         'created_at' => $this->faker->date('Y-m-d H:i:s'),
         'deleted_at' => $this->faker->date('Y-m-d H:i:s')

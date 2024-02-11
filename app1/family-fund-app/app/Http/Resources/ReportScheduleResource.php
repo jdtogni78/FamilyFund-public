@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class FundReportScheduleResource extends JsonResource
+class ReportScheduleResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,9 @@ class FundReportScheduleResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'fund_report_id' => $this->fund_report_id,
-            'schedule_id' => $this->schedule_id,
-            'start_dt' => $this->start_dt,
-            'end_dt' => $this->end_dt,
+            'descr' => $this->descr,
+            'type' => $this->type,
+            'value' => $this->value,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at

@@ -2,13 +2,13 @@
 
 namespace App\Repositories;
 
-use App\Models\FundReport;
+use App\Models\FundReportExt;
 use App\Repositories\BaseRepository;
 
 /**
  * Class FundReportRepository
  * @package App\Repositories
- * @version March 28, 2022, 2:48 am UTC
+ * @version February 11, 2024, 6:58 pm UTC
 */
 
 class FundReportRepository extends BaseRepository
@@ -37,6 +37,6 @@ class FundReportRepository extends BaseRepository
      **/
     public function model()
     {
-        return FundReport::class;
+        return FundReportExt::class;
     }
 }

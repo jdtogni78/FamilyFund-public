@@ -7,33 +7,32 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
- * Class FundReport
+ * Class ReportSchedule
  * @package App\Models
- * @version February 11, 2024, 6:58 pm UTC
+ * @version February 11, 2024, 6:45 pm UTC
  *
- * @property \App\Models\Fund $fund
  * @property \Illuminate\Database\Eloquent\Collection $fundReportSchedules
- * @property integer $fund_id
+ * @property string $descr
  * @property string $type
- * @property string $as_of
+ * @property string $value
  */
-class FundReport extends Model
+class ReportSchedule extends Model
 {
     use SoftDeletes;
 
     use HasFactory;
 
-    public $table = 'fund_reports';
-
+    public $table = 'report_schedules';
+    
 
     protected $dates = ['deleted_at'];
 
 
 
     public $fillable = [
-        'fund_id',
+        'descr',
         'type',
-        'as_of'
+        'value'
     ];
 
     /**
@@ -43,9 +42,9 @@ class FundReport extends Model
      */
     protected $casts = [
         'id' => 'integer',
-        'fund_id' => 'integer',
+        'descr' => 'string',
         'type' => 'string',
-        'as_of' => 'date'
+        'value' => 'string'
     ];
 
     /**
@@ -54,27 +53,19 @@ class FundReport extends Model
      * @var array
      */
     public static $rules = [
-        'fund_id' => 'required',
-        'type' => 'required|in:ALL,ADM',
-        'as_of' => 'required',
+        'descr' => 'nullable|string|max:255',
+        'type' => 'required|in:DOM',
+        'value' => 'required|string|max:255',
         'updated_at' => 'nullable',
-        'created_at' => 'nullable',
+        'created_at' => 'required',
         'deleted_at' => 'nullable'
     ];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     **/
-    public function fund()
-    {
-        return $this->belongsTo(\App\Models\Fund::class, 'fund_id');
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      **/
     public function fundReportSchedules()
     {
-        return $this->hasMany(\App\Models\FundReportSchedule::class, 'fund_report_id');
+        return $this->hasMany(\App\Models\FundReportSchedule::class, 'schedule_id');
     }
 }

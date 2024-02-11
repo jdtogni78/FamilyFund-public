@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class FundReportSchedule
  * @package App\Models
- * @version January 17, 2023, 6:26 am UTC
+ * @version February 11, 2024, 7:02 pm UTC
  *
- * @property \App\Models\FundReport $templateFundReport
- * @property integer $template_fund_report_id
- * @property integer $day_of_month
- * @property integer $frequency
+ * @property \Illuminate\Database\Eloquent\Collection $fundReports
+ * @property \Illuminate\Database\Eloquent\Collection $reportSchedules
+ * @property integer $fund_report_id
+ * @property integer $schedule_id
+ * @property string $start_dt
+ * @property string $end_dt
  */
 class FundReportSchedule extends Model
 {
@@ -23,16 +25,17 @@ class FundReportSchedule extends Model
     use HasFactory;
 
     public $table = 'fund_report_schedules';
-    
+
 
     protected $dates = ['deleted_at'];
 
 
 
     public $fillable = [
-        'template_fund_report_id',
-        'day_of_month',
-        'frequency'
+        'fund_report_id',
+        'schedule_id',
+        'start_dt',
+        'end_dt'
     ];
 
     /**
@@ -42,9 +45,10 @@ class FundReportSchedule extends Model
      */
     protected $casts = [
         'id' => 'integer',
-        'template_fund_report_id' => 'integer',
-        'day_of_month' => 'integer',
-        'frequency' => 'integer'
+        'fund_report_id' => 'integer',
+        'schedule_id' => 'integer',
+        'start_dt' => 'date',
+        'end_dt' => 'date'
     ];
 
     /**
@@ -53,19 +57,28 @@ class FundReportSchedule extends Model
      * @var array
      */
     public static $rules = [
-        'template_fund_report_id' => 'required',
-        'day_of_month' => 'required|max:31',
-        'frequency' => 'required|in:1,3,12',
-        'updated_at' => 'nullable|nullable',
+        'fund_report_id' => 'required',
+        'schedule_id' => 'required',
+        'start_dt' => 'required',
+        'end_dt' => 'required',
+        'updated_at' => 'nullable',
         'created_at' => 'required',
-        'deleted_at' => 'nullable|nullable'
+        'deleted_at' => 'nullable'
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      **/
-    public function templateFundReport()
+    public function fundReports()
     {
-        return $this->belongsTo(\App\Models\FundReport::class, 'template_fund_report_id');
+        return $this->hasMany(\App\Models\FundReport::class, 'fund_report_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function reportSchedules()
+    {
+        return $this->hasMany(\App\Models\ReportSchedule::class, 'schedule_id');
     }
 }

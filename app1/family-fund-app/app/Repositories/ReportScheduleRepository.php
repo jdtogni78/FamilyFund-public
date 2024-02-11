@@ -2,25 +2,24 @@
 
 namespace App\Repositories;
 
-use App\Models\FundReportSchedule;
+use App\Models\ReportSchedule;
 use App\Repositories\BaseRepository;
 
 /**
- * Class FundReportScheduleRepository
+ * Class ReportScheduleRepository
  * @package App\Repositories
- * @version February 11, 2024, 7:02 pm UTC
+ * @version February 11, 2024, 6:45 pm UTC
 */
 
-class FundReportScheduleRepository extends BaseRepository
+class ReportScheduleRepository extends BaseRepository
 {
     /**
      * @var array
      */
     protected $fieldSearchable = [
-        'fund_report_id',
-        'schedule_id',
-        'start_dt',
-        'end_dt'
+        'descr',
+        'type',
+        'value'
     ];
 
     /**
@@ -38,6 +37,6 @@ class FundReportScheduleRepository extends BaseRepository
      **/
     public function model()
     {
-        return FundReportSchedule::class;
+        return ReportSchedule::class;
     }
 }

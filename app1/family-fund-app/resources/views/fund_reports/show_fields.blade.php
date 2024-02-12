@@ -16,3 +16,9 @@
     <p>{{ $fundReport->as_of }}</p>
 </div>
 
+<!-- Fund Report Schedule Id Field -->
+<div class="form-group">
+    {!! Form::label('fund_report_schedule_id', 'Fund Report Schedule Id:') !!}
+    <p>{{ $fundReport->fund_report_schedule_id }}</p>
+</div>
+

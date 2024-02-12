@@ -6,6 +6,7 @@
             <th>Fund Id</th>
             <th>Type</th>
             <th>As Of</th>
+            <th>Fund Report Schedule Id</th>
             <th>Created At</th>
             <th colspan="3">Action</th>
         </tr>
@@ -17,6 +18,7 @@
                 <td>{{ $fundReport->fund_id }}</td>
                 <td>{{ $fundReport->type }}</td>
                 <td>{{ $fundReport->as_of }}</td>
+                <td>{{ $fundReport->fund_report_schedule_id }}</td>
                 <td>{{ $fundReport->created_at }}</td>
                 <td>
                     {!! Form::open(['route' => ['fundReports.destroy', $fundReport->id], 'method' => 'delete']) !!}

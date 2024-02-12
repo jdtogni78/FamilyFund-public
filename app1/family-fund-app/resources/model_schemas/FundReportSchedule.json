@@ -87,7 +87,7 @@
         "name": "deleted_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "nullable|nullable",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -102,5 +102,9 @@
     {
         "type": "relation",
         "relation": "mt1,ReportSchedule,schedule_id"
+    },
+    {
+        "type": "relation",
+        "relation": "1tm,FundReport,fund_report_schedule_id"
     }
 ]

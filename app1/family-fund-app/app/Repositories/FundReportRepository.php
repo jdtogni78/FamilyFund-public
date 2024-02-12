@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class FundReportRepository
  * @package App\Repositories
- * @version February 11, 2024, 6:58 pm UTC
+ * @version February 11, 2024, 11:55 pm UTC
 */
 
 class FundReportRepository extends BaseRepository
@@ -19,7 +19,8 @@ class FundReportRepository extends BaseRepository
     protected $fieldSearchable = [
         'fund_id',
         'type',
-        'as_of'
+        'as_of',
+        'fund_report_schedule_id'
     ];
 
     /**

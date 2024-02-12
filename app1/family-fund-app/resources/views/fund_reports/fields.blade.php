@@ -31,6 +31,12 @@
 @endpush
 
 
+<!-- Fund Report Schedule Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('fund_report_schedule_id', 'Fund Report Schedule Id:') !!}
+    {!! Form::number('fund_report_schedule_id', null, ['class' => 'form-control']) !!}
+</div>
+
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
     {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}

@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class FundReport
  * @package App\Models
- * @version February 11, 2024, 6:58 pm UTC
+ * @version February 11, 2024, 11:55 pm UTC
  *
  * @property \App\Models\Fund $fund
+ * @property \App\Models\FundReportSchedule $fundReportSchedule
  * @property \Illuminate\Database\Eloquent\Collection $fundReportSchedules
  * @property integer $fund_id
  * @property string $type
  * @property string $as_of
+ * @property integer $fund_report_schedule_id
  */
 class FundReport extends Model
 {
@@ -25,6 +27,9 @@ class FundReport extends Model
 
     public $table = 'fund_reports';
 
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+
 
     protected $dates = ['deleted_at'];
 
@@ -33,7 +38,8 @@ class FundReport extends Model
     public $fillable = [
         'fund_id',
         'type',
-        'as_of'
+        'as_of',
+        'fund_report_schedule_id'
     ];
 
     /**
@@ -45,7 +51,8 @@ class FundReport extends Model
         'id' => 'integer',
         'fund_id' => 'integer',
         'type' => 'string',
-        'as_of' => 'date'
+        'as_of' => 'date',
+        'fund_report_schedule_id' => 'integer'
     ];
 
     /**
@@ -57,8 +64,9 @@ class FundReport extends Model
         'fund_id' => 'required',
         'type' => 'required|in:ALL,ADM',
         'as_of' => 'required',
+        'fund_report_schedule_id' => 'nullable',
         'updated_at' => 'nullable',
-        'created_at' => 'nullable',
+        'created_at' => 'required',
         'deleted_at' => 'nullable'
     ];
 
@@ -71,10 +79,18 @@ class FundReport extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function fundReportSchedule()
+    {
+        return $this->belongsTo(\App\Models\FundReportScheduleExt::class, 'fund_report_schedule_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      **/
-    public function fundReportSchedules()
+    public function fundReportScheduleTemplates()
     {
-        return $this->hasMany(\App\Models\FundReportSchedule::class, 'fund_report_id');
+        return $this->hasMany(\App\Models\FundReportScheduleExt::class, 'fund_report_id');
     }
 }

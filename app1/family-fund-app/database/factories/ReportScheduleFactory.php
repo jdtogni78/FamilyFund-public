@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ReportSchedule;
+use App\Models\ReportScheduleExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ReportScheduleFactory extends Factory
@@ -12,7 +12,7 @@ class ReportScheduleFactory extends Factory
      *
      * @var string
      */
-    protected $model = ReportSchedule::class;
+    protected $model = ReportScheduleExt::class;
 
     /**
      * Define the model's default state.

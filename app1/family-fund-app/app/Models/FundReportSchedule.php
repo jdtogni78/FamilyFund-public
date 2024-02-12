@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class FundReportSchedule
  * @package App\Models
- * @version February 11, 2024, 7:23 pm UTC
+ * @version February 11, 2024, 11:54 pm UTC
  *
  * @property \App\Models\FundReport $fundReport
  * @property \App\Models\ReportSchedule $schedule
+ * @property \Illuminate\Database\Eloquent\Collection $fundReports
  * @property integer $fund_report_id
  * @property integer $schedule_id
  * @property string $start_dt
@@ -25,7 +26,7 @@ class FundReportSchedule extends Model
     use HasFactory;
 
     public $table = 'fund_report_schedules';
-    
+
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
 
@@ -72,9 +73,9 @@ class FundReportSchedule extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
-    public function fundReport()
+    public function fundReportTemplate()
     {
-        return $this->belongsTo(\App\Models\FundReport::class, 'fund_report_id');
+        return $this->belongsTo(\App\Models\FundReportExt::class, 'fund_report_id');
     }
 
     /**
@@ -83,5 +84,13 @@ class FundReportSchedule extends Model
     public function schedule()
     {
         return $this->belongsTo(\App\Models\ReportSchedule::class, 'schedule_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function fundReportsGenerated()
+    {
+        return $this->hasMany(\App\Models\FundReportExt::class, 'fund_report_schedule_id');
     }
 }

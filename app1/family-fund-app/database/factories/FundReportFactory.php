@@ -23,11 +23,12 @@ class FundReportFactory extends Factory
     {
         return [
             'fund_id' => $this->faker->word,
-        'type' => $this->faker->word,
-        'as_of' => $this->faker->word,
-        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'type' => $this->faker->word,
+            'as_of' => $this->faker->word,
+//            'fund_report_schedule_id' => $this->faker->word,
+            'created_at' => $this->faker->date('Y-m-d H:i:s'),
+            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

@@ -15,7 +15,7 @@ class BaseChart
     public $title3="title3";
     public $series3Values;
 
-    private $title1Labels = "Date";
+    public $title1Labels = "Date";
 
     protected string $seriesName1;
     protected string $seriesName2;

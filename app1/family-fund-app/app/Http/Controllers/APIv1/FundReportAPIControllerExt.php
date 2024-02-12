@@ -10,6 +10,7 @@ use App\Repositories\FundReportRepository;
 use App\Http\Controllers\API\FundReportAPIController;
 use App\Repositories\FundReportScheduleRepository;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -45,17 +46,34 @@ class FundReportAPIControllerExt extends FundReportAPIController
         // create fund report schedules repo
         $schedulesRepo = \App::make(FundReportScheduleRepository::class);
         $schedules = $schedulesRepo->all();
+        $asOf = date('Y-m-d');
 
         foreach ($schedules as $schedule) {
             // check if schedule is due
-            if ($schedule->isDue($schedule)) {
-                // create fund report
-                $fundReport = $this->createFundReportFromSchedule($schedule);
-                $this->msgs[] = 'Fund Report saved successfully';
+            $shouldRunBy = $schedule->shouldRunBy($asOf, $schedule);
+
+            // if should run by is greater than asof, skip, otherwise create fund report
+            if ($shouldRunBy->lte($asOf)) {
+                $fundReport = $this->createFundReportFromSchedule($schedule, $asOf, $shouldRunBy);
+                if ($this->verbose) {
+                    Log::info('Created fund report for schedule: ' . $schedule->id);
+                }
             }
-            $fundReport = $this->createFundReport($schedule->toArray());
-            $this->msgs[] = 'Fund Report saved successfully';
         }
+        return;
+    }
+
+    private function createFundReportFromSchedule(mixed $schedule, $asOf, $shouldRunBy)
+    {
+        $templateReport = $schedule->fundReportTemplate()->first();
+        $fundReport = $this->createFundReport([
+            'fund_id' => $templateReport->fund_id,
+            'type' => $templateReport->type,
+            'as_of' => $shouldRunBy,
+            'fund_report_schedule_id' => $schedule->id,
+            'created_at' => $asOf,
+        ]);
+        Log::info('Created fund report from schedule: ' . json_encode($fundReport));
         return $fundReport;
     }
 }

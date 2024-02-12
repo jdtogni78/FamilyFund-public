@@ -46,18 +46,30 @@ class FundReportAPIControllerExt extends FundReportAPIController
         // create fund report schedules repo
         $schedulesRepo = \App::make(FundReportScheduleRepository::class);
         $schedules = $schedulesRepo->all();
-        $asOf = date('Y-m-d');
+        $asOf = now();
 
+        $assetPriceRepo = \App::make(\App\Repositories\AssetPriceRepository::class);
+
+        /** @var FundReportSchedule $schedule */
         foreach ($schedules as $schedule) {
+            // log schedule
+            Log::info('Checking schedule: ' . json_encode($schedule->toArray()));
+
             // check if schedule is due
             $shouldRunBy = $schedule->shouldRunBy($asOf, $schedule);
+            $hasNewAssets = $assetPriceRepo->makeModel()->newQuery()
+                ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
 
             // if should run by is greater than asof, skip, otherwise create fund report
             if ($shouldRunBy->lte($asOf)) {
-                $fundReport = $this->createFundReportFromSchedule($schedule, $asOf, $shouldRunBy);
-                if ($this->verbose) {
-                    Log::info('Created fund report for schedule: ' . $schedule->id);
+                if ($hasNewAssets > 0) {
+                    Log::info('Creating fund report for schedule: ' . $schedule->id);
+                    $fundReport = $this->createFundReportFromSchedule($schedule, $asOf, $shouldRunBy);
+                } else {
+                    Log::warning('Missing data for fund report schedule ' . $schedule->id);
                 }
+            } else {
+                Log::info('Skipping fund report for schedule ' . $schedule->id . ', due on ' . $shouldRunBy->toDateString());
             }
         }
         return;

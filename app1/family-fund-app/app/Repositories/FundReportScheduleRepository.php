@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\FundReportSchedule;
+use App\Models\FundReportScheduleExt;
 use App\Repositories\BaseRepository;
 
 /**
@@ -38,6 +38,6 @@ class FundReportScheduleRepository extends BaseRepository
      **/
     public function model()
     {
-        return FundReportSchedule::class;
+        return FundReportScheduleExt::class;
     }
 }

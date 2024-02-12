@@ -31,28 +31,33 @@ class ReportScheduleExt extends ReportSchedule
     ];
 
     public function shouldRunBy(Carbon $today, null|Carbon $lastRun) {
+        $today = $today->copy()->startOfDay();
+        $lastRun = $lastRun?->copy()->startOfDay();
         $prevRunToday = $this->prevRunDate($today);
-        $nextRunToday = $this->nextRunDate($today);
+        $nextRunToday = $this->nextRunDate($today->copy()->addDay());
 
         // log function call
-        Log::info('shouldRunBy', [
-            'today' => $today->toDateString(),
-            'lastRun' => $lastRun?->toDateString(),
-            'prevRunToday' => $prevRunToday->toDateString(),
-            'nextRunToday' => $nextRunToday->toDateString(),
+        Log::info('RS shouldRunBy', [
+            'today'        => $today->toDateTimeString(),
+            'lastRun'      => $lastRun?->toDateTimeString(),
+            'prevRunToday' => $prevRunToday->toDateTimeString(),
+            'nextRunToday' => $nextRunToday->toDateTimeString(),
         ]);
 
         // if last run is null, return prev run date based on today
         if (!$lastRun) {
+            Log::info('RS shouldRunBy: lastRun is null: ' . $prevRunToday->toDateString());
             return $prevRunToday;
         }
 
         // if last run is older than todays prev run, return prev run date based on today
         if ($lastRun->lt($prevRunToday)) {
+            Log::info('RS shouldRunBy: lastRun is older than prevRunToday: ' . $prevRunToday->toDateString());
             return $prevRunToday;
         }
 
         // then, last run is newer than todays prev run, return next run date based on today
+        Log::info('RS shouldRunBy: lastRun is newer than prevRunToday: ' . $nextRunToday->toDateString());
         return $nextRunToday;
     }
 

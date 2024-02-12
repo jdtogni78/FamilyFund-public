@@ -3,6 +3,7 @@ namespace Tests\Feature;
 
 use App\Models\ReportSchedule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ReportScheduleTest extends TestCase
@@ -41,5 +42,46 @@ class ReportScheduleTest extends TestCase
         $rs = ReportSchedule::factory()->make(['type' => 'DOM', 'value' => '5']);
         $runBy = $rs->shouldRunBy(new Carbon($today), $lastRun == null? null : new Carbon($lastRun));
         $this->assertEquals($expected, $runBy->toDateString());
+    }
+
+
+    // create a parametrized test for different types and values
+    public function typesAndValuesProvider()
+    {
+        return [
+            ['2023-12-27', 370, 'DOM', '5', 12],
+            ['2023-12-27', 370, 'DOW', '5', 53],
+
+            ['2023-12-27', 370, 'DOY', '5', 1],
+            ['2023-12-27',   8, 'DOY', '5', 0],
+            ['2023-12-27',   9, 'DOY', '5', 1],
+            ['2023-12-27',   5, 'DOY', '1', 1],
+            ['2023-12-31', 367, 'DOY', '1', 2],
+
+            ['2023-12-27', 370, 'DOQ', '5', 4],
+            ['2023-01-01',   3, 'DOQ', '5', 0],
+            ['2023-01-01',   4, 'DOQ', '5', 1],
+        ];
+    }
+
+    /**
+     * @dataProvider typesAndValuesProvider
+     */
+    public function testTypesAndValues($startDate, $days, $type, $value, $expected) {
+        Log::info("startDate: $startDate, days: $days, type: $type, value: $value, expected: $expected");
+        $rs = ReportSchedule::factory()->make(['type' => $type, 'value' => $value]);
+        $count = 0;
+        $today = new Carbon($startDate);
+        for ($i = 0; $i <= $days; $i++) {
+            if ($rs->matchesSchedule($today)) {
+                Log::info("matches: " . $today->toDateString());
+                $count++;
+            }
+            $today->addDay();
+        }
+        $today->subDay();
+        Log::info("count: $count by " . $today->toDateString());
+
+        $this->assertEquals($expected, $count);
     }
 }

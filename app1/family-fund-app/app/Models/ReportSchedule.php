@@ -57,7 +57,7 @@ class ReportSchedule extends Model
      */
     public static $rules = [
         'descr' => 'nullable|string|max:255',
-        'type' => 'required|in:DOM',
+        'type' => 'required|in:DOM,DOW,DOQ,DOY',
         'value' => 'required|string|max:255',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',

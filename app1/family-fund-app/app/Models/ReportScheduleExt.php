@@ -88,7 +88,10 @@ class ReportScheduleExt extends ReportSchedule
             case 'DOY':
                 return $date->dayOfYear == $value;
             case 'DOQ':
-                return $date->firstOfQuarter()->diffInDays($date) == $value;
+                $first = $date->copy()->firstOfQuarter();
+                $diff = $first->diffInDays($date) + 1;
+//                Log::info($date->toDateString() . ' -- '. $first->toDateString() . ' -- ' . $diff);
+                return $diff == $value;
         }
     }
 }

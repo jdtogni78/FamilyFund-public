@@ -2,6 +2,7 @@
     <table class="table table-striped" id="accountReports-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Account Id</th>
                 <th>Type</th>
                 <th>As Of</th>
@@ -12,6 +13,7 @@
         <tbody>
         @foreach($accountReports as $accountReport)
             <tr>
+                <td>{{ $accountReport->id }}</td>
                 <td>{{ $accountReport->account_id }}</td>
                 <td>{{ $accountReport->type }}</td>
                 <td>{{ $accountReport->as_of }}</td>

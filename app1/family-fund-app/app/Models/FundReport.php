@@ -66,7 +66,7 @@ class FundReport extends Model
         'as_of' => 'required',
         'fund_report_schedule_id' => 'nullable',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
+        'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
 

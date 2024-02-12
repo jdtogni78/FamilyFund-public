@@ -78,7 +78,7 @@ class Transaction extends Model
         'descr' => 'nullable|string|max:255',
         'flags' => 'nullable|string|in:A,C',
         'updated_at' => 'nullable',
-        'created_at' => 'required',
+        'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
     public static $create_rules = [

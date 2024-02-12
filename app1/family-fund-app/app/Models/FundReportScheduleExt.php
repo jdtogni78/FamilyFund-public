@@ -11,7 +11,7 @@ class FundReportScheduleExt extends FundReportSchedule
         // find last run of report
         $lastReport = $this->lastGeneratedReport();
         $lastAsOf = $lastReport?->as_of;
-        Log::info('lastGeneratedReport ' . json_encode($lastReport->toArray()));
+        Log::info('lastGeneratedReport ' . json_encode($lastReport?->toArray()));
 
         /** @var ReportScheduleExt $schedule **/
         $schedule = $this->schedule()->first();

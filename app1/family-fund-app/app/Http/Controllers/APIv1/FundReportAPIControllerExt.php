@@ -56,7 +56,7 @@ class FundReportAPIControllerExt extends FundReportAPIController
             Log::info('Checking schedule: ' . json_encode($schedule->toArray()));
 
             // check if schedule is due
-            $shouldRunBy = $schedule->shouldRunBy($asOf, $schedule);
+            $shouldRunBy = $schedule->shouldRunBy($asOf);
             $hasNewAssets = $assetPriceRepo->makeModel()->newQuery()
                 ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
 

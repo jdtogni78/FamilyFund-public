@@ -205,7 +205,6 @@ trait AccountTrait
             $err[] = $msg;
             Log::error($msg);
         } else {
-            $sendCount++;
             $msg = "Sending email to " . $account->email_cc;
             Log::info($msg);
             $msgs[] = $msg;
@@ -213,7 +212,13 @@ trait AccountTrait
             if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
             if ($this->verbose) Log::debug("account: " . json_encode($account) . "\n");
             $reportData = new AccountQuarterlyReport($account, $asOf, $pdfFile);
-            Mail::to($account->email_cc)->send($reportData);
+
+            $sentMsg = $this->sendMail($reportData, $account->email_cc);
+            if (null == $sentMsg) {
+                $sendCount++;
+            } else {
+                $err[] = $sentMsg;
+            }
         }
         if ($sendCount == 0) {
             $msg = "No emails sent";

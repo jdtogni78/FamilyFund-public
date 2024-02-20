@@ -4,10 +4,10 @@
     {!! Form::number('account_id', null, ['class' => 'form-control']) !!}
 </div>
 
-<!-- Type Field -->
+<!-- Type Field with api typemap -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3,'maxlength' => 3]) !!}
+    {!! Form::select('type', $api['typeMap'], null, ['class' => 'form-control custom-select']) !!}
 </div>
 
 <!-- As Of Field -->

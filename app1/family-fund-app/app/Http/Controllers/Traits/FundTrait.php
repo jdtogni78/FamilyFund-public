@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Mail;
 
 Trait FundTrait
 {
-    use PerformanceTrait;
+    use PerformanceTrait, MailTrait;
     protected $err = [];
     protected $msgs = [];
     private $noEmailMessage = "The following accounts have no email: ";
@@ -232,9 +232,12 @@ Trait FundTrait
                 $user = $account->user()->first();
                 $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
 
-                $emails = explode(",", $account->email_cc);
-                $to = array_shift($emails);
-                Mail::to($to)->cc($emails)->send($reportData);
+                $sentMsg = $this->sendMail($reportData, $account->email_cc);
+                if (null == $sentMsg) {
+                    $sendCount++;
+                } else {
+                    $errs[] = $sentMsg;
+                }
             }
         }
         if (count($noEmail)) {

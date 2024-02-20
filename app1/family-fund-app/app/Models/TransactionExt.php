@@ -27,8 +27,10 @@ class TransactionExt extends Transaction
         'C' => 'Cleared',
     ];
     public static array $flagsMap = [
+        null => 'No Flags',
         'A' => 'Add Cash Position',
         'C' => 'Cash Already Added',
+        'U' => 'No match',
     ];
 
     /**
@@ -36,6 +38,7 @@ class TransactionExt extends Transaction
      */
     public function createBalance($shares, $timestamp, $verbose=false)
     {
+        Log::debug("Creating Balance: " . json_encode($this->toArray()));
         if ($shares == null || $shares == 0) {
             throw new Exception("Balances need transactions with shares");
         }
@@ -55,7 +58,7 @@ class TransactionExt extends Transaction
             $oldShares = $bal->shares;
             $bal->end_dt = $timestamp;
             $bal->save();
-            if ($verbose) Log::debug("OLD BAL " . json_encode($bal) . "\n");
+            if ($verbose) Log::debug("OLD BAL " . json_encode($bal));
         } else if ($otherBalance != null) {
             Log::debug("BALANCE FOUND: ".json_encode($otherBalance->toArray())."\n");
             // has lingering balances that is not infinity
@@ -71,7 +74,7 @@ class TransactionExt extends Transaction
                 'start_dt' => $timestamp,
                 'end_dt' => '9999-12-31',
             ]);
-        if ($verbose) Log::debug("NEW BAL " . json_encode($newBal)."\n");
+        if ($verbose) Log::debug("NEW BAL " . json_encode($newBal));
     }
 
     /**
@@ -79,6 +82,7 @@ class TransactionExt extends Transaction
      */
     public function processPending(): void
     {
+        Log::debug("Processing Transaction: " . json_encode($this->toArray()));
         $verbose = false;
         $account = $this->account()->first();
         $fund = $account->fund()->first();
@@ -92,18 +96,20 @@ class TransactionExt extends Transaction
             throw new Exception("Cannot Process Transaction: Share price not available for fund " .
                 $fund->name . " at " . $timestamp);
         }
-        $isFundTrans = $account->user_id == null;
+        $isFundAccount = $account->user_id == null;
         $this->shares = $value / $shareValue;
         $allShares = $this->shares;
-        if (!$isFundTrans) {
-            if ($this->flags != null) {
-                throw new Exception("Unexpected: Regular transactions dont support flags");
+        if (!$isFundAccount) {
+            Log::debug("Acct Tran: Validate flags & shares: '" . $this->flags . "' " . $this->shares . " " . $allShares);
+            if (!($this->flags == null || $this->flags == 'U')) {
+                throw new Exception("Unexpected: Regular transactions support no flags or no match only: " . $this->flags);
             }
             // check if fund has enough shares (unless its a fund transaction)
             if ($availableShares < $allShares) {
                 throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
             }
         } else {
+            Log::debug("Fund Tran: Validate flags & shares: '" . $this->flags . "' ");
             // validate that flags are in (A, C)
             // calculate shares, considering the value is added to the fund first
             switch ($this->flags) {
@@ -116,21 +122,26 @@ class TransactionExt extends Transaction
                 case 'C': // cash already added
                     // recalculate share value, discounting the value
                     // a deposit was already made to the fund, artificially increasing its share value
+                    Log::debug("Cash already added: " . $value . " " . $shareValue . " " . $timestamp);
                     $fundShares = $fund->sharesAsOf($timestamp);
                     $fundValue = $fund->valueAsOf($timestamp);
                     $shareValue = ($fundValue - $value) / $fundShares;
                     $this->shares = $value / $shareValue;
                     $allShares = $this->shares;
+                    Log::debug("Recalculated: " . $fundValue . " " . $fundShares . " " .
+                        $shareValue . " " . $this->shares);
                     break;
 
                 default:
-                    $flagString = implode(',', array_keys(self::$flagsMap));
-                    throw new Exception("Unexpected: Fund transactions must have flags: " . $flagString);
+                    throw new Exception("Unexpected: Fund transactions must have flags: A or C");
             }
         }
         $this->createBalance($this->shares, $timestamp);
 
-        if (!$isFundTrans) {
+        $noMatch = 'U' == $this->flags;
+        $createMatch = !($isFundAccount || $noMatch);
+        Log::debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
+        if ($createMatch) {
             $this->createMatching($account, $verbose, $shareValue, $allShares, $availableShares);
         }
 
@@ -196,27 +207,24 @@ class TransactionExt extends Transaction
         $port = $fund->portfolios()->first();
         $source = $port->source;
 
-        // get cash asset
-        $cashAsset = AssetExt::getCashAsset();
-        Log::debug("Cash asset: " . json_encode($cashAsset));
+        list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
 
-        // create an portfolio assets api object
-        $controller = app(PortfolioAssetAPIControllerExt::class);
-
-        // create a new portfolio asset
-        $pa = $controller->getQuery($source, $cashAsset->id, $timestamp);
         // validate if pa end date is high date
-        if ($pa->end_dt != '9999-12-31') {
+        if (!str_starts_with($pa->end_dt, '9999-12-31')) {
             throw new Exception("Cannot add cash to fund " . $fund->id . " at " . $timestamp
                 . " as its not the latest position:  " . json_encode($pa));
         }
-        Log::debug("Portfolio asset: " . json_encode($pa));
-        $curValue = $pa->value;
+
+        // update the cash port asset value
+        $curValue = $pa->position;
+//        $controller->verbose = true;
+        Log::debug("Adding cash to fund " . $fund->id . " at " . $timestamp . " " . $curValue . " " . $value);
         $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value + $curValue, 'position');
     }
 
     protected function createMatching(AccountExt $account, bool $verbose, float $shareValue, float $allShares, float $availableShares): void
     {
+        Log::debug("Creating matching for " . $this->id . " " . $account->id . " " . $shareValue . " " . $allShares . " " . $availableShares);
         $rss = new TransactionResource($this);
         $input = $rss->toArray(null);
 
@@ -226,8 +234,8 @@ class TransactionExt extends Transaction
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
             if ($verbose) {
-                Log::debug("AMR " . json_encode($amr) . " " . $matchValue . "\n");
-                Log::debug("MR " . json_encode($amr->matchingRule()->get()) . "\n");
+                Log::debug("AMR " . json_encode($amr) . " " . $matchValue);
+                Log::debug("MR " . json_encode($amr->matchingRule()->get()));
             }
             if ($matchValue > 0) {
                 $mr = $amr->matchingRule()->first();
@@ -240,9 +248,11 @@ class TransactionExt extends Transaction
                     throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
                 }
 
-                if ($verbose) Log::debug("MATCHTRAN " . json_encode($input) . "\n");
+                if ($verbose) Log::debug("MATCHTRAN " . json_encode($input));
+                /** @var TransactionExt $matchTran */
                 $matchTran = $repo->create($input);
-                $matchTran->createBalance();
+                $matchTran->createBalance($matchTran->shares, $matchTran->timestamp, $verbose);
+
                 $match = TransactionMatching::factory()
                     ->for($mr)
                     // ->forReferenceTransaction([$this]) // dont work??
@@ -253,6 +263,25 @@ class TransactionExt extends Transaction
                     ]);
             }
         }
+    }
+
+    public static function getCashPortfolioAsset(mixed $source, \Carbon\Carbon|string $timestamp): array
+    {
+        // get cash asset
+        $cashAsset = AssetExt::getCashAsset();
+        Log::debug("Cash asset: " . json_encode($cashAsset));
+
+        // create an portfolio assets api object
+        $controller = app(PortfolioAssetAPIControllerExt::class);
+
+        // Get the portfolio asset at the timestamp
+        $pa = $controller->getPortfolioAsset($source, $cashAsset, $timestamp);
+
+        // throws if empty
+        if (empty($pa)) {
+            throw new Exception("Cannot find cash asset value: " . $cashAsset->id);
+        }
+        return array($cashAsset, $controller, $pa[0]);
     }
 
 }

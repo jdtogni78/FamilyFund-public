@@ -76,7 +76,7 @@ class Transaction extends Model
         'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
-        'flags' => 'nullable|string|in:A,C',
+        'flags' => 'nullable|string|in:A,C,U',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'

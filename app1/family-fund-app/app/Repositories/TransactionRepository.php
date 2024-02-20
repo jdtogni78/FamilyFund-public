@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Transaction;
+use App\Models\TransactionExt;
 use App\Repositories\BaseRepository;
 
 /**

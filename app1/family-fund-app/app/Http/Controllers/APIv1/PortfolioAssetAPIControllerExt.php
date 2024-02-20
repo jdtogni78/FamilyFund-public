@@ -78,7 +78,13 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
         return $ap;
     }
 
-    protected function getQuery($source, $asset, $timestamp)
+    // wrap getQuery with a better name
+    public function getPortfolioAsset($source, $asset, $timestamp)
+    {
+        return $this->getQuery($source, $asset, $timestamp);
+    }
+
+    public function getQuery($source, $asset, $timestamp)
     {
         $portfolio = PortfolioExt::where('source', $source)->get()->first();
         $query = $portfolio->assetsAsOf($timestamp, $asset->id);

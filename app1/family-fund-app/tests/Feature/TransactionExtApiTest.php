@@ -83,7 +83,7 @@ class TransactionExtApiTest extends TestCase
 
         foreach($data['trans'] as $dtran) {
             if ($this->verbose) print_r("*** " .json_encode($dtran)."\n");
-            $transaction = $factory->makeTransaction($dtran['value'], null, 'PUR', 'P', new Carbon());
+            $transaction = $factory->makeTransaction($dtran['value'], null, 'PUR', 'P', null, new Carbon());
             $this->postTransaction($transaction, $dtran['shares']);
 
             $response = json_decode($this->response->getContent(), true);

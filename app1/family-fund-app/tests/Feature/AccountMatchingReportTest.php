@@ -66,14 +66,14 @@ class AccountMatchingReportTest extends TestCase
         $this->assertResponse(1, 50, 25, 50);
 
         // TODO: 2 tranMatchings
-        $transaction = $factory->createTransaction(100);
+        $transaction = $factory->createTransaction(100, null, 'PUR', 'P', null, null);
         $transaction->timestamp = '2021-11-12';
         $transaction->save();
 
         $matching = $account->accountMatchingRules()->first();
 
         // lets pretend it maxed out
-        $matchTransaction = $factory->createTransaction(25, null, 'MAT', 'C');
+        $matchTransaction = $factory->createTransaction(25, null, 'MAT', 'C', null, null);
         $matchTransaction->timestamp = '2021-11-12';
         $matchTransaction->save();
 
@@ -110,7 +110,7 @@ class AccountMatchingReportTest extends TestCase
         $this->getAPI($account);
         $this->assertResponse(1, 0, 0, 150);
 
-        $transaction = $factory->createTransaction();
+        $transaction = $factory->createTransaction(100, null, 'PUR', 'P', null, null);
         $transaction->timestamp = '2021-11-02';
         $transaction->save();
 
@@ -119,7 +119,7 @@ class AccountMatchingReportTest extends TestCase
 
         $matching = $factory->userAccount->accountMatchingRules()->first();
         $value = $transaction->value;
-        $matchTransaction = $factory->createTransaction($value, null, 'MAT', 'C');
+        $matchTransaction = $factory->createTransaction($value, null, 'MAT', 'C', null, null);
         $matchTransaction->timestamp = '2021-11-02';
         $matchTransaction->save();
 

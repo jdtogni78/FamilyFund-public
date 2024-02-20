@@ -1,10 +1,13 @@
 <?php namespace Tests\APIs;
 
 use App\Http\Resources\TransactionResource;
+use App\Models\AssetExt;
+use App\Models\TransactionExt;
 use CpChart\Data;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 use Tests\TestCase;
@@ -65,17 +68,18 @@ class TransactionApiExtTest extends TestCase
     public function test_basics()
     {
         $factory = $this->factory;
-        $timestamp = '2022-01-01';
+        // create date for testing using now
+        $timestamp = now()->format('Y-m-d');
         $transactions = $factory->userAccount->transactions();
 
         // pending tran without match > clear
-        $this->postPurchase(100, $timestamp, 100);
+        $this->postPurchase(100, 100, null, $timestamp);
         $this->assertEquals($transactions->count(), 1);
         $this->validateTran($this->tranRes, 100, 100, 100);
 
         // fail to post tran in the past
         // TODO better error code
-        $this->postTransactionError(100, 'PUR', 'P', '2021-12-01');
+        $this->postTransactionError(100, 'PUR', 'P', '2021-01-01');
         $this->assertEquals($transactions->count(), 1);
     }
 
@@ -85,41 +89,73 @@ class TransactionApiExtTest extends TestCase
     public function test_fund_tran()
     {
         $factory = $this->factory;
-        $timestamp = '2022-01-01';
+        $timestamp = now()->format('Y-m-d');
+        $tomorrow = now()->addDay()->format('Y-m-d');
+        $d_3 = now()->addDays(3)->format('Y-m-d');
+
 //        $factory->dumpTransactions($factory->fundAccount);
         $transactions = $factory->fundAccount->transactions();
+        $source = $factory->portfolio->source;
 
         // pending tran without match > clear
-        $this->postPurchase(1000, $timestamp, 1000, $factory->fundAccount);
+        list($cashAsset, $controller, $pa) = TransactionExt::getCashPortfolioAsset($source, $timestamp);
+        Log::debug("pa: ".json_encode($pa));
+        $this->assertEquals(1000, $pa->position);
+        $this->validateBalances($transactions, [1000]);
+
+        // transaction also adds cash, so
+        // total shares increase,
+        // balance increase and
+        // cash increases
+        $this->postPurchase(1000, 1000, 'A', $timestamp, $factory->fundAccount);
         $this->assertEquals($transactions->count(), 2);
-        $this->validateTran($this->tranRes, 1000, 1000, 2000);
+        $this->validateTran($this->tranRes, 1000, 1000, 2000); // total shares increased to 2k
+        list($cashAsset, $controller, $pa2) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
+        $this->assertEquals($pa->position + 1000, $pa2->position);
+        $this->validateBalances($transactions, [1000, 2000]);
+
+        // pretend cash deposit happened
+        $pa2->position += 1000;
+        $pa2->save();
+
+        // test tran with cash pre-added, so
+        // total shares increase (matches cash deposit)
+        // balance increases
+        // cash position does not change
+        $this->postPurchase(1000, 1000, 'C', $tomorrow, $factory->fundAccount);
+        $this->assertEquals($transactions->count(), 3);
+        list($cashAsset, $controller, $pa3) = TransactionExt::getCashPortfolioAsset($source, $d_3);
+        Log::debug("pa3: ".json_encode($pa3));
+        $this->validateBalances($transactions, [1000, 2000, 3000]);
+        $this->assertEquals($pa2->position, $pa3->position);
+        $this->validateTran($this->tranRes, 1000, 1000, 3000); // total shares not changed
 
         $transactions = $factory->userAccount->transactions();
-        $this->postTransactionError(1001, 'PUR', 'P', $timestamp); // not enough fund shares
-        $this->assertEquals($transactions->count(), 0);
 
-        $this->postPurchase(1000, $timestamp, 2000);
+        // we have 3k shares and 3k value, add a user tran
+        $this->postPurchase(1000, 1000, null, $tomorrow);
         $this->assertEquals($transactions->count(), 1);
-        $this->validateTran($this->tranRes, 1000, 2000, 2000);
+        $this->validateTran($this->tranRes, 1000, 1000, 1000);
 
     }
 
     public function test_matching()
     {
         $factory = $this->factory;
-        $timestamp = '2022-01-01';
+        $timestamp = now()->format('Y-m-d');
+        $year = now()->year;
         $transactions = $factory->userAccount->transactions();
 
         // add past matching
-        $factory->createMatching(100, 100, '2000-01-01', '2001-01-01');
+        $factory->createMatching(100, 100, ($year-2).'-01-01', ($year-1).'-01-01');
         // add future matching
-        $factory->createMatching(100, 100, '2025-01-01');
+        $factory->createMatching(100, 100, ($year+2).'-01-01');
         // add current matching
         $factory->createMatching(100, 50);
 
         // pending tran with match
         //   (extra pending tran to be ignored)
-        $this->postPurchase(100, $timestamp, 100);
+        $this->postPurchase(100, 100, null, $timestamp);
 //        $this->dumpTrans();
         $this->assertEquals($transactions->count(), 2);
         $tm = $this->tranRes->referenceTransactionMatching()->first();
@@ -128,7 +164,8 @@ class TransactionApiExtTest extends TestCase
         $this->validateTran($this->tranRes, 100, 100, 100, 'C', $timestamp);
         $this->validateTran($match, 50, 50, 150);
 
-        $this->postPurchase(100, '2022-01-02', 100);
+        $tomorrow = now()->addDay()->format('Y-m-d');
+        $this->postPurchase(100, 100, null, $tomorrow);
         $this->validateTran($this->tranRes, 100, 100, 250);
 //        $this->dumpTrans();
         $this->assertEquals($transactions->count(), 3); // no matching was created
@@ -137,8 +174,9 @@ class TransactionApiExtTest extends TestCase
     public function test_multi_matching()
     {
         $factory = $this->factory;
-        $timestamp = '2021-12-21';
-        $timestamp2 = '2021-12-22';
+        $timestamp = now()->format('Y-m-d');
+        $timestamp2 = now()->addDay()->format('Y-m-d');
+        $year = now()->year;
         $transactions = $factory->userAccount->transactions();
 
         // add matching
@@ -148,21 +186,21 @@ class TransactionApiExtTest extends TestCase
         $factory->createMatching(10, 200);
 
         // add matching
-        $mr3 = $factory->createMatching(100, 50, '2000-01-01', '2022-01-01', 50);
+        $mr3 = $factory->createMatching(100, 50, '2000-01-01', ($year+1).'-01-01', 50);
 
         // pending tran with match
         //   (extra pending tran to be ignored)
 //        $factory->dumpTransactions();
 //        $factory->dumpBalances();
 
-        $this->postPurchase(30, $timestamp, 30);
+        $this->postPurchase(30, 30, null, $timestamp);
 //        $this->dumpTrans();
         $this->assertEquals($transactions->count(), 3);
         $tm = $this->tranRes->referenceTransactionMatching()->get();
         $this->validateTran($tm[0]->transaction()->first(), 30, 30, 60, 'C', $timestamp);
         $this->validateTran($tm[1]->transaction()->first(), 20, 20, 80);
 
-        $this->postPurchase(100, $timestamp2, 100);
+        $this->postPurchase(100, 100, null, $timestamp2);
 //        $this->dumpTrans();
         $this->assertEquals($transactions->count(), 6);
         $tm = $this->tranRes->referenceTransactionMatching()->get();
@@ -207,13 +245,13 @@ class TransactionApiExtTest extends TestCase
 
     protected function postTransactionError($value, $type, $status, $timestamp=null, $shares=null, $code=200): void
     {
-        $this->postTransaction($value, $type, $status, $timestamp, $shares);
+        $this->postTransaction($value, $type, $status, null, $timestamp, $shares);
         $this->assertApiError($code);
     }
 
-    protected function postTransaction($value, $type, $status, $timestamp=null, $shares=null, $account=null): void
+    protected function postTransaction($value, $type, $status, $flags=null, $timestamp=null, $shares=null, $account=null): void
     {
-        $transaction = $this->factory->makeTransaction($value, $account, $type, $status, $timestamp, $shares)->toArray();
+        $transaction = $this->factory->makeTransaction($value, $account, $type, $status, $flags, $timestamp, $shares)->toArray();
         $url = '/api/transactions';
         $this->postAPI($url, $transaction);
         if ($this->data != null && array_key_exists('id', $this->data)) {
@@ -221,9 +259,9 @@ class TransactionApiExtTest extends TestCase
         }
     }
 
-    private function postPurchase(float $value, $timestamp=null, float $shares, $account=null)
+    private function postPurchase(float $value, float $shares, $flags = null, $timestamp=null, $account=null)
     {
-        $this->postTransaction($value, 'PUR', 'P', $timestamp, null, $account);
+        $this->postTransaction($value, 'PUR', 'P', $flags, $timestamp, null, $account);
         $this->assertApiSuccess();
         $this->assertEquals($value, $this->data['value']);
         $this->assertEquals($shares, $this->data['shares']);
@@ -233,14 +271,32 @@ class TransactionApiExtTest extends TestCase
     private function validateTran(Transaction $tran, float $value, float $shares, float $balance,
                                   string $status='C', $endDate='9999-12-31')
     {
-        $this->assertEquals($value, $tran->value);
-        $this->assertEquals($shares, $tran->shares);
-        $this->assertEquals($status, $tran->status);
+        $this->assertEquals($value, $tran->value, "value");
+        $this->assertEquals($shares, $tran->shares, "shares");
+        $this->assertEquals($status, $tran->status, "status");
         $bal = $tran->accountBalance()->first();
         $this->assertEquals($balance, $bal->shares);
         $this->assertEquals($endDate, $bal->end_dt->toDateString());
     }
 
+    private function validateBalances($trans, $values)
+    {
+        $i = 0;
+        $balances = $trans->get()->map(function($t) {
+            $balance = $t->accountBalance()->first();
+            Log::debug('bal: '.json_encode($balance));
+            return $balance;
+        });
+        Log::debug('values: '.json_encode($values));
+        // validate count
+        $this->assertEquals(count($balances), count($values));
+        foreach ($balances as $bal) {
+            $this->assertTrue(abs($values[$i] - $bal->shares) < 0.0001,
+                'Balance '.$i.' does not match: '.$values[$i].' vs '.$bal->shares);
+
+            $i++;
+        }
+    }
 
     // Test inPeriod vs consider tran
     // TODO Test show all past matching & considered values

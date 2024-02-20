@@ -79,7 +79,7 @@ class PortfolioExt extends Portfolio
 
         $totalValue = 0;
         foreach ($portfolioAssets as $pa) {
-//            print_r("pa: " . json_encode($pa) . "\n");
+            Log::debug("pa: " . json_encode($pa));
             $position = $pa->position;
             $asset_id = $pa->asset_id;
             if ($position == 0)
@@ -95,7 +95,7 @@ class PortfolioExt extends Portfolio
                 $price = $assetPrice[0]['price'];
                 $value = $position * $price;
                 $totalValue += $value;
-                if ($this->verbose) print_r("values: ".json_encode([$asset_id, $position, $price, $value])."\n");
+                if ($this->verbose) Log::debug("values: ".json_encode([$asset_id, $position, $price, $value]));
             } else {
                 # TODO printf("No price for $asset_id\n");
             }

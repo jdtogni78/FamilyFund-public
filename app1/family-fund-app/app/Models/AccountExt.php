@@ -16,15 +16,11 @@ use Nette\Utils\DateTime;
  */
 class AccountExt extends Account
 {
-    // public function fund()
-    // {
-    //     return parent::fund()->get()->first();
-    // }
     public static function accountMap()
     {
         $accountRepo = \App::make(AccountRepository::class);
         $recs = $accountRepo->all([], null, null, ['id', 'nickname'])->toArray();
-        $out = [];
+        $out = [null => 'Please Select Account'];
         foreach ($recs as $row) {
             $out[$row['id']] = $row['nickname'];
         }

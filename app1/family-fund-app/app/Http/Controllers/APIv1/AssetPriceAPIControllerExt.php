@@ -68,7 +68,7 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
         return $ap;
     }
 
-    protected function getQuery($source, $asset, $timestamp)
+    public function getQuery($source, $asset, $timestamp)
     {
         $query = $asset->pricesAsOf($timestamp);
         return $query;

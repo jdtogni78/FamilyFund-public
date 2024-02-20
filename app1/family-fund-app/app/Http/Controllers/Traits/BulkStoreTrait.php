@@ -13,7 +13,7 @@ use Exception;
 
 trait BulkStoreTrait
 {
-    protected abstract function getQuery($source, $asset, $timestamp);
+    public abstract function getQuery($source, $asset, $timestamp);
     protected abstract function createChild($data, $source);
     private $verbose = false;
     private $warnings;

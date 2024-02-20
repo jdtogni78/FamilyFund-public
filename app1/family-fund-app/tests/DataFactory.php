@@ -65,7 +65,7 @@ class DataFactory
         $this->portfolio = $this->fund->portfolio();
         $this->source = $this->portfolio->source;
 
-        $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', $timestamp);
+        $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', null, $timestamp);
 
         $this->fundBalance = AccountBalance::factory()
             ->for($this->fundTransaction, 'transaction')
@@ -101,14 +101,14 @@ class DataFactory
         return $this->user;
     }
 
-    public function createMatching($dollar_end=100, $match=100, $start='2000-01-01', $end='9999-12-31', $dollar_start = 0)
+    public function createMatching($dollar_end=100, $match=100, $start='2024-01-01', $end='9999-12-31', $dollar_start = 0)
     {
         $mr = $this->createMatchingRule($dollar_end, $match, $start, $end, $dollar_start);
         $this->createAccountMatching();
         return $mr;
     }
 
-    public function createMatchingRule($dollar_end=100, $match=100, $start='2000-01-01', $end='9999-12-31', $dollar_start = 0) {
+    public function createMatchingRule($dollar_end=100, $match=100, $start='2024-01-01', $end='9999-12-31', $dollar_start = 0) {
         $this->matchingRule = MatchingRule::factory()->create([
             'dollar_range_start' => $dollar_start,
             'dollar_range_end' => $dollar_end,
@@ -133,14 +133,14 @@ class DataFactory
         return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type='PUR', $status='P', $timestamp=null) {
-        $tran = $this->makeTransaction($value, $account, $type, $status, $timestamp);
+    public function createTransaction($value=100, $account=null, $type='PUR', $status='P', $flags=null, $timestamp=null) {
+        $tran = $this->makeTransaction($value, $account, $type, $status, $flags, $timestamp);
         $tran->save();
         if ($this->verbose) print_r("tran: " . json_encode($tran) . "\n");
         return $tran;
     }
 
-    public function makeTransaction($value=100, $account=null, $type='PUR', $status='P', $timestamp=null, $shares=null) {
+    public function makeTransaction($value=100, $account=null, $type='PUR', $status='P', $flags=null, $timestamp=null, $shares=null) {
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -153,6 +153,7 @@ class DataFactory
             'type' => $type,
             'status' => $status,
             'value' => $value,
+            'flags' => $flags,
         ];
         if ($shares) $arr['shares'] = $shares;
         if ($timestamp) $arr['timestamp'] = $timestamp;
@@ -228,10 +229,10 @@ class DataFactory
 
     public function createTransactionWithMatching($value1=100, $value2=50): void
     {
-        $transaction = $this->createTransaction($value1);
+        $transaction = $this->createTransaction($value1, null, 'PUR', 'P', null, null);
         $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
 
-        $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C');
+        $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C', null, null);
         $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction);
     }
 

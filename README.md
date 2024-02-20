@@ -94,6 +94,7 @@ echo "127.0.0.1 noreply.domain.com mailhog" | sudo tee -a /etc/hosts
 sendmail_path = "/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025"
 
 #### Test
+
 php tests/TestEmail.php
 
 for f in run_report.log.*.gz; do gunzip -c $f | sed '0,/^.*## Positions$/d' | sed  -n '/.*## Report/q;p'; done|grep SPXL|sort
@@ -126,6 +127,11 @@ php artisan tinker
     $user = App\Models\UserExt::where('email', 'admin@dev.familyfund.local')->first();
     $user->password = Hash::make('new_password');
     $user->save();
+
+### Jumpbox Setup
+
+Dont recall initial install, but here are some notes:
+https://davewpark.medium.com/securing-remote-access-with-a-jumpserver-in-10-steps-ce2d9cd328f6
 
 ### Jumpbox
 

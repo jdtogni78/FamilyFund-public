@@ -7,6 +7,7 @@ use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
 use App\Jobs\SendAccountReport;
 use App\Models\AccountReport;
+use App\Models\AccountReportExt;
 use App\Repositories\AccountReportRepository;
 use Laracasts\Flash\Flash;
 use Response;
@@ -18,13 +19,18 @@ class AccountReportControllerExt extends AccountReportController
         parent::__construct($accountReportRepository);
     }
 
-    /**
-     * Store a newly created AccountReport in storage.
-     *
-     * @param CreateAccountReportRequest $request
-     *
-     * @return Response
-     */
+    public function create()
+    {
+        $api = ['typeMap' => AccountReportExt::$typeMap];
+        return parent::create()->with('api', $api);
+    }
+
+    public function show($id)
+    {
+        $api = ['typeMap' => AccountReportExt::$typeMap];
+        return parent::show($id)->with('api', $api);
+    }
+
     public function store(CreateAccountReportRequest $request)
     {
         $input = $request->all();
@@ -50,12 +56,4 @@ class AccountReportControllerExt extends AccountReportController
 
         return redirect(route('accountReports.index'));
     }
-
-//
-//        if (count($this->err) == 0) {
-//            Flash::success('Account Report saved successfully.');
-//        } else {
-//            Flash::error(implode("</br>", $this->err));
-//        }
-
 }

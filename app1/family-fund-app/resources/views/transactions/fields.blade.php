@@ -31,8 +31,11 @@
 @push('scripts')
    <script type="text/javascript">
        function updateShareValue() {
+           if ($('#type').val() === 'INI') {
+               return;
+           }
            $('#__share_price').val("...");
-           $('#__shares').val("...");
+           $('#shares').val("...");
 
            account = $('#account_id').find(":selected").val();
            dt = $("#timestamp").datetimepicker('getDate').val();
@@ -52,7 +55,7 @@
 
                    $('#__share_price').val(share_price);
                    value = $('#value').val();
-                   $('#__shares').val(value / share_price);
+                   $('#shares').val(value / share_price);
                }
            });
        }
@@ -61,11 +64,40 @@
            updateShareValue();
        })
 
+       function updateSharePrice() {
+           if ($('#type').val() === 'INI') {
+               value = $('#value').val();
+               shares = $('#shares').val();
+               share_price = value / shares;
+               $('#__share_price').val(share_price);
+           }
+       }
+
        $("#value").change(function() {
            value = $('#value').val();
-           share_price = $('#__share_price').val();
-           $('#__shares').val(value / share_price);
+           if ($('#type').val() === 'INI') {
+               updateSharePrice();
+           } else {
+               share_price = $('#__share_price').val();
+               $('#shares').val(value / share_price);
+           }
        })
+
+       $("#shares").change(function() {
+           if ($('#type').val() === 'INI') {
+               updateSharePrice();
+           }
+       });
+
+       $("#type").change(function() {
+           value = $('#type').val();
+           // make shares editable if INI
+              if (value === 'INI') {
+                $('#shares').prop('readonly', false);
+              } else {
+                $('#shares').prop('readonly', true);
+              }
+       });
 
        $('#timestamp').datetimepicker({
            format: 'YYYY-MM-DD',
@@ -92,8 +124,8 @@
 
 <!-- CALC Shares -->
 <div class="form-group col-sm-6">
-    {!! Form::label('__shares', 'Shares:') !!}
-    {!! Form::number('__shares', null, ['class' => 'form-control', 'readonly' => 'true']) !!}
+    {!! Form::label('shares', 'Shares:') !!}
+    {!! Form::number('shares', null, ['class' => 'form-control', 'readonly' => 'true']) !!}
 </div>
 
 <!-- CALC Share Prices -->

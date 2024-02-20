@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
@@ -43,13 +44,13 @@ class TransactionExtApiTest extends TestCase
         $tranArr = $transaction->toArray();
 
         $url = '/api/transactions';
-        if ($this->verbose) print_r("*** $url " .json_encode($tranArr)."\n");
+        if ($this->verbose) Log::debug("*** $url " .json_encode($tranArr));
         $this->response = $this->json(
             'POST',
             $url, $tranArr
         );
 
-        if ($this->verbose) print_r($this->response->getContent());
+        if ($this->verbose) Log::debug($this->response->getContent());
         $tranArr['status'] = $status;
         $tranArr['shares'] = $shares;
 
@@ -66,7 +67,7 @@ class TransactionExtApiTest extends TestCase
     {
         $bal = $tran->accountBalance()->first();
         $this->assertNotNull($bal);
-        if ($this->verbose) print_r($bal->toArray());
+        if ($this->verbose) Log::debug($bal->toArray());
         $this->assertEquals($bal->shares, $balance);
     }
 
@@ -82,7 +83,7 @@ class TransactionExtApiTest extends TestCase
         }
 
         foreach($data['trans'] as $dtran) {
-            if ($this->verbose) print_r("*** " .json_encode($dtran)."\n");
+            if ($this->verbose) Log::debug("*** " .json_encode($dtran));
             $transaction = $factory->makeTransaction($dtran['value'], null, 'PUR', 'P', null, new Carbon());
             $this->postTransaction($transaction, $dtran['shares']);
 
@@ -91,16 +92,14 @@ class TransactionExtApiTest extends TestCase
             $tran = Transaction::find($rdata['id']);
             $this->assertNotNull($tran);
 
-//            print_r("\n");
-//            print_r(json_encode($tran->toArray())."\n");
             $hasMatching = array_key_exists('match', $dtran);
             $this->validateTransaction($tran, $dtran['value'], $dtran['balance']);
 
             if ($hasMatching) {
                 $tranMatch = $tran->referenceTransactionMatching()->first();
-                if ($this->verbose) print_r("TRAN: " . json_encode($tranMatch->toArray())."\n");
+                if ($this->verbose) Log::debug("TRAN: " . json_encode($tranMatch->toArray()));
                 $matchTran = $tranMatch->transaction()->first();
-                if ($this->verbose) print_r("MATCHTRAN:" . json_encode($matchTran->toArray())."\n");
+                if ($this->verbose) Log::debug("MATCHTRAN:" . json_encode($matchTran->toArray()));
                 $this->validateTransaction($matchTran, $dtran['match']['value'], $dtran['match']['balance'], $hasMatching);
                 $this->validateBalance($matchTran, $dtran['match']['balance']);
             }

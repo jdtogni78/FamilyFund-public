@@ -92,12 +92,20 @@ class TransactionExt extends Transaction
         $shareValue = $fund->shareValueAsOf($timestamp);
         $availableShares = $fund->unallocatedShares($timestamp);
 
+        Log::debug("Transaction :".json_encode($this->toArray()));
+
         if ($shareValue == 0) {
-            throw new Exception("Cannot Process Transaction: Share price not available for fund " .
-                $fund->name . " at " . $timestamp);
+            if ($this->type != 'INI') {
+                throw new Exception("Cannot Process Transaction: Share price not available for fund " .
+                    $fund->name . " at " . $timestamp);
+            } else {
+                // shares should have been provided
+            }
+        } else {
+            $this->shares = $value / $shareValue;
         }
+
         $isFundAccount = $account->user_id == null;
-        $this->shares = $value / $shareValue;
         $allShares = $this->shares;
         if (!$isFundAccount) {
             Log::debug("Acct Tran: Validate flags & shares: '" . $this->flags . "' " . $this->shares . " " . $allShares);
@@ -123,10 +131,16 @@ class TransactionExt extends Transaction
                     // recalculate share value, discounting the value
                     // a deposit was already made to the fund, artificially increasing its share value
                     Log::debug("Cash already added: " . $value . " " . $shareValue . " " . $timestamp);
-                    $fundShares = $fund->sharesAsOf($timestamp);
-                    $fundValue = $fund->valueAsOf($timestamp);
-                    $shareValue = ($fundValue - $value) / $fundShares;
-                    $this->shares = $value / $shareValue;
+                    if ($this->type !== 'INI') {
+                        $fundShares = $fund->sharesAsOf($timestamp);
+                        $fundValue = $fund->valueAsOf($timestamp);
+                        $shareValue = ($fundValue - $value) / $fundShares;
+                        $this->shares = $value / $shareValue;
+                    } else {
+                        $fundShares = $this->shares;
+                        $fundValue = $value;
+                        $shareValue = $value / $fundShares;
+                    }
                     $allShares = $this->shares;
                     Log::debug("Recalculated: " . $fundValue . " " . $fundShares . " " .
                         $shareValue . " " . $this->shares);
@@ -207,7 +221,15 @@ class TransactionExt extends Transaction
         $port = $fund->portfolios()->first();
         $source = $port->source;
 
-        list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
+        try {
+            list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
+        } catch (Exception $e) {
+            Log::debug("Cash asset not found, creating it");
+            self::createCashPortfolioAsset($source, $value, $timestamp);
+            list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
+            $pa->position = 0; // hack to avoid validation error
+        }
+        Log::debug("Cash asset found: " . json_encode($pa));
 
         // validate if pa end date is high date
         if (!str_starts_with($pa->end_dt, '9999-12-31')) {
@@ -217,7 +239,6 @@ class TransactionExt extends Transaction
 
         // update the cash port asset value
         $curValue = $pa->position;
-//        $controller->verbose = true;
         Log::debug("Adding cash to fund " . $fund->id . " at " . $timestamp . " " . $curValue . " " . $value);
         $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value + $curValue, 'position');
     }
@@ -278,10 +299,17 @@ class TransactionExt extends Transaction
         $pa = $controller->getPortfolioAsset($source, $cashAsset, $timestamp);
 
         // throws if empty
-        if (empty($pa)) {
+        if (empty($pa) || count($pa) == 0) {
             throw new Exception("Cannot find cash asset value: " . $cashAsset->id);
         }
         return array($cashAsset, $controller, $pa[0]);
+    }
+
+    public static function createCashPortfolioAsset(string $source, $value, \Carbon\Carbon|string $timestamp)
+    {
+        $cashAsset = AssetExt::getCashAsset();
+        $controller = app(PortfolioAssetAPIControllerExt::class);
+        $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value, 'position');
     }
 
 }

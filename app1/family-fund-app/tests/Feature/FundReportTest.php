@@ -5,6 +5,7 @@ use App\Mail\FundQuarterlyReport;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
+use Log;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
@@ -42,6 +43,7 @@ class FundReportTest extends TestCase
                 $mail->hasTo($email);
         });
 
+        // test with no email_cc
         $factory->fundAccount->email_cc = null;
         $factory->fundAccount->save();
 
@@ -54,13 +56,13 @@ class FundReportTest extends TestCase
         $email = $factory->userAccount->email_cc;
         $factory->userAccount->email_cc = null;
         $factory->userAccount->save();
-        $this->postAPI('REG', Response::HTTP_UNPROCESSABLE_ENTITY);
+        $this->postAPI('ALL', Response::HTTP_UNPROCESSABLE_ENTITY);
         Mail::assertNotSent(FundQuarterlyReport::class);
 
         Mail::fake();
         $factory->userAccount->email_cc = $email;
         $factory->userAccount->save();
-        $this->postAPI('REG');
+        $this->postAPI('ALL');
         Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email, $fund));
 
 
@@ -69,7 +71,7 @@ class FundReportTest extends TestCase
         $factory->createAccountMatching();
         $email2 = $factory->userAccount->email_cc;
         $factory->createTransactionWithMatching();
-        $this->postAPI('REG');
+        $this->postAPI('ALL');
         Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email, $fund));
         Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email2, $fund));
     }
@@ -82,14 +84,16 @@ class FundReportTest extends TestCase
             'as_of'     => $this->asOf,
         ];
 
-        if ($this->verbose) print_r("*** POST ".json_encode($this->post)."\n");
+        if ($this->verbose)
+            Log::debug("*** POST ".json_encode($this->post));
         $this->response = $this->json(
             'POST',
             '/api/fund_reports/', $this->post
         );
 
         $response = json_decode($this->response->getContent(), true);
-        if ($this->verbose) print_r("response: " . json_encode($response,JSON_PRETTY_PRINT) . "\n");
+        if ($this->verbose)
+            Log::debug("response: " . json_encode($response,JSON_PRETTY_PRINT));
 
         if ($code == 200)
             $this->assertApiSuccess();

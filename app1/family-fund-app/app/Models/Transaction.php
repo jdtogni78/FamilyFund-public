@@ -81,11 +81,12 @@ class Transaction extends Model
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
+
     public static $create_rules = [
-        'type' => 'in:PUR',
-        'status' => 'in:P',
+        'type' => 'required|in:PUR,INI',
+        'status' => 'required|in:P',
         'value' => 'required|numeric',
-        'shares' => 'prohibited',
+        'shares' => 'nullable|numeric',
         'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',

@@ -1,16 +1,18 @@
 <?php namespace Tests;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Mockery\Exception;
 
 trait ApiTestTrait
 {
+    use VerboseTrait;
+
     private $response;
     protected $success;
     protected $message;
     protected $data;
-
-    protected $verbose = false;
 
     public function loginWithFakeUser($email='admin@dev.familyfund.local')
     {
@@ -26,8 +28,8 @@ trait ApiTestTrait
     public function assertApiResponse($expectedData, Array $ignoredKeys = [])
     {
         if ($this->verbose) {
-            print_r("IGNORE: ".json_encode($ignoredKeys)."\n");
-            print_r("EXPECT: ".json_encode($expectedData)."\n");
+            Log::debug("IGNORE: ".json_encode($ignoredKeys));
+            Log::debug("EXPECT: ".json_encode($expectedData));
         }
 
         $this->assertApiSuccess();
@@ -36,7 +38,7 @@ trait ApiTestTrait
         $actualData = $response['data'];
 
         if ($this->verbose)
-            print_r(json_encode($actualData)."\n");
+            Log::debug(json_encode($actualData));
 
         $this->assertNotEmpty($actualData['id']);
         $this->assertModelData($expectedData, $actualData, $ignoredKeys, 'data');
@@ -59,6 +61,7 @@ trait ApiTestTrait
     public function assertApiError($code)
     {
         $this->response->assertStatus($code);
+        Log::debug($this->response->getContent());
 //        $response = json_decode($this->response->getContent(), true);
         $this->response->assertJson(['success' => false]);
     }
@@ -75,13 +78,14 @@ trait ApiTestTrait
                 $this->fail("Key missing on actual response: $p");
             }
             if (!array_key_exists($key, $expectedData)) {
+                Log::debug($actualData[$key]);
                 $this->fail("Unnexpected key on actual response: $p");
             }
             $value = $actualData[$key];
             if (in_array($key, ['created_at', 'updated_at', 'deleted_at'])) {
                 continue;
             }
-            if ($this->verbose) print_r("** assert model: " . json_encode([$p, $expectedData[$key], $actualData[$key]]) . "\n");
+            if ($this->verbose) Log::debug("** assert model: " . json_encode([$p, $expectedData[$key], $actualData[$key]]));
             if (is_array($actualData[$key])) {
                 $ignored = [];
                 if (array_key_exists($key, $ignoredKeys)) {
@@ -121,26 +125,26 @@ trait ApiTestTrait
         $this->success = null;
         if (array_key_exists('success', $response)) {
             $this->success = $response['success'];
-            if ($this->verbose) print_r("SUCCESS: " . ($this->success?"TRUE":"false") . "\n");
+            if ($this->verbose) Log::debug("SUCCESS: " . ($this->success?"TRUE":"false") . "\n");
         }
         if (array_key_exists('message', $response)) {
             $this->message = $response['message'];
-            if ($this->verbose) print_r("MESSAGE: " . $this->message . "\n");
+            if ($this->verbose) Log::debug("MESSAGE: " . $this->message . "\n");
         }
         if (array_key_exists('data', $response)) {
             $this->data = $response['data'];
         }
-        if ($this->verbose) print_r("response: " . $this->response->getStatusCode() . " " . json_encode($response) . "\n");
+        if ($this->verbose) Log::debug("response: " . $this->response->getStatusCode() . " " . json_encode($response) . "\n");
     }
 
     public function postAPI(string $api, array $data) {
-        if ($this->verbose) print("*** POST API: $api\n*** DATA:" . json_encode($data) ."\n");
+        if ($this->verbose) Log::debug("*** POST API: $api\n*** DATA:" . json_encode($data) );
         $this->setResponse($this->json('POST', $api, $data));
     }
 
     public function getAPI(string $api): void
     {
-        if ($this->verbose) print("*** GET API: $api\n");
+        if ($this->verbose) Log::debug("*** GET API: $api\n");
         $this->setResponse($this->json('GET', $api));
     }
 

@@ -140,7 +140,7 @@ JUMPBOX=REDACTED_JUMP_HOST
 FFSERVER=192.168.68.120
 
 ssh -J dstrader@${JUMPBOXDNS}:60004 jdtogni@${FFSERVER} -p 22
-ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
+ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3001:${FFSERVER}:3001
 
 ssh -J dstrader@${JUMPBOX}:22332 jdtogni@${FFSERVER} -p 22
 ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
@@ -154,6 +154,8 @@ ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
 ### Adding a fund
 
 * Create an account with no user id for the fund
+* Create Fund
+* Create portfolio
 * Create an initial transaction for the fund
 
 ### Making an investment into a fund

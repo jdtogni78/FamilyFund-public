@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Mail;
 
 trait AccountTrait
 {
-    use PerformanceTrait;
-    protected $verbose=false;
+    use PerformanceTrait, VerboseTrait, MailTrait;
 
     public function createAccountArray($account)
     {
@@ -200,12 +199,12 @@ trait AccountTrait
         $err = [];
         $msgs = [];
         $sendCount = 0;
-        if (empty($account->email_cc)) {
-            $msg = "Account " . $account->nickname . " has no email configured";
+        $msg = $account->validateHasEmail();
+        if ($msg != null) {
             $err[] = $msg;
             Log::error($msg);
         } else {
-            $msg = "Sending email to " . $account->email_cc;
+            $msg = "Sending account report email to " . $account->email_cc;
             Log::info($msg);
             $msgs[] = $msg;
             $pdfFile = $pdf->file();

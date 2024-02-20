@@ -13,6 +13,7 @@ use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
+use Exception;
 
 class TransactionApiExtTest extends TestCase
 {
@@ -139,6 +140,56 @@ class TransactionApiExtTest extends TestCase
 
     }
 
+    public function test_initial_tran() {
+        $this->factory = $factory = new DataFactory();
+        $timestamp = now()->format('Y-m-d');
+        $tomorrow = now()->addDay()->format('Y-m-d');
+        $factory->createFund(1000, 1000, $timestamp, true);
+        $factory->createUser();
+        $source = $factory->portfolio->source;
+
+        $transactions = $factory->fundAccount->transactions();
+        $this->assertEquals(0, $transactions->count());
+
+        $gotException = false;
+        try {
+            TransactionExt::getCashPortfolioAsset($source, $timestamp);
+        } catch (Exception $e) {
+            $gotException = true;
+        }
+        $this->assertEquals(true, $gotException);
+
+        $this->postPurchase(1000, 1000, 'A', $timestamp, $factory->fundAccount, 'INI');
+        $this->assertEquals($transactions->count(), 1);
+        $this->validateTran($this->tranRes, 1000, 1000, 1000);
+        list($cashAsset, $controller, $pa2) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
+        $this->assertEquals(1000, $pa2->position);
+        $this->validateBalances($transactions, [1000]);
+    }
+
+    public function test_initial_tran_existent_cash() {
+        $this->factory = $factory = new DataFactory();
+        $yesterday = now()->subDay()->format('Y-m-d');
+        $timestamp = now()->format('Y-m-d');
+        $tomorrow = now()->addDay()->format('Y-m-d');
+        $factory->createFund(1000, 1000, $timestamp, true);
+        $factory->createUser();
+        $source = $factory->portfolio->source;
+
+        TransactionExt::createCashPortfolioAsset($source, 2000, $yesterday);
+        list($cashAsset, $controller, $pa1) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
+        $this->assertEquals(2000, $pa1->position);
+        $transactions = $factory->fundAccount->transactions();
+        $this->assertEquals(0, $transactions->count());
+
+        $this->postPurchase(2000, 1000, 'C', $timestamp, $factory->fundAccount, 'INI');
+        $this->assertEquals($transactions->count(), 1);
+        $this->validateTran($this->tranRes, 2000, 1000, 1000);
+        list($cashAsset, $controller, $pa2) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
+        $this->assertEquals(2000, $pa2->position);
+        $this->validateBalances($transactions, [1000]);
+    }
+
     public function test_matching()
     {
         $factory = $this->factory;
@@ -259,9 +310,9 @@ class TransactionApiExtTest extends TestCase
         }
     }
 
-    private function postPurchase(float $value, float $shares, $flags = null, $timestamp=null, $account=null)
+    private function postPurchase(float $value, float $shares, $flags = null, $timestamp=null, $account=null, $type = 'PUR')
     {
-        $this->postTransaction($value, 'PUR', 'P', $flags, $timestamp, null, $account);
+        $this->postTransaction($value, $type, 'P', $flags, $timestamp, $shares, $account);
         $this->assertApiSuccess();
         $this->assertEquals($value, $this->data['value']);
         $this->assertEquals($shares, $this->data['shares']);

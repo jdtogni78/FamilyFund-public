@@ -198,7 +198,7 @@ Trait FundTrait
         $noEmail = [];
         $accounts = $this->reportUsers($fund, $isAdmin);
         foreach ($accounts as $account) {
-            $err = $this->validateHasEmail($account);
+            $err = $account->validateHasEmail();
             if ($err) $noEmail[] = $err;
         }
         // the fund account has no email
@@ -218,12 +218,12 @@ Trait FundTrait
         $sendCount = 0;
         $accounts = $this->reportUsers($fund, $isAdmin);
         foreach ($accounts as $account) {
-            $err = $this->validateHasEmail($account);
+            $err = $account->validateHasEmail();
             if ($err != null) {
                 $noEmail[] = $err;
             } else {
                 $sendCount++;
-                $msg = "Sending email to " . $account->email_cc;
+                $msg = "Sending fund report email to " . $account->email_cc;
                 Log::info($msg);
                 $msgs[] = $msg;
                 $pdfFile = $pdf->file();
@@ -250,15 +250,6 @@ Trait FundTrait
         }
         $this->err = $errs;
         $this->msgs = $msgs;
-    }
-
-    protected function validateHasEmail(mixed $account): ?string
-    {
-        // fund accounts have no user, so they are fine, others must have email
-        if (empty($account->email_cc) && $account->user()->count() > 0) {
-            return $account->nickname;
-        }
-        return null;
     }
 
     protected function createFundReport(array $input)

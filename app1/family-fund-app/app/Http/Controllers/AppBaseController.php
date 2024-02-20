@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use InfyOm\Generator\Utils\ResponseUtil;
+use Log;
 use Response;
 
 /**
@@ -25,7 +26,9 @@ class AppBaseController extends Controller
 
     public function sendError($error, $code = 404)
     {
-        return Response::json(ResponseUtil::makeError($error), $code);
+        $makeError = ResponseUtil::makeError($error);
+//        Log::debug('Error response: ' . json_encode($makeError));
+        return Response::json($makeError, $code);
     }
 
     public function sendSuccess($message)
@@ -35,38 +38,4 @@ class AppBaseController extends Controller
             'message' => $message
         ], 200);
     }
-
-    
-//     /**
-//      * success response method.
-//      *
-//      * @return \Illuminate\Http\Response
-//      */
-//     public function sendResponse($result, $message, $code)
-//     {
-//         $response = [
-//             'success' => true,
-//             'data'    => $result,
-//             'message' => $message,
-//         ];
-//         return response()->json($response, $code);
-//     }
-
-
-//     /**
-//      * return error response.
-//      *
-//      * @return \Illuminate\Http\Response
-//      */
-//     public function sendError($error, $errorMessages = [], $code)
-//     {
-//         $response = [
-//             'success' => false,
-//             'message' => $error,
-//         ];
-//         if (!empty($errorMessages)) {
-//             $response['data'] = $errorMessages;
-//         }
-//         return response()->json($response, $code);
-//     }
 }

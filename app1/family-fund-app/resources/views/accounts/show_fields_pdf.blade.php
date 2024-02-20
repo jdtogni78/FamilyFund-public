@@ -22,6 +22,7 @@
         {!! Form::label($field, 'Email CC:') !!}
         {!! Form::text($field, $api[$field], $field_props) !!}
     </div>
+    @isset($api['balances'][0])
     <div class="form-group col-sm-6 col-left">
         @php $field = 'shares'; @endphp
         {!! Form::label($field, 'Shares:') !!}
@@ -35,6 +36,7 @@
             {!! Form::number($field, $api['balances'][0][$field],  $field_props) !!}
         </div>
     </div>
+    @endisset
     <div class="form-group col-sm-6 col-left">
         @php $field = 'matching_available'; @endphp
         {!! Form::label($field, 'Matching Available:') !!}

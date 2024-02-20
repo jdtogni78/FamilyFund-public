@@ -11,7 +11,9 @@ trait TransactionTrait
     {
         $transaction = null;
         DB::transaction(function () use ($input, &$transaction) {
-            $input['shares'] = null;
+            if ($input['type'] !== 'INI') {
+                $input['shares'] = null;
+            }
             $transaction = $this->transactionRepository->create($input);
             $transaction->processPending();
         });

@@ -79,7 +79,7 @@ class PortfolioExt extends Portfolio
 
         $totalValue = 0;
         foreach ($portfolioAssets as $pa) {
-            Log::debug("pa: " . json_encode($pa));
+            if ($this->verbose) Log::debug("pa: " . json_encode($pa));
             $position = $pa->position;
             $asset_id = $pa->asset_id;
             if ($position == 0)

@@ -8,6 +8,7 @@ use App\Repositories\AccountBalanceRepository;
 use App\Repositories\AccountRepository;
 use App\Repositories\TransactionRepository;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Log;
 use Nette\Utils\DateTime;
 
 /**
@@ -143,4 +144,16 @@ class AccountExt extends Account
         $from = $year.'-01-01';
         $to = ($year+1).'-01-01';
         return $this->periodPerformance($from, $to);
-    }}
+    }
+
+    // validate has email
+    protected function validateHasEmail(): ?string
+    {
+        $account = $this;
+        if (empty($account->email_cc)) {
+            Log::error("No email_cc for " . $account->nickname);
+            return $account->nickname;
+        }
+        return null;
+    }
+}

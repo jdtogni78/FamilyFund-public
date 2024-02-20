@@ -52,7 +52,7 @@ class DataFactory
 
     public $verbose = false;
 
-    public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01')
+    public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01', $noTransaction=false)
     {
         $this->fund = Fund::factory()
             ->has(Portfolio::factory()->count(1), 'portfolios')
@@ -65,27 +65,29 @@ class DataFactory
         $this->portfolio = $this->fund->portfolio();
         $this->source = $this->portfolio->source;
 
-        $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', null, $timestamp);
+        if (!$noTransaction) {
+            $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', null, $timestamp);
 
-        $this->fundBalance = AccountBalance::factory()
-            ->for($this->fundTransaction, 'transaction')
-            ->for($this->fundAccount, 'account')
-            ->create([
-                'type' => 'OWN',
-                'start_dt' => $timestamp,
-                'end_dt' => '9999-12-31',
-                'shares' => $shares
-            ]);
+            $this->fundBalance = AccountBalance::factory()
+                ->for($this->fundTransaction, 'transaction')
+                ->for($this->fundAccount, 'account')
+                ->create([
+                    'type' => 'OWN',
+                    'start_dt' => $timestamp,
+                    'end_dt' => '9999-12-31',
+                    'shares' => $shares
+                ]);
 
-        $this->cash = AssetExt::getCashAsset();
+            $this->cash = AssetExt::getCashAsset();
 
-        $this->cashPosition = PortfolioAsset::factory()
-            ->for($this->portfolio, 'portfolio')
-            ->for($this->cash, 'asset')
-            ->create([
-                'position' => $value,
-                'start_dt' => $timestamp,
-            ]);
+            $this->cashPosition = PortfolioAsset::factory()
+                ->for($this->portfolio, 'portfolio')
+                ->for($this->cash, 'asset')
+                ->create([
+                    'position' => $value,
+                    'start_dt' => $timestamp,
+                ]);
+        }
         return $this->fund;
     }
 

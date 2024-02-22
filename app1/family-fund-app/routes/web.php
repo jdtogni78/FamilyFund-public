@@ -26,6 +26,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('funds/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showPDFAsOf');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
+    Route::get('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@split')
+        ->name('tradePortfolios.split');
 
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
@@ -48,4 +50,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
     Route::resource('reportSchedules', App\Http\Controllers\WebV1\ReportScheduleControllerExt::class);
     Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
+
+    Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
+        ->name('tradePortfolios.create');
+
 });

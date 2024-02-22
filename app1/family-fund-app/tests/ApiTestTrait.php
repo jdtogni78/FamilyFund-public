@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Mockery\Exception;
 

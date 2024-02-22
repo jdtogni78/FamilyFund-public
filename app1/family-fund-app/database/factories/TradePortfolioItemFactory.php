@@ -23,12 +23,12 @@ class TradePortfolioItemFactory extends Factory
     {
         return [
             //'trade_portfolio_id' => $this->faker->word,
-        'symbol' => $this->faker->word,
-        'type' => $this->faker->word,
-        'target_share' => $this->faker->word,
-        'deviation_trigger' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s')
+            'symbol' => $this->faker->word,
+            'type' => $this->faker->word,
+            'target_share' => $this->faker->randomNumber(2)/100,
+            'deviation_trigger' => $this->faker->randomNumber(2)/100,
+            //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+            //'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

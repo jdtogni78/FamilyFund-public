@@ -18,17 +18,7 @@
         <p>{{ $api['portfolio']['source'] }}</p>
     </div>
 
-    <!-- Start Date Field -->
-    <div class="form-group  col-sm-6">
-        {!! Form::label('start_dt', 'Start Date:') !!}
-        <p>{{ $tradePortfolio->start_dt }}</p>
-    </div>
-
-    <!-- create end date field -->
-    <div class="form-group  col-sm-6">
-        {!! Form::label('end_dt', 'End Date:') !!}
-        <p>{{ $tradePortfolio->end_dt }}</p>
-    </div>
+    @include('trade_portfolios.show_dates')
 
     <!-- Cash Target Field -->
     <div class="form-group  col-sm-6">

@@ -2,6 +2,9 @@
 
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
+use App\Models\TradePortfolio;
+use App\Models\TradePortfolioExt;
+use App\Models\TradePortfolioItem;
 use App\Models\Transaction;
 use App\Models\TransactionMatching;
 use App\Models\User;
@@ -13,6 +16,8 @@ use App\Models\Asset;
 use App\Models\PortfolioAsset;
 use App\Models\MatchingRule;
 use App\Models\AccountMatchingRule;
+use Carbon\Carbon;
+use Log;
 use Nette\Utils\DateTime;
 
 class DataFactory
@@ -50,6 +55,8 @@ class DataFactory
     public $portfolioAsset;
     public $portfolioAssets = [];
 
+    public TradePortfolioExt $tradePortfolio;
+
     public $verbose = false;
 
     public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01', $noTransaction=false)
@@ -58,7 +65,7 @@ class DataFactory
             ->has(Portfolio::factory()->count(1), 'portfolios')
             ->has(Account::factory()->count(1), 'accounts')
             ->create();
-        if ($this->verbose) print_r("this->fund: " . json_encode($this->fund) . "\n");
+        if ($this->verbose) Log::debug("this->fund: " . json_encode($this->fund));
         $this->funds[] = $this->fund;
 
         $this->fundAccount = $this->fund->account();
@@ -103,6 +110,27 @@ class DataFactory
         return $this->user;
     }
 
+    public function createTradePortfolio($start_dt, $end_dt='9999-12-31')
+    {
+        $this->tradePortfolio = TradePortfolio::factory()
+//            ->for($this->portfolio, 'portfolio')
+            ->create([
+                'start_dt' => $start_dt,
+                'end_dt' => $end_dt,
+            ]);
+
+        if ($this->verbose) Log::debug("tradePortfolio: " . json_encode($this->tradePortfolio));
+
+        for ($i=0; $i<3; $i++) {
+            $item = TradePortfolioItem::factory()
+                ->for($this->tradePortfolio, 'tradePortfolio')
+                ->create([]);
+            if ($this->verbose) Log::debug("item: " . json_encode($item));
+        }
+        return $this->tradePortfolio;
+    }
+
+
     public function createMatching($dollar_end=100, $match=100, $start='2024-01-01', $end='9999-12-31', $dollar_start = 0)
     {
         $mr = $this->createMatchingRule($dollar_end, $match, $start, $end, $dollar_start);
@@ -118,7 +146,7 @@ class DataFactory
             "date_start" => $start,
             "date_end" => $end,
         ]);
-        if ($this->verbose) print_r("mr: " . json_encode($this->matchingRule) . "\n");
+        if ($this->verbose) Log::debug("mr: " . json_encode($this->matchingRule));
 
         $this->matchingRules[] = $this->matchingRule;
         return $this->matchingRule;
@@ -130,7 +158,7 @@ class DataFactory
             ->for($this->matchingRule)
             ->create([
             ]);
-        if ($this->verbose) print_r("amr: " . json_encode($amr) . "\n");
+        if ($this->verbose) Log::debug("amr: " . json_encode($amr));
         $this->accountMatching[] = $amr;
         return $this->accountMatching;
     }
@@ -138,7 +166,7 @@ class DataFactory
     public function createTransaction($value=100, $account=null, $type='PUR', $status='P', $flags=null, $timestamp=null) {
         $tran = $this->makeTransaction($value, $account, $type, $status, $flags, $timestamp);
         $tran->save();
-        if ($this->verbose) print_r("tran: " . json_encode($tran) . "\n");
+        if ($this->verbose) Log::debug("tran: " . json_encode($tran));
         return $tran;
     }
 
@@ -173,7 +201,7 @@ class DataFactory
         $asset = Asset::factory()->create([
             'source' => $source,
         ]);
-        if ($this->verbose) print_r("asset: " . json_encode($asset) . "\n");
+        if ($this->verbose) Log::debug("asset: " . json_encode($asset));
         $this->assets[] = $this->asset = $asset;
         return $asset;
     }
@@ -183,7 +211,7 @@ class DataFactory
         $data = ['asset_id' => $asset];
         if ($price != null) $data['price'] = $price;
         $ap = AssetPrice::factory()->create($data);
-        if ($this->verbose) print_r("ap: " . json_encode($ap) . "\n");
+        if ($this->verbose) Log::debug("ap: " . json_encode($ap));
         $this->assetPrices[] = $this->assetPrice = $ap;
         return $ap;
     }
@@ -196,7 +224,7 @@ class DataFactory
         ];
         if ($position != null) $data['position'] = $position;
         $pa = PortfolioAsset::factory()->create($data);
-        if ($this->verbose) print_r("pa: " . json_encode($pa) . "\n");
+        if ($this->verbose) Log::debug("pa: " . json_encode($pa));
         $this->portfolioAssets[] = $this->portfolioAsset = $pa;
         return $pa;
     }
@@ -240,27 +268,27 @@ class DataFactory
 
     public function dumpTransactions($account = null) {
         if ($account == null) $account = $this->userAccount;
-        print_r(["TRANSACTIONS", $account->id]);
+        Log::debug(["TRANSACTIONS", $account->id]);
 //        foreach ($this->factory->account->transactions() as $t) {
         foreach ($account->transactions()->get() as $t) {
-            print_r("** TRAN " . json_encode($t->toArray()) . "\n");
+            Log::debug("** TRAN " . json_encode($t->toArray()));
             $bal = $t->accountBalance()->first();
-            if ($bal) print_r("**** BAL " . json_encode($bal->toArray()) . "\n");
+            if ($bal) Log::debug("**** BAL " . json_encode($bal->toArray()));
             foreach ($t->referenceTransactionMatching()->get() as $r) {
-                print_r("**** REF " . json_encode($r->toArray()) . "\n");
+                Log::debug("**** REF " . json_encode($r->toArray()));
             }
         }
     }
 
     public function dumpMatchingRules()
     {
-        print_r("[MatchingRules]\n");
+        Log::debug("[MatchingRules]\n");
         foreach ($this->matchingRules as $mr) {
             $accts = [];
             foreach ($mr->accountMatchingRules()->get() as $amr) {
                 $accts[] = $amr->account()->first()->id;
             }
-            print_r("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts)."\n");
+            Log::debug("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts)."\n");
 
         }
     }
@@ -268,10 +296,10 @@ class DataFactory
     public function dumpBalances()
     {
         $accounts = array_merge([$this->fundAccount], $this->userAccounts);
-        print_r("[BALANCES]\n");
+        Log::debug("[BALANCES]\n");
         foreach ($accounts as $account) {
             foreach ($account->accountBalances()->get() as $bal) {
-                print_r("** " . json_encode($bal) . "\n");
+                Log::debug("** " . json_encode($bal));
             }
         }
     }

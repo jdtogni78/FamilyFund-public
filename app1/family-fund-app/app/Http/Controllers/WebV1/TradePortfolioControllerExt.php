@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Models\TradePortfolioExt;
 use App\Repositories\TradePortfolioRepository;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
 use App\Http\Controllers\TradePortfolioController;
+use Symfony\Component\HttpFoundation\Request;
 
 class TradePortfolioControllerExt extends TradePortfolioController
 {
@@ -28,6 +32,44 @@ class TradePortfolioControllerExt extends TradePortfolioController
         return $this->showAsOf($id, null);
     }
 
+    public function createWithParams(Request $request)
+    {
+        $portfolio_id = $request->input('portfolio_id');
+        return parent::create()->with('portfolio_id', $portfolio_id);
+    }
+
+    public function split($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            Flash::error('Trade Portfolio not found');
+            return redirect(route('tradePortfolios.index'));
+        }
+
+        $api = $this->createAPIResponse($tradePortfolio);
+        $date = new Carbon();
+        $api['api']['tradePortfolio']['start_dt'] = $date;
+        $api['api']['tradePortfolio']['show_end_dt'] = $date;
+        $api['api']['tradePortfolio']['end_dt'] = new Carbon('9999-12-31');
+        return view('trade_portfolios.show', $api)
+            ->with('split', true);
+    }
+
+    public function doSplit(Request $request)
+    {
+        // create db transaction
+        DB::transaction(function () use ($request) {
+            $id = $request->input('id');
+            $start_dt = $request->input('start_dt');
+            $end_dt = $request->input('end_dt');
+            /** @var TradePortfolioExt $tradePortfolio */
+            $tradePortfolio = $this->tradePortfolioRepository->find($id);
+            $tradePortfolio->splitWithItems($start_dt, $end_dt);
+        });
+        return redirect(route('tradePortfolios.index'));
+    }
+
     /**
      * Display the specified Fund.
      *
@@ -41,10 +83,15 @@ class TradePortfolioControllerExt extends TradePortfolioController
 
         if (empty($tradePortfolio)) {
             Flash::error('Trade Portfolio not found');
-
             return redirect(route('tradePortfolios.index'));
         }
 
+        $api = $this->createAPIResponse($tradePortfolio);
+        return view('trade_portfolios.show', $api);
+    }
+
+    public function createAPIResponse($tradePortfolio)
+    {
         Log::info($tradePortfolio->tradePortfolioItems()->count()."\r");
         $tradePortfolio['items'] = $tradePortfolio->tradePortfolioItems()->get();
 
@@ -55,12 +102,15 @@ class TradePortfolioControllerExt extends TradePortfolioController
         });
         $tradePortfolio['total_shares'] = $total * 100.0;
 
+        $tradePortfolio['show_start_dt'] = $tradePortfolio['start_dt'];
+        $tradePortfolio['show_end_dt'] = $tradePortfolio['end_dt'];
+
         $api = [
             'tradePortfolio' => $tradePortfolio,
             'portfolio' => $tradePortfolio->portfolio(),
             'tradePortfolioItems' => $tradePortfolio->tradePortfolioItems()->get(),
         ];
         $api['api'] = $api;
-        return view('trade_portfolios.show', $api);
+        return $api;
     }
 }

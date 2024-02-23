@@ -188,3 +188,18 @@ FFSERVER=192.168.68.120
 * Restore ownership on server
   * sudo chown dockeruser:dockeruser app1/family-fund-app/ -R
   
+## Backup to NAS
+
+* enable NAS: https://kb.synology.com/en-my/DSM/tutorial/How_to_back_up_Linux_computer_to_Synology_NAS
+* setup NFS: https://kb.synology.com/en-br/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS
+* mount NAS:
+  * sudo mount -v -t nfs -o vers=3 192.168.68.60:/volume1/NetBackup /mnt/backup
+  * add to /etc/fstab
+* create user with exact same properties of NAS, ex
+  * sudo useradd -u 1028 -g 100 backup2
+* choose folders to backup:
+  * /var/log
+  * /home/jdtogni
+* add crontab to root
+  10  3  *  *  * rsync -a /home/jdtogni/ /mnt/backup/dstrader_server/home/jdtogni
+  10  3  *  *  * rsync -a /var/log/ /mnt/backup/dstrader_server/var/log

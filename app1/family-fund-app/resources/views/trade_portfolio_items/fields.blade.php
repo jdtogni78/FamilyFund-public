@@ -7,13 +7,13 @@
 <!-- Symbol Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('symbol', 'Symbol:') !!}
-    {!! Form::text('symbol', null, ['class' => 'form-control','maxlength' => 50,'maxlength' => 50]) !!}
+    {!! Form::text('symbol', null, ['class' => 'form-control','maxlength' => 50]) !!}
 </div>
 
 <!-- Type Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 50,'maxlength' => 50]) !!}
+    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 50]) !!}
 </div>
 
 <!-- Target Share Field -->
@@ -22,10 +22,16 @@
     {!! Form::number('target_share', null, ['class' => 'form-control', 'step' => 0.001]) !!}
 </div>
 
-<!-- Deviation trigger Field -->
+<!-- Deviation Trigger Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('deviation_trigger', 'Deviation trigger:') !!}
+    {!! Form::label('deviation_trigger', 'Deviation Trigger:') !!}
     {!! Form::number('deviation_trigger', null, ['class' => 'form-control', 'step' => 0.0001]) !!}
+</div>
+
+<!-- Display Category Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('display_category', 'Display Category:') !!}
+    {!! Form::text('display_category', null, ['class' => 'form-control','maxlength' => 50]) !!}
 </div>
 
 <!-- Submit Field -->

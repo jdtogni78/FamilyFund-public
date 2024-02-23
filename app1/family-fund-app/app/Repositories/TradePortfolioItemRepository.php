@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TradePortfolioItemRepository
  * @package App\Repositories
- * @version February 23, 2024, 8:38 am UTC
+ * @version February 23, 2024, 8:47 am UTC
 */
 
 class TradePortfolioItemRepository extends BaseRepository

@@ -2,21 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Asset
  * @package App\Models
- * @version March 5, 2022, 9:25 pm UTC
+ * @version February 23, 2024, 9:34 am UTC
  *
  * @property \Illuminate\Database\Eloquent\Collection $assetChangeLogs
  * @property \Illuminate\Database\Eloquent\Collection $assetPrices
  * @property \Illuminate\Database\Eloquent\Collection $portfolioAssets
+ * @property string $source
  * @property string $name
  * @property string $type
- * @property string $source
+ * @property string $display_group
  */
 class Asset extends Model
 {
@@ -35,9 +36,10 @@ class Asset extends Model
 
 
     public $fillable = [
+        'source',
         'name',
         'type',
-        'source'
+        'display_group'
     ];
 
     /**
@@ -47,9 +49,10 @@ class Asset extends Model
      */
     protected $casts = [
         'id' => 'integer',
+        'source' => 'string',
         'name' => 'string',
         'type' => 'string',
-        'source' => 'string'
+        'display_group' => 'string'
     ];
 
     /**
@@ -61,6 +64,7 @@ class Asset extends Model
         'name' => 'required|string|max:128',
         'type' => 'required|[a-zA-Z][a-zA-Z]+|max:20',
         'source' => 'required|[a-zA-Z][a-zA-Z]+|max:50',
+        'display_group' => 'nullable|string|max:50',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'

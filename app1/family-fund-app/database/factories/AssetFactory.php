@@ -23,11 +23,12 @@ class AssetFactory extends Factory
     {
         return [
             'name' => $this->faker->word . "_" . $this->faker->randomNumber(5),
-        'type' => $this->faker->word,
-        'source' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'type' => $this->faker->word,
+            'source' => $this->faker->word,
+            'display_group' => $this->faker->word,
+//        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+//        'created_at' => $this->faker->date('Y-m-d H:i:s'),
+//        'deleted_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

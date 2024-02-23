@@ -12,6 +12,18 @@
         "inView": false
     },
     {
+        "name": "source",
+        "dbType": "string,30",
+        "htmlType": "text",
+        "validations": "required|string|max:30",
+        "searchable": true,
+        "fillable": true,
+        "primary": false,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
         "name": "name",
         "dbType": "string,128",
         "htmlType": "text",
@@ -25,9 +37,9 @@
     },
     {
         "name": "type",
-        "dbType": "string,3",
+        "dbType": "string,20",
         "htmlType": "text",
-        "validations": "required|string|max:3",
+        "validations": "required|string|max:20|string|max:20",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -36,22 +48,10 @@
         "inView": true
     },
     {
-        "name": "source_feed",
-        "dbType": "string,50",
+        "name": "display_group",
+        "dbType": "string,50:nullable",
         "htmlType": "text",
-        "validations": "required|string|max:50",
-        "searchable": true,
-        "fillable": true,
-        "primary": false,
-        "inForm": true,
-        "inIndex": true,
-        "inView": true
-    },
-    {
-        "name": "feed_id",
-        "dbType": "string,128",
-        "htmlType": "text",
-        "validations": "required|string|max:128",
+        "validations": "nullable|string|max:50|nullable|string|max:50",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -76,6 +76,18 @@
         "dbType": "datetime",
         "htmlType": "date",
         "validations": "required",
+        "searchable": false,
+        "fillable": false,
+        "primary": false,
+        "inForm": false,
+        "inIndex": false,
+        "inView": false
+    },
+    {
+        "name": "deleted_at",
+        "dbType": "datetime:nullable",
+        "htmlType": "date",
+        "validations": "nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,

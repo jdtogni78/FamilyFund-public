@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class AssetRepository
  * @package App\Repositories
- * @version March 5, 2022, 9:25 pm UTC
+ * @version February 23, 2024, 9:34 am UTC
 */
 
 class AssetRepository extends BaseRepository
@@ -17,9 +17,10 @@ class AssetRepository extends BaseRepository
      * @var array
      */
     protected $fieldSearchable = [
+        'source',
         'name',
         'type',
-        'source'
+        'display_group'
     ];
 
     /**

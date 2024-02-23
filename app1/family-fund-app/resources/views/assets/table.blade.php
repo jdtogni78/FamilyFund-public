@@ -3,9 +3,10 @@
         <thead>
             <tr>
                 <th>Id</th>
+                <th>Source</th>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Source</th>
+                <th>Display Group</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -13,9 +14,10 @@
         @foreach($assets as $asset)
             <tr>
                 <td>{{ $asset->id }}</td>
+                <td>{{ $asset->source }}</td>
                 <td>{{ $asset->name }}</td>
                 <td>{{ $asset->type }}</td>
-                <td>{{ $asset->source }}</td>
+                <td>{{ $asset->display_group }}</td>
                 <td>
                     {!! Form::open(['route' => ['assets.destroy', $asset->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

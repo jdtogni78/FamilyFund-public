@@ -22,8 +22,8 @@
     <p>{{ $tradePortfolioItem->target_share }}</p>
 </div>
 
-<!-- Deviation trigger Field -->
+<!-- Deviation Trigger Field -->
 <div class="form-group">
-    {!! Form::label('deviation_trigger', 'Deviation trigger:') !!}
+    {!! Form::label('deviation_trigger', 'Deviation Trigger:') !!}
     <p>{{ $tradePortfolioItem->deviation_trigger }}</p>
 </div>

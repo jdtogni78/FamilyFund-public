@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class TradePortfolioItem
  * @package App\Models
- * @version February 23, 2024, 8:47 am UTC
+ * @version February 23, 2024, 8:38 am UTC
  *
  * @property \App\Models\TradePortfolio $tradePortfolio
  * @property integer $trade_portfolio_id

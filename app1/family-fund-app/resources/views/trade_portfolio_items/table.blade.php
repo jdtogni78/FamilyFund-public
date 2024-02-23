@@ -7,7 +7,6 @@
                 <th>Type</th>
                 <th>Target Share</th>
                 <th>Deviation trigger</th>
-                <th>Display Category</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -19,7 +18,6 @@
                 <td>{{ $tradePortfolioItem->type }}</td>
                 <td>{{ $tradePortfolioItem->target_share * 100 }}%</td>
                 <td>{{ $tradePortfolioItem->deviation_trigger * 100}}%</td>
-                <td>{{ $tradePortfolioItem->display_category }}</td>
                 <td>
                     {!! Form::open(['route' => ['tradePortfolioItems.destroy', $tradePortfolioItem->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

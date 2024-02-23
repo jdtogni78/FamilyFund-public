@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class TradePortfolioItemRepository
  * @package App\Repositories
- * @version February 23, 2024, 8:38 am UTC
+ * @version July 23, 2022, 12:55 pm UTC
 */
 
 class TradePortfolioItemRepository extends BaseRepository
@@ -21,8 +21,7 @@ class TradePortfolioItemRepository extends BaseRepository
         'symbol',
         'type',
         'target_share',
-        'deviation_trigger',
-        'display_category'
+        'deviation_trigger'
     ];
 
     /**

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class TradePortfolioItem
  * @package App\Models
- * @version February 23, 2024, 8:38 am UTC
+ * @version July 23, 2022, 12:55 pm UTC
  *
  * @property \App\Models\TradePortfolio $tradePortfolio
  * @property integer $trade_portfolio_id
@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $type
  * @property number $target_share
  * @property number $deviation_trigger
- * @property string $display_category
  */
 class TradePortfolioItem extends Model
 {
@@ -40,8 +39,7 @@ class TradePortfolioItem extends Model
         'symbol',
         'type',
         'target_share',
-        'deviation_trigger',
-        'display_category'
+        'deviation_trigger'
     ];
 
     /**
@@ -55,8 +53,7 @@ class TradePortfolioItem extends Model
         'symbol' => 'string',
         'type' => 'string',
         'target_share' => 'decimal:3',
-        'deviation_trigger' => 'decimal:5',
-        'display_category' => 'string'
+        'deviation_trigger' => 'decimal:5'
     ];
 
     /**
@@ -70,10 +67,8 @@ class TradePortfolioItem extends Model
         'type' => 'required|string|max:50',
         'target_share' => 'required|numeric',
         'deviation_trigger' => 'required|numeric',
-        'display_category' => 'nullable|string|max:50',
         'updated_at' => 'nullable',
-        'created_at' => 'nullable',
-        'deleted_at' => 'nullable'
+        'created_at' => 'nullable'
     ];
 
     /**

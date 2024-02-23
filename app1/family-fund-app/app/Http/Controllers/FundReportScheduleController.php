@@ -13,7 +13,7 @@ use Response;
 class FundReportScheduleController extends AppBaseController
 {
     /** @var FundReportScheduleRepository $fundReportScheduleRepository*/
-    protected $fundReportScheduleRepository;
+    private $fundReportScheduleRepository;
 
     public function __construct(FundReportScheduleRepository $fundReportScheduleRepo)
     {

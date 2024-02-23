@@ -28,6 +28,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
     Route::get('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@split')
         ->name('tradePortfolios.split');
+    Route::patch('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doSplit')
+        ->name('tradePortfolios.split');
 
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);

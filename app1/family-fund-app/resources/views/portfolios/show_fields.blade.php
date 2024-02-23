@@ -17,7 +17,7 @@
                 <strong>Trade Portfolios</strong>
             </div>
             <div class="card-body">
-                @php($tradePortfolios = $portfolio->tradePortfolios()->get())
+                @php($tradePortfolios = $portfolio->tradePortfolios()->get()->sortByDesc('end_dt'))
                 @include('trade_portfolios.table')
             </div>
         </div>

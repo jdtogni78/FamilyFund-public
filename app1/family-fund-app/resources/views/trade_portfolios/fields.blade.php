@@ -7,7 +7,7 @@
 <!-- Fund Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('portfolio_id', 'Portfolio Id:') !!}
-    {!! Form::number('portfolio_id', $portfolio_id, ['class' => 'form-control']) !!}
+    {!! Form::number('portfolio_id', $portfolio_id ?? null, ['class' => 'form-control']) !!}
 </div>
 
 @include('trade_portfolios.edit_dates')

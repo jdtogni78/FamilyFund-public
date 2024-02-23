@@ -10,6 +10,22 @@
     <div class="container-fluid">
         <div class="animated fadeIn">
             @include('coreui-templates::common.errors')
+            @isset($split) @if($split==true)
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-header">
+                                <strong>Split Trade Portfolio</strong>
+                            </div>
+                            <div class="card-body">
+                                {!! Form::model($tradePortfolio, ['route' => ['tradePortfolios.split', $tradePortfolio->id], 'method' => 'patch']) !!}
+                                @include('trade_portfolios.split_fields')
+                                {!! Form::close() !!}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif @endisset
             <div class="row">
                 <div class="col">
                     <div class="card">
@@ -49,22 +65,6 @@
                     </div>
                 </div>
             </div>
-            @if($split==true)
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <strong>Split Trade Portfolio</strong>
-                            </div>
-                            <div class="card-body">
-                                {!! Form::model($tradePortfolio, ['route' => ['tradePortfolios.update', $tradePortfolio->id], 'method' => 'patch']) !!}
-                                @include('trade_portfolios.split_fields')
-                                {!! Form::close() !!}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 @endsection

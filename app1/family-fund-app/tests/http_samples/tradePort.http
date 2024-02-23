@@ -1,0 +1,22 @@
+GET http://localhost:3000/api/trade_portfolios/acct2
+
+> {%
+    client.global.set("asOf", "2024-04-01");
+    client.global.set("expected", "2024-04-01");
+    var expected = client.global.get("expected");
+    client.test("date is " + expected, function() {});
+%}
+
+### GET trade port with date
+GET http://localhost:3000/api/trade_portfolios/acct2?asOf={{asOf}}
+Accept: application/json
+
+> {%
+    client.test("date is " + expected, function() {
+        var startDate = response.body.data.start_dt;
+        var expected = client.global.get("expected");
+        client.assert(startDate === expected, "Expected '" + expected + "' but received '" + startDate + "'");
+    });
+ %}
+
+

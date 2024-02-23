@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Http\Requests\SplitTradePortfolioRequest;
 use App\Models\TradePortfolioExt;
 use App\Repositories\TradePortfolioRepository;
 use Carbon\Carbon;
@@ -20,13 +21,15 @@ class TradePortfolioControllerExt extends TradePortfolioController
         parent::__construct($tradePortfolioRepo);
     }
 
-    /**
-     * Display the specified TradePorfolio.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
+    public function index(\Illuminate\Http\Request $request)
+    {
+        $tradePortfolios = $this->tradePortfolioRepository->all()
+            ->sortByDesc('end_dt');
+
+        return view('trade_portfolios.index')
+            ->with('tradePortfolios', $tradePortfolios);
+    }
+
     public function show($id)
     {
         return $this->showAsOf($id, null);
@@ -56,18 +59,19 @@ class TradePortfolioControllerExt extends TradePortfolioController
             ->with('split', true);
     }
 
-    public function doSplit(Request $request)
+    public function doSplit(SplitTradePortfolioRequest $request)
     {
         // create db transaction
-        DB::transaction(function () use ($request) {
-            $id = $request->input('id');
+        DB::transaction(function () use ($request, &$newTP) {
+            $id = $request->route('id');
             $start_dt = $request->input('start_dt');
             $end_dt = $request->input('end_dt');
+            Log::debug("doSplit id: $id, start_dt: $start_dt, end_dt: $end_dt");
             /** @var TradePortfolioExt $tradePortfolio */
             $tradePortfolio = $this->tradePortfolioRepository->find($id);
-            $tradePortfolio->splitWithItems($start_dt, $end_dt);
+            $newTP = $tradePortfolio->splitWithItems($start_dt, $end_dt);
         });
-        return redirect(route('tradePortfolios.index'));
+        return redirect(route('tradePortfolios.show', $newTP->id));
     }
 
     /**

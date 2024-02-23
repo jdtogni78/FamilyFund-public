@@ -26,13 +26,15 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
 
     public function index(Request $request)
     {
-        $asOf = date('Y-m-d');
+        $asOf = $request->route("asOf") ?? date('Y-m-d');
+        $asOf .= "T23:59:59";
+
         $tradePortfolios = $this->tradePortfolioRepository->all(
             $request->except(['skip', 'limit']),
             $request->get('skip'),
             $request->get('limit')
         )
-            ->where('portfolio_id', '>', 0)
+            ->whereNotNull('portfolio_id')
             ->where('start_dt', '<=', $asOf)
             ->where('end_dt', '>', $asOf);
 
@@ -54,9 +56,14 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
      */
     public function show($accountName)
     {
-        $asOf = date('Y-m-d');
+        $request = request();
+        $asOf = $request->asOf ?? date('Y-m-d');
+        $asOf .= "T23:59:59";
+        Log::debug("TRADE PORTFOLIO: " . $accountName . " " . $asOf);
+        # TODO: should be tested separately - end date comparison is wrong
         /** @var TradePortfolioExt $tradePortfolio */
         $tradePortfolio = $this->tradePortfolioRepository->all()
+            ->whereNotNull('portfolio_id')
             ->where('start_dt', '<=', $asOf)
             ->where('end_dt', '>', $asOf)
             ->firstWhere('account_name', $accountName);
@@ -65,7 +72,6 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
             return $this->sendError('Trade Portfolio not found');
         }
 
-        $asOf = date('Y-m-d');
         $arr = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
 
         return $this->sendResponse($arr, 'Trade Portfolio retrieved successfully');

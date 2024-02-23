@@ -10,6 +10,12 @@ use Carbon\Carbon;
  */
 class TradePortfolioExt extends TradePortfolio
 {
+    public static $split_rules = [
+//        'id' => 'required',
+        'start_dt' => 'required',
+        'end_dt' => 'required',
+    ];
+
     public function portfolio()
     {
         $portfolios = TradePortfolio::portfolio($this);

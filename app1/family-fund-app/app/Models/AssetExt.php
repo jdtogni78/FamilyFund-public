@@ -26,25 +26,22 @@ class AssetExt extends Asset
     }
 
     public static function getSP500Asset(): AssetExt {
-        $symbol = "SPY";
-        $asset = AssetExt::
-            where('name', $symbol)
-            ->where('type', 'STK')
-            ->get()->first();
-        if ($asset == null) {
-            throw new Exception("Cant find asset {$symbol}");
-        }
+        $asset = self::getAsset("SPY", "STK");
         return $asset;
     }
 
-    public static function getCashAsset(): AssetExt
-    {
+    public static function getCashAsset(): AssetExt {
+        $asset = self::getAsset("CASH", "CSH");
+        return $asset;
+    }
+
+    public static function getAsset(string $symbol, string $type) {
         $asset = AssetExt::
-            where('name', 'CASH')
-            ->orWhere('type', 'CSH')
+        where('name', $symbol)
+            ->where('type', $type)
             ->get()->first();
         if ($asset == null) {
-            throw new Exception("Cant find asset CASH");
+            throw new Exception("Cant find asset {$symbol}");
         }
         return $asset;
     }

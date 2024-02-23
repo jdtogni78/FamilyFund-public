@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Traits;
 use App\Http\Resources\AccountResource;
 use App\Mail\AccountQuarterlyReport;
 use App\Models\AccountExt;
+use App\Models\AssetExt;
 use App\Models\Utils;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -134,8 +135,8 @@ trait AccountTrait
         $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
         $arr['matching_rules'] = $api->createAccountMatchingResponse($account, $asOf);
         $arr['matching_available'] = $this->getTotalAvailableMatching($arr['matching_rules']);
-        $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
-        $arr['cash'] = $api->createCashPerformanceResponse($asOf, $arr['transactions']);
+        $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions']);
+        $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
         $arr['as_of'] = $asOf;
         return $arr;

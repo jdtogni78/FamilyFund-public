@@ -9,8 +9,12 @@ use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
 use App\Mail\FundQuarterlyReport;
 use App\Models\AccountReport;
+use App\Models\AssetExt;
 use App\Models\FundExt;
 use App\Models\FundReportExt;
+use App\Models\Portfolio;
+use App\Models\PortfolioAsset;
+use App\Models\PortfolioExt;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
@@ -120,11 +124,27 @@ Trait FundTrait
         $account = $fund->fundAccount();
         $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
 
-        $arr['sp500_monthly_performance'] = $api->createSP500MonthlyPerformanceResponse($asOf, $arr['transactions']);
-        $arr['cash'] = $api->createCashPerformanceResponse($asOf, $arr['transactions']);
+        $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions']);
+        $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
+        /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
+        /** @var PortfolioAsset $pa */
+        $assetPerf = [];
+        foreach ($portfolio->portfolioAssets()->get() as $pa) {
+            /** @var AssetExt $asset */
+            $asset = $pa->asset()->first();
+            $group = $asset->display_group();
+
+            $perf = $api->createAssetMonthlyPerformanceResponse($asset, $asOf, $arr['transactions']);
+            if (!isset($assetPerf[$group])) {
+                $assetPerf[$group] = [];
+            }
+            $assetPerf[$group][$asset->symbol] = $perf;
+        }
+        $arr['asset_monthly_performance'] = $assetPerf;
+
         $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
 
         $yearAgo = Utils::asOfAddYear($asOf, -1);

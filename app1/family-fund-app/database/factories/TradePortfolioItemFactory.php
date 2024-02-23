@@ -27,6 +27,7 @@ class TradePortfolioItemFactory extends Factory
             'type' => $this->faker->word,
             'target_share' => $this->faker->randomNumber(2)/100,
             'deviation_trigger' => $this->faker->randomNumber(2)/100,
+            'display_category' => $this->faker->word,
             //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
             //'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];

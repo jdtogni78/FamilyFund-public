@@ -21,8 +21,10 @@ class TradePortfolioItemResource extends JsonResource
             'type' => $this->type,
             'target_share' => $this->target_share,
             'deviation_trigger' => $this->deviation_trigger,
+            'display_category' => $this->display_category,
             'updated_at' => $this->updated_at,
-            'created_at' => $this->created_at
+            'created_at' => $this->created_at,
+            'deleted_at' => $this->deleted_at
         ];
     }
 }

@@ -124,7 +124,7 @@ Trait FundTrait
         $account = $fund->fundAccount();
         $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
 
-        $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions']);
+        $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
         $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
 

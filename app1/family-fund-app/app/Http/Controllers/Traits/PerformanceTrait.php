@@ -80,6 +80,10 @@ trait PerformanceTrait
                     $ap = $asset->pricesAsOf($tran['timestamp'])->first();
                     if (empty($ap)) {
                         Log::warning("No prices for $symbol at " . $tran['timestamp']);
+                        $allShares[] = [
+                            'timestamp' => $tran['timestamp'],
+                            'shares' => 0
+                        ];
                         continue;
                     }
                     $shares += $tran['value'] / $ap->price;
@@ -112,25 +116,21 @@ trait PerformanceTrait
         return $allValues;
     }
 
-    public function createAssetMonthlyPerformanceResponse($asset, $asOf, $trans) {
+    public function createAssetMonthlyPerformanceResponse($asset, $asOf, $trans, $removeZeroes=false) {
         $shares = $this->prepAssetShares($asset, $asOf, $trans);
-        return $this->createMonthlyPerformanceResponseFor($asOf, 'createAssetPeformanceArray', $shares, $asset);
+        return $this->createMonthlyPerformanceResponseFor($asOf, 'createAssetPeformanceArray', $removeZeroes, $shares, $asset);
     }
-//    public function createSP500MonthlyPerformanceResponse($asOf, $trans) {
-//        $shares = $this->prepAssetShares(AssetExt::getSP500Asset(), $asOf, $trans);
-//        return $this->createMonthlyPerformanceResponseFor($asOf, 'createSP500PeformanceArray', $shares);
-//    }
 
     public function createCashMonthlyPerformanceResponse($asOf, $trans) {
         $shares = $this->prepCash($asOf, $trans);
-        return $this->createMonthlyPerformanceResponseFor($asOf, 'createCashPeformanceArray', $shares);
+        return $this->createMonthlyPerformanceResponseFor($asOf, 'createCashPeformanceArray', true, $shares);
     }
 
     public function createMonthlyPerformanceResponse($asOf) {
-        return $this->createMonthlyPerformanceResponseFor($asOf, 'createPerformanceArray');
+        return $this->createMonthlyPerformanceResponseFor($asOf, 'createPerformanceArray', true);
     }
 
-    public function createMonthlyPerformanceResponseFor($asOf, $func, $shares=null, $asset=null)
+    public function createMonthlyPerformanceResponseFor($asOf, $func, $removeZeroes=false, $shares=null, $asset=null)
     {
         $arr = array();
 
@@ -152,9 +152,14 @@ trait PerformanceTrait
             $arr[$monthStart] = $yp;
         }
 
-        $ret = $this->removeEmptyStart($arr);
-        $ret = array_reverse($ret, true);
-        $ret = $this->removeEmptyStart($ret);
+        if ($removeZeroes) {
+            // NOTE: can only remove zeroes if all items on a graph also can...
+            $ret = $this->removeEmptyStart($arr);
+            $ret = array_reverse($ret, true);
+            $ret = $this->removeEmptyStart($ret);
+        } else {
+            $ret = array_reverse($arr, true);;
+        }
         return $ret;
     }
 
@@ -193,10 +198,11 @@ trait PerformanceTrait
 
     protected function removeEmptyStart(array $ret): array
     {
+        $key1 = 'value';
         foreach ($ret as $key => $values) {
             // check if key exists
-            if (array_key_exists('shares', $values)) {
-                if ($values['value'] == 0) {
+            if (array_key_exists($key1, $values)) {
+                if ($values[$key1] == 0) {
                     unset($ret[$key]);
                 } else {
                     break;

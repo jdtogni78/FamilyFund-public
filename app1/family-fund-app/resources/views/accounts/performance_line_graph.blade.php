@@ -1,5 +1,5 @@
 <div>
-    <canvas id="perfGraph2"></canvas>
+    <canvas id="perfGraphMonthly"></canvas>
 </div>
 
 @push('scripts')
@@ -10,8 +10,8 @@
             label: 'Monthly Performance',
             data: Object.values(api.monthly_performance)
                 .map(function(e) {return e.value;}),
-            backgroundColor: ['blue'],
-            borderColor: ['blue']
+            backgroundColor: [graphColors[0]],
+            borderColor: [graphColors[0]],
         }];
 
         let addSP500 = {!! $addSP500 !!};
@@ -21,20 +21,20 @@
             datasets.push({
                 label: 'S&P 500',
                 data: sp500_data,
-                backgroundColor: ['red'],
-                borderColor: ['red'],
+                backgroundColor: [graphColors[1]],
+                borderColor: [graphColors[1]],
             });
         }
 
         datasets.push({
             label: 'Cash',
             data: Object.values(api.cash).map(function(e) {return e.value;}),
-            backgroundColor: ['green'],
-            borderColor: ['green'],
+            backgroundColor: [graphColors[2]],
+            borderColor: [graphColors[2]],
         });
 
         var myChart = new Chart(
-            document.getElementById('perfGraph2'),
+            document.getElementById('perfGraphMonthly'),
             {
                 type: 'line',
                 data: {

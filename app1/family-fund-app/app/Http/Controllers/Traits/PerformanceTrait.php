@@ -28,7 +28,7 @@ trait PerformanceTrait
     {
         $value = 0;
         $assetShares = 0;
-        $symbol = $asset->portfolioAssets->first()->symbol;
+        $symbol = $asset->name;
         try {
             // find asset price with latest timestamp before asOf
             foreach ($all_shares as $shares) {
@@ -39,7 +39,10 @@ trait PerformanceTrait
                 }
             }
             $ap = $asset->pricesAsOf($asOf)->first();
-            $value = $assetShares * $ap->price;
+            if (empty($ap))
+                $value = 0;
+            else
+                $value = $assetShares * $ap->price;
         } catch (\Exception $e) {
             Log::error("while calculating $symbol $asOf: " . $e->getMessage());
                Log::error($e->getTraceAsString());
@@ -70,11 +73,15 @@ trait PerformanceTrait
     {
         $shares = 0;
         $allShares = array();
-        $symbol = $asset->portfolioAssets->first()->symbol;
+        $symbol = $asset->name;
         try {
             foreach ($trans as $tran) {
                 if ($tran['timestamp'] <= $asOf) {
-                    $ap = $this->asset->pricesAsOf($tran['timestamp'])->first();
+                    $ap = $asset->pricesAsOf($tran['timestamp'])->first();
+                    if (empty($ap)) {
+                        Log::warning("No prices for $symbol at " . $tran['timestamp']);
+                        continue;
+                    }
                     $shares += $tran['value'] / $ap->price;
                     $allShares[] = [
                         'timestamp' => $tran['timestamp'],

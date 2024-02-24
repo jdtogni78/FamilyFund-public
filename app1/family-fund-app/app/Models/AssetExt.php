@@ -61,13 +61,6 @@ class AssetExt extends Asset
             ->whereDate('end_dt', '>', $now);
 
         $assetPrices = $query->get();
-        if ($debug) {
-            Log::debug($query->toSql());
-            // log all query parameters
-            foreach ($query->getBindings() as $i => $binding) {
-                Log::debug("Binding $i is $binding");
-            }
-        }
         if ($assetPrices->count() > 1) {
             print_r($assetPrices->toArray());
             throw new \Exception("There should only be one asset price (found " . $assetPrices->count() . ") for asset " . $this->id . ' at ' . $now);

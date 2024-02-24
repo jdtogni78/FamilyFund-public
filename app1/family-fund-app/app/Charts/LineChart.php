@@ -26,12 +26,6 @@ class LineChart extends BaseChart
             "Mode" => $mode,
         ]);
 
-        $this->data->Data["Series"][$this->seriesName1]["Color"] = [
-            "R" => 0,
-            "G" => 0,
-            "B" => 255,
-            "Alpha" => 100,
-        ];
         $legendWidth = $this->longestLabel * $this->fonts["legend"]["size"];
         $legendX = ($this->width - $legendWidth)/2;
         $this->setFont("legend");

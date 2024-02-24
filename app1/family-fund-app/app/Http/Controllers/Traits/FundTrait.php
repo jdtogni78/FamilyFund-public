@@ -135,13 +135,14 @@ Trait FundTrait
         foreach ($portfolio->portfolioAssets()->get() as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
-            $group = $asset->display_group();
+            $group = $asset->display_group;
+            if ($asset->type == "CSH") continue;
 
             $perf = $api->createAssetMonthlyPerformanceResponse($asset, $asOf, $arr['transactions']);
             if (!isset($assetPerf[$group])) {
                 $assetPerf[$group] = [];
             }
-            $assetPerf[$group][$asset->symbol] = $perf;
+            $assetPerf[$group][$asset->name] = $perf;
         }
         $arr['asset_monthly_performance'] = $assetPerf;
 

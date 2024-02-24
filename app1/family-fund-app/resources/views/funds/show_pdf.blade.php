@@ -37,6 +37,21 @@
             </div>
         </div>
     </div>
+    @foreach($api['asset_monthly_performance'] as $group => $perf)
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Group {{$group}}</strong>
+                    </div>
+                    <div class="card-body">
+                        @php($i = array_search($group, array_keys($api['asset_monthly_performance'])))
+                        <img src="{{$files['group' . $i . '_monthly_performance.png']}}" alt="Yearly Performance"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
     <div class="row new-page">
         @foreach($api['tradePortfolios'] as $tradePortfolio)
             <div class="col">

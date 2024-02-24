@@ -24,6 +24,7 @@ class FundPDF
         $this->createAssetsAllocationGraph($arr, $tempDir);
         $this->createYearlyPerformanceGraph($arr, $tempDir);
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
+        $this->createGroupMonthlyPerformanceGraphs($arr, $tempDir);
         $this->createTradePortfoliosGraph($arr, $tempDir);
 
         $view = 'funds.show_pdf';

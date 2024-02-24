@@ -20,21 +20,7 @@ var myChart = new Chart(
   datasets: [{
     // label: 'My First Dataset',
     data: assets_shares,
-    backgroundColor: [
-      'blue',
-      'red',
-      'green',
-      'yellow',
-      'cyan',
-      'orange',
-      'gray',
-      'magenta',
-      'lime',
-      'teal',
-      'maroon',
-      'silver',
-    ],
-
+    backgroundColor: graphColors,
     hoverOffset: 3
   }]
 },

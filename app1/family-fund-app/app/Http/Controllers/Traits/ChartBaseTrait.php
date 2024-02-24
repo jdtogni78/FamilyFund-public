@@ -17,42 +17,44 @@ trait ChartBaseTrait
         $name = 'yearly_performance.png';
         $arr = $api['yearly_performance'];
         $labels = array_keys($arr);
+        $title = 'Yearly Performance';
         $values = $this->getGraphData($arr);
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->createBarChart($values, $labels, $file);
+        $this->createBarChart($values, $title, $labels, $file);
     }
 
     public function createMonthlyPerformanceGraph(array $api, TemporaryDirectory $tempDir)
     {
         $name = 'monthly_performance.png';
-        $arr = $api['monthly_performance'];
-        $labels = array_keys($arr);
-        $values1 = $this->getGraphData($arr);
+        $labels = array_keys($api['monthly_performance']);
+        $values1 = $this->getGraphData($api['monthly_performance']);
         $values2 = $this->getGraphData($api['sp500_monthly_performance']);
         $values3 = $this->getGraphData($api['cash']);
 
         $this->files[$name] = $file = $tempDir->path($name);
         $this->createLineChart($file, $labels,
-            ["Performance", "SP500", "Cash"],
+            ["Monthly Performance", "SP500", "Cash"],
             [$values1, $values2, $values3]);
     }
 
     public function createGroupMonthlyPerformanceGraphs(array $api, TemporaryDirectory $tempDir)
     {
+        $sp500Values = $this->getGraphData($api['sp500_monthly_performance']);
         $arr = $api['asset_monthly_performance'];
         $i = 0;
         foreach ($arr as $group => $perf) {
             $name = 'group' . $i . '_monthly_performance.png';
 
-            $j = 0;
-            $graphValues = [];
             $titles = [];
+            $graphValues = [];
+
+            $titles[] = 'S&P500';
+            $graphValues[] = $sp500Values;
+            $labels = array_keys($sp500Values);
             foreach ($perf as $symbol => $values) {
-                if ($j == 0) $labels = array_keys($values);
                 $titles[] = $symbol;
                 $graphValues[] = $this->getGraphData($values);
-                $j++;
             }
 
             $this->files[$name] = $file = $tempDir->path($name);
@@ -100,12 +102,12 @@ trait ChartBaseTrait
         $chart->saveAs($file);
     }
 
-    public function createBarChart(array $values, array $labels, string $file)
+    public function createBarChart(array $values, $title, array $labels, string $file)
     {
         $chart = new BarChart();
         $chart->labels = $labels;
         $chart->seriesValues = [$values];
-        $chart->titles = ["Performance"];
+        $chart->titles = [$title];
         $chart->createChart();
         $chart->saveAs($file);
     }

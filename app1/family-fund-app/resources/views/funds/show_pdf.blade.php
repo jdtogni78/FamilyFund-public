@@ -21,6 +21,13 @@
                 </div>
                 <div class="card-body">
                     <img src="{{$files['monthly_performance.png']}}" alt="Monthly Performance"/>
+                    <div class="col-xs-12">
+                        <ul>
+                            <li><b>Monthly Performance</b>: the performance of this fund</li>
+                            <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
+                            <li><b>Cash</b>: the performance of a fund that would invest the same amount of funds 100% on Cash</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -47,6 +54,12 @@
                     <div class="card-body">
                         @php($i = array_search($group, array_keys($api['asset_monthly_performance'])))
                         <img src="{{$files['group' . $i . '_monthly_performance.png']}}" alt="Yearly Performance"/>
+                        <div class="col-xs-12">
+                            <ul>
+                                <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
+                                <li><b>Others</b>: the performance of a fund that would invest the same amount of funds 100% on other stock</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

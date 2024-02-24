@@ -33,7 +33,7 @@ class BaseChart
     public $width = 900;
     public $height = 400;
 
-    public $margin = 20;
+    public $margin = 30;
 
     protected $image;
     protected $data;

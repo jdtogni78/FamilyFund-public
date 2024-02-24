@@ -27,7 +27,7 @@ class LineChart extends BaseChart
         ]);
 
         $legendWidth = $this->longestLabel * $this->fonts["legend"]["size"];
-        $legendX = ($this->width - $legendWidth)/2;
+        $legendX = ($chartWidth - $legendWidth)/2;
         $this->setFont("legend");
         $this->image->drawLegend($legendX, $this->margin, [
             "Style" => LEGEND_NOBORDER,

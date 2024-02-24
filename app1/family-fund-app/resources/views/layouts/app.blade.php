@@ -108,8 +108,8 @@
 <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
-<script type="javascript">
-    let graphColors = ['blue','red','green','orange','teal','maroon','magenta','lime','gray','cyan','yellow','silver'];
+<script type="text/javascript">
+        let graphColors = ['blue','red','green','orange','teal','maroon','magenta','lime','gray','cyan','yellow','silver'];
 </script>
 
 @stack('scripts')

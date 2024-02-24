@@ -1,6 +1,13 @@
 <div>
     <canvas id="perfGraphMonthly"></canvas>
 </div>
+<div class="col-xs-12">
+    <ul>
+        <li><b>Monthly Performance</b>: the performance of this fund</li>
+        <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
+        <li><b>Cash</b>: the performance of a fund that would invest the same amount of funds 100% on Cash</li>
+    </ul>
+</div>
 
 @push('scripts')
     <script type="text/javascript">

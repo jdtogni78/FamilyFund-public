@@ -2,20 +2,26 @@
     <table class="table table-striped" id="assetPrices-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Asset Id</th>
-        <th>Price</th>
-        <th>Start Dt</th>
-        <th>End Dt</th>
+                <th>Asset Name</th>
+                <th>Asset Type</th>
+                <th>Price</th>
+                <th>Start Dt</th>
+                <th>End Dt</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($assetPrices as $assetPrice)
             <tr>
+                <td>{{ $assetPrice->id }}</td>
                 <td>{{ $assetPrice->asset_id }}</td>
-            <td>{{ $assetPrice->price }}</td>
-            <td>{{ $assetPrice->start_dt }}</td>
-            <td>{{ $assetPrice->end_dt }}</td>
+                <td>{{ $assetPrice->asset()->first()->name }}</td>
+                <td>{{ $assetPrice->asset()->first()->type }}</td>
+                <td>{{ $assetPrice->price }}</td>
+                <td>{{ $assetPrice->start_dt }}</td>
+                <td>{{ $assetPrice->end_dt }}</td>
                 <td>
                     {!! Form::open(['route' => ['assetPrices.destroy', $assetPrice->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

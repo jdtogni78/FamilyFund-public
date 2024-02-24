@@ -29,7 +29,19 @@ class PortfolioAssetController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $portfolioAssets = $this->portfolioAssetRepository->all();
+        $name = $request->input("name");
+
+        $portfolioAssets = $this->portfolioAssetRepository->all(
+            $request->except(['skip', 'limit']),
+            $request->get('skip'),
+            $request->get('limit'));
+
+        if (!empty($name))
+            $portfolioAssets = $portfolioAssets->where('asset.name', '=', "$name");
+
+        $portfolioAssets = $portfolioAssets
+            ->sortBy('asset.name')
+            ->sortByDesc('start_dt');
 
         return view('portfolio_assets.index')
             ->with('portfolioAssets', $portfolioAssets);

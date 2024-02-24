@@ -6,7 +6,7 @@
                 <th>Portfolio Id</th>
                 <th>Fund Name</th>
                 <th>Asset Id</th>
-                <th>Asset Symbol</th>
+                <th>Asset Name</th>
                 <th>Position</th>
                 <th>Start Dt</th>
                 <th>End Dt</th>

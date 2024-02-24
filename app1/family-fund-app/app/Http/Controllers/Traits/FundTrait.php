@@ -127,13 +127,14 @@ Trait FundTrait
         $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions']);
         $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
-        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $arr['transactions']);
-        $arr['asset_monthly_performance'] = $assetPerf;
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
         /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
         $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
+
+        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $arr);
+        $arr['asset_monthly_performance'] = $assetPerf;
 
         $yearAgo = Utils::asOfAddYear($asOf, -1);
         $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
@@ -281,9 +282,14 @@ Trait FundTrait
         $this->fundEmailReport($fundReport, $pdf);
     }
 
-    private function createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $transactions)
+    private function createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $arr)
     {
-        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
+        $transactions = $arr['transactions'];
+        $curAssets = $arr['portfolio']['assets'];
+        $assetNames = array_map(function ($asset) {
+            return $asset['name'];
+        }, $curAssets);
+
         /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
 
@@ -292,6 +298,11 @@ Trait FundTrait
         foreach ($portfolio->portfolioAssets()->get() as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
+            // skip if asset name is not in curAssets
+            if (!in_array($asset->name, $assetNames)) {
+                Log::debug("(group) Skip $asset->name");
+                continue;
+            }
             $group = $asset->display_group;
             if ($asset->type == "CSH") {
                 $perf = $api->createCashMonthlyPerformanceResponse($asOf, $transactions);

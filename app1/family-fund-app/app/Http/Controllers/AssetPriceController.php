@@ -8,6 +8,7 @@ use App\Repositories\AssetPriceRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
+use Log;
 use Response;
 
 class AssetPriceController extends AppBaseController
@@ -29,7 +30,20 @@ class AssetPriceController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $assetPrices = $this->assetPriceRepository->all();
+        $name = $request->input('name');
+        Log::debug($name);
+
+        $assetPrices = $this->assetPriceRepository->all(
+            $request->except(['skip', 'limit']),
+            $request->get('skip'),
+            $request->get('limit'));
+
+        if (!empty($name))
+            $assetPrices = $assetPrices->where('asset.name', '=', "$name");
+
+        $assetPrices = $assetPrices
+            ->sortBy('asset.name')
+            ->sortByDesc('start_dt');
 
         return view('asset_prices.index')
             ->with('assetPrices', $assetPrices);

@@ -15,6 +15,7 @@ use App\Models\FundReportExt;
 use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
 use App\Models\PortfolioExt;
+use App\Models\TradePortfolioExt;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
@@ -139,10 +140,16 @@ Trait FundTrait
         $yearAgo = Utils::asOfAddYear($asOf, -1);
         $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
         $arr['tradePortfolios'] = $tradePortfolios;
+
+        /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
-            $tradePortfolio->items = $tradePortfolio->tradePortfolioItems()->get();
+            $items = $tradePortfolio->tradePortfolioItems()->get();
+            $tradePortfolio->items = $items;
+            $tradePortfolio->annotateAssetsAndGroups();
+            $tradePortfolio->annotateTotalShares();
         }
 
+        $arr['asOf'] = $asOf;
         return $arr;
     }
 

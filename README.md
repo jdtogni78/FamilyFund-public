@@ -137,7 +137,7 @@ https://davewpark.medium.com/securing-remote-access-with-a-jumpserver-in-10-step
 
 JUMPBOXDNS=REDACTED.example.invalid
 JUMPBOX=REDACTED_JUMP_HOST
-FFSERVER=192.168.68.120
+FFSERVER=REDACTED_LAN_HOST
 
 ssh -J dstrader@${JUMPBOXDNS}:60004 jdtogni@${FFSERVER} -p 22
 ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3001:${FFSERVER}:3001
@@ -166,7 +166,7 @@ ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
 
 ### Deploying DSTrader to prod
 
-FFSERVER=192.168.68.120
+FFSERVER=REDACTED_LAN_HOST
 
 * Copy DSTrader.jar from stage to prod
 * Review properties in stage and prod
@@ -177,7 +177,7 @@ FFSERVER=192.168.68.120
 
 ### Deploying FamilyFund to prod
 
-FFSERVER=192.168.68.120
+FFSERVER=REDACTED_LAN_HOST
 
 * Verify changes
   * rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ jdtogni@${FFSERVER}:~/dev/FamilyFund/app1/
@@ -203,3 +203,21 @@ FFSERVER=192.168.68.120
 * add crontab to root
   10  3  *  *  * rsync -a /home/jdtogni/ /mnt/backup/dstrader_server/home/jdtogni
   10  3  *  *  * rsync -a /var/log/ /mnt/backup/dstrader_server/var/log
+
+## VPN Setup
+
+L2TP/IPSec
+User/password
+* did not work on mac os
+* worked on ios
+
+
+## Wake on LAN
+
+* enable WOL on BIOS
+* enable WOL on OS
+  * sudo ethtool -s enp3s0 wol g
+  * sudo ethtool enp3s0
+  * sudo systemctl enable wol@enp3s0
+  * sudo systemctl start wol@enp3s0
+* <wol-router-faq-redacted>

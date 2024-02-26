@@ -51,7 +51,7 @@
     </div>
 
     <!-- Total Share Field: calculate cash target plus sum of all item shares -->
-    <div class="form-group  col-sm-6">
+    <div class="form-group col-sm-6 font-weight-bold {{ $tradePortfolio->total_shares == 100 ? 'text-success' : 'text-danger' }}">
         {!! Form::label('total_share', 'Total Shares:') !!}
         <p>{{ $tradePortfolio->total_shares }}%</p>
     </div>

@@ -67,18 +67,10 @@
             @endforeach
             <div class="row">
                 @foreach($api['tradePortfolios'] as $tradePortfolio)
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Target Portfolio {{ $tradePortfolio->id }}
-                                [{{ $tradePortfolio->start_dt->format('Y-m-d') }} to
-                                {{ $tradePortfolio->end_dt->format('Y-m-d') }}]</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('trade_portfolios.graph')
-                        </div>
-                    </div>
-                </div>
+                    @php($extraTitle = '' . $tradePortfolio->id . ' [' .
+                            $tradePortfolio->start_dt->format('Y-m-d') . ' to ' .
+                            $tradePortfolio->end_dt->format('Y-m-d') . ']')
+                    @include('trade_portfolios.inner_show_graphs')
                 @endforeach
                 <div class="col">
                     <div class="card">
@@ -142,33 +134,9 @@
                 </div>
             </div>
             @foreach($api['tradePortfolios'] as $tradePortfolio)
-            <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Target Portfolio {{ $tradePortfolio->id }}</strong>
-                            <a href="{{ route('tradePortfolios.index') }}" class="btn btn-light">Back</a>
-                        </div>
-                        <div class="card-body">
-                            @include('trade_portfolios.show_fields')
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Target Portfolio Details {{ $tradePortfolio->id }}</strong>
-                        </div>
-                        <div class="card-body">
-                            @if($tradePortfolioItems = $tradePortfolio->items)
-                            @include('trade_portfolio_items.table')
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
+                @php($extraTitle = '' . $tradePortfolio->id)
+                @php($tradePortfolioItems = $tradePortfolio->items)
+                @include('trade_portfolios.inner_show')
             @endforeach
             <div class="row">
                 <div class="col-lg-12">

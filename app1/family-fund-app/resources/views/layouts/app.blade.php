@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>{{config('app.name')}}</title>
-    <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <meta content='width=device-width,
+ initial-scale=1,
+ maximum-scale=1,
+ user-scalable=no' name='viewport'>
     <!-- Bootstrap 4.1.1 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css">
@@ -109,7 +112,25 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
 <script type="text/javascript">
-        let graphColors = ['blue','red','green','orange','teal','maroon','magenta','lime','gray','cyan','yellow','silver'];
+        let graphColors = [
+            'blue',
+            'red',
+            'limegreen',
+            'gold',
+
+            'darkblue',
+            'maroon',
+            'darkgreen',
+            'goldenrod',
+
+            'aqua',
+            'deeppink',
+            'palegreen',
+            'yellow',
+
+            'teal',
+            'silver'
+        ];
 </script>
 
 @stack('scripts')

@@ -60,7 +60,7 @@ class TradePortfolioController extends AppBaseController
 
         Flash::success('Trade Portfolio saved successfully.');
 
-        return redirect(route('tradePortfolios.index'));
+        return redirect(route('tradePortfolios.show', [$tradePortfolio->id]));
     }
 
     /**
@@ -125,7 +125,7 @@ class TradePortfolioController extends AppBaseController
 
         Flash::success('Trade Portfolio updated successfully.');
 
-        return redirect(route('tradePortfolios.index'));
+        return redirect(route('tradePortfolios.show', [$tradePortfolio->id]));
     }
 
     /**
@@ -147,10 +147,11 @@ class TradePortfolioController extends AppBaseController
             return redirect(route('tradePortfolios.index'));
         }
 
+        $port = $tradePortfolio->portfolio()->first();
         $this->tradePortfolioRepository->delete($id);
 
         Flash::success('Trade Portfolio deleted successfully.');
 
-        return redirect(route('tradePortfolios.index'));
+        return redirect(route('portfolios.show', [$port->id]));
     }
 }

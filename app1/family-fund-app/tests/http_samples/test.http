@@ -1,9 +1,9 @@
 ### GET prod account
-GET http://192.168.68.120:3001/api/trade_portfolios/
+GET http://REDACTED_LAN_HOST:3001/api/trade_portfolios/
 Accept: application/json
 
 ### GET prod account
-GET http://192.168.68.120:3001/api/trade_portfolios/U0000012
+GET http://REDACTED_LAN_HOST:3001/api/trade_portfolios/U0000012
 Accept: application/json
 
 ### GET dev account
@@ -27,7 +27,7 @@ GET http://localhost:3000/api/fund_reports/1
 Accept: application/json
 
 ### Post bulk update
-POST http://192.168.68.120:3001/api/portfolio_assets_bulk_update
+POST http://REDACTED_LAN_HOST:3001/api/portfolio_assets_bulk_update
 Content-Type: application/json
 
 {"source":"DWGIB","symbols":[

@@ -60,7 +60,7 @@ class TradePortfolioItemController extends AppBaseController
 
         Flash::success('Trade Portfolio Item saved successfully.');
 
-        return redirect(route('tradePortfolioItems.index'));
+        return redirect(route('tradePortfolios.show', [$tradePortfolioItem->tradePortfolio()->first()->id]));
     }
 
     /**
@@ -125,7 +125,7 @@ class TradePortfolioItemController extends AppBaseController
 
         Flash::success('Trade Portfolio Item updated successfully.');
 
-        return redirect(route('tradePortfolioItems.index'));
+        return redirect(route('tradePortfolios.show', [$tradePortfolioItem->tradePortfolio()->first()->id]));
     }
 
     /**
@@ -147,10 +147,11 @@ class TradePortfolioItemController extends AppBaseController
             return redirect(route('tradePortfolioItems.index'));
         }
 
+        $tpId = $tradePortfolioItem->tradePortfolio()->first()->id;
         $this->tradePortfolioItemRepository->delete($id);
 
         Flash::success('Trade Portfolio Item deleted successfully.');
 
-        return redirect(route('tradePortfolioItems.index'));
+        return redirect(route('tradePortfolios.show', [$tpId]));
     }
 }

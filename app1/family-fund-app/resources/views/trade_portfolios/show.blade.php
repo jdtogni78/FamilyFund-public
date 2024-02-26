@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+    <script type="text/javascript">
+        var api = {!! json_encode($tradePortfolio) !!};
+    </script>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ route('tradePortfolios.index') }}">Trade Portfolio</a>
@@ -26,44 +29,9 @@
                     </div>
                 </div>
             @endif @endisset
+            @include("trade_portfolios.inner_show")
             <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Details</strong>
-                            <a href="{{ route('tradePortfolios.index') }}" class="btn btn-light">Back</a>
-                        </div>
-                        <div class="card-body">
-                            @include('trade_portfolios.show_fields')
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Target %</strong>
-                        </div>
-                        <div class="card-body">
-                            @if($tradePortfolio = $api['tradePortfolio'])
-                                @include('trade_portfolios.graph')
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong>Trade Portfolio Items</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('trade_portfolio_items.table')
-                        </div>
-                    </div>
-                </div>
+                @include("trade_portfolios.inner_show_graphs")
             </div>
         </div>
     </div>

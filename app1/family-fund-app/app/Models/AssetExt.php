@@ -35,9 +35,8 @@ class AssetExt extends Asset
         return $asset;
     }
 
-    public static function getAsset(string $symbol, string $type) {
-        $asset = AssetExt::
-        where('name', $symbol)
+    public static function getAsset(string $symbol, string $type) : AssetExt {
+        $asset = AssetExt::where('name', $symbol)
             ->where('type', $type)
             ->get()->first();
         if ($asset == null) {

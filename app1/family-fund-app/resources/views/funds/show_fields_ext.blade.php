@@ -50,6 +50,7 @@
 <div class="form-group col-sm-6">
     @php $field = 'admin'; @endphp
     {!! Form::label($field, 'Admin:') !!}
+    ADMIN
 </div>
 @endisset
 <div class="form-group col-sm-6">

@@ -32,8 +32,6 @@ class TradePortfolioItem extends Model
 
     protected $dates = ['deleted_at'];
 
-
-
     public $fillable = [
         'trade_portfolio_id',
         'symbol',

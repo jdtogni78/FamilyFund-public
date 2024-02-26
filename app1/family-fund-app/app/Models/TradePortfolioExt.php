@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Log;
 
 /**
  * Class FundExt
@@ -10,6 +11,7 @@ use Carbon\Carbon;
  */
 class TradePortfolioExt extends TradePortfolio
 {
+    public array $groups;
     public static $split_rules = [
 //        'id' => 'required',
         'start_dt' => 'required',
@@ -62,5 +64,37 @@ class TradePortfolioExt extends TradePortfolio
         }
 
         return $newTp;
+    }
+
+    public function annotateTotalShares()
+    {
+        // sum total shares
+        $total = $this->cash_target;
+        $this->items->each(function ($item) use (&$total) {
+            $total += $item->target_share;
+        });
+        $this->total_shares = $total * 100.0;
+    }
+
+    public function annotateAssetsAndGroups() {
+        $items = $this->tradePortfolioItems()->get();
+        $groups = [];
+        /** @var TradePortfolioItem $item */
+        foreach ($items as $item) {
+            $asset = AssetExt::getAsset($item->symbol, $item->type);
+            $group = $asset->display_group;
+            $item->group = $group;
+            // add asset as key to group
+            if (!array_key_exists($group, $groups)) {
+                $groups[$group] = 0;
+            }
+            $groups[$group] += $item->target_share * 100;
+        }
+
+        $asset = AssetExt::getCashAsset();
+        $groups[$asset->display_group] += $this->cash_target * 100;
+
+        $this->groups = $groups;
+        $this->items = $items;
     }
 }

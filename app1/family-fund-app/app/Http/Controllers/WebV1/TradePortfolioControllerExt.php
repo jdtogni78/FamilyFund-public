@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Requests\SplitTradePortfolioRequest;
+use App\Models\AssetExt;
 use App\Models\TradePortfolioExt;
 use App\Repositories\TradePortfolioRepository;
 use Carbon\Carbon;
@@ -55,6 +56,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $api['api']['tradePortfolio']['start_dt'] = $date;
         $api['api']['tradePortfolio']['show_end_dt'] = $date;
         $api['api']['tradePortfolio']['end_dt'] = new Carbon('9999-12-31');
+
         return view('trade_portfolios.show', $api)
             ->with('split', true);
     }
@@ -91,29 +93,27 @@ class TradePortfolioControllerExt extends TradePortfolioController
         }
 
         $api = $this->createAPIResponse($tradePortfolio);
+        if ($asOf === null) {
+            $asOf = Carbon::now();
+        } else {
+            $asOf = Carbon::parse($asOf);
+        }
+
+        $api['asOf'] = $asOf;
         return view('trade_portfolios.show', $api);
     }
 
-    public function createAPIResponse($tradePortfolio)
+    public function createAPIResponse(TradePortfolioExt $tradePortfolio)
     {
-        Log::info($tradePortfolio->tradePortfolioItems()->count()."\r");
-        $tradePortfolio['items'] = $tradePortfolio->tradePortfolioItems()->get();
-
-        // sum total shares
-        $total = $tradePortfolio['cash_target'];
-        $tradePortfolio->items->each(function ($item) use (&$total) {
-            $total += $item->target_share;
-        });
-        $tradePortfolio['total_shares'] = $total * 100.0;
-
-        $tradePortfolio['show_start_dt'] = $tradePortfolio['start_dt'];
-        $tradePortfolio['show_end_dt'] = $tradePortfolio['end_dt'];
+        Log::info($tradePortfolio->tradePortfolioItems()->count());
+        $tradePortfolio->annotateAssetsAndGroups();
+        $tradePortfolio->annotateTotalShares();
 
         $api = [
             'tradePortfolio' => $tradePortfolio,
             'portfolio' => $tradePortfolio->portfolio(),
-            'tradePortfolioItems' => $tradePortfolio->tradePortfolioItems()->get(),
         ];
+
         $api['api'] = $api;
         return $api;
     }

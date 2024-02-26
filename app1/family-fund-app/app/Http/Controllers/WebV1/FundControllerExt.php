@@ -53,7 +53,8 @@ class FundControllerExt extends FundController
         $arr = $this->createFullFundResponse($fund, $asOf, $this->isAdmin());
 
         return view('funds.show_ext')
-            ->with('api', $arr);
+            ->with('api', $arr)
+            ->with('asOf', $arr['asOf']);
     }
 
     /**

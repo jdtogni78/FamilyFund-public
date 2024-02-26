@@ -62,8 +62,8 @@ class Asset extends Model
      */
     public static $rules = [
         'name' => 'required|string|max:128',
-        'type' => 'required|[a-zA-Z][a-zA-Z]+|max:20',
-        'source' => 'required|[a-zA-Z][a-zA-Z]+|max:50',
+        'type' => 'required|regex:/[a-zA-Z][a-zA-Z]+/|max:20',
+        'source' => 'required|regex:/[a-zA-Z][a-zA-Z]+/|max:50',
         'display_group' => 'nullable|string|max:50',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',

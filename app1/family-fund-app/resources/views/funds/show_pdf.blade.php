@@ -70,12 +70,24 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <strong>Target Portfolio {{ $tradePortfolio->id }}
+                        <strong>Target Portfolio Target % {{ $tradePortfolio->id }}
                             [{{ $tradePortfolio->start_dt->format('Y-m-d') }} to
                             {{ $tradePortfolio->end_dt->format('Y-m-d') }}]</strong>
                     </div>
                     <div class="card-body">
                         <img src="{{$files['trade_portfolios_' . $tradePortfolio->id . '.png']}}" alt="Trade Portfolio"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Target Portfolio Group % {{ $tradePortfolio->id }}
+                            [{{ $tradePortfolio->start_dt->format('Y-m-d') }} to
+                            {{ $tradePortfolio->end_dt->format('Y-m-d') }}]</strong>
+                    </div>
+                    <div class="card-body">
+                        <img src="{{$files['trade_portfolios_group' . $tradePortfolio->id . '.png']}}" alt="Trade Portfolio"/>
                     </div>
                 </div>
             </div>
@@ -96,7 +108,7 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        <strong>Fund Allocation</strong>
+                        <strong>Fund Allocation (ADMIN)</strong>
                     </div>
                     <div class="card-body">
                         <img src="{{$files['shares_allocation.png']}}" alt="Fund Allocation"/>
@@ -186,7 +198,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
-                        <strong>Accounts</strong>
+                        <strong>Accounts (ADMIN)</strong>
                     </div>
                     <div class="card-body">
                         @include('funds.accounts_table')

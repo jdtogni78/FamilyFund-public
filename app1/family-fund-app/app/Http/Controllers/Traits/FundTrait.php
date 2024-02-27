@@ -125,8 +125,8 @@ Trait FundTrait
         $account = $fund->fundAccount();
         $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
 
-        $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
-        $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
+        $arr['sp500_monthly_performance'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
+        $arr['cash'] = $this->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
 
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
@@ -134,12 +134,12 @@ Trait FundTrait
         $portfolio = $fund->portfolios()->first();
         $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
 
-        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $arr);
-        $arr['asset_monthly_performance'] = $assetPerf;
-
         $yearAgo = Utils::asOfAddYear($asOf, -1);
         $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
         $arr['tradePortfolios'] = $tradePortfolios;
+
+        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
+        $arr['asset_monthly_performance'] = $assetPerf;
 
         /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
@@ -289,13 +289,17 @@ Trait FundTrait
         $this->fundEmailReport($fundReport, $pdf);
     }
 
-    private function createGroupMonthlyPerformanceResponse($fund, $api, $asOf, $arr)
+    private function createGroupMonthlyPerformanceResponse($fund, $asOf, $arr)
     {
         $transactions = $arr['transactions'];
-        $curAssets = $arr['portfolio']['assets'];
-        $assetNames = array_map(function ($asset) {
-            return $asset['name'];
-        }, $curAssets);
+        $tps = $arr['tradePortfolios'];
+        $assetNames = ['CASH'];
+        // collect all asset names under trade port list
+        foreach ($tps as $tp) {
+            foreach ($tp->tradePortfolioItems()->get() as $item) {
+                $assetNames[] = $item->symbol;
+            }
+        }
 
         /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
@@ -305,21 +309,24 @@ Trait FundTrait
         foreach ($portfolio->portfolioAssets()->get() as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
+
             // skip if asset name is not in curAssets
             if (!in_array($asset->name, $assetNames)) {
                 Log::debug("(group) Skip $asset->name");
                 continue;
+            } else {
+                Log::debug("(group) Add $asset->name");
             }
             $group = $asset->display_group;
             if ($asset->type == "CSH") {
-                $perf = $api->createCashMonthlyPerformanceResponse($asOf, $transactions);
+                $perf = $this->createCashMonthlyPerformanceResponse($asOf, $transactions);
             } else {
-                $perf = $api->createAssetMonthlyPerformanceResponse($asset, $asOf, $transactions);
+                $perf = $this->createAssetMonthlyPerformanceResponse($asset, $asOf, $transactions);
             }
 
             if (!isset($assetPerf[$group])) {
                 $assetPerf[$group] = [];
-                $assetPerf[$group]['SP500'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $transactions);
+                $assetPerf[$group]['SP500'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $transactions);
             }
             $assetPerf[$group][$asset->name] = $perf;
         }

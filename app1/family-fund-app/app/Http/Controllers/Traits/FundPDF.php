@@ -26,6 +26,7 @@ class FundPDF
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createGroupMonthlyPerformanceGraphs($arr, $tempDir);
         $this->createTradePortfoliosGraph($arr, $tempDir);
+        $this->createTradePortfoliosGroupGraph($arr, $tempDir);
 
         $view = 'funds.show_pdf';
         $pdfFile = 'fund.pdf';
@@ -87,12 +88,23 @@ class FundPDF
             $labels = array_map(function ($v) {
                 return $v['symbol'];
             }, $tradePortfolio->items->toArray());
-            // sum up all shares from items
+            $values = array_map(function ($v) {
+                return $v['target_share'];
+            }, $tradePortfolio->items->toArray());
 
-            $labels[] = 'Cash';
-            $values[] = $tradePortfolio['cash_target'] * 100.0;
-            Log::debug("labels: " . json_encode($labels));
-            Log::debug("values: " . json_encode($values));
+            $this->files[$name] = $file = $tempDir->path($name);
+            $this->createDoughnutChart($values, $labels, $file);
+        }
+    }
+
+    public function createTradePortfoliosGroupGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        $arr = $api['tradePortfolios'];
+        foreach ($arr as $tradePortfolio) {
+            $name = 'trade_portfolios_group' . $tradePortfolio->id . '.png';
+
+            $labels = array_keys($tradePortfolio->groups);
+            $values = array_values($tradePortfolio->groups);
 
             $this->files[$name] = $file = $tempDir->path($name);
             $this->createDoughnutChart($values, $labels, $file);

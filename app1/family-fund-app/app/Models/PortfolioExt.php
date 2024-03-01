@@ -75,6 +75,7 @@ class PortfolioExt extends Portfolio
      */
     public function valueAsOf($now): float
     {
+//        Log::debug("port value $now");
         $portfolioAssets = $this->assetsAsOf($now);
 
         $totalValue = 0;

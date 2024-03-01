@@ -45,6 +45,7 @@ class FundExt extends Fund
 
     public function valueAsOf($now, $verbose=false)
     {
+        /** @var PortfolioExt $portfolio */
         $portfolio = $this->portfolio();
         return $portfolio->valueAsOf($now, $verbose);
     }

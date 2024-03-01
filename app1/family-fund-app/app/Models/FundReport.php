@@ -75,7 +75,7 @@ class FundReport extends Model
      **/
     public function fund()
     {
-        return $this->belongsTo(\App\Models\Fund::class, 'fund_id');
+        return $this->belongsTo(\App\Models\FundExt::class, 'fund_id');
     }
 
     /**

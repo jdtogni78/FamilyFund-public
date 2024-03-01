@@ -15,7 +15,6 @@ trait PerformanceTrait
 
     public function createPerformanceArray($start, $asOf, $shares=null, $asset=null)
     {
-        // print_r([$this->perfObject->id, $start, $asOf]);
         $yp = array();
         $yp['value']        = Utils::currency($value = $this->perfObject->valueAsOf($asOf));
         $yp['shares']       = Utils::shares($shares = $this->perfObject->sharesAsOf($asOf));
@@ -175,12 +174,21 @@ trait PerformanceTrait
             $arr[$asOf] = $yp;
         }
 
-        for (; $year >= 2021; $year--) {
+        $tran = $this->perfObject->findOldestTransaction();
+        $firstDate = $tran->timestamp->addDay()->format('Y-m-d');
+        $firstYear = substr($firstDate, 0, 4);
+
+        $prevYearStart = ($year-1).'-01-01';
+        for (; $year > $firstYear; $year--) {
             $yearStart = $year.'-01-01';
             $prevYearStart = ($year-1).'-01-01';
+//            Log::debug("prev $prevYearStart $yearStart");
             $yp = $this->createPerformanceArray($prevYearStart, $yearStart);
             $arr[$yearStart] = $yp;
         }
+//        Log::debug("Add last $prevYearStart $firstDate $tran");
+        $arr[$firstDate] = $this->createPerformanceArray($prevYearStart, $firstDate);
+
 
         $ret = $this->removeEmptyStart($arr);
         $ret = array_reverse($ret);

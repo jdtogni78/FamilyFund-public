@@ -63,13 +63,11 @@
                 <div class="dropdown-header text-center">
                     <strong>Settings</strong>
                 </div>
-                <a class="dropdown-item" href="#">
-                    <i class="fa fa-user"></i> Profile</a>
-                <a class="dropdown-item" href="#">
-                    <i class="fa fa-wrench"></i> Settings</a>
+                <a class="dropdown-item" href="{{ url('/change-password') }}"><i class="fa fa-shield"></i> Change Password</a>
+                <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Profile</a>
+                <a class="dropdown-item" href="#"><i class="fa fa-wrench"></i> Settings</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">
-                    <i class="fa fa-shield"></i> Lock Account</a>
+                <a class="dropdown-item" href="#"><i class="fa fa-shield"></i> Lock Account</a>
                 <a href="{{ url('/logout') }}" class="dropdown-item btn btn-default btn-flat"
                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fa fa-lock"></i>Logout

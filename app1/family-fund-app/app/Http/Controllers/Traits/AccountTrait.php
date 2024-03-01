@@ -75,7 +75,7 @@ trait AccountTrait
         $arr = array();
         foreach ($transactions as $transaction) {
             $tran = array();
-            if ($transaction->created_at->gte(Carbon::createFromFormat('Y-m-d', $asOf)))
+            if ($transaction->timestamp->gte(Carbon::createFromFormat('Y-m-d', $asOf)))
                 continue;
             $tran['id']     = $transaction->id;
             $tran['type']   = $transaction->type;
@@ -132,6 +132,7 @@ trait AccountTrait
         $arr = $api->createAccountResponse($account, $asOf);
         $arr['monthly_performance'] = $api->createMonthlyPerformanceResponse($asOf);
         $arr['yearly_performance'] = $api->createYearlyPerformanceResponse($asOf);
+        $arr['disbursable'] = $api->createDisbursableResponse($arr, $asOf);
         $arr['transactions'] = $api->createTransactionsResponse($account, $asOf);
         $arr['matching_rules'] = $api->createAccountMatchingResponse($account, $asOf);
         $arr['matching_available'] = $this->getTotalAvailableMatching($arr['matching_rules']);
@@ -229,4 +230,29 @@ trait AccountTrait
         $this->msgs = $msgs;
     }
 
+    protected function createDisbursableResponse($arr, $asOf) {
+        $cap = 0.02;
+        $year = Carbon::parse($asOf)->startOfYear();
+        $yearNow = $year->format('Y-m-d');
+
+        $perf = $arr['yearly_performance'];
+//        Log::debug($perf);
+        $disb = 0;
+        $perfValue = 0;
+        if (array_key_exists($yearNow, $perf)) {
+            $data = $perf[$yearNow];
+//            Log::debug("Found $yearNow " . json_encode($data));
+            $value = $data['value'];
+            $perfValue = $data['performance'];
+            $disb = $value * max(0.0, min($cap, $perfValue));
+        }
+
+//        Log::debug("Disb: " . $disb);
+        return [
+            'year' => $yearNow,
+            'performance' => $perfValue,
+            'limit' => $cap * 100.0,
+            'value' => $disb
+        ];
+    }
 }

@@ -58,7 +58,8 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $api['api']['tradePortfolio']['end_dt'] = new Carbon('9999-12-31');
 
         return view('trade_portfolios.show', $api)
-            ->with('split', true);
+            ->with('split', true)
+            ->with('asOf', $date);
     }
 
     public function doSplit(SplitTradePortfolioRequest $request)

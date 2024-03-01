@@ -8,11 +8,11 @@ use App\Http\Resources\FundResource;
 use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
 use App\Mail\FundQuarterlyReport;
+use App\Models\AccountExt;
 use App\Models\AccountReport;
 use App\Models\AssetExt;
 use App\Models\FundExt;
 use App\Models\FundReportExt;
-use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
 use App\Models\PortfolioExt;
 use App\Models\TradePortfolioExt;
@@ -189,10 +189,11 @@ Trait FundTrait
         }
     }
 
-    protected function reportUsers($fund, bool $isAdmin): array
+    public function reportUsers(FundExt $fund, bool $isAdmin): array
     {
         $ret = [];
         $accounts = $fund->accounts()->get();
+        /** @var AccountExt $account */
         foreach ($accounts as $account) {
             $users = $account->user()->get();
             if (($isAdmin && count($users) == 0) ||
@@ -207,12 +208,14 @@ Trait FundTrait
     /**
      * @throws Exception
      */
-    public function validateReportEmails($fundReport)
+    public function validateReportEmails(FundReportExt $fundReport)
     {
+        /** @var FundExt $fund */
         $fund = $fundReport->fund()->first();
         $isAdmin = $fundReport->isAdmin();
         $noEmail = [];
         $accounts = $this->reportUsers($fund, $isAdmin);
+        /** @var AccountExt $account */
         foreach ($accounts as $account) {
             $err = $account->validateHasEmail();
             if ($err) $noEmail[] = $err;

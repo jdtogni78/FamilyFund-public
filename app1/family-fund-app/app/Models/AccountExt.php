@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Repositories\AccountBalanceRepository;
 use App\Repositories\AccountRepository;
 use App\Repositories\TransactionRepository;
+use DB;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Nette\Utils\DateTime;
@@ -97,9 +98,9 @@ class AccountExt extends Account
 
     public function sharesAsOf($now) {
         $accountBalances = $this->allSharesAsOf($now);
-//        print_r($accountBalances->count());
+//        Log::debug("share val as of $now " .$accountBalances->count());
         foreach ($accountBalances as $balance) {
-//            print_r(json_encode($balance->toArray()));
+//            Log::debug(json_encode($balance->toArray()));
             if ($balance->type == 'OWN') {
                 return $balance->shares;
             }
@@ -116,27 +117,80 @@ class AccountExt extends Account
     }
 
     public function shareValueAsOf($asOf) {
-        return $this->fund()->first()->shareValueAsOf($asOf);
+        /** @var FundExt $fund */
+        $fund = $this->fund()->first();
+        return $fund->shareValueAsOf($asOf);
     }
 
     public function remainingMatchings() {
         return NULL;
     }
 
+    public function findOldestTransaction() {
+        $trans = $this->transactions()->get();
+        $tran = $trans->sortBy('timestamp')->first();
+        return $tran;
+    }
+
+    public static function calculateTWR(array $data): float
+    {
+        $cumulativeReturn = 1;
+        Log::debug("calculate TWR: " . json_encode($data));
+        foreach ($data as $period) {
+            list($startValue, $endValue, $cashFlow) = $period;
+//            Log::debug("** $startValue, $endValue, $cashFlow");
+
+            // Calculate the return for the current period
+            if ($startValue == 0) {
+                $periodReturn = 1;
+            } else {
+                $periodReturn = ($endValue - $cashFlow) / $startValue;
+            }
+
+            // Update the cumulative return
+            $cumulativeReturn *= $periodReturn;
+//            Log::debug("*** $periodReturn, $cumulativeReturn");
+        }
+
+        // Calculate the final TWR
+        $twr = $cumulativeReturn - 1;
+        Log::debug("twr: ". ($twr * 100));
+
+        return $twr;
+    }
+
+
     public function periodPerformance($from, $to)
     {
-        $shareValueFrom = $this->fund()->first()->shareValueAsOf($from);
-        $shareValueTo = $this->fund()->first()->shareValueAsOf($to);
+        Log::debug("periodPerformance $from $to");
 
-        $sharesFrom = $this->sharesAsOf($from);
-        $sharesTo = $this->sharesAsOf($to);
+        $trans = $this->transactions()
+            ->select('timestamp', DB::raw('sum(value) as value'))
+            ->whereDate('timestamp', '>=', $from)
+            ->whereDate('timestamp', '<', $to)
+            ->orderBy('timestamp')
+            ->groupBy('timestamp')
+            ->get();
 
-        $valueFrom = $shareValueFrom * $sharesFrom;
-        $valueTo = $shareValueTo * $sharesTo;
+        $start = $from;
+        $startValue = $this->valueAsOf($start);
+//        Log::debug("per per $start $startValue");
+        $cashFlow = 0;
+        $data = [];
+        /** @var TransactionExt $tran */
+        foreach($trans as $tran) {
+            Log::debug($tran);
+            $end = $tran->timestamp; // shares are added next day
 
-        // var_dump(array($from, $to, $shareValueFrom, $shareValueTo, $sharesFrom, $sharesTo, $valueFrom, $valueTo));
-        if ($valueFrom == 0) return 0;
-        return $valueTo/$valueFrom - 1;
+            $endValue = $this->valueAsOf($end);
+            $data[] = [$startValue, $endValue, $cashFlow];
+
+            $cashFlow = 0+$tran->value;
+            $startValue = $endValue;
+        }
+        $lastValue = $this->valueAsOf($to);
+        $data[] = [$startValue, $lastValue, $cashFlow];
+        return self::calculateTWR($data);
     }
 
     public function yearlyPerformance($year)
@@ -147,7 +201,7 @@ class AccountExt extends Account
     }
 
     // validate has email
-    protected function validateHasEmail(): ?string
+    public function validateHasEmail(): ?string
     {
         $account = $this;
         if (empty($account->email_cc)) {

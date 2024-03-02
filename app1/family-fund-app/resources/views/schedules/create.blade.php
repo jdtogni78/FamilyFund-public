@@ -3,7 +3,7 @@
 @section('content')
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
-         <a href="{!! route('fundReportSchedules.index') !!}">Fund Report Schedule</a>
+         <a href="{!! route('schedules.index') !!}">Schedule</a>
       </li>
       <li class="breadcrumb-item active">Create</li>
     </ol>
@@ -15,12 +15,12 @@
                         <div class="card">
                             <div class="card-header">
                                 <i class="fa fa-plus-square-o fa-lg"></i>
-                                <strong>Create Fund Report Schedule</strong>
+                                <strong>Create Schedule</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::open(['route' => 'fundReportSchedules.store']) !!}
+                                {!! Form::open(['route' => 'schedules.store']) !!}
 
-                                   @include('fund_report_schedules.fields')
+                                   @include('schedules.fields')
 
                                 {!! Form::close() !!}
                             </div>

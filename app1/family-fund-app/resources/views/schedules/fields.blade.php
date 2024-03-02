@@ -4,10 +4,10 @@
     {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255,'maxlength' => 255]) !!}
 </div>
 
-<!-- Type Field using typeMap -->
+<!-- Type Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::select('type', $api['typeMap'], 'DOM', ['class' => 'form-control']);  !!}
+    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 3,'maxlength' => 3]) !!}
 </div>
 
 <!-- Value Field -->
@@ -19,5 +19,5 @@
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
     {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
-    <a href="{{ route('reportSchedules.index') }}" class="btn btn-secondary">Cancel</a>
+    <a href="{{ route('schedules.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

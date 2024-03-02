@@ -3,7 +3,7 @@
 @section('content')
     <ol class="breadcrumb">
           <li class="breadcrumb-item">
-             <a href="{!! route('reportSchedules.index') !!}">Report Schedule</a>
+             <a href="{!! route('schedules.index') !!}">Schedule</a>
           </li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
@@ -15,12 +15,12 @@
                       <div class="card">
                           <div class="card-header">
                               <i class="fa fa-edit fa-lg"></i>
-                              <strong>Edit Report Schedule</strong>
+                              <strong>Edit Schedule</strong>
                           </div>
                           <div class="card-body">
-                              {!! Form::model($reportSchedule, ['route' => ['reportSchedules.update', $reportSchedule->id], 'method' => 'patch']) !!}
+                              {!! Form::model($schedule, ['route' => ['schedules.update', $schedule->id], 'method' => 'patch']) !!}
 
-                              @include('report_schedules.fields')
+                              @include('schedules.fields')
 
                               {!! Form::close() !!}
                             </div>

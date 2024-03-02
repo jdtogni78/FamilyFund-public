@@ -2,7 +2,7 @@
 
 @section('content')
     <ol class="breadcrumb">
-        <li class="breadcrumb-item">Fund Report Schedules</li>
+        <li class="breadcrumb-item">Schedules</li>
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
@@ -12,11 +12,11 @@
                      <div class="card">
                          <div class="card-header">
                              <i class="fa fa-align-justify"></i>
-                             FundReportSchedules
-                             <a class="pull-right" href="{{ route('fundReportSchedules.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
+                             Schedules
+                             <a class="pull-right" href="{{ route('schedules.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
                          </div>
                          <div class="card-body">
-                             @include('fund_report_schedules.table')
+                             @include('schedules.table')
                               <div class="pull-right mr-3">
                                      
                               </div>

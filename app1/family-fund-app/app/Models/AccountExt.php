@@ -53,7 +53,7 @@ class AccountExt extends Account
 
 //            'type' => 'in:PUR,BOR,SAL,REP,MAT,INI',
             switch ($tran->type) {
-                case 'PUR':
+                case TransactionExt::TYPE_PURCHASE:
                 case 'REP':
                     $value += $tran->value;
                     break;
@@ -62,7 +62,7 @@ class AccountExt extends Account
                     $value -= $tran->value;
                     break;
                 case 'MAT': // dont account for
-                case 'INI': // dont account for
+                case TransactionExt::TYPE_INITIAL: // dont account for
                     break;
 
             }

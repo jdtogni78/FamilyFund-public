@@ -48,7 +48,7 @@
         "inView": true
     },
     {
-        "name": "fund_report_schedule_id",
+        "name": "scheduled_job_id",
         "dbType": "bigInteger,false,true",
         "htmlType": null,
         "validations": "nullable",

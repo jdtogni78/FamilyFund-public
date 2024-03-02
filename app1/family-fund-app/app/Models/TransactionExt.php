@@ -18,19 +18,29 @@ use Nette\Utils\DateTime;
  */
 class TransactionExt extends Transaction
 {
+    public const TYPE_PURCHASE = TransactionExt::TYPE_INITIAL;
+    public const TYPE_INITIAL = 'INI';
+
+    public const STATUS_PENDING = 'P';
+    public const STATUS_CLEARED = 'C';
+
+    public const FLAGS_ADD_CASH = 'A';
+    public const FLAGS_CASH_ADDED = 'C';
+    public const FLAGS_NO_MATCH = 'U';
+
     public static array $typeMap = [
-        'PUR' => 'Purchase',
-        'INI' => 'Initial Value',
+        TransactionExt::TYPE_PURCHASE => 'Purchase',
+        TransactionExt::TYPE_INITIAL => 'Initial Value',
     ];
     public static array $statusMap = [
-        'P' => 'Pending',
-        'C' => 'Cleared',
+        TransactionExt::STATUS_PENDING => 'Pending',
+        TransactionExt::STATUS_CLEARED => 'Cleared',
     ];
     public static array $flagsMap = [
         null => 'No Flags',
-        'A' => 'Add Cash Position',
-        'C' => 'Cash Already Added',
-        'U' => 'No match',
+        TransactionExt::FLAGS_ADD_CASH => 'Add Cash Position',
+        TransactionExt::FLAGS_CASH_ADDED => 'Cash Already Added',
+        TransactionExt::FLAGS_NO_MATCH => 'No matching',
     ];
 
     /**
@@ -84,7 +94,9 @@ class TransactionExt extends Transaction
     {
         Log::debug("Processing Transaction: " . json_encode($this->toArray()));
         $verbose = false;
+        /** @var AccountExt $account */
         $account = $this->account()->first();
+        /** @var FundExt $fund */
         $fund = $account->fund()->first();
         $timestamp = $this->timestamp;
         $value = $this->value;
@@ -95,10 +107,9 @@ class TransactionExt extends Transaction
         Log::debug("Transaction :".json_encode($this->toArray()));
 
         if ($shareValue == 0) {
-            if ($this->type != 'INI') {
+            if ($this->type != TransactionExt::TYPE_INITIAL) {
                 throw new Exception("Cannot Process Transaction: Share price not available for fund " .
                     $fund->name . " at " . $timestamp);
-            } else {
                 // shares should have been provided
             }
         } else {
@@ -131,7 +142,7 @@ class TransactionExt extends Transaction
                     // recalculate share value, discounting the value
                     // a deposit was already made to the fund, artificially increasing its share value
                     Log::debug("Cash already added: " . $value . " " . $shareValue . " " . $timestamp);
-                    if ($this->type !== 'INI') {
+                    if ($this->type !== TransactionExt::TYPE_INITIAL) {
                         $fundShares = $fund->sharesAsOf($timestamp);
                         $fundValue = $fund->valueAsOf($timestamp);
                         $shareValue = ($fundValue - $value) / $fundShares;

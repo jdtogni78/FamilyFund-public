@@ -41,7 +41,7 @@ class TransactionApiExtTest extends TestCase
     public function test_validation_errors()
     {
         // reject clear tran
-        $this->postTransactionError(100, 'PUR', 'C');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'C');
 
         // reject non purchase
         $this->postTransactionError(100, 'SAL', 'P');
@@ -53,14 +53,14 @@ class TransactionApiExtTest extends TestCase
         $this->postTransactionError(100, '123', 'P');
 
         //  reject timestamp in future
-        $this->postTransactionError(100, 'PUR', 'P', '9999-12-31');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '9999-12-31');
         //  reject timestamp year old
-        $this->postTransactionError(100, 'PUR', 'P', '2020-01-01');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2020-01-01');
         //  reject no timestamp
-        $this->postTransactionError(100, 'PUR', 'P');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P');
 
         // reject has shares
-        $this->postTransactionError(100, 'PUR', 'P', '2022-01-01', 200);
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2022-01-01', 200);
     }
 
     /**
@@ -80,7 +80,7 @@ class TransactionApiExtTest extends TestCase
 
         // fail to post tran in the past
         // TODO better error code
-        $this->postTransactionError(100, 'PUR', 'P', '2021-01-01');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2021-01-01');
         $this->assertEquals($transactions->count(), 1);
     }
 
@@ -159,7 +159,7 @@ class TransactionApiExtTest extends TestCase
         }
         $this->assertEquals(true, $gotException);
 
-        $this->postPurchase(1000, 1000, 'A', $timestamp, $factory->fundAccount, 'INI');
+        $this->postPurchase(1000, 1000, 'A', $timestamp, $factory->fundAccount, TransactionExt::TYPE_INITIAL);
         $this->assertEquals($transactions->count(), 1);
         $this->validateTran($this->tranRes, 1000, 1000, 1000);
         list($cashAsset, $controller, $pa2) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
@@ -182,7 +182,7 @@ class TransactionApiExtTest extends TestCase
         $transactions = $factory->fundAccount->transactions();
         $this->assertEquals(0, $transactions->count());
 
-        $this->postPurchase(2000, 1000, 'C', $timestamp, $factory->fundAccount, 'INI');
+        $this->postPurchase(2000, 1000, 'C', $timestamp, $factory->fundAccount, TransactionExt::TYPE_INITIAL);
         $this->assertEquals($transactions->count(), 1);
         $this->validateTran($this->tranRes, 2000, 1000, 1000);
         list($cashAsset, $controller, $pa2) = TransactionExt::getCashPortfolioAsset($source, $tomorrow);
@@ -310,7 +310,7 @@ class TransactionApiExtTest extends TestCase
         }
     }
 
-    private function postPurchase(float $value, float $shares, $flags = null, $timestamp=null, $account=null, $type = 'PUR')
+    private function postPurchase(float $value, float $shares, $flags = null, $timestamp=null, $account=null, $type = TransactionExt::TYPE_PURCHASE)
     {
         $this->postTransaction($value, $type, 'P', $flags, $timestamp, $shares, $account);
         $this->assertApiSuccess();

@@ -40,18 +40,4 @@ class FundReportAPIControllerExt extends FundReportAPIController
             return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
-
-    private function createFundReportFromSchedule(mixed $schedule, $asOf, $shouldRunBy)
-    {
-        $templateReport = $schedule->fundReportTemplate()->first();
-        $fundReport = $this->createFundReport([
-            'fund_id' => $templateReport->fund_id,
-            'type' => $templateReport->type,
-            'as_of' => $shouldRunBy,
-            'fund_report_schedule_id' => $schedule->id,
-            'created_at' => $asOf,
-        ]);
-        Log::info('Created fund report from schedule: ' . json_encode($fundReport));
-        return $fundReport;
-    }
 }

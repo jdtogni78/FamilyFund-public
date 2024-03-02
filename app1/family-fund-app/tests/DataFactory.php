@@ -73,7 +73,7 @@ class DataFactory
         $this->source = $this->portfolio->source;
 
         if (!$noTransaction) {
-            $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, 'INI', 'C', null, $timestamp);
+            $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, TransactionExt::TYPE_INITIAL, 'C', null, $timestamp);
 
             $this->fundBalance = AccountBalance::factory()
                 ->for($this->fundTransaction, 'transaction')
@@ -163,14 +163,14 @@ class DataFactory
         return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type='PUR', $status='P', $flags=null, $timestamp=null) {
+    public function createTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE, $status='P', $flags=null, $timestamp=null) {
         $tran = $this->makeTransaction($value, $account, $type, $status, $flags, $timestamp);
         $tran->save();
         if ($this->verbose) Log::debug("tran: " . json_encode($tran));
         return $tran;
     }
 
-    public function makeTransaction($value=100, $account=null, $type='PUR', $status='P', $flags=null, $timestamp=null, $shares=null) {
+    public function makeTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE, $status='P', $flags=null, $timestamp=null, $shares=null) {
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -259,7 +259,7 @@ class DataFactory
 
     public function createTransactionWithMatching($value1=100, $value2=50): void
     {
-        $transaction = $this->createTransaction($value1, null, 'PUR', 'P', null, null);
+        $transaction = $this->createTransaction($value1, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
         $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
 
         $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C', null, null);

@@ -63,7 +63,7 @@ class TransactionApiGoldenDataTest extends TestCase
 
             $portfolio = $fund->portfolio();
             $assets = $portfolio->valueAsOf($asOf, $this->verbose);
-            if ($transaction->type != 'INI') {
+            if ($transaction->type != TransactionExt::TYPE_INITIAL) {
                 if ($fixValues) {
                     if ($shareValue > 0) {
                         if (Utils::shares($transaction->value / $shareValue) != $transaction->shares) {
@@ -119,11 +119,11 @@ class TransactionApiGoldenDataTest extends TestCase
                 }
                 $old_shares = $bals[$key][4];
                 if ($bal_type == 'OWN') {
-                    if (! ($tran_type == 'PUR' || $tran_type == 'REP' || $tran_type == 'MAT')) {
+                    if (! ($tran_type == TransactionExt::TYPE_PURCHASE || $tran_type == 'REP' || $tran_type == 'MAT')) {
                         $tran_shares *= -1;
                     }
                 } elseif ($bal_type == 'BOR') {
-                    if ($tran_type == 'PUR' || $tran_type == 'REP' || $tran_type == 'MAT') {
+                    if ($tran_type == TransactionExt::TYPE_PURCHASE || $tran_type == 'REP' || $tran_type == 'MAT') {
                         $tran_shares *= -1;
                     }
                 }

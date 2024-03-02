@@ -32,7 +32,7 @@ class AccountApiGoldenDataTest extends TestCase
             $transaction['reference_transaction'] = $ref_tran_id;
         $transaction['timestamp'] = $date;
         // $transaction['account_id'] = 1;//$account_id;
-        $transaction['type'] = 'PUR';
+        $transaction['type'] = TransactionExt::TYPE_PURCHASE;
         $transaction['current_value'] = Utils::currency($currentValue);
         $transaction['current_performance'] = Utils::percent($currentValue/$value - 1);
         $transaction['balances'] = ['OWN' => $total_shares];

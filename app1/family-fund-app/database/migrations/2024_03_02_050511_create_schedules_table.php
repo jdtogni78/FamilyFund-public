@@ -14,17 +14,7 @@ class CreateSchedulesTable extends Migration
      */
     public function up()
     {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->bigInteger('id', true, true);
-            $table->string('descr', 255);
-            $table->string('type', 3);
-            $table->string('value', 255);
-            $table->datetime('deleted_at')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-// TODO migrate
-//        Schema::dropIfExists('report_schedules');
+        DB::raw("alter table report_schedules rename schedules");
     }
 
     /**
@@ -34,6 +24,6 @@ class CreateSchedulesTable extends Migration
      */
     public function down()
     {
-        Schema::drop('schedules');
+        DB::raw("alter table schedules rename report_schedules");
     }
 }

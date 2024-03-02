@@ -66,7 +66,7 @@ class AccountMatchingReportTest extends TestCase
         $this->assertResponse(1, 50, 25, 50);
 
         // TODO: 2 tranMatchings
-        $transaction = $factory->createTransaction(100, null, 'PUR', 'P', null, null);
+        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
         $transaction->timestamp = '2021-11-12';
         $transaction->save();
 
@@ -110,7 +110,7 @@ class AccountMatchingReportTest extends TestCase
         $this->getAPI($account);
         $this->assertResponse(1, 0, 0, 150);
 
-        $transaction = $factory->createTransaction(100, null, 'PUR', 'P', null, null);
+        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
         $transaction->timestamp = '2021-11-02';
         $transaction->save();
 

@@ -33,8 +33,8 @@
 
 <!-- Fund Report Schedule Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('fund_report_schedule_id', 'Fund Report Schedule Id:') !!}
-    {!! Form::number('fund_report_schedule_id', null, ['class' => 'form-control']) !!}
+    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
+    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->

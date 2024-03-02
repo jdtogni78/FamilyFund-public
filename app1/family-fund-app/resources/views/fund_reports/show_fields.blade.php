@@ -18,7 +18,7 @@
 
 <!-- Fund Report Schedule Id Field -->
 <div class="form-group">
-    {!! Form::label('fund_report_schedule_id', 'Fund Report Schedule Id:') !!}
-    <p>{{ $fundReport->fund_report_schedule_id }}</p>
+    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
+    <p>{{ $fundReport->scheduled_job_id }}</p>
 </div>
 

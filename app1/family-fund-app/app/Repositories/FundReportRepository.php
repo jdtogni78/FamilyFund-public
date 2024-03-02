@@ -20,7 +20,7 @@ class FundReportRepository extends BaseRepository
         'fund_id',
         'type',
         'as_of',
-        'fund_report_schedule_id'
+        'scheduled_job_id'
     ];
 
     /**

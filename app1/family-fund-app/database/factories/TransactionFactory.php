@@ -22,7 +22,7 @@ class TransactionFactory extends Factory
     public function definition()
     {
         return [
-            'type' => $this->faker->randomElement(['PUR','SAL','MAT','BOR','REP']),
+            'type' => $this->faker->randomElement([TransactionExt::TYPE_PURCHASE,'SAL','MAT','BOR','REP']),
         'status' => $this->faker->randomElement(['P','C']),
         'value' => $this->faker->randomFloat(2, $min = 0.01, $max = 999999.99),
             'flags' => $this->faker->randomElement(['A','C','U',null]),

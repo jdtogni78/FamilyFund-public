@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property integer $fund_id
  * @property string $type
  * @property string $as_of
- * @property integer $fund_report_schedule_id
+ * @property integer $scheduled_job_id
  */
 class FundReport extends Model
 {

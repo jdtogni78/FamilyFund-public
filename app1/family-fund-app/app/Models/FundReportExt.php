@@ -26,4 +26,6 @@ class FundReportExt extends FundReport
     {
         return 'ADM' == $this->type;
     }
+
+
 }

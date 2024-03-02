@@ -15,11 +15,13 @@ use App\Models\FundExt;
 use App\Models\FundReportExt;
 use App\Models\PortfolioAsset;
 use App\Models\PortfolioExt;
+use App\Models\ScheduledJob;
 use App\Models\TradePortfolioExt;
 use App\Models\User;
 use App\Models\Utils;
 use App\Repositories\AccountRepository;
 use App\Repositories\PortfolioRepository;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -278,6 +280,38 @@ Trait FundTrait
         $fundReport->save();
         SendFundReport::dispatch($fundReport);
         return $fundReport;
+    }
+
+    protected function createFundReportFromSchedule(mixed $schedule, $asOf, $shouldRunBy)
+    {
+        $fundReportRepo = \App::make(\App\Repositories\FundReportRepository::class);
+        // find fund report template
+        $templateReport = $fundReportRepo->makeModel()->newQuery()
+            ->where('fund_id', $schedule->fund_id)->first();
+
+        $fundReport = $this->createFundReport([
+            'fund_id' => $templateReport->fund_id,
+            'type' => $templateReport->type,
+            'as_of' => $shouldRunBy,
+            'scheduled_job_id' => $schedule->id,
+            'created_at' => $asOf,
+        ]);
+        Log::info('Created fund report from schedule: ' . json_encode($fundReport));
+        return $fundReport;
+    }
+
+    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): void
+    {
+        $assetPriceRepo = \App::make(\App\Repositories\AssetPriceRepository::class);
+        // check if there is data to run fund report & is due
+        $hasNewAssets = $assetPriceRepo->makeModel()->newQuery()
+            ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
+        if ($hasNewAssets > 0) {
+            Log::info('Creating fund report for schedule: ' . $schedule->id);
+            $fundReport = $this->createFundReportFromSchedule($schedule, $asOf, $shouldRunBy);
+        } else {
+            Log::warning('Missing data for fund report schedule ' . $schedule->id);
+        }
     }
 
     protected function sendFundEmailReport($fundReport): void

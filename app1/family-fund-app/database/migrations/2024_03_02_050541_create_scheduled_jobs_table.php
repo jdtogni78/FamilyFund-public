@@ -26,8 +26,21 @@ class CreateScheduledJobsTable extends Migration
             $table->softDeletes();
         });
 
-        // TODO copy data
-//        Schema::dropIfExists('fund_report_schedules');
+        Schema::table('fund_reports', function (Blueprint $table) {
+            // rename the fund_report_schedule_id column to scheduled_job_id
+            $table->renameColumn('fund_report_schedule_id', 'scheduled_job_id');
+        });
+
+        DB::raw("insert into scheduled_jobs (schedule_id, entity_descr, entity_id, start_dt, end_dt, created_at, updated_at, deleted_at) " .
+                "select schedule_id, 'fund_report', fund_report_id, start_dt, end_dt, created_at, updated_at, deleted_at from fund_report_schedules ");
+
+        Schema::table('transactions', function (Blueprint $table) {
+            // drop the fund_report_schedule_id column
+            $table->foreignId('scheduled_job_id')->after('flags')->nullable()->constrained();
+        });
+
+        // drop the fund_report_schedules table
+        Schema::dropIfExists('fund_report_schedules');
     }
 
     /**
@@ -37,6 +50,27 @@ class CreateScheduledJobsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('scheduled_jobs');
+        // create the fund_report_schedules table
+        Schema::create('fund_report_schedules', function (Blueprint $table) {
+            $table->bigInteger('schedule_id', true, true);
+            $table->bigInteger('fund_report_id', false, true);
+            $table->date('start_dt');
+            $table->date('end_dt');
+            $table->datetime('deleted_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        DB::raw("insert into fund_report_schedules (schedule_id, fund_report_id, start_dt, end_dt, created_at, updated_at, deleted_at) " .
+                "select schedule_id, entity_id, start_dt, end_dt, created_at, updated_at, deleted_at from fund_report_schedules " .
+                "where entity_descr = 'fund_report'");
+
+        // drop the scheduled_jobs table
+        Schema::dropIfExists('scheduled_jobs');
+
+        // rollback renameColumn
+        Schema::table('fund_reports', function (Blueprint $table) {
+            $table->renameColumn('scheduled_job_id', 'fund_report_schedule_id');
+        });
     }
 }

@@ -74,8 +74,5 @@ Route::resource('change_logs', App\Http\Controllers\API\ChangeLogAPIController::
 Route::resource('trade_portfolios', App\Http\Controllers\APIv1\TradePortfolioAPIControllerExt::class);
 Route::resource('trade_portfolio_items', App\Http\Controllers\API\TradePortfolioItemAPIController::class);
 
-
 Route::resource('schedules', App\Http\Controllers\API\ScheduleAPIController::class);
-
-
-Route::resource('scheduled_jobs', App\Http\Controllers\API\ScheduledJobAPIController::class);
+Route::resource('scheduled_jobs', App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt::class);

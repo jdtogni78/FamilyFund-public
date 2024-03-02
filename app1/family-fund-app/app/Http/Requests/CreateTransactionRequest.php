@@ -24,7 +24,6 @@ class CreateTransactionRequest extends FormRequest
      */
     public function rules()
     {
-        $rules = Transaction::$create_rules;
-        return $rules;
+        return Transaction::$rules;
     }
 }

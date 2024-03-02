@@ -99,22 +99,25 @@
               }
        });
 
-       $('#timestamp').datetimepicker({
-           format: 'YYYY-MM-DD',
-           useCurrent: true,
-           icons: {
-               up: "icon-arrow-up-circle icons font-2xl",
-               down: "icon-arrow-down-circle icons font-2xl"
-           },
-           sideBySide: true
-       }).on('dp.change', function(e){
+       $('#timestamp').
+       // datetimepicker({
+       //     format: 'YYYY-MM-DD',
+       //         useCurrent: true,
+       //         icons: {
+       //             up: "icon-arrow-up-circle icons font-2xl",
+       //             down: "icon-arrow-down-circle icons font-2xl"
+       //         },
+       //         sideBySide: true
+       // }).
+       on('dp.change', function(e){
            if(e.date){
                updateShareValue();
            }
        });
 
-   </script>
+       </script>
 @endpush
+
 
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
@@ -138,6 +141,12 @@
 <div class="form-group col-sm-6">
     {!! Form::label('descr', 'Descr:') !!}
     {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255]) !!}
+</div>
+
+<!-- Scheduled Job Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
+    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->

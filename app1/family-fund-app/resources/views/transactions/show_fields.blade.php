@@ -40,3 +40,15 @@
     <p>{{ $transaction->descr }}</p>
 </div>
 
+<!-- Flags Field -->
+<div class="form-group">
+    {!! Form::label('flags', 'Flags:') !!}
+    <p>{{ $transaction->flags }}</p>
+</div>
+
+<!-- Scheduled Job Id Field -->
+<div class="form-group">
+    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
+    <p>{{ $transaction->scheduled_job_id }}</p>
+</div>
+

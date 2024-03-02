@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class Transaction
  * @package App\Models
- * @version February 4, 2024, 7:42 pm UTC
+ * @version March 2, 2024, 10:21 am UTC
  *
- * @property \App\Models\Account $account
- * @property \App\Models\TransactionMatching $transactionMatching
- * @property \App\Models\TransactionMatching $transactionMatching1
- * @property \App\Models\AccountBalance $accountBalance
+ * @property \App\Models\AccountExt $account
+ * @property \App\Models\ScheduledJobExt $scheduledJob
+ * @property \Illuminate\Database\Eloquent\Collection $accountBalances
+ * @property \Illuminate\Database\Eloquent\Collection $transactionMatchings
+ * @property \Illuminate\Database\Eloquent\Collection $referenceTransactionMatching
  * @property string $type
  * @property string $status
  * @property number $value
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property integer $account_id
  * @property string $descr
  * @property string $flags
+ * @property integer $scheduled_job_id
  */
 class Transaction extends Model
 {
@@ -32,8 +34,13 @@ class Transaction extends Model
 
     public $table = 'transactions';
 
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+
 
     protected $dates = ['deleted_at'];
+
+
 
     public $fillable = [
         'type',
@@ -43,7 +50,8 @@ class Transaction extends Model
         'timestamp',
         'account_id',
         'descr',
-        'flags'
+        'flags',
+        'scheduled_job_id'
     ];
 
     /**
@@ -60,7 +68,8 @@ class Transaction extends Model
         'timestamp' => 'datetime',
         'account_id' => 'integer',
         'descr' => 'string',
-        'flags' => 'string'
+        'flags' => 'string',
+        'scheduled_job_id' => 'integer'
     ];
 
     /**
@@ -77,6 +86,7 @@ class Transaction extends Model
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
         'flags' => 'nullable|string|in:A,C,U',
+        'scheduled_job_id' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -91,14 +101,22 @@ class Transaction extends Model
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
         'flags' => 'nullable|string|in:A,C',
+        'scheduled_job_id' => 'nullable',
     ];
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
     public function account()
     {
         return $this->belongsTo(\App\Models\AccountExt::class, 'account_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function scheduledJob()
+    {
+        return $this->belongsTo(\App\Models\ScheduledJobExt::class, 'scheduled_job_id');
     }
 
     /**

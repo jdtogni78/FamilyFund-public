@@ -25,7 +25,7 @@ class UpdateTransactionRequest extends FormRequest
     public function rules()
     {
         $rules = Transaction::$rules;
-
+        
         return $rules;
     }
 }

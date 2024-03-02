@@ -3,13 +3,12 @@
 namespace App\Repositories;
 
 use App\Models\Transaction;
-use App\Models\TransactionExt;
 use App\Repositories\BaseRepository;
 
 /**
  * Class TransactionRepository
  * @package App\Repositories
- * @version February 4, 2024, 7:42 pm UTC
+ * @version March 2, 2024, 10:21 am UTC
 */
 
 class TransactionRepository extends BaseRepository
@@ -25,7 +24,8 @@ class TransactionRepository extends BaseRepository
         'timestamp',
         'account_id',
         'descr',
-        'flags'
+        'flags',
+        'scheduled_job_id'
     ];
 
     /**

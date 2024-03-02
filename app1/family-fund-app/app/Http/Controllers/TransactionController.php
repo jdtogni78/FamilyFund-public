@@ -12,7 +12,7 @@ use Response;
 
 class TransactionController extends AppBaseController
 {
-    /** @var  TransactionRepository */
+    /** @var TransactionRepository $transactionRepository*/
     protected $transactionRepository;
 
     public function __construct(TransactionRepository $transactionRepo)

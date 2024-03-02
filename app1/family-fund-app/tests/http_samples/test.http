@@ -42,7 +42,7 @@ Content-Type: application/json
 "timestamp":"2024-01-26T12:52:06.946234984"}
 
 ### POST schedule reports
-POST http://localhost:3000/api/schedule_reports
+POST http://localhost:3000/api/schedule_jobs
 Content-Type: application/json
 
 {}

@@ -49,9 +49,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);
-    Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
-    Route::resource('reportSchedules', App\Http\Controllers\WebV1\ReportScheduleControllerExt::class);
-    Route::resource('fundReportSchedules', App\Http\Controllers\FundReportScheduleController::class);
+    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
+    Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');
@@ -59,3 +58,5 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
 });
+
+

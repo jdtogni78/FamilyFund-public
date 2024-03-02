@@ -50,7 +50,7 @@ Route::get('accounts/{id}/report_as_of/{as_of}', 'App\Http\Controllers\APIv1\Acc
 Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv1\AccountAPIControllerExt@shareValueAsOf')
     ->name('accounts.share_value');
 
-Route::post('schedule_reports', 'App\Http\Controllers\APIv1\FundReportAPIControllerExt@scheduleReports');
+Route::post('schedule_jobs', 'App\Http\Controllers\APIv1\ScheduledJobsAPIControllerExt@scheduleJobs');
 
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class);
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class);
@@ -73,3 +73,9 @@ Route::resource('account_reports', App\Http\Controllers\APIv1\AccountReportAPICo
 Route::resource('change_logs', App\Http\Controllers\API\ChangeLogAPIController::class);
 Route::resource('trade_portfolios', App\Http\Controllers\APIv1\TradePortfolioAPIControllerExt::class);
 Route::resource('trade_portfolio_items', App\Http\Controllers\API\TradePortfolioItemAPIController::class);
+
+
+Route::resource('schedules', App\Http\Controllers\API\ScheduleAPIController::class);
+
+
+Route::resource('scheduled_jobs', App\Http\Controllers\API\ScheduledJobAPIController::class);

@@ -94,18 +94,6 @@
         <span>Account Reports</span>
     </a>
 </li>
-<li class="nav-item {{ Request::is('fundReportSchedules*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('fundReportSchedules.index') }}">
-        <i class="nav-icon icon-cursor"></i>
-        <span>Fund Report Schedules</span>
-    </a>
-</li>
-<li class="nav-item {{ Request::is('reportSchedules*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('reportSchedules.index') }}">
-        <i class="nav-icon icon-cursor"></i>
-        <span>Report Schedules</span>
-    </a>
-</li>
 <li class="nav-item {{ Request::is('changeLogs*') ? 'active' : '' }}">
     <a class="nav-link" href="{{ route('changeLogs.index') }}">
         <i class="nav-icon icon-cursor"></i>
@@ -116,5 +104,17 @@
     <a class="nav-link" href="{{ route('tradePortfolioItems.index') }}">
         <i class="nav-icon icon-cursor"></i>
         <span>Trade Portfolio Items</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('schedules*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('schedules.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Schedules</span>
+    </a>
+</li>
+<li class="nav-item {{ Request::is('scheduledJobs*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('scheduledJobs.index') }}">
+        <i class="nav-icon icon-cursor"></i>
+        <span>Scheduled Jobs</span>
     </a>
 </li>

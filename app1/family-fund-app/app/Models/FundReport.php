@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @version February 11, 2024, 11:55 pm UTC
  *
  * @property \App\Models\Fund $fund
- * @property \App\Models\FundReportSchedule $fundReportSchedule
- * @property \Illuminate\Database\Eloquent\Collection $fundReportSchedules
+ * @property \App\Models\ScheduledJobExt $scheduledJob
+// * @property \Illuminate\Database\Eloquent\Collection $fundReportSchedules
  * @property integer $fund_id
  * @property string $type
  * @property string $as_of
@@ -39,7 +39,7 @@ class FundReport extends Model
         'fund_id',
         'type',
         'as_of',
-        'fund_report_schedule_id'
+        'scheduled_job_id'
     ];
 
     /**
@@ -52,7 +52,7 @@ class FundReport extends Model
         'fund_id' => 'integer',
         'type' => 'string',
         'as_of' => 'date',
-        'fund_report_schedule_id' => 'integer'
+        'scheduled_job_id' => 'integer'
     ];
 
     /**
@@ -64,7 +64,7 @@ class FundReport extends Model
         'fund_id' => 'required',
         'type' => 'required|in:ALL,ADM',
         'as_of' => 'required',
-        'fund_report_schedule_id' => 'nullable',
+        'scheduled_job_id' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -81,16 +81,8 @@ class FundReport extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
-    public function fundReportSchedule()
+    public function scheduledJob()
     {
-        return $this->belongsTo(\App\Models\FundReportScheduleExt::class, 'fund_report_schedule_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     **/
-    public function fundReportScheduleTemplates()
-    {
-        return $this->hasMany(\App\Models\FundReportScheduleExt::class, 'fund_report_id');
+        return $this->belongsTo(\App\Models\ScheduledJobExt::class, 'scheduled_job_id');
     }
 }

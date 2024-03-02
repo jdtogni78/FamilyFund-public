@@ -12,7 +12,7 @@
         "inView": false
     },
     {
-        "name": "fund_id",
+        "name": "schedule_id",
         "dbType": "bigInteger,false,true",
         "htmlType": null,
         "validations": "required",
@@ -24,10 +24,10 @@
         "inView": true
     },
     {
-        "name": "type",
-        "dbType": "string,3",
+        "name": "entity_descr",
+        "dbType": "string,255",
         "htmlType": "text",
-        "validations": "required|in:ALL,ADM",
+        "validations": "required|string|max:255|string|max:255",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -36,7 +36,19 @@
         "inView": true
     },
     {
-        "name": "as_of",
+        "name": "entity_id",
+        "dbType": "bigInteger,false,true",
+        "htmlType": null,
+        "validations": "required",
+        "searchable": true,
+        "fillable": true,
+        "primary": false,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
+        "name": "start_dt",
         "dbType": "date",
         "htmlType": "date",
         "validations": "required",
@@ -48,10 +60,10 @@
         "inView": true
     },
     {
-        "name": "fund_report_schedule_id",
-        "dbType": "bigInteger,false,true",
-        "htmlType": null,
-        "validations": "nullable",
+        "name": "end_dt",
+        "dbType": "date",
+        "htmlType": "date",
+        "validations": "required",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -60,7 +72,7 @@
         "inView": true
     },
     {
-        "name": "updated_at",
+        "name": "created_at",
         "dbType": "datetime:nullable",
         "htmlType": "date",
         "validations": "nullable|nullable",
@@ -72,10 +84,10 @@
         "inView": false
     },
     {
-        "name": "created_at",
-        "dbType": "datetime",
+        "name": "updated_at",
+        "dbType": "datetime:nullable",
         "htmlType": "date",
-        "validations": "required",
+        "validations": "nullable|nullable",
         "searchable": false,
         "fillable": false,
         "primary": false,
@@ -97,10 +109,6 @@
     },
     {
         "type": "relation",
-        "relation": "mt1,Fund,fund_id"
-    },
-    {
-        "type": "relation",
-        "relation": "mt1,ScheduledJobs,scheduled_jobs_id"
+        "relation": "mt1,Schedule,schedule_id"
     }
 ]

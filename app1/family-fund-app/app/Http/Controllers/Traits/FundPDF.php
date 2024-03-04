@@ -48,7 +48,6 @@ class FundPDF
     {
         $name = 'assets_allocation.png';
         $arr = $api['portfolio']['assets'];
-//        print_r("arr alloc: " . json_encode($arr) . "\n");
         $labels = array_map(function ($v) {
             return $v['name'];
         }, $arr);

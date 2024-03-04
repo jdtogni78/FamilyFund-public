@@ -25,20 +25,22 @@
 <!-- Timestamp Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('timestamp', 'Timestamp:') !!}
-    {!! Form::text('timestamp', null, ['class' => 'form-control','id'=>'timestamp']) !!}
+    {!! Form::date('timestamp', null, ['class' => 'form-control', 'id' => 'timestamp']) !!}
 </div>
 
 @push('scripts')
    <script type="text/javascript">
+       api = {!! json_encode($api) !!};
        function updateShareValue() {
            if ($('#type').val() === 'INI') {
                return;
            }
-           $('#__share_price').val("...");
-           $('#shares').val("...");
+           $('#__share_price').val(0);
+           $('#shares').val(0);
 
            account = $('#account_id').find(":selected").val();
-           dt = $("#timestamp").datetimepicker('getDate').val();
+           // get value from timestamp
+           dt = $('#timestamp').val();
            console.log('Date chosen: "' + dt + '"');
 
            if (dt === '')  return;
@@ -54,8 +56,7 @@
                    console.log(share_price);
 
                    $('#__share_price').val(share_price);
-                   value = $('#value').val();
-                   $('#shares').val(value / share_price);
+                   updateSharePrice();
                }
            });
        }
@@ -65,22 +66,24 @@
        })
 
        function updateSharePrice() {
+           value = $('#value').val();
            if ($('#type').val() === 'INI') {
-               value = $('#value').val();
                shares = $('#shares').val();
                share_price = value / shares;
                $('#__share_price').val(share_price);
+           } else {
+               share_price = $('#__share_price').val();
+               if (share_price === 0) {
+                   $('#shares').val(0);
+               } else {
+                   $('#shares').val(value / share_price);
+               }
            }
        }
 
        $("#value").change(function() {
            value = $('#value').val();
-           if ($('#type').val() === 'INI') {
-               updateSharePrice();
-           } else {
-               share_price = $('#__share_price').val();
-               $('#shares').val(value / share_price);
-           }
+           updateSharePrice();
        })
 
        $("#shares").change(function() {
@@ -99,18 +102,18 @@
               }
        });
 
-       $('#timestamp').
-       // datetimepicker({
-       //     format: 'YYYY-MM-DD',
-       //         useCurrent: true,
-       //         icons: {
-       //             up: "icon-arrow-up-circle icons font-2xl",
-       //             down: "icon-arrow-down-circle icons font-2xl"
-       //         },
-       //         sideBySide: true
-       // }).
-       on('dp.change', function(e){
-           if(e.date){
+       $('#timestamp')
+           // .datetimepicker({
+           //     format: 'YYYY-MM-DD',
+           //         useCurrent: true,
+           //         icons: {
+           //             up: "icon-arrow-up-circle icons font-2xl",
+           //             down: "icon-arrow-down-circle icons font-2xl"
+           //         },
+           //         sideBySide: true
+           // })
+           .on('dp.change', function(e){
+           if (e.date) {
                updateShareValue();
            }
        });
@@ -144,10 +147,10 @@
 </div>
 
 <!-- Scheduled Job Id Field -->
-<div class="form-group col-sm-6">
-    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
-    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}
-</div>
+{{--<div class="form-group col-sm-6">--}}
+{{--    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}--}}
+{{--    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}--}}
+{{--</div>--}}
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">

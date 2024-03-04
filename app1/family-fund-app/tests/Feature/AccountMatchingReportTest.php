@@ -1,15 +1,18 @@
 <?php
 namespace Tests\Feature;
 
+use App\Http\Controllers\Traits\VerboseTrait;
+use App\Models\TransactionExt;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Log;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
 
 class AccountMatchingReportTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, VerboseTrait;
 
     public $date;
     private mixed $resMR;
@@ -45,11 +48,11 @@ class AccountMatchingReportTest extends TestCase
         $account = $factory->userAccount;
 
         if ($this->verbose) {
-            print_r("tran1: " . json_encode($factory->transactions[0]) . "\n");
-            print_r("match: " . json_encode($factory->matchTransaction) . "\n");
-            print_r("\nAMR " . json_encode($amr = $account->accountMatchingRules()->first()));
-            print_r("\nMR " . json_encode($amr->matchingRule()->first()));
-            print_r("\n");
+            Log::debug("tran1: " . json_encode($factory->transactions[0]));
+            Log::debug("match: " . json_encode($factory->matchTransaction));
+            Log::debug("\nAMR " . json_encode($amr = $account->accountMatchingRules()->first()));
+            Log::debug("\nMR " . json_encode($amr->matchingRule()->first()));
+            Log::debug("\n");
         }
 //        $factory->dumpTransactions();
 //        $factory->dumpMatchingRules();
@@ -66,20 +69,22 @@ class AccountMatchingReportTest extends TestCase
         $this->assertResponse(1, 50, 25, 50);
 
         // TODO: 2 tranMatchings
-        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
+        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_PENDING, null, null);
         $transaction->timestamp = '2021-11-12';
         $transaction->save();
 
         $matching = $account->accountMatchingRules()->first();
 
         // lets pretend it maxed out
-        $matchTransaction = $factory->createTransaction(25, null, 'MAT', 'C', null, null);
+        $matchTransaction = $factory->createTransaction(25, null, TransactionExt::TYPE_MATCHING,
+            TransactionExt::STATUS_PENDING, null, null);
         $matchTransaction->timestamp = '2021-11-12';
         $matchTransaction->save();
 
         if ($this->verbose) {
-            print_r("new tran: " . json_encode($transaction) . "\n");
-            print_r("new match: " . json_encode($matchTransaction) . "\n");
+            Log::debug("new tran: " . json_encode($transaction) . "\n");
+            Log::debug("new match: " . json_encode($matchTransaction) . "\n");
         }
         $factory->createTransactionMatching($matching, $matchTransaction, $transaction);
 
@@ -110,7 +115,8 @@ class AccountMatchingReportTest extends TestCase
         $this->getAPI($account);
         $this->assertResponse(1, 0, 0, 150);
 
-        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
+        $transaction = $factory->createTransaction(100, null, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_PENDING, null, null);
         $transaction->timestamp = '2021-11-02';
         $transaction->save();
 
@@ -119,13 +125,14 @@ class AccountMatchingReportTest extends TestCase
 
         $matching = $factory->userAccount->accountMatchingRules()->first();
         $value = $transaction->value;
-        $matchTransaction = $factory->createTransaction($value, null, 'MAT', 'C', null, null);
+        $matchTransaction = $factory->createTransaction($value, null, TransactionExt::TYPE_MATCHING,
+            TransactionExt::STATUS_CLEARED, null, null);
         $matchTransaction->timestamp = '2021-11-02';
         $matchTransaction->save();
 
         if ($this->verbose) {
-            print_r("new tran: " . json_encode($transaction) . "\n");
-            print_r("new match: " . json_encode($matchTransaction) . "\n");
+            Log::debug("new tran: " . json_encode($transaction) . "\n");
+            Log::debug("new match: " . json_encode($matchTransaction) . "\n");
         }
 
         $this->getAPI($account);
@@ -140,7 +147,7 @@ class AccountMatchingReportTest extends TestCase
     {
         if ($date == null) $date = $this->date;
         $uri = '/api/account_matching/' . $account->id . '/as_of/' . $date;
-        if ($this->verbose) print_r("\nuri: $uri\n");
+        $this->debug("\nuri: $uri\n");
         $this->response = $this->json(
             'GET',
             $uri
@@ -149,7 +156,7 @@ class AccountMatchingReportTest extends TestCase
         $this->assertApiSuccess();
 
         $response = json_decode($this->response->getContent(), true);
-        if ($this->verbose) print_r("\nresponse: " . json_encode($response) . "\n");
+        $this->debug("\nresponse: " . json_encode($response));
         $this->data = $response['data'];
         $this->resMR = $response['data']['matching_rules'];
         if (count($this->resMR) > 0) {

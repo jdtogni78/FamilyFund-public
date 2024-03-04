@@ -14,10 +14,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class FundReportExt extends FundReport
 {
+    const TYPE_ADMIN = 'ADM';
+    const TYPE_ALL = 'ALL';
+
     // typeMap
     public static array $typeMap = [
-        'ADM' => 'Admin',
-        'ALL' => 'All',
+        self::TYPE_ADMIN => 'Admin',
+        self::TYPE_ALL => 'All',
     ];
 
     /**
@@ -27,5 +30,8 @@ class FundReportExt extends FundReport
         return 'ADM' == $this->type;
     }
 
-
+    public function scheduledJobs()
+    {
+        return ScheduledJobExt::scheduledJobs(ScheduledJobExt::ENTITY_FUND_REPORT, $this->id);
+    }
 }

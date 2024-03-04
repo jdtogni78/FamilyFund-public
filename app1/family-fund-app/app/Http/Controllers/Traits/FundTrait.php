@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Traits;
 
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
 use App\Http\Controllers\WebV1\AccountControllerExt;
+use App\Http\Resources\FundReportResource;
 use App\Http\Resources\FundResource;
 use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
@@ -11,6 +12,7 @@ use App\Mail\FundQuarterlyReport;
 use App\Models\AccountExt;
 use App\Models\AccountReport;
 use App\Models\AssetExt;
+use App\Models\AssetPrice;
 use App\Models\FundExt;
 use App\Models\FundReportExt;
 use App\Models\PortfolioAsset;
@@ -248,8 +250,8 @@ Trait FundTrait
                 Log::info($msg);
                 $msgs[] = $msg;
                 $pdfFile = $pdf->file();
-                if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
-                if ($this->verbose) Log::debug("fund: " . json_encode($fund) . "\n");
+                if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile));
+                if ($this->verbose) Log::debug("fund: " . json_encode($fund));
                 $user = $account->user()->first();
                 $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
 
@@ -282,36 +284,35 @@ Trait FundTrait
         return $fundReport;
     }
 
-    protected function createFundReportFromSchedule(mixed $schedule, $asOf, $shouldRunBy)
+    protected function createFundReportFromSchedule(mixed $job, $asOf, $shouldRunBy)
     {
-        $fundReportRepo = \App::make(\App\Repositories\FundReportRepository::class);
-        // find fund report template
-        $templateReport = $fundReportRepo->makeModel()->newQuery()
-            ->where('fund_id', $schedule->fund_id)->first();
+        $templateReport = FundReportExt::query()
+            ->where('id', $job->entity_id)->first();
 
         $fundReport = $this->createFundReport([
             'fund_id' => $templateReport->fund_id,
             'type' => $templateReport->type,
             'as_of' => $shouldRunBy,
-            'scheduled_job_id' => $schedule->id,
+            'scheduled_job_id' => $job->id,
             'created_at' => $asOf,
         ]);
         Log::info('Created fund report from schedule: ' . json_encode($fundReport));
         return $fundReport;
     }
 
-    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): void
+    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?FundReportExt
     {
-        $assetPriceRepo = \App::make(\App\Repositories\AssetPriceRepository::class);
         // check if there is data to run fund report & is due
-        $hasNewAssets = $assetPriceRepo->makeModel()->newQuery()
+        $hasNewAssets = AssetPrice::query()
             ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
         if ($hasNewAssets > 0) {
-            Log::info('Creating fund report for schedule: ' . $schedule->id);
-            $fundReport = $this->createFundReportFromSchedule($schedule, $asOf, $shouldRunBy);
+            Log::info('Creating fund report for schedule: ' . $job->id);
+            $report = $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
+            return $report;
         } else {
-            Log::warning('Missing data for fund report schedule ' . $schedule->id);
+            Log::warning('Missing data for fund report schedule ' . $job->id);
         }
+        return null;
     }
 
     protected function sendFundEmailReport($fundReport): void

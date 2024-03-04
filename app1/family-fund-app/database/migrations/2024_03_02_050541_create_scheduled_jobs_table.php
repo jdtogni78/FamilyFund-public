@@ -28,7 +28,13 @@ class CreateScheduledJobsTable extends Migration
 
         Schema::table('fund_reports', function (Blueprint $table) {
             // rename the fund_report_schedule_id column to scheduled_job_id
-            $table->renameColumn('fund_report_schedule_id', 'scheduled_job_id');
+            $table->foreignId('scheduled_job_id')->after('as_of')->nullable()
+                ->constrained()->value('fund_report_schedule_id');
+        });
+
+        Schema::table('fund_reports', function (Blueprint $table) {
+            // rename the fund_report_schedule_id column to scheduled_job_id
+            $table->dropForeignId('fund_report_schedule_id');
         });
 
         DB::raw("insert into scheduled_jobs (schedule_id, entity_descr, entity_id, start_dt, end_dt, created_at, updated_at, deleted_at) " .
@@ -37,6 +43,7 @@ class CreateScheduledJobsTable extends Migration
         Schema::table('transactions', function (Blueprint $table) {
             // drop the fund_report_schedule_id column
             $table->foreignId('scheduled_job_id')->after('flags')->nullable()->constrained();
+            $table->datetime('timestamp')->change();
         });
 
         // drop the fund_report_schedules table
@@ -64,6 +71,17 @@ class CreateScheduledJobsTable extends Migration
         DB::raw("insert into fund_report_schedules (schedule_id, fund_report_id, start_dt, end_dt, created_at, updated_at, deleted_at) " .
                 "select schedule_id, entity_id, start_dt, end_dt, created_at, updated_at, deleted_at from fund_report_schedules " .
                 "where entity_descr = 'fund_report'");
+
+        Schema::table('fund_reports', function (Blueprint $table) {
+            // rename the fund_report_schedule_id column to scheduled_job_id
+            $table->foreignId('fund_report_schedule_id')->after('as_of')->nullable()
+                ->constrained()->value('scheduled_job_id');
+        });
+
+        Schema::table('fund_reports', function (Blueprint $table) {
+            // rename the fund_report_schedule_id column to scheduled_job_id
+            $table->dropForeignId('scheduled_job_id');
+        });
 
         // drop the scheduled_jobs table
         Schema::dropIfExists('scheduled_jobs');

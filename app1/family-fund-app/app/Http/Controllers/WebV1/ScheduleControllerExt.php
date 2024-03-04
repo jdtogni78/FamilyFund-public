@@ -14,7 +14,6 @@ use Response;
 
 class ScheduleControllerExt extends ScheduleController
 {
-
     public function create()
     {
         $api = [

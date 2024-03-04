@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\API\TradePortfolioAPIController;
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\TradePortfolioExt;
 use App\Models\Utils;
 use App\Repositories\TradePortfolioRepository;
@@ -19,6 +20,8 @@ use Response;
 
 class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
 {
+    use VerboseTrait;
+
     public function __construct(TradePortfolioRepository $tradePortfolioRepo)
     {
         parent::__construct($tradePortfolioRepo);
@@ -38,7 +41,7 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
             ->where('start_dt', '<=', $asOf)
             ->where('end_dt', '>', $asOf);
 
-        Log::debug("TRADE PORTFOLIOS: " . json_encode($tradePortfolios) . "\n");
+        $this->debug("TRADE PORTFOLIOS: " . json_encode($tradePortfolios));
         $arr = [];
         foreach ($tradePortfolios as $tradePortfolio) {
             $arr[] = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
@@ -59,7 +62,7 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $request = request();
         $asOf = $request->asOf ?? date('Y-m-d');
         $asOf .= "T23:59:59";
-        Log::debug("TRADE PORTFOLIO: " . $accountName . " " . $asOf);
+        $this->debug("TRADE PORTFOLIO: " . $accountName . " " . $asOf);
         # TODO: should be tested separately - end date comparison is wrong
         /** @var TradePortfolioExt $tradePortfolio */
         $tradePortfolio = $this->tradePortfolioRepository->all()

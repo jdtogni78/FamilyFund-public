@@ -2,6 +2,7 @@
 namespace Tests\Feature;
 
 use App\Models\Schedule;
+use App\Models\ScheduleExt;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
@@ -39,7 +40,7 @@ class ScheduleTest extends TestCase
      */
     public function testSchedules($today, $lastRun, $expected)
     {
-        $rs = Schedule::factory()->make(['type' => 'DOM', 'value' => '5']);
+        $rs = Schedule::factory()->make(['type' => ScheduleExt::TYPE_DAY_OF_MONTH, 'value' => '5']);
         $runBy = $rs->shouldRunBy(new Carbon($today), $lastRun == null? null : new Carbon($lastRun));
         $this->assertEquals($expected, $runBy->toDateString());
     }
@@ -49,18 +50,18 @@ class ScheduleTest extends TestCase
     public function typesAndValuesProvider()
     {
         return [
-            ['2023-12-27', 370, 'DOM', '5', 12],
-            ['2023-12-27', 370, 'DOW', '5', 53],
+            ['2023-12-27', 370, ScheduleExt::TYPE_DAY_OF_MONTH, '5', 12],
+            ['2023-12-27', 370, ScheduleExt::TYPE_DAY_OF_WEEK, '5', 53],
 
-            ['2023-12-27', 370, 'DOY', '5', 1],
-            ['2023-12-27',   8, 'DOY', '5', 0],
-            ['2023-12-27',   9, 'DOY', '5', 1],
-            ['2023-12-27',   5, 'DOY', '1', 1],
-            ['2023-12-31', 367, 'DOY', '1', 2],
+            ['2023-12-27', 370, ScheduleExt::TYPE_DAY_OF_YEAR, '5', 1],
+            ['2023-12-27',   8, ScheduleExt::TYPE_DAY_OF_YEAR, '5', 0],
+            ['2023-12-27',   9, ScheduleExt::TYPE_DAY_OF_YEAR, '5', 1],
+            ['2023-12-27',   5, ScheduleExt::TYPE_DAY_OF_YEAR, '1', 1],
+            ['2023-12-31', 367, ScheduleExt::TYPE_DAY_OF_YEAR, '1', 2],
 
-            ['2023-12-27', 370, 'DOQ', '5', 4],
-            ['2023-01-01',   3, 'DOQ', '5', 0],
-            ['2023-01-01',   4, 'DOQ', '5', 1],
+            ['2023-12-27', 370, ScheduleExt::TYPE_DAY_OF_QUARTER, '5', 4],
+            ['2023-01-01',   3, ScheduleExt::TYPE_DAY_OF_QUARTER, '5', 0],
+            ['2023-01-01',   4, ScheduleExt::TYPE_DAY_OF_QUARTER, '5', 1],
         ];
     }
 

@@ -1,23 +1,29 @@
 <div class="table-responsive-sm">
     <table class="table table-striped" id="scheduledJobs-table">
         <thead>
-            <tr>
-                <th>Schedule Id</th>
-        <th>Entity Descr</th>
-        <th>Entity Id</th>
-        <th>Start Dt</th>
-        <th>End Dt</th>
-                <th colspan="3">Action</th>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <th>Schedule Id</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th>Entity Descr</th>
+            <th>Entity Id</th>
+            <th>Start Dt</th>
+            <th>End Dt</th>
+            <th colspan="3">Action</th>
+        </tr>
         </thead>
         <tbody>
         @foreach($scheduledJobs as $scheduledJob)
             <tr>
+                <td>{{ $scheduledJob->id }}</td>
                 <td>{{ $scheduledJob->schedule_id }}</td>
-            <td>{{ $scheduledJob->entity_descr }}</td>
-            <td>{{ $scheduledJob->entity_id }}</td>
-            <td>{{ $scheduledJob->start_dt }}</td>
-            <td>{{ $scheduledJob->end_dt }}</td>
+                <td>{{ $scheduledJob->schedule()->first()->type }}</td>
+                <td>{{ $scheduledJob->schedule()->first()->value }}</td>
+                <td>{{ $scheduledJob->entity_descr }}</td>
+                <td>{{ $scheduledJob->entity_id }}</td>
+                <td>{{ $scheduledJob->start_dt }}</td>
+                <td>{{ $scheduledJob->end_dt }}</td>
                 <td>
                     {!! Form::open(['route' => ['scheduledJobs.destroy', $scheduledJob->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

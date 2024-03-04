@@ -39,7 +39,8 @@ class TransactionControllerExt extends TransactionController
             'flagsMap' => TransactionExt::$flagsMap,
             'accountMap' => AccountExt::accountMap(),
         ];
-        return view('transactions.create')->with('api', $api);
+        return view('transactions.create')
+            ->with('api', $api);
     }
 
     /**
@@ -83,7 +84,8 @@ class TransactionControllerExt extends TransactionController
             return redirect(route('transactions.index'));
         }
 
-        return view('transactions.show')->with('transaction', $transaction);
+        return view('transactions.show')
+            ->with('transaction', $transaction);
     }
 
     /**

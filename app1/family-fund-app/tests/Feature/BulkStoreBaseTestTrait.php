@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use Illuminate\Http\Response;
 
 trait BulkStoreBaseTestTrait
 {
+    use VerboseTrait;
+
     protected array $post;
 
     protected function postValidationError(array $post=null, $error_code = null): void
@@ -25,9 +28,9 @@ trait BulkStoreBaseTestTrait
     protected function postBulkAPI(array $post=null): void
     {
         if ($post==null) $post = $this->post;
-        if ($this->verbose) print_r("*** postBulkAPI ".$this->api.": " . json_encode($post)."\n");
+        $this->debug("*** postBulkAPI ".$this->api.": " . json_encode($post));
         $this->response = $this->json('POST', $this->api, $post);
-        if ($this->verbose) print_r("*** response: " . json_encode($this->response)."\n");
+        $this->debug("*** response: " . json_encode($this->response));
         $this->assertEmptyData();
         $this->assertApiSuccess();
     }
@@ -36,7 +39,7 @@ trait BulkStoreBaseTestTrait
     protected function assertEmptyData()
     {
         if ($this->verbose)
-            print_r($this->response->content()."\n");
+            Log::debug($this->response->content()."\n");
         $res = json_decode($this->response->content());
         $this->assertEmpty($res->data);
     }
@@ -59,7 +62,7 @@ trait BulkStoreBaseTestTrait
             } else {
                 $check = abs($child->$key - $value) < $errThreashold;
                 if ($this->verbose)
-                    print_r("values: " . json_encode([$child->$key, $value, $errThreashold, $check]) . "\n");
+                    Log::debug("values: " . json_encode([$child->$key, $value, $errThreashold, $check]) . "\n");
                 $this->assertTrue($check);
             }
         } else {
@@ -96,7 +99,7 @@ trait BulkStoreBaseTestTrait
     protected function postForError(?array $post)
     {
         if ($post == null) $post = $this->post;
-        if ($this->verbose) print_r("*** postError " . $this->api . ": " . json_encode($post) . "\n");
+        $this->debug("*** postError " . $this->api . ": " . json_encode($post));
         $this->response = $this->json('POST', $this->api, $post);
     }
 

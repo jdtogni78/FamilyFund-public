@@ -1,19 +1,21 @@
 <div class="table-responsive-sm">
     <table class="table table-striped" id="schedules-table">
         <thead>
-            <tr>
-                <th>Descr</th>
-        <th>Type</th>
-        <th>Value</th>
-                <th colspan="3">Action</th>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <th>Descr</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th colspan="3">Action</th>
+        </tr>
         </thead>
         <tbody>
         @foreach($schedules as $schedule)
             <tr>
+                <td>{{ $schedule->id }}</td>
                 <td>{{ $schedule->descr }}</td>
-            <td>{{ $schedule->type }}</td>
-            <td>{{ $schedule->value }}</td>
+                <td>{{ $schedule->type }}</td>
+                <td>{{ $schedule->value }}</td>
                 <td>
                     {!! Form::open(['route' => ['schedules.destroy', $schedule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

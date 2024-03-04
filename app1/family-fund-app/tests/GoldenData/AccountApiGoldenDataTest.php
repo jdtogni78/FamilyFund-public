@@ -93,7 +93,7 @@ class AccountApiGoldenDataTest extends TestCase
 
     public function compareCurrency($a, $b)
     {
-        if ($this->verbose) print_r("comp float: " . json_encode([$a, $b]) . "\n");
+        if ($this->verbose) print_r("comp float: " . json_encode([$a, $b]));
         return abs($a - $b) < 0.02;
     }
 

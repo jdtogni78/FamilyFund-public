@@ -23,11 +23,11 @@ class ScheduleFactory extends Factory
     {
         return [
             'descr' => $this->faker->word,
-        'type' => $this->faker->word,
-        'value' => $this->faker->word,
-        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'type' => $this->faker->word,
+            'value' => $this->faker->word,
+            'created_at' => $this->faker->date('Y-m-d H:i:s'),
+            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+//            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

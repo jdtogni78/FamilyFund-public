@@ -145,7 +145,7 @@ trait AccountTrait
 
     protected function createAccountMatchingResponse($account, $asOf): array
     {
-        if ($this->verbose) print_r("amresp: " . json_encode($account) . " " . $asOf . "\n");
+        $this->debug("amresp: " . json_encode($account) . " " . $asOf);
         $tsAsOf = (new Carbon($asOf))->getTimestamp();
         $arr = [];
         foreach ($account->accountMatchingRules()->get() as $amr) {
@@ -210,8 +210,8 @@ trait AccountTrait
             Log::info($msg);
             $msgs[] = $msg;
             $pdfFile = $pdf->file();
-            if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile) . "\n");
-            if ($this->verbose) Log::debug("account: " . json_encode($account) . "\n");
+            $this->debug("pdfFile: " . json_encode($pdfFile));
+            $this->debug("account: " . json_encode($account));
             $reportData = new AccountQuarterlyReport($account, $asOf, $pdfFile);
 
             $sentMsg = $this->sendMail($reportData, $account->email_cc);

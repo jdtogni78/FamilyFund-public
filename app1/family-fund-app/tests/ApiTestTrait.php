@@ -126,16 +126,16 @@ trait ApiTestTrait
         $this->success = null;
         if (array_key_exists('success', $response)) {
             $this->success = $response['success'];
-            if ($this->verbose) Log::debug("SUCCESS: " . ($this->success?"TRUE":"false") . "\n");
+            if ($this->verbose) Log::debug("SUCCESS: " . ($this->success?"TRUE":"false"));
         }
         if (array_key_exists('message', $response)) {
             $this->message = $response['message'];
-            if ($this->verbose) Log::debug("MESSAGE: " . $this->message . "\n");
+            if ($this->verbose) Log::debug("MESSAGE: " . $this->message);
         }
         if (array_key_exists('data', $response)) {
             $this->data = $response['data'];
         }
-        if ($this->verbose) Log::debug("response: " . $this->response->getStatusCode() . " " . json_encode($response) . "\n");
+        if ($this->verbose) Log::debug("response: " . $this->response->getStatusCode() . " " . json_encode($response));
     }
 
     public function postAPI(string $api, array $data) {

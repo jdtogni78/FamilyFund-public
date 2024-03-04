@@ -70,7 +70,6 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
     {
         $portfolio = PortfolioExt::where('source', $source)->get()->first();
         $data['portfolio_id'] = $portfolio->id;
-//        print_r("create: " . json_encode($data) . "\n");
         $ap = PortfolioAsset::create($data);
         if ($data['position'] != $ap->position) {
             $this->warn("Position was adjusted from ".$data['position']." to ".$ap->position);

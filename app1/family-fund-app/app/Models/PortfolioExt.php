@@ -52,7 +52,7 @@ class PortfolioExt extends Portfolio
             ->whereDate('start_dt', '<', $end);
 
         $max = $query->max('position');
-        Log::debug("max cash: ".json_encode([$this->id, $cash->id, $max])."\n");
+        Log::debug("max cash: ".json_encode([$this->id, $cash->id, $max]));
         if ($max == null) $max = 0.0;
 
         return $max;
@@ -102,11 +102,9 @@ class PortfolioExt extends Portfolio
             }
         }
         // $totalValue = round($totalValue,4);
-        if ($this->verbose) {
-            print('id '.$this->id."\n");
-            print('asOf '.$now."\n");
-            print('totalvalue '.$totalValue."\n");
-        }
+        $this->debug('id '.$this->id);
+        $this->debug('asOf '.$now);
+        $this->debug('totalvalue '.$totalValue);
         return $totalValue;
     }
 

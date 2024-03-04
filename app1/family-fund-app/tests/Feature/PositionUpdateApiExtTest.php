@@ -28,13 +28,8 @@ class PositionUpdateApiExtTest extends TestCase
     }
 
     public function getChildren($asset, $source) {
-//        print_r("asset: " . json_encode($asset) . "\n");
         $portfolio = PortfolioExt::where('source', $source)->get()->first();
         $query = $portfolio->assetHistory($asset->id);
-//        print_r(count($query));
-//        foreach ($query as $o) {
-//            print_r("o: " . json_encode($o) . "\n");
-//        }
         return $query;
     }
 

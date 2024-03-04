@@ -2,14 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\AssetExt;
+use Log;
 use Ramsey\Collection\Collection;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\DataFactory;
 
 trait BulkStoreTestTrait
 {
-    use TimestampTestTrait;
+    use TimestampTestTrait, VerboseTrait;
     use BulkStoreBaseTestTrait;
 
     protected $field;
@@ -61,8 +63,8 @@ trait BulkStoreTestTrait
         if ($cashTs == null)    $cashTs    = $this->df->cashPosition->start_dt;
         if ($cashValue == null) $cashValue = $this->df->cashPosition->position;
 
-        if ($this->verbose) print_r("SETUP ".json_encode($this->df->portfolio)."\n");
-        if ($this->verbose) print_r("SETUP ".json_encode($this->df->cashPosition)."\n");
+        $this->debug("SETUP ".json_encode($this->df->portfolio));
+        $this->debug("SETUP ".json_encode($this->df->cashPosition));
 
         $this->cashTimestamp = $cashTs;
         $this->cashValue = $cashValue;
@@ -188,7 +190,7 @@ trait BulkStoreTestTrait
         $children = $this->getChildren($asset, $this->source);
         $child = $children->first();
         $value = $child->{$this->field};
-        if ($this->verbose) print_r("child: " . json_encode($child) . "\n");
+        $this->debug("child: " . json_encode($child));
 
         $this->assertCount(1, $children);
         $this->assertEquals($value, $child->{$this->field});
@@ -200,7 +202,7 @@ trait BulkStoreTestTrait
         $children = $this->getChildren($asset, $this->source);
 
         $child = $children->first();
-        if ($this->verbose) print_r("child: " . json_encode($child) . "\n");
+        $this->debug("child: " . json_encode($child));
         $this->assertCount(1, $children);
         $this->assertEquals($value, $child->{$this->field});
     }
@@ -285,7 +287,7 @@ trait BulkStoreTestTrait
 
             $this->assertCount(1, $res->toArray());
             $asset = $res->first();
-            if ($this->verbose) print_r(json_encode($asset) . "\n");
+            $this->debug(json_encode($asset));
 
             $symbol['updated_at'] = $symbol['created_at'] = date('Y-m-d');
             $this->assertAssetSymbol($asset, $symbol);
@@ -306,10 +308,10 @@ trait BulkStoreTestTrait
 
     protected function validate3Historical($collection, $field, $name, $expectedValue, $ts1, $value1, $ts2, $value2)
     {
-        if ($this->verbose) print_r(json_encode([$name, $ts1, $expectedValue, $ts2, $value2])."\n");
+        $this->debug(json_encode([$name, $ts1, $expectedValue, $ts2, $value2])."\n");
         $this->assertEquals(3, count($collection));
         foreach ($collection as $obj) {
-            if ($this->verbose) print_r(json_encode($obj)."\n");
+            $this->debug(json_encode($obj)."\n");
             if ($this->compareTimestamp($obj->start_dt, $this->post['timestamp'])) { // middle record
                 $this->assertTrue($this->compareTimestamp($obj->end_dt, $ts2));
                 $this->assertEquals($expectedValue, $obj[$field]);
@@ -325,10 +327,10 @@ trait BulkStoreTestTrait
     }
     protected function validate2Historical($collection, $field, $name, $expectedValue, $oldTs, $oldExpectedValue, $ts2=null, $value2=null)
     {
-        if ($this->verbose) print_r(json_encode([$name, $oldTs, $expectedValue])."\n");
+        $this->debug(json_encode([$name, $oldTs, $expectedValue])."\n");
         $this->assertEquals(2, count($collection));
         foreach ($collection as $obj) {
-            if ($this->verbose) print_r(json_encode($obj)."\n");
+            $this->debug(json_encode($obj)."\n");
             if ($this->compareTimestamp($obj->start_dt, $this->post['timestamp'])) {
                 $this->assertEquals($expectedValue, $obj->$field);
                 $this->assertTrue($this->isInfinity($obj->end_dt));
@@ -342,10 +344,10 @@ trait BulkStoreTestTrait
 
     public function validateUniqueHistorical($collection, $field, $name, $expectedValue, $timestamp, $value1=null, $ts2=null, $value2=null): void
     {
-        if ($this->verbose) print_r("coll: " . json_encode($collection->toArray()) . "\n");
+        $this->debug("coll: " . json_encode($collection->toArray()));
         $count = 0;
         foreach ($collection as $obj) {
-            if ($this->verbose) print_r(json_encode($obj)."\n");
+            $this->debug(json_encode($obj));
             if ($this->compareTimestamp($timestamp, $obj->start_dt)) {
                 $this->assertEquals($expectedValue, $obj->{$field});
                 if ($value1 == "NOTINF") {

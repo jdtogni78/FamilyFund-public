@@ -6,7 +6,7 @@
             <th>Fund Id</th>
             <th>Type</th>
             <th>As Of</th>
-            <th>Fund Report Schedule Id</th>
+            <th>Scheduled Job Id</th>
             <th>Created At</th>
             <th colspan="3">Action</th>
         </tr>

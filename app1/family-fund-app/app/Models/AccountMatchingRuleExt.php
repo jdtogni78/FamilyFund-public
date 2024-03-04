@@ -2,31 +2,35 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Repositories\AssetPriceRepository;
 use Exception;
 use Illuminate\Support\Carbon;
+use Log;
 
 class AccountMatchingRuleExt extends AccountMatchingRule
 {
+    use VerboseTrait;
+
     public function getMatchValueAsOf(Carbon $now, $isDatedReport, $func, $name): mixed
     {
         $value = 0;
         $mr = $this->matchingRule()->first();
         $account = $this->account()->first();
         if ($this->isInPeriod($now, $isDatedReport)) {
-            if ($this->verbose) print_r($name . ": " . $mr->transactionMatchings()->count(). "\n");
+            $this->debug($name . ": " . $mr->transactionMatchings()->count());
             foreach ($mr->transactionMatchings()->get() as $tm) {
                 foreach ($tm->$func()->get() as $transaction) {
                     $inTime = $this->isTransactionInTime($isDatedReport, $transaction->timestamp, $now);
-                    if ($this->verbose) print_r("tran acct : " . $transaction->account_id . " " . $account->id . "\n");
+                    $this->debug("tran acct : " . $transaction->account_id . " " . $account->id);
                     if ($inTime && $transaction->account_id == $account->id) {
-                        if ($this->verbose) print_r("vals: " . json_encode([$now, $transaction->toArray()]) . "\n");
+                        $this->debug("vals: " . json_encode([$now, $transaction->toArray()]));
                         $value += $transaction->value;
                     }
                 }
             }
         }
-        if ($this->verbose) print_r("{$name}: $value\n");
+        $this->debug("{$name}: $value");
         return $value;
     }
     public function getMatchGrantedAsOf(Carbon $now, $isDatedReport = true): mixed
@@ -41,7 +45,7 @@ class AccountMatchingRuleExt extends AccountMatchingRule
     public function isTransactionInTime($isDatedReport, Carbon $timestamp, Carbon $now): bool
     {
         $inTime = !$isDatedReport || $now >= $timestamp;
-        if ($this->verbose) print_r("now: " . $now . " ts " . $timestamp . " pastonly " . $isDatedReport . " inTime " . $inTime . "\n");
+        $this->debug("now: " . $now . " ts " . $timestamp . " pastonly " . $isDatedReport . " inTime " . $inTime . "\n");
         return $inTime;
     }
 
@@ -52,7 +56,7 @@ class AccountMatchingRuleExt extends AccountMatchingRule
             $ret = $now >= $mr->date_start;
         }
 //        $this->verbose = true;
-        if ($this->verbose) print_r("inPeriod: ".json_encode([
+        $this->debug("inPeriod: ".json_encode([
             $this->id, $this->matchingRule()->first()->id,
             "now", $now,
                 "start", $mr->date_start,
@@ -60,7 +64,7 @@ class AccountMatchingRuleExt extends AccountMatchingRule
                 $now >= $mr->date_start,
                 $now <= $mr->date_end,
                 "ret", $ret])
-            . "\n");
+            );
         return $ret;
     }
 
@@ -80,8 +84,8 @@ class AccountMatchingRuleExt extends AccountMatchingRule
                 $deposits = $account->depositedValueBetween($mr->date_start, $mr->date_end);
                 $applicable = $this->applicableValue($deposits, $tranToMatch->value);
                 $matchValue = $applicable * ($mr->match_percent / 100.0);
-                if ($this->verbose) print_r("match: " . json_encode([$used, $possible, $deposits, $applicable,
-                            $tranToMatch->value, $tranToMatch->id, $matchValue]) . "\n");
+                $this->debug("match: " . json_encode([$used, $possible, $deposits, $applicable,
+                            $tranToMatch->value, $tranToMatch->id, $matchValue]));
                 if ($applicable > $tranToMatch->value) {
                     throw new Exception("Matching more than the transaction value: tran id " + $tranToMatch->id);
                 }

@@ -27,9 +27,9 @@ class ScheduledJobFactory extends Factory
             'entity_id' => $this->faker->word,
             'start_dt' => $this->faker->date('Y-m-d'),
             'end_dt' => $this->faker->date('Y-m-d'),
-            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
+//            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
             'created_at' => $this->faker->date('Y-m-d H:i:s'),
-            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+//            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

@@ -54,7 +54,6 @@ class FundExt extends Fund
     {
         $value = $this->valueAsOf($now);
         $shares = $this->sharesAsOf($now);
-//        print_r(json_encode([$value,$shares,$now->toDatetimeString(),$this->id])."\n");
         if ($shares == 0) return 0;
         return $value / $shares;
     }

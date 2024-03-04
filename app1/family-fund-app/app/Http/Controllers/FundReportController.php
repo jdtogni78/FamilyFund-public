@@ -29,7 +29,8 @@ class FundReportController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $fundReports = $this->fundReportRepository->all();
+        $fundReports = $this->fundReportRepository->all()
+            ->sortByDesc('as_of');
 
         return view('fund_reports.index')
             ->with('fundReports', $fundReports);

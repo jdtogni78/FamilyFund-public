@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use Carbon\Carbon;
 use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,14 +11,21 @@ use Illuminate\Support\Facades\Log;
 
 class ScheduleExt extends Schedule
 {
+    use VerboseTrait;
+
+    const TYPE_DAY_OF_MONTH = 'DOM';
+    const TYPE_DAY_OF_WEEK = 'DOW';
+    const TYPE_DAY_OF_YEAR = 'DOY';
+    const TYPE_DAY_OF_QUARTER = 'DOQ';
+
     /**
      * @var string[]
      */
     public static array $typeMap = [
-        'DOM' => 'Day of Month',
-        'DOW' => 'Day of Week',
-        'DOY' => 'Day of Year',
-        'DOQ' => 'Day of Quarter',
+        self::TYPE_DAY_OF_MONTH => 'Day of Month',
+        self::TYPE_DAY_OF_WEEK => 'Day of Week',
+        self::TYPE_DAY_OF_YEAR => 'Day of Year',
+        self::TYPE_DAY_OF_QUARTER => 'Day of Quarter',
     ];
 
     public function shouldRunBy(Carbon $today, null|Carbon $lastRun) {
@@ -27,7 +35,7 @@ class ScheduleExt extends Schedule
         $nextRunToday = $this->nextRunDate($today->copy()->addDay());
 
         // log function call
-        Log::info('RS shouldRunBy', [
+        $this->debug('RS shouldRunBy', [
             'today'        => $today->toDateTimeString(),
             'lastRun'      => $lastRun?->toDateTimeString(),
             'prevRunToday' => $prevRunToday->toDateTimeString(),
@@ -36,18 +44,18 @@ class ScheduleExt extends Schedule
 
         // if last run is null, return prev run date based on today
         if (!$lastRun) {
-            Log::info('RS shouldRunBy: lastRun is null: ' . $prevRunToday->toDateString());
+            $this->info('RS shouldRunBy: lastRun is null: ' . $prevRunToday->toDateString());
             return $prevRunToday;
         }
 
         // if last run is older than todays prev run, return prev run date based on today
         if ($lastRun->lt($prevRunToday)) {
-            Log::info('RS shouldRunBy: lastRun is older than prevRunToday: ' . $prevRunToday->toDateString());
+            $this->info('RS shouldRunBy: lastRun is older than prevRunToday: ' . $prevRunToday->toDateString());
             return $prevRunToday;
         }
 
         // then, last run is newer than todays prev run, return next run date based on today
-        Log::info('RS shouldRunBy: lastRun is newer than prevRunToday: ' . $nextRunToday->toDateString());
+        $this->info('RS shouldRunBy: lastRun is newer than prevRunToday: ' . $nextRunToday->toDateString());
         return $nextRunToday;
     }
 
@@ -71,16 +79,16 @@ class ScheduleExt extends Schedule
         $type = $this->type;
         $value = $this->value;
         switch ($type) {
-            case 'DOM':
+            case self::TYPE_DAY_OF_MONTH:
                 return $date->day == $value;
-            case 'DOW':
+            case self::TYPE_DAY_OF_WEEK:
                 return $date->dayOfWeek == $value;
-            case 'DOY':
+            case self::TYPE_DAY_OF_YEAR:
                 return $date->dayOfYear == $value;
-            case 'DOQ':
+            case self::TYPE_DAY_OF_QUARTER:
                 $first = $date->copy()->firstOfQuarter();
                 $diff = $first->diffInDays($date) + 1;
-//                Log::info($date->toDateString() . ' -- '. $first->toDateString() . ' -- ' . $diff);
+//                $this->info($date->toDateString() . ' -- '. $first->toDateString() . ' -- ' . $diff);
                 return $diff == $value;
         }
     }

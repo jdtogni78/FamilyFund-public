@@ -1,11 +1,18 @@
 <?php namespace Tests;
 
+use App\Models\AccountExt;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
+use App\Models\FundReport;
+use App\Models\Schedule;
+use App\Models\ScheduledJob;
+use App\Models\ScheduledJobExt;
+use App\Models\ScheduleExt;
 use App\Models\TradePortfolio;
 use App\Models\TradePortfolioExt;
 use App\Models\TradePortfolioItem;
 use App\Models\Transaction;
+use App\Models\TransactionExt;
 use App\Models\TransactionMatching;
 use App\Models\User;
 use App\Models\Fund;
@@ -25,7 +32,8 @@ class DataFactory
     public $userNum = 0;
     public $user;
     public $users = array();
-    public $userAccount;
+
+    public AccountExt $userAccount;
     public $userAccounts = array();
 
     public $matchingRules = array();
@@ -73,7 +81,8 @@ class DataFactory
         $this->source = $this->portfolio->source;
 
         if (!$noTransaction) {
-            $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, TransactionExt::TYPE_INITIAL, 'C', null, $timestamp);
+            $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, TransactionExt::TYPE_INITIAL,
+                TransactionExt::STATUS_CLEARED, null, $timestamp);
 
             $this->fundBalance = AccountBalance::factory()
                 ->for($this->fundTransaction, 'transaction')
@@ -163,14 +172,17 @@ class DataFactory
         return $this->accountMatching;
     }
 
-    public function createTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE, $status='P', $flags=null, $timestamp=null) {
+    public function createTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE,
+                                      $status=TransactionExt::STATUS_PENDING, $flags=null, $timestamp=null) {
         $tran = $this->makeTransaction($value, $account, $type, $status, $flags, $timestamp);
         $tran->save();
         if ($this->verbose) Log::debug("tran: " . json_encode($tran));
         return $tran;
     }
 
-    public function makeTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE, $status='P', $flags=null, $timestamp=null, $shares=null) {
+    public function makeTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE,
+                                    $status=TransactionExt::STATUS_PENDING, $flags=null, $timestamp=null, $shares=null) {
+        Log::debug("makeTransaction: " . json_encode($account) . " " . $type . " " . $status . " " . $value . " " . $flags . " " . $timestamp . " " . $shares);
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -188,12 +200,75 @@ class DataFactory
         if ($shares) $arr['shares'] = $shares;
         if ($timestamp) $arr['timestamp'] = $timestamp;
 
+        Log::debug("makeTransaction: " . json_encode($arr));
         $this->transaction = Transaction::factory()
             ->for($account, 'account')
             ->make($arr);
         $this->transactions[] = $this->transaction;
         return $this->transaction;
     }
+
+    public function createScheduledTransaction($schedType, $schedValue, $timestamp, $value, $account=null)
+    {
+        $schedule = $this->createSchedule($schedType, $schedValue);
+        $tran = $this->makeTransaction($value, $account, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_SCHEDULED, TransactionExt::FLAGS_NO_MATCH, $timestamp);
+        $tran->save();
+        $job = $this->createScheduledJob($schedule, ScheduledJobExt::ENTITY_TRANSACTION, $tran->id, $timestamp);
+        if ($this->verbose) Log::debug("tran: " . json_encode($tran));
+        return array($schedule, $job, $tran);
+    }
+
+    public function createScheduledFundReport($schedType, $schedValue, $fund, $type, $asOf=null)
+    {
+        if ($asOf == null) $asOf = Carbon::parse('9999-12-31');
+        $schedule = $this->createSchedule($schedType, $schedValue);
+        $report = $this->createFundReport($fund, $type, $asOf);
+        $job = $this->createScheduledJob($schedule, ScheduledJobExt::ENTITY_FUND_REPORT, $report->id, $asOf);
+        if ($this->verbose) Log::debug("report: " . json_encode($report));
+        return array($schedule, $job, $report);
+    }
+
+    public function createFundReport($fund, $type, $asOf=null) {
+        if ($asOf == null) $asOf = Carbon::parse('9999-12-31');
+        $report = FundReport::factory()
+            ->for($fund, 'fund')
+            ->create([
+                'type' => $type,
+                'as_of' => $asOf,
+            ]);
+        $report->save();
+        if ($this->verbose) Log::debug("fund report: " . json_encode($report));
+        return $report;
+    }
+
+    public function createScheduledJob($schedule, $entity_descr, $entity_id, $start_dt=null, $end_dt='9999-12-31')
+    {
+        if ($start_dt == null) $start_dt = date('Y-m-d');
+        $job = ScheduledJob::factory()
+            ->for($schedule, 'schedule')
+            ->create([
+                'entity_descr' => $entity_descr,
+                'entity_id' => $entity_id,
+                'start_dt' => $start_dt,
+                'end_dt' => $end_dt,
+            ]);
+        if ($this->verbose) Log::debug("Scheduled job: " . json_encode($job));
+        return $job;
+    }
+
+    public function createSchedule($type, $value) {
+        $schedule = Schedule::factory()
+            ->create([
+                'descr' => "test sched $type $value",
+                'type' => $type,
+                'value' => $value,
+            ]);
+        if ($this->verbose) Log::debug("schedule: " . json_encode($schedule));
+        return $schedule;
+    }
+
+
 
     public function createAsset($source)
     {
@@ -206,10 +281,15 @@ class DataFactory
         return $asset;
     }
 
-    protected function createAssetPrice($asset, $price=null)
+    public function createAssetPrice($asset, $price=null, $start_dt=null, $end_dt=null)
     {
         $data = ['asset_id' => $asset];
         if ($price != null) $data['price'] = $price;
+        if ($start_dt != null) $data['start_dt'] = $start_dt;
+        else $data['start_dt'] = Carbon::today();
+        if ($end_dt != null) $data['end_dt'] = $end_dt;
+        else $data['end_dt'] = Carbon::parse('9999-12-31');
+
         $ap = AssetPrice::factory()->create($data);
         if ($this->verbose) Log::debug("ap: " . json_encode($ap));
         $this->assetPrices[] = $this->assetPrice = $ap;
@@ -259,10 +339,12 @@ class DataFactory
 
     public function createTransactionWithMatching($value1=100, $value2=50): void
     {
-        $transaction = $this->createTransaction($value1, null, TransactionExt::TYPE_PURCHASE, 'P', null, null);
+        $transaction = $this->createTransaction($value1, null, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_PENDING, null, null);
         $matching = $this->userAccounts[$this->userNum]->accountMatchingRules()->first();
 
-        $this->matchTransaction = $this->createTransaction($value2, null, 'MAT', 'C', null, null);
+        $this->matchTransaction = $this->createTransaction($value2, null, TransactionExt::TYPE_MATCHING,
+            TransactionExt::STATUS_CLEARED, null, null);
         $match = $this->createTransactionMatching($matching, $this->matchTransaction, $transaction);
     }
 
@@ -288,7 +370,7 @@ class DataFactory
             foreach ($mr->accountMatchingRules()->get() as $amr) {
                 $accts[] = $amr->account()->first()->id;
             }
-            Log::debug("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts)."\n");
+            Log::debug("** MR ".json_encode($mr->toArray()) . " accounts:" . json_encode($accts));
 
         }
     }

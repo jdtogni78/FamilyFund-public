@@ -79,7 +79,7 @@ class Transaction extends Model
      */
     public static $rules = [
         'type' => 'required|in:PUR,SAL,BOR,REP,MAT,INI',
-        'status' => 'required|in:C,P',
+        'status' => 'required|in:C,P,S',
         'value' => 'required|numeric',
         'shares' => 'nullable|numeric',
         'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
@@ -94,13 +94,13 @@ class Transaction extends Model
 
     public static $create_rules = [
         'type' => 'required|in:PUR,INI',
-        'status' => 'required|in:P',
+        'status' => 'required|in:P,S',
         'value' => 'required|numeric',
         'shares' => 'nullable|numeric',
-        'timestamp' => 'required|after:last year|before_or_equal:tomorrow',
+        'timestamp' => 'nullable|after:last year|before_or_equal:tomorrow',
         'account_id' => 'required',
         'descr' => 'nullable|string|max:255',
-        'flags' => 'nullable|string|in:A,C',
+        'flags' => 'nullable|string|in:A,C,U',
         'scheduled_job_id' => 'nullable',
     ];
     /**

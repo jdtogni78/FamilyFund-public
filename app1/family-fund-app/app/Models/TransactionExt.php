@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Http\Controllers\APIv1\PortfolioAssetAPIControllerExt;
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
 use App\Repositories\AccountBalanceRepository;
 use App\Repositories\PortfolioAssetRepository;
+use App\Repositories\ScheduledJobRepository;
 use App\Repositories\TransactionRepository;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Nette\Utils\DateTime;
@@ -18,11 +21,18 @@ use Nette\Utils\DateTime;
  */
 class TransactionExt extends Transaction
 {
-    public const TYPE_PURCHASE = TransactionExt::TYPE_INITIAL;
+    use VerboseTrait;
+
+    public const TYPE_PURCHASE = 'PUR';
     public const TYPE_INITIAL = 'INI';
+    public const TYPE_SALE = 'SAL';
+    public const TYPE_MATCHING = 'MAT';
+    public const TYPE_BORROW = 'BOR';
+    public const TYPE_REPAY = 'REP';
 
     public const STATUS_PENDING = 'P';
     public const STATUS_CLEARED = 'C';
+    public const STATUS_SCHEDULED = 'S';
 
     public const FLAGS_ADD_CASH = 'A';
     public const FLAGS_CASH_ADDED = 'C';
@@ -31,10 +41,15 @@ class TransactionExt extends Transaction
     public static array $typeMap = [
         TransactionExt::TYPE_PURCHASE => 'Purchase',
         TransactionExt::TYPE_INITIAL => 'Initial Value',
+        TransactionExt::TYPE_SALE => 'Sale',
+        TransactionExt::TYPE_MATCHING => 'Matching',
+        TransactionExt::TYPE_BORROW => 'Borrow',
+        TransactionExt::TYPE_REPAY => 'Repay',
     ];
     public static array $statusMap = [
         TransactionExt::STATUS_PENDING => 'Pending',
         TransactionExt::STATUS_CLEARED => 'Cleared',
+        TransactionExt::STATUS_SCHEDULED => 'Scheduled',
     ];
     public static array $flagsMap = [
         null => 'No Flags',
@@ -46,9 +61,9 @@ class TransactionExt extends Transaction
     /**
      * @throws \Exception
      */
-    public function createBalance($shares, $timestamp, $verbose=false)
+    public function createBalance($shares, $timestamp)
     {
-        Log::debug("Creating Balance: " . json_encode($this->toArray()));
+        $this->debug("Creating Balance: " . json_encode($this->toArray()));
         if ($shares == null || $shares == 0) {
             throw new Exception("Balances need transactions with shares");
         }
@@ -68,9 +83,9 @@ class TransactionExt extends Transaction
             $oldShares = $bal->shares;
             $bal->end_dt = $timestamp;
             $bal->save();
-            if ($verbose) Log::debug("OLD BAL " . json_encode($bal));
+            $this->debug("OLD BAL " . json_encode($bal));
         } else if ($otherBalance != null) {
-            Log::debug("BALANCE FOUND: ".json_encode($otherBalance->toArray())."\n");
+            $this->debug("BALANCE FOUND: ".json_encode($otherBalance->toArray()));
             // has lingering balances that is not infinity
             throw new Exception("Unexpected: There are existent balances that were end-dated - not safe to proceed");
         }
@@ -84,7 +99,7 @@ class TransactionExt extends Transaction
                 'start_dt' => $timestamp,
                 'end_dt' => '9999-12-31',
             ]);
-        if ($verbose) Log::debug("NEW BAL " . json_encode($newBal));
+        $this->debug("NEW BAL " . json_encode($newBal));
     }
 
     /**
@@ -92,13 +107,22 @@ class TransactionExt extends Transaction
      */
     public function processPending(): void
     {
-        Log::debug("Processing Transaction: " . json_encode($this->toArray()));
+        Log::info("Processing Transaction: " . json_encode($this->toArray()));
+        if ($this->status === TransactionExt::STATUS_SCHEDULED) {
+            Log::info("Nothing to do for scheduled transaction: " . $this->id);
+            return;
+        }
+        $timestamp = $this->timestamp;
+        if ($timestamp->gt(Carbon::today())) {
+            Log::warning("Keep pending state as transaction is in the future: " . $timestamp);
+            return;
+        }
+
         $verbose = false;
         /** @var AccountExt $account */
         $account = $this->account()->first();
         /** @var FundExt $fund */
         $fund = $account->fund()->first();
-        $timestamp = $this->timestamp;
         $value = $this->value;
 
         $shareValue = $fund->shareValueAsOf($timestamp);
@@ -132,13 +156,13 @@ class TransactionExt extends Transaction
             // validate that flags are in (A, C)
             // calculate shares, considering the value is added to the fund first
             switch ($this->flags) {
-                case 'A': // add cash position
+                case TransactionExt::FLAGS_ADD_CASH:
                     // share value is correct, no need to recalculate
                     // just need to add the cash to cash position
                     $this->addCashToFund($fund, $value, $timestamp);
                     break;
 
-                case 'C': // cash already added
+                case TransactionExt::FLAGS_CASH_ADDED: // cash already added
                     // recalculate share value, discounting the value
                     // a deposit was already made to the fund, artificially increasing its share value
                     Log::debug("Cash already added: " . $value . " " . $shareValue . " " . $timestamp);
@@ -165,12 +189,12 @@ class TransactionExt extends Transaction
 
         $noMatch = 'U' == $this->flags;
         $createMatch = !($isFundAccount || $noMatch);
-        Log::debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
+        $this->debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
         if ($createMatch) {
             $this->createMatching($account, $verbose, $shareValue, $allShares, $availableShares);
         }
 
-        $this->status = 'C';
+        $this->status = TransactionExt::STATUS_CLEARED;
         $this->save();
     }
 
@@ -183,8 +207,8 @@ class TransactionExt extends Transaction
             ->whereDate('start_dt', '>=', $timestamp);
         $bal2 = $query->first();
         if ($bal2 != null) {
-            Log::debug("There is already a balance on this period " . $timestamp .
-                ": " . json_encode($bal2->toArray()) . " \n");
+            Log::error("There is already a balance on this period " . $timestamp .
+                ": " . json_encode($bal2->toArray()));
             throw new Exception("Cannot add balance at " . $timestamp
                 . " as there is already a balance on this period " . $bal2->id);
         }
@@ -218,6 +242,8 @@ class TransactionExt extends Transaction
 
         if ($bal != null) {
             if ($bal->start_dt > $timestamp) {
+                Log::error("There is already a balance on this period " . $timestamp .
+                    ": " . json_encode($bal->toArray()));
                 throw new Exception("Cannot add balance at " . $timestamp
                     . " before previous balance " . $bal->start_dt);
             }
@@ -227,7 +253,7 @@ class TransactionExt extends Transaction
 
     private function addCashToFund(Fund $fund, $value, \Carbon\Carbon|string $timestamp)
     {
-        Log::debug("Adding cash (" . $value . ") to fund " . $fund->id . " at " . $timestamp);
+        $this->debug("Adding cash (" . $value . ") to fund " . $fund->id . " at " . $timestamp);
         $timestamp = $this->timestamp;
         $port = $fund->portfolios()->first();
         $source = $port->source;
@@ -235,12 +261,12 @@ class TransactionExt extends Transaction
         try {
             list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
         } catch (Exception $e) {
-            Log::debug("Cash asset not found, creating it");
+            $this->debug("Cash asset not found, creating it");
             self::createCashPortfolioAsset($source, $value, $timestamp);
             list($cashAsset, $controller, $pa) = $this->getCashPortfolioAsset($source, $timestamp);
             $pa->position = 0; // hack to avoid validation error
         }
-        Log::debug("Cash asset found: " . json_encode($pa));
+        $this->debug("Cash asset found: " . json_encode($pa));
 
         // validate if pa end date is high date
         if (!str_starts_with($pa->end_dt, '9999-12-31')) {
@@ -250,13 +276,13 @@ class TransactionExt extends Transaction
 
         // update the cash port asset value
         $curValue = $pa->position;
-        Log::debug("Adding cash to fund " . $fund->id . " at " . $timestamp . " " . $curValue . " " . $value);
+        $this->debug("Adding cash to fund " . $fund->id . " at " . $timestamp . " " . $curValue . " " . $value);
         $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value + $curValue, 'position');
     }
 
     protected function createMatching(AccountExt $account, bool $verbose, float $shareValue, float $allShares, float $availableShares): void
     {
-        Log::debug("Creating matching for " . $this->id . " " . $account->id . " " . $shareValue . " " . $allShares . " " . $availableShares);
+        $this->debug("Creating matching for " . $this->id . " " . $account->id . " " . $shareValue . " " . $allShares . " " . $availableShares);
         $rss = new TransactionResource($this);
         $input = $rss->toArray(null);
 
@@ -266,13 +292,13 @@ class TransactionExt extends Transaction
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
             if ($verbose) {
-                Log::debug("AMR " . json_encode($amr) . " " . $matchValue);
-                Log::debug("MR " . json_encode($amr->matchingRule()->get()));
+                $this->debug("AMR " . json_encode($amr) . " " . $matchValue);
+                $this->debug("MR " . json_encode($amr->matchingRule()->get()));
             }
             if ($matchValue > 0) {
                 $mr = $amr->matchingRule()->first();
                 $input['value'] = $matchValue;
-                $input['status'] = 'C';
+                $input['status'] = TransactionExt::STATUS_CLEARED;
                 $input['shares'] = $matchValue / $shareValue;
                 $input['descr'] = "$descr with $mr->name ($mr->id)";
                 $allShares += $input['shares'];
@@ -280,10 +306,10 @@ class TransactionExt extends Transaction
                     throw new Exception("Fund does not have enough shares ($availableShares) to support purchase of ($allShares)");
                 }
 
-                if ($verbose) Log::debug("MATCHTRAN " . json_encode($input));
+                $this->debug("MATCHTRAN " . json_encode($input));
                 /** @var TransactionExt $matchTran */
                 $matchTran = $repo->create($input);
-                $matchTran->createBalance($matchTran->shares, $matchTran->timestamp, $verbose);
+                $matchTran->createBalance($matchTran->shares, $matchTran->timestamp);
 
                 $match = TransactionMatching::factory()
                     ->for($mr)
@@ -301,7 +327,7 @@ class TransactionExt extends Transaction
     {
         // get cash asset
         $cashAsset = AssetExt::getCashAsset();
-        Log::debug("Cash asset: " . json_encode($cashAsset));
+//        Log::debug("Cash asset: " . json_encode($cashAsset));
 
         // create an portfolio assets api object
         $controller = app(PortfolioAssetAPIControllerExt::class);
@@ -323,4 +349,8 @@ class TransactionExt extends Transaction
         $controller->insertHistorical($source, $cashAsset->id, $timestamp, $value, 'position');
     }
 
+    public function scheduledJobs()
+    {
+        return ScheduledJobExt::scheduledJobs(ScheduledJobExt::ENTITY_TRANSACTION, $this->id);
+    }
 }

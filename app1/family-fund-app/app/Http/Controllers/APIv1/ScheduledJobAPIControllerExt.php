@@ -3,18 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Traits\FundTrait;
+use App\Http\Controllers\Traits\ScheduledJobTrait;
 use App\Http\Controllers\Traits\TransactionTrait;
-use App\Http\Requests\API\CreateScheduledJobAPIRequest;
-use App\Http\Requests\API\UpdateScheduledJobAPIRequest;
-use App\Models\ScheduledJob;
-use App\Models\TransactionExt;
-use App\Repositories\ScheduledJobRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
-use App\Http\Resources\ScheduledJobResource;
-use Illuminate\Support\Facades\Log;
-use Response;
 
 /**
  * Class ScheduledJobController
@@ -23,45 +16,21 @@ use Response;
 
 class ScheduledJobAPIControllerExt extends AppBaseController
 {
-    use FundTrait, TransactionTrait;
-
-    // create a registry of handlers
-    private $handlers = [];
+    use ScheduledJobTrait;
 
     // contructor
     public function __construct()
     {
-        // create fund report handler
-        $this->handlers['fund_report'] = 'fundReportScheduleDue';
-        $this->handlers['transaction'] = 'transactionScheduleDue';
+        $this->setupHandlers();
     }
 
-    public function scheduleJobs()
+    public function scheduleJobs(Request $request)
     {
-        // create fund report schedules repo
-        $schedulesRepo = \App::make(ScheduledJobRepository::class);
-        $schedules = $schedulesRepo->all();
-        $asOf = now();
-
-        /** @var ScheduledJob $schedule */
-        foreach ($schedules as $schedule) {
-            // log schedule
-            Log::info('Checking schedule: ' . json_encode($schedule->toArray()));
-            $shouldRunBy = $schedule->shouldRunBy($asOf);
-
-            // if should run by is greater than asof, skip, otherwise report as due
-            if ($shouldRunBy->lte($asOf)) {
-                $this->scheduleDue($shouldRunBy, $schedule, $asOf);
-            } else {
-                Log::info('Skip scheduled job ' . $schedule->id . ', due on ' . $shouldRunBy->toDateString());
-            }
+        $asOf = $request->input('as_of', Carbon::now());
+        list ($ret, $errors) = $this->scheduleDueJobs($asOf);
+        if (count($errors) > 0) {
+            return $this->sendError('Errors scheduling jobs: ' . implode(', ', $errors));
         }
+        return $this->sendResponse($ret, 'Scheduled jobs retrieved successfully');
     }
-
-    private function scheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): void
-    {
-        $func = $this->handlers[$schedule->entity_descr];
-        $this->$func($shouldRunBy, $schedule, $asOf);
-    }
-
 }

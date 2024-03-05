@@ -11,6 +11,7 @@ use Laracasts\Flash\Flash;
  */
 trait PerformanceTrait
 {
+    use VerboseTrait;
     protected $perfObject;
 
     public function createPerformanceArray($start, $asOf, $shares=null, $asset=null)
@@ -44,7 +45,7 @@ trait PerformanceTrait
                 $value = $assetShares * $ap->price;
         } catch (\Exception $e) {
             Log::error("while calculating $symbol $asOf: " . $e->getMessage());
-               Log::error($e->getTraceAsString());
+            Log::error($e->getTraceAsString());
         }
         $yp = array();
         $yp['value']        = Utils::currency($value);
@@ -90,7 +91,7 @@ trait PerformanceTrait
                         'timestamp' => $tran['timestamp'],
                         'shares' => $shares
                     ];
-                    Log::debug($symbol . " value: " . $tran['value'] . " price: $ap->price >> shares: $shares at " . $tran['timestamp']);
+                    $this->debug($symbol . " value: " . $tran['value'] . " price: $ap->price >> shares: $shares at " . $tran['timestamp']);
                 }
             }
         } catch (\Exception $e) {
@@ -107,7 +108,7 @@ trait PerformanceTrait
         foreach ($trans as $tran) {
             if ($tran['timestamp'] <= $asOf) {
                 $timestamp = substr("" . $tran['timestamp'],0,10);
-                Log::debug("cash value: " . $tran['value'] . " at " . $timestamp);
+                $this->debug("cash value: " . $tran['value'] . " at " . $timestamp);
                 $total += $tran['value'];
                 $allValues[$timestamp] = $total;
             }
@@ -175,18 +176,22 @@ trait PerformanceTrait
         }
 
         $tran = $this->perfObject->findOldestTransaction();
-        $firstDate = $tran->timestamp->addDay()->format('Y-m-d');
-        $firstYear = substr($firstDate, 0, 4);
+        $this->debug("tran: $tran");
+        $this->debug("perfObject: $this->perfObject");
+        if ($tran == null) {
+            throw new \Exception("No transactions found");
+        } else {
+            $firstDate = $tran->timestamp->addDay()->format('Y-m-d');
+            $firstYear = substr($firstDate, 0, 4);
+        }
 
         $prevYearStart = ($year-1).'-01-01';
         for (; $year > $firstYear; $year--) {
             $yearStart = $year.'-01-01';
             $prevYearStart = ($year-1).'-01-01';
-//            Log::debug("prev $prevYearStart $yearStart");
             $yp = $this->createPerformanceArray($prevYearStart, $yearStart);
             $arr[$yearStart] = $yp;
         }
-//        Log::debug("Add last $prevYearStart $firstDate $tran");
         $arr[$firstDate] = $this->createPerformanceArray($prevYearStart, $firstDate);
 
 

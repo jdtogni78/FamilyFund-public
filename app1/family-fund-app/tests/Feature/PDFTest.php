@@ -7,8 +7,12 @@ use App\Http\Controllers\Traits\FundPDF;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Models\AccountExt;
 use App\Models\FundExt;
+use App\Models\TransactionExt;
+use Carbon\Carbon;
+use CpChart\Data;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Log;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
@@ -18,45 +22,46 @@ class PDFTest extends TestCase
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
     use FundTrait, AccountTrait;
 
-    public $startDt;
-    public $endDt;
-    public $fund;
-    public array $post;
+    private DataFactory $factory;
+    private string $asOf;
 
     public function setUp(): void
     {
         parent::setUp();
-        $this->startDt = '2022-01-01';
-        $this->endDt   = '2022-03-01';
-        $this->verbose = false;
+        $this->factory = new DataFactory();
+        $this->factory->createFund();
+        $this->asOf = Carbon::tomorrow()->format('Y-m-d');
     }
 
     public function testFundAdminPDF()
     {
-//        $this->_testFundPDF(true);
-//        $this->_testFundPDF(false);
+        $this->_testFundPDF(true);
+        $this->_testFundPDF(false);
     }
 
     public function _testFundPDF($isAdmin)
     {
-        $fund = FundExt::find(1);
-        $asOf = date('2022-01-01');
+        $fund = $this->factory->fund;
 
-        $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
+        $arr = $this->createFullFundResponse($fund, $this->asOf, $isAdmin);
         $pdf = new FundPDF($arr, $isAdmin, true);
         $pdfFile = $pdf->file();
-        print_r($pdfFile);
+        Log::debug($pdfFile);
+        $this->assertNotNull($pdfFile);
     }
 
     public function testAccountPDF()
     {
-        $account = AccountExt::find(7);
-        $asOf = date('2022-01-01');
+        $this->factory->createUser();
+        $tran = $this->factory->createTransaction();
+        $this->factory->createBalance(100, $tran, $this->factory->userAccount);
+        $account = $this->factory->userAccount;
 
-        $arr = $this->createAccountViewData($asOf, $account);
+        $arr = $this->createAccountViewData($this->asOf, $account);
         $pdf = new AccountPDF($arr, true);
         $pdfFile = $pdf->file();
-//        print_r($pdfFile);
+        Log::debug($pdfFile);
+        $this->assertNotNull($pdfFile);
     }
 
 }

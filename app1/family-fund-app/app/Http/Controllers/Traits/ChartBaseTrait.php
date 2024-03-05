@@ -69,6 +69,7 @@ trait ChartBaseTrait
         $name = 'shares.png';
         $arr = $api['transactions'];
         $data = [];
+        Log::debug("createSharesLineChart: " . json_encode($arr));
         foreach ($arr as $v) {
             $data[substr($v['timestamp'], 0,10)] = $v['balances']['OWN'] * $v['share_price'];
         };

@@ -84,15 +84,7 @@ class DataFactory
             $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, TransactionExt::TYPE_INITIAL,
                 TransactionExt::STATUS_CLEARED, null, $timestamp);
 
-            $this->fundBalance = AccountBalance::factory()
-                ->for($this->fundTransaction, 'transaction')
-                ->for($this->fundAccount, 'account')
-                ->create([
-                    'type' => 'OWN',
-                    'start_dt' => $timestamp,
-                    'end_dt' => '9999-12-31',
-                    'shares' => $shares
-                ]);
+            $this->fundBalance = $this->createBalance($shares, $this->fundTransaction, $this->fundAccount, $timestamp);
 
             $this->cash = AssetExt::getCashAsset();
 
@@ -384,6 +376,21 @@ class DataFactory
                 Log::debug("** " . json_encode($bal));
             }
         }
+    }
+
+    public function createBalance($shares, $tran, $account=null, $start_dt=null, $end_dt='9999-12-31'): \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model
+    {
+        if ($start_dt == null) $start_dt = Carbon::today();
+        if ($account == null) $account = $this->userAccount;
+        return AccountBalance::factory()
+            ->for($tran, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'OWN',
+                'start_dt' => $start_dt,
+                'end_dt' => $end_dt,
+                'shares' => $shares
+            ]);
     }
 
 }

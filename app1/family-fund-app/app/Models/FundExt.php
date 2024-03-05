@@ -21,7 +21,7 @@ class FundExt extends Fund
         return $portfolios->first();
     }
 
-    public function account()
+    public function account() : AccountExt
     {
         $accountRepo = \App::make(AccountRepository::class);
         $query = $accountRepo->makeModel()->newQuery();
@@ -109,5 +109,11 @@ class FundExt extends Fund
     public function fundAccount()
     {
         return $this->accounts()->where('user_id', null)->first();
+    }
+
+    public function findOldestTransaction() {
+        $trans = $this->account()->transactions()->get();
+        $tran = $trans->sortBy('timestamp')->first();
+        return $tran;
     }
 }

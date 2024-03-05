@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Repositories\PortfolioAssetRepository;
 use App\Repositories\TradePortfolioRepository;
 use DB;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
  */
 class PortfolioExt extends Portfolio
 {
-    private mixed $verbose = false;
+    use VerboseTrait;
 
     public function assetsAsOf($now, $assetId=null): Collection
     {

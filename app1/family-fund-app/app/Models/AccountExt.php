@@ -35,8 +35,7 @@ class AccountExt extends Account
     public function transactions()
     {
         return $this->hasMany(\App\Models\TransactionExt::class, 'account_id')
-            ->orderBy('created_at')
-            ;
+            ->orderBy('timestamp');
     }
 
     public function depositedValueBetween($start, $end)

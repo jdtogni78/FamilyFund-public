@@ -116,7 +116,7 @@
                     </div>
                 </div>
             </div>
-            @if($api['matching_available'] != 0)
+            @if(!empty($api['matching_rules']))
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">

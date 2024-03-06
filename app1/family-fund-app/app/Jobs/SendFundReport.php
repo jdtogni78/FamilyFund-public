@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Http\Controllers\Traits\FundTrait;
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\FundReport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -17,7 +18,6 @@ class SendFundReport implements ShouldQueue
     use FundTrait;
 
     private FundReport $fundReport;
-    protected $verbose = true;
 
     /**
      * Create a new job instance.
@@ -26,7 +26,6 @@ class SendFundReport implements ShouldQueue
      */
     public function __construct($fundReport)
     {
-        //
         $this->fundReport = $fundReport;
     }
 

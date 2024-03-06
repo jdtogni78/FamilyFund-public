@@ -29,6 +29,7 @@ class PerformanceTraitTests extends TestCase
 
     public function twrDataProvider()
     {
+        // $startValue, $endValue, $cashFlow
         return [
             [[[1000, 1200, 0]], 20],
             [[[1000, 1200, 200]], 0],

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Controllers\Traits\ScheduledJobTrait;

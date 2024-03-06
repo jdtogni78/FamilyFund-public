@@ -137,7 +137,7 @@ class AccountExt extends Account
         Log::debug("calculate TWR: " . json_encode($data));
         foreach ($data as $period) {
             list($startValue, $endValue, $cashFlow) = $period;
-//            Log::debug("** $startValue, $endValue, $cashFlow");
+            Log::debug("** $startValue, $endValue, $cashFlow");
 
             // Calculate the return for the current period
             if ($startValue == 0) {
@@ -148,7 +148,7 @@ class AccountExt extends Account
 
             // Update the cumulative return
             $cumulativeReturn *= $periodReturn;
-//            Log::debug("*** $periodReturn, $cumulativeReturn");
+            Log::debug("*** $periodReturn, $cumulativeReturn");
         }
 
         // Calculate the final TWR
@@ -173,8 +173,7 @@ class AccountExt extends Account
 
         $start = $from;
         $startValue = $this->valueAsOf($start);
-//        Log::debug("per per $start $startValue");
-        $cashFlow = 0;
+        Log::debug("per per $start $startValue");
         $data = [];
         /** @var TransactionExt $tran */
         foreach($trans as $tran) {
@@ -182,13 +181,13 @@ class AccountExt extends Account
             $end = $tran->timestamp; // shares are added next day
 
             $endValue = $this->valueAsOf($end);
+            $cashFlow = 0+$tran->value;
             $data[] = [$startValue, $endValue, $cashFlow];
 
-            $cashFlow = 0+$tran->value;
             $startValue = $endValue;
         }
         $lastValue = $this->valueAsOf($to);
-        $data[] = [$startValue, $lastValue, $cashFlow];
+        $data[] = [$startValue, $lastValue, 0];
         return self::calculateTWR($data);
     }
 

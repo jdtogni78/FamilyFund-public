@@ -21,7 +21,6 @@ class CreateScheduledJobsTable extends Migration
             $table->bigInteger('entity_id', false, true);
             $table->date('start_dt');
             $table->date('end_dt');
-            $table->datetime('deleted_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -29,12 +28,15 @@ class CreateScheduledJobsTable extends Migration
         Schema::table('fund_reports', function (Blueprint $table) {
             // rename the fund_report_schedule_id column to scheduled_job_id
             $table->foreignId('scheduled_job_id')->after('as_of')->nullable()
-                ->constrained()->value('fund_report_schedule_id');
+                ->constrained();
         });
+
+        DB::raw("update fund_reports set scheduled_job_id = fund_report_schedule_id");
 
         Schema::table('fund_reports', function (Blueprint $table) {
             // rename the fund_report_schedule_id column to scheduled_job_id
-            $table->dropForeignId('fund_report_schedule_id');
+            $table->dropForeign('fund_reports_fund_report_schedules_id_foreign');
+            $table->dropColumn('fund_report_schedule_id');
         });
 
         DB::raw("insert into scheduled_jobs (schedule_id, entity_descr, entity_id, start_dt, end_dt, created_at, updated_at, deleted_at) " .

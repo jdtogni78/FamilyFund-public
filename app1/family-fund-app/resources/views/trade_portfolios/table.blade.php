@@ -34,6 +34,11 @@
                     {!! Form::open(['route' => ['tradePortfolios.destroy', $tradePortfolio->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('tradePortfolios.show', [$tradePortfolio->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('tradePortfolios.showRebalance', [
+                                $tradePortfolio->id,
+                                $tradePortfolio->start_dt->toDateString(),
+                                $tradePortfolio->end_dt->gt(\Carbon\Carbon::today())? \Carbon\Carbon::today()->toDateString() : $tradePortfolio->end_dt->toDateString()
+                                ]) }}" class='btn btn-ghost-warning'><i class="fa fa-eye"></i></a>
                         @if(\Carbon\Carbon::parse($tradePortfolio->end_dt)->isBefore($asOf ?? \Carbon\Carbon::today()))
                             {{-- If end_dt is before today, don't display the buttons --}}
                         @else

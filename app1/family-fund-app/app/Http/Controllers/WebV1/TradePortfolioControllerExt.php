@@ -4,6 +4,7 @@ namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Requests\SplitTradePortfolioRequest;
+use App\Http\Resources\PortfolioAssetResource;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
@@ -11,6 +12,7 @@ use App\Models\TradePortfolioExt;
 use App\Models\TradePortfolioItem;
 use App\Repositories\TradePortfolioRepository;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laracasts\Flash\Flash;
@@ -157,6 +159,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $date = $start->copy();
         $port = $tradePortfolio->portfolio();
         $assets = [];
+        $porfolioAssets = new Collection();
 
         for (; $date->lt($end); $date->addDay()) {
             $this->debug("date: " . $date->toDateString());
@@ -168,6 +171,9 @@ class TradePortfolioControllerExt extends TradePortfolioController
             $this->debug("pas: $pas");
             if ($pas->count() == 0) {
                 continue;
+            }
+            foreach ($pas as $pa) {
+                $porfolioAssets->add(new PortfolioAssetResource($pa));
             }
 
             /** @var TradePortfolioItem $item */
@@ -235,10 +241,14 @@ class TradePortfolioControllerExt extends TradePortfolioController
 //            }
 //        }
 
+        $porfolioAssets = $porfolioAssets->unique('id')
+            ->sortBy('start_dt')
+            ->sortBy('asset_id');
         $tradePortfolio->items = $tradePortfolio->tradePortfolioItems()->get();
         $api = [
             'tradePortfolio' => $tradePortfolio,
             'portfolio' => $tradePortfolio->portfolio(),
+            'portfolioAssets' => $porfolioAssets,
             'rebalance' => $all,
         ];
 

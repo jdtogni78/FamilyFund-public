@@ -38,7 +38,7 @@ trait PerformanceTrait
                     break;
                 }
             }
-            $ap = $asset->pricesAsOf($asOf)->first();
+            $ap = $asset->priceAsOf($asOf)->first();
             if (empty($ap))
                 $value = 0;
             else
@@ -77,7 +77,7 @@ trait PerformanceTrait
         try {
             foreach ($trans as $tran) {
                 if ($tran['timestamp'] <= $asOf) {
-                    $ap = $asset->pricesAsOf($tran['timestamp'])->first();
+                    $ap = $asset->priceAsOf($tran['timestamp'])->first();
                     if (empty($ap)) {
                         Log::warning("No prices for $symbol at " . $tran['timestamp']);
                         $allShares[] = [

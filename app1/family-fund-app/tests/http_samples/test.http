@@ -46,3 +46,6 @@ POST http://localhost:3000/api/schedule_jobs
 Content-Type: application/json
 
 {}
+
+### GET rebalance
+GET http://localhost:3000/trade_portfolios/1/showRebalance

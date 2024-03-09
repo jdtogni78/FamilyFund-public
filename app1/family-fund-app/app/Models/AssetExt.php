@@ -51,7 +51,7 @@ class AssetExt extends Asset
 
     /**
      **/
-    public function pricesAsOf($now, $debug=false)
+    public function priceAsOf($now, $debug=false)
     {
         $assetPricesRepo = \App::make(AssetPriceRepository::class);
         $query = $assetPricesRepo->makeModel()->newQuery();

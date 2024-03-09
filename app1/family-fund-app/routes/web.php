@@ -30,6 +30,8 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfolios.split');
     Route::patch('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doSplit')
         ->name('tradePortfolios.split');
+    Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
+        ->name('tradePortfolios.showRebalance');
 
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);

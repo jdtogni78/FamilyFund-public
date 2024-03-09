@@ -91,7 +91,7 @@ class PortfolioExt extends Portfolio
             if ($asset == null) {
                 throw new Exception("Cant find asset $asset_id");
             }
-            $assetPrice = $asset->pricesAsOf($now);
+            $assetPrice = $asset->priceAsOf($now);
 
             if (count($assetPrice) == 1) {
                 $price = $assetPrice[0]['price'];

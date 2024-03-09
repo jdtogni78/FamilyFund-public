@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Log;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
@@ -114,8 +115,8 @@ class TransactionApiGoldenDataTest extends TestCase
             $key = $bal_type . $account_id;
             if (array_key_exists($key, $bals)) {
                 if ($this->verbose) {
-                    print("bo " . implode(', ', $bals[$key]) . "\n");
-                    print("bn " . implode(', ', $a)."\n");
+                    Log::debug("bo " . implode(', ', $bals[$key]));
+                    Log::debug("bn " . implode(', ', $a));
                 }
                 $old_shares = $bals[$key][4];
                 if ($bal_type == 'OWN') {

@@ -56,7 +56,7 @@ class PortfolioAPIControllerExt extends AppBaseController
             $a = $pa->asset()->first();
             $asset['name'] = $a->name;
             $asset['type'] = $a->type;
-            $assetPrices = $a->pricesAsOf($as_of);
+            $assetPrices = $a->priceAsOf($as_of);
 
             if (count($assetPrices) == 1) {
                 $price = $assetPrices[0]['price'];

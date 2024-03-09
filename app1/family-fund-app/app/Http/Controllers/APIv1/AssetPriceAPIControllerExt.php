@@ -70,7 +70,7 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
 
     public function getQuery($source, $asset, $timestamp)
     {
-        $query = $asset->pricesAsOf($timestamp);
+        $query = $asset->priceAsOf($timestamp);
         return $query;
     }
 }

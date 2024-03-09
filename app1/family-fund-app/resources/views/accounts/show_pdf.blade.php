@@ -20,7 +20,7 @@
                     <strong>Performance</strong>
                 </div>
                 <div class="card-body">
-                    <img src="{{$files['monthly_performance.png']}}" alt="Monthly Performance"/>
+                    <img src="{{$files['monthly_performance.png']}}" alt="Monthly Value"/>
                 </div>
             </div>
         </div>
@@ -29,10 +29,10 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <strong>Yearly Performance</strong>
+                    <strong>Yearly Value</strong>
                 </div>
                 <div class="card-body">
-                    <img src="{{$files['yearly_performance.png']}}" alt="Yearly Performance"/>
+                    <img src="{{$files['yearly_performance.png']}}" alt="Yearly Value"/>
                 </div>
             </div>
         </div>
@@ -53,7 +53,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <strong>Yearly Performance</strong>
+                    <strong>Yearly Value</strong>
                 </div>
                 <div class="card-body">
                     @php ($performance_key = 'yearly_performance')
@@ -66,7 +66,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <strong>Monthly Performance</strong>
+                    <strong>Monthly Value</strong>
                 </div>
                 <div class="card-body">
                     @php ($performance_key = 'monthly_performance')

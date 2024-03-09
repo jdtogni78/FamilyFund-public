@@ -41,7 +41,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Monthly Performance</strong>
+                            <strong>Monthly Value</strong>
                         </div>
                         <div class="card-body">
                             @php($addSP500 = true)
@@ -55,7 +55,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Yearly Performance</strong>
+                            <strong>Yearly Value</strong>
                         </div>
                         <div class="card-body">
                             @include('accounts.performance_graph')
@@ -82,7 +82,7 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Yearly Performance</strong>
+                            <strong>Yearly Value</strong>
                         </div>
                         <div class="card-body">
                             @php ($performance_key = 'yearly_performance')
@@ -95,7 +95,7 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Monthly Performance</strong>
+                            <strong>Monthly Value</strong>
                         </div>
                         <div class="card-body">
                             @php ($performance_key = 'monthly_performance')

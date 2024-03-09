@@ -9,7 +9,7 @@
         const perf_data = {
             labels: perf_labels,
             datasets: [{
-                label: 'Performance',
+                label: 'Value',
                 data: Object.values(api.yearly_performance).map(function(e) {return e.value;}),
                 backgroundColor: [
                     'gray',

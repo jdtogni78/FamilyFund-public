@@ -17,13 +17,13 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <strong>Monthly Performance</strong>
+                    <strong>Monthly Value</strong>
                 </div>
                 <div class="card-body">
-                    <img src="{{$files['monthly_performance.png']}}" alt="Monthly Performance"/>
+                    <img src="{{$files['monthly_performance.png']}}" alt="Monthly Value"/>
                     <div class="col-xs-12">
                         <ul>
-                            <li><b>Monthly Performance</b>: the performance of this fund</li>
+                            <li><b>Monthly Value</b>: the performance of this fund</li>
                             <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
                             <li><b>Cash</b>: the performance of a fund that would invest the same amount of funds 100% on Cash</li>
                         </ul>
@@ -36,10 +36,10 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <strong>Yearly Performance</strong>
+                    <strong>Yearly Value</strong>
                 </div>
                 <div class="card-body">
-                    <img src="{{$files['yearly_performance.png']}}" alt="Yearly Performance"/>
+                    <img src="{{$files['yearly_performance.png']}}" alt="Yearly Value"/>
                 </div>
             </div>
         </div>
@@ -53,7 +53,7 @@
                     </div>
                     <div class="card-body">
                         @php($i = array_search($group, array_keys($api['asset_monthly_performance'])))
-                        <img src="{{$files['group' . $i . '_monthly_performance.png']}}" alt="Yearly Performance"/>
+                        <img src="{{$files['group' . $i . '_monthly_performance.png']}}" alt="Yearly Value"/>
                         <div class="col-xs-12">
                             <ul>
                                 <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
@@ -131,7 +131,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <strong>Yearly Performance</strong>
+                    <strong>Yearly Value</strong>
                 </div>
                 <div class="card-body">
                     @php ($performance_key = 'yearly_performance')
@@ -144,7 +144,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <strong>Monthly Performance</strong>
+                    <strong>Monthly Value</strong>
                 </div>
                 <div class="card-body">
                     @php ($performance_key = 'monthly_performance')

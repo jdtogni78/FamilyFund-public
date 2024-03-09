@@ -17,7 +17,7 @@ trait ChartBaseTrait
         $name = 'yearly_performance.png';
         $arr = $api['yearly_performance'];
         $labels = array_keys($arr);
-        $title = 'Yearly Performance';
+        $title = 'Yearly Value';
         $values = $this->getGraphData($arr);
 
         $this->files[$name] = $file = $tempDir->path($name);
@@ -34,7 +34,7 @@ trait ChartBaseTrait
 
         $this->files[$name] = $file = $tempDir->path($name);
         $this->createLineChart($file, $labels,
-            ["Monthly Performance", "SP500", "Cash"],
+            ["Monthly Value", "SP500", "Cash"],
             [$values1, $values2, $values3]);
     }
 

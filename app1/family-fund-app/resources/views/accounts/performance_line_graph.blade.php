@@ -3,9 +3,9 @@
 </div>
 <div class="col-xs-12">
     <ul>
-        <li><b>Monthly Performance</b>: the performance of this fund</li>
-        <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
-        <li><b>Cash</b>: the performance of a fund that would invest the same amount of funds 100% on Cash</li>
+        <li><b>Monthly Value</b>: the value of this fund</li>
+        <li><b>SP500</b>: the value of a fund that would invest the same amount of funds 100% on SP500</li>
+        <li><b>Cash</b>: the value of a fund that would invest the same amount of funds 100% on Cash</li>
     </ul>
 </div>
 
@@ -14,7 +14,7 @@
         var api = {!! json_encode($api) !!};
         let labels = Object.keys(api.monthly_performance);
         let datasets = [{
-            label: 'Monthly Performance',
+            label: 'Monthly Value',
             data: Object.values(api.monthly_performance)
                 .map(function(e) {return e.value;}),
             backgroundColor: [graphColors[0]],

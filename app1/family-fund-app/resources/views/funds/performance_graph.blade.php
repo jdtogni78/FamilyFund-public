@@ -9,7 +9,7 @@ const perf_labels = Object.keys(api.yearly_performance);
 const perf_data = {
   labels: perf_labels,
   datasets: [{
-    label: 'Performance',
+    label: 'Value',
     data: Object.values(api.yearly_performance).map(function(e) {return e.value;}),
     backgroundColor: [
       'gray',
@@ -28,7 +28,7 @@ const perf_config = {
       }
     }
   },
-};  
+};
 var myChart = new Chart(
     document.getElementById('perfGraph'),
     perf_config

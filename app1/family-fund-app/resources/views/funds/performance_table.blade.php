@@ -13,7 +13,7 @@
         @foreach($api[$performance_key] as $period => $perf)
             <tr>
                 <td>{{ $period }}</td>
-                <td>{{ $perf['performance'] }}</td>
+                <td>{{ $perf['performance'] }}%</td>
                 <td>{{ $perf['shares'] }}</td>
                 <td>{{ $perf['value'] }}</td>
                 <td>{{ $perf['share_value'] }}</td>

@@ -3,8 +3,8 @@
 </div>
 <div class="col-xs-12">
     <ul>
-        <li><b>SP500</b>: the performance of a fund that would invest the same amount of funds 100% on SP500</li>
-        <li><b>Others</b>: the performance of a fund that would invest the same amount of funds 100% on other stock</li>
+        <li><b>SP500</b>: the value of a fund that would invest the same amount of funds 100% on SP500</li>
+        <li><b>Others</b>: the value of a fund that would invest the same amount of funds 100% on other stock</li>
     </ul>
 </div>
 

@@ -13,9 +13,9 @@ use Exception;
 
 trait BulkStoreTrait
 {
+    use VerboseTrait;
     public abstract function getQuery($source, $asset, $timestamp);
     protected abstract function createChild($data, $source);
-    private $verbose = false;
     private $warnings;
 
     private function warn(string $string)

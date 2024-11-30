@@ -7,21 +7,22 @@ use Illuminate\Support\Facades\Mail;
 
 Trait MailTrait
 {
-
     public function sendMail($data, $to, $cc = null)
     {
         $emails = explode(",", $to);
         $mailto = Mail::to($emails);
-        if (null === $cc) {
+        if (null !== $cc && strlen($cc) > 0) {
             $emailsCC = explode(",", $cc);
             $mailto->cc($emailsCC);
+            Log::info("Adding cc " . $emailsCC);
         }
+        $msg = "Email to " . $emails;
+        Log::info($msg);
         $mailto->send($data);
 
         if (Mail::failures()) {
-            $msg = "Email to " . $to . ", " . $emails . " failed";
-            Log::error($msg);
-            return $msg;
+            Log::error($msg . " failed");
+            return $msg . " failed";
         }
         return null;
     }

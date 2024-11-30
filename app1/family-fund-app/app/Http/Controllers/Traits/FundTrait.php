@@ -350,10 +350,10 @@ Trait FundTrait
 
             // skip if asset name is not in curAssets
             if (!in_array($asset->name, $assetNames)) {
-                Log::debug("(group) Skip $asset->name");
+                Log::trace("(group) Skip $asset->name");
                 continue;
             } else {
-                Log::debug("(group) Add $asset->name");
+                Log::trace("(group) Add $asset->name");
             }
             $group = $asset->display_group;
             if ($asset->type == "CSH") {

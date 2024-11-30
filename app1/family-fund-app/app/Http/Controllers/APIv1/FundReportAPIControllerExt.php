@@ -21,7 +21,6 @@ use Symfony\Component\HttpFoundation\Response;
 class FundReportAPIControllerExt extends FundReportAPIController
 {
     use FundTrait;
-    public $verbose = false;
 
     public function __construct(FundReportRepository $fundReportRepo)
     {

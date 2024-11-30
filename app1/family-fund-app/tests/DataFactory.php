@@ -26,9 +26,12 @@ use App\Models\AccountMatchingRule;
 use Carbon\Carbon;
 use Log;
 use Nette\Utils\DateTime;
+use App\Http\Controllers\Traits\VerboseTrait;
 
 class DataFactory
 {
+    use VerboseTrait;
+
     public $userNum = 0;
     public $user;
     public $users = array();
@@ -64,8 +67,6 @@ class DataFactory
     public $portfolioAssets = [];
 
     public TradePortfolioExt $tradePortfolio;
-
-    public $verbose = false;
 
     public function createFund($shares=1000, $value=1000, $timestamp='2022-01-01', $noTransaction=false)
     {

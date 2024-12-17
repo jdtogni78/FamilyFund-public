@@ -15,7 +15,7 @@ function ds_encr() {
   if [ -f ${FILE} ]; then
     logInfo "Encrypting ${FILE} with ${GPG_EMAIL}"
     rm -f ${FILE}.encr && \
-    gpg --batch --yes -o ${FILE}.encr -e -r ${GPG_EMAIL} ${FILE} && \
+    gpg --no-tty --batch --yes -o ${FILE}.encr -e -r ${GPG_EMAIL} ${FILE} && \
     ds_clear ${FILE}
   fi
 }
@@ -28,7 +28,7 @@ function ds_decr() {
   # usually we will only decript though
 
   logInfo "Decrypting ${FILE}"
-  gpg --batch --yes -o ${FILE} -d ${FILE}.encr
+  gpg --no-tty --batch --yes -o ${FILE} -d ${FILE}.encr
 
   logInfo "### After decrypting ${FILE}"
   ls ${FILE} ${FILE}.encr 2> /dev/null

@@ -128,6 +128,7 @@ php artisan tinker
     $user->password = Hash::make('new_password');
     $user->save();
 
+
 ### Jumpbox Setup
 
 Dont recall initial install, but here are some notes:
@@ -144,6 +145,14 @@ ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3001:${FFSERVER}:3
 
 ssh -J dstrader@${JUMPBOX}:22332 jdtogni@${FFSERVER} -p 22
 ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
+
+### Wake on LAN
+<router-model-redacted> setup: <wol-router-faq-redacted>
+setup server to wake up: https://www.cyberciti.biz/tips/linux-send-wake-on-lan-wol-magic-packets.html
+mac app: https://apps.apple.com/us/app/wakeoncommand/id1484204619?mt=12
+
+Could not make the WOL work from VPN, only inside the network.
+So, some server must be kept on, from that we can wake the other servers.
 
 ### Adding an account
 
@@ -163,6 +172,26 @@ ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
 * Create a transaction for the fund
 * When should the new cash be available
 * Making transaction before cash was recognized caused miscalculation and validation error
+
+
+### Server Setup
+sudo apt install mariadb-client
+
+### Adding a docker user
+
+Create group and user for docker:
+```bash
+groupadd -g 100999 dockeruser
+useradd -u 100999 -G dockeruser dockeruser
+usermod -aG dockeruser jdtogni
+```
+
+You should see:
+* on /etc/passwd: ```dockeruser:x:100999:100999::/home/dockeruser:/bin/sh```
+* on /etc/group: ```dockeruser:x:100999:jdtogni```
+
+Follow the instructions for rootless docker:
+* https://docs.docker.com/engine/security/rootless/
 
 ### Deploying DSTrader to prod
 
@@ -193,24 +222,20 @@ FFSERVER=REDACTED_LAN_HOST
 * enable NAS: https://kb.synology.com/en-my/DSM/tutorial/How_to_back_up_Linux_computer_to_Synology_NAS
 * setup NFS: https://kb.synology.com/en-br/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS
 * mount NAS:
-  * sudo mount -v -t nfs -o vers=3 192.168.68.60:/volume1/NetBackup /mnt/backup
+  * ```sudo mount -v -t nfs -o vers=3 REDACTED_NAS_HOST:/volume1/NetBackup /mnt/backup```
   * add to /etc/fstab
+    * ```REDACTED_NAS_HOST:/volume1/NetBackup    /mnt/backup   nfs    defaults 0 0```
 * create user with exact same properties of NAS, ex
   * sudo useradd -u 1028 -g 100 backup2
 * choose folders to backup:
   * /var/log
   * /home/jdtogni
-* add crontab to root
-  10  3  *  *  * rsync -a /home/jdtogni/ /mnt/backup/dstrader_server/home/jdtogni
-  10  3  *  *  * rsync -a /var/log/ /mnt/backup/dstrader_server/var/log
+  * /etc
 
 ## VPN Setup
 
 L2TP/IPSec
 User/password
-* did not work on mac os
-* worked on ios
-
 
 ## Wake on LAN
 
@@ -221,3 +246,11 @@ User/password
   * sudo systemctl enable wol@enp3s0
   * sudo systemctl start wol@enp3s0
 * <wol-router-faq-redacted>
+
+### VNC Server Setup
+
+Open port 5900
+* netstat -lntu|grep 5900
+* sudo ufw allow 5900
+* sudo apt install x11-xserver-utils
+* xhost +local:$USER

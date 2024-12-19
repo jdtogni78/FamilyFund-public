@@ -3,11 +3,12 @@
         <thead>
             <tr>
                 <th>Name</th>
-        <th>Dollar Range Start</th>
-        <th>Dollar Range End</th>
-        <th>Date Start</th>
-        <th>Date End</th>
-        <th>Match Percent</th>
+                <th>Dollar Range Start</th>
+                <th>Dollar Range End</th>
+                <th>Date Start</th>
+                <th>Date End</th>
+                <th>Match Percent</th>
+                <th>Account Nicknames</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -15,11 +16,12 @@
         @foreach($matchingRules as $matchingRule)
             <tr>
                 <td>{{ $matchingRule->name }}</td>
-            <td>{{ $matchingRule->dollar_range_start }}</td>
-            <td>{{ $matchingRule->dollar_range_end }}</td>
-            <td>{{ $matchingRule->date_start }}</td>
-            <td>{{ $matchingRule->date_end }}</td>
-            <td>{{ $matchingRule->match_percent }}</td>
+                <td>{{ $matchingRule->dollar_range_start }}</td>
+                <td>{{ $matchingRule->dollar_range_end }}</td>
+                <td>{{ $matchingRule->date_start }}</td>
+                <td>{{ $matchingRule->date_end }}</td>
+                <td>{{ $matchingRule->match_percent }}</td>
+                <td>{{ $matchingRule->accountMatchingRules->pluck('account.nickname')->implode(', ') }}</td>
                 <td>
                     {!! Form::open(['route' => ['matchingRules.destroy', $matchingRule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

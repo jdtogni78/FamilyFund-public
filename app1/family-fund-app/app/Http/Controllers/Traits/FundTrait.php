@@ -112,6 +112,39 @@ Trait FundTrait
         return false;
     }
 
+    public function createFundResponseTradeBands($fund, $asOf, $isAdmin = false) {
+        if ($asOf == null) $asOf = date('Y-m-d');
+        $fund = FundExt::find($fund->id);
+
+        $api = $this;
+        $arr = $api->createFundResponse($fund, $asOf);
+        $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
+        $account = $fund->fundAccount();
+        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+
+        /** @var PortfolioExt $portfolio */
+        $portfolio = $fund->portfolios()->first();
+
+        $yearAgo = Utils::asOfAddYear($asOf, -1);
+        $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
+        $arr['tradePortfolios'] = $tradePortfolios;
+
+        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
+        $arr['asset_monthly_performance'] = $assetPerf;
+
+        /** @var TradePortfolioExt $tradePortfolio */
+        foreach ($tradePortfolios as $tradePortfolio) {
+            $items = $tradePortfolio->tradePortfolioItems()->get();
+            $tradePortfolio->items = $items;
+            $tradePortfolio->annotateAssetsAndGroups();
+            $tradePortfolio->annotateTotalShares();
+        }
+
+        $arr['asOf'] = $asOf;
+        return $arr;
+    }
+
+
     public function createFullFundResponse($fund, $asOf, $isAdmin = false) {
         if ($asOf == null) $asOf = date('Y-m-d');
         $fund = FundExt::find($fund->id);
@@ -350,10 +383,10 @@ Trait FundTrait
 
             // skip if asset name is not in curAssets
             if (!in_array($asset->name, $assetNames)) {
-                Log::trace("(group) Skip $asset->name");
+                Log::debug("(group) Skip $asset->name");
                 continue;
             } else {
-                Log::trace("(group) Add $asset->name");
+                Log::debug("(group) Add $asset->name");
             }
             $group = $asset->display_group;
             if ($asset->type == "CSH") {

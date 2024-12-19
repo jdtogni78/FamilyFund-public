@@ -11,6 +11,7 @@
                     <div class='btn-group'>
                         <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                         <a href="{{ route('tradePortfolios.split', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-code-fork"></i></a>
+                        <a href="{{ route('fund.show_trade_bands', [$tradePortfolio->portfolio()->fund()->first()->id, $tradePortfolio->id, $asOf]) }}" class='btn btn-ghost-info'><i class="fa fa-wave-pulse"></i></a>
                         {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger no_mobile', 'onclick' => "return confirm('Are you sure?')"]) !!}
                     </div>
                 @endif

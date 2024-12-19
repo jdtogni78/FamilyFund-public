@@ -3,7 +3,9 @@
         <thead>
             <tr>
                 <th>Account Id</th>
+                <th>Account Nickname</th>
                 <th>Matching Rule Id</th>
+                <th>Matching Rule Name</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -11,7 +13,9 @@
         @foreach($accountMatchingRules as $accountMatchingRule)
             <tr>
                 <td>{{ $accountMatchingRule->account_id }}</td>
+                <td>{{ $accountMatchingRule->account->nickname }}</td>
                 <td>{{ $accountMatchingRule->matching_rule_id }}</td>
+                <td>{{ $accountMatchingRule->matchingRule->name }}</td>
                 <td>
                     {!! Form::open(['route' => ['accountMatchingRules.destroy', $accountMatchingRule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

@@ -16,7 +16,7 @@
                              <a class="pull-right" href="{{ route('accountMatchingRules.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
                          </div>
                          <div class="card-body">
-                             @include('account_matching_rules.table')
+                             @include('account_matching_rules.table_ext')
                               <div class="pull-right mr-3">
                                      
                               </div>

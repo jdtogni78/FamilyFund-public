@@ -70,9 +70,10 @@ class TradePortfolioExt extends TradePortfolio
     {
         // sum total shares
         $total = $this->cash_target;
-        $this->items->each(function ($item) use (&$total) {
+        /** @var TradePortfolioItem $item */
+        foreach ($this->items as $item) {
             $total += $item->target_share;
-        });
+        }
         $this->total_shares = $total * 100.0;
     }
 
@@ -90,9 +91,11 @@ class TradePortfolioExt extends TradePortfolio
             }
             $groups[$group] += $item->target_share * 100;
         }
-
         $asset = AssetExt::getCashAsset();
-        $groups[$asset->display_group] += $this->cash_target * 100;
+        if (!array_key_exists($asset->display_group, $groups)) {
+            $groups[$asset->display_group] = 0;
+        }
+        $groups[$asset->display_group] += (float)($this->cash_target * 100);
 
         $this->groups = $groups;
         $this->items = $items;

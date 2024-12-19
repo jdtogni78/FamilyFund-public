@@ -79,4 +79,29 @@ class FundControllerExt extends FundController
 
         return $pdf->inline('fund.pdf');
     }
+
+    /**
+     * Display the specified Fund.
+     *
+     * @param int $id
+     *
+     * @return Response
+     */
+    public function tradeBandsAsOf($id, $tport, $asOf)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $arr = $this->createFundResponseTradeBands($fund, $asOf, $this->isAdmin());
+
+        return view('funds.show_trade_bands')
+            ->with('api', $arr)
+            ->with('asOf', $arr['asOf'])
+            ->with('tport', $tport);
+    }
+
 }

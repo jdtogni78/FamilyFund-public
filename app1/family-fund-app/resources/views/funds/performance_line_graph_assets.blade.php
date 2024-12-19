@@ -12,6 +12,7 @@
     <script type="text/javascript">
         group = '{{$group}}'
         perf = {!! json_encode($perf) !!};
+        labels = Object.keys(perf.SP500);
         colors = ['red', 'blue', 'green', 'orange', 'cyan', 'magenta', 'pink'];
         datasets = [];
 

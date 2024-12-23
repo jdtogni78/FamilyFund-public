@@ -29,12 +29,17 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Monthly Value</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseMV" 
+                            role="button" aria-expanded="false" aria-controls="collapseMV">
+                            Monthly Value
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @php($addSP500 = true)
-                            @include('funds.performance_line_graph')
-                            @php($addSP500 = false)
+                        <div class="collapse" id="collapseMV">
+                            <div class="card-body">
+                                @php($addSP500 = true)
+                                @include('funds.performance_line_graph')
+                                @php($addSP500 = false)
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -43,10 +48,15 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Yearly Value</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseYV" 
+                            role="button" aria-expanded="false" aria-controls="collapseYV">
+                            Yearly Value
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.performance_graph')
+                        <div class="collapse" id="collapseYV">
+                            <div class="card-body">
+                                @include('funds.performance_graph')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -56,10 +66,15 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header">
-                                <strong>Group {{$group}}</strong>
+                                <a class="btn btn-primary" data-toggle="collapse" href="#collapse{{$group}}" 
+                                role="button" aria-expanded="false" aria-controls="collapse{{$group}}">
+                                Group {{$group}}
+                                </a>
                             </div>
-                            <div class="card-body">
-                                @include('funds.performance_line_graph_assets')
+                            <div class="collapse" id="collapse{{$group}}">
+                                <div class="card-body">
+                                    @include('funds.performance_line_graph_assets')
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -75,10 +90,15 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Current Assets</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseCA" 
+                            role="button" aria-expanded="false" aria-controls="collapseCA">
+                            Current Assets
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.assets_graph')
+                        <div class="collapse" id="collapseCA">
+                            <div class="card-body">
+                                @include('funds.assets_graph')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -88,20 +108,30 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Fund Allocation (ADMIN)</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseFA" 
+                            role="button" aria-expanded="false" aria-controls="collapseFA">
+                            Fund Allocation (ADMIN)
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.allocation_graph')
+                        <div class="collapse" id="collapseFA">
+                            <div class="card-body">
+                                @include('funds.allocation_graph')
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Accounts Allocation (ADMIN)</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseAA" 
+                            role="button" aria-expanded="false" aria-controls="collapseAA">
+                            Accounts Allocation (ADMIN)
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.accounts_graph')
+                        <div class="collapse" id="collapseAA">
+                            <div class="card-body">
+                                @include('funds.accounts_graph')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -111,11 +141,16 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Yearly Value</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseYV2" 
+                            role="button" aria-expanded="false" aria-controls="collapseYV2">
+                            Yearly Value
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @php ($performance_key = 'yearly_performance')
-                            @include('funds.performance_table')
+                        <div class="collapse" id="collapseYV2">
+                            <div class="card-body">
+                                @php ($performance_key = 'yearly_performance')
+                                @include('funds.performance_table')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -124,11 +159,16 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Monthly Value</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseMV2" 
+                            role="button" aria-expanded="false" aria-controls="collapseMV2">
+                            Monthly Value
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @php ($performance_key = 'monthly_performance')
-                            @include('funds.performance_table')
+                        <div class="collapse" id="collapseMV2">
+                            <div class="card-body">
+                                @php ($performance_key = 'monthly_performance')
+                                @include('funds.performance_table')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,10 +182,15 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Assets</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseAT" 
+                            role="button" aria-expanded="false" aria-controls="collapseAT">
+                            Assets
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.assets_table')
+                        <div class="collapse" id="collapseAT">
+                            <div class="card-body">
+                                @include('funds.assets_table')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -154,10 +199,15 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Transactions</strong>
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseAT" 
+                            role="button" aria-expanded="false" aria-controls="collapseAT">
+                            Transactions
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('accounts.transactions_table')
+                        <div class="collapse" id="collapseAT">
+                            <div class="card-body">
+                                @include('accounts.transactions_table')
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -167,10 +217,15 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <strong>Accounts (ADMIN)</strong>
+                                <a class="btn btn-primary" data-toggle="collapse" href="#collapseAT" 
+                                role="button" aria-expanded="false" aria-controls="collapseAT">
+                                Accounts (ADMIN)
+                                </a>
                             </div>
-                            <div class="card-body">
-                                @include('funds.accounts_table')
+                            <div class="collapse" id="collapseAT">
+                                <div class="card-body">
+                                    @include('funds.accounts_table')
+                                </div>
                             </div>
                         </div>
                     </div>

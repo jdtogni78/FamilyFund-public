@@ -10,3 +10,5 @@ echo "Generating $file"
 cat ${dir}/truncate_all.sql > $file
 mysqldump --column-statistics=FALSE familyfund_${env} --no-create-info $* \
     | sed -e $'s/),(/),\\\n(/g' >> $file
+
+

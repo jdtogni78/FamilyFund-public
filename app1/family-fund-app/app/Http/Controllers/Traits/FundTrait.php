@@ -124,13 +124,15 @@ Trait FundTrait
 
         /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
+        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
+        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
 
-        $yearAgo = Utils::asOfAddYear($asOf, -1);
+        $yearAgo = Utils::asOfAddYear($asOf, -5);
         $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
         $arr['tradePortfolios'] = $tradePortfolios;
 
-        $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
-        $arr['asset_monthly_performance'] = $assetPerf;
+        $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr);
+        $arr['asset_monthly_bands'] = $assetPerf;
 
         /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
@@ -195,11 +197,25 @@ Trait FundTrait
         // ignore if as_of is high date
         $isHighDate = $fundReport->as_of->format('Y-m-d') == '9999-12-31';
         $isAll = $fundReport->type === 'ALL';
-
-        $this->createAccountReports($fundReport);
-        $this->sendFundEmailReport($fundReport);
+        $isTradingBands = $fundReport->type === 'TRADING_BANDS';
+        if ($isTradingBands) {
+            $this->sendTradingBandsEmailReport($fundReport);
+        } else {
+            $this->createAccountReports($fundReport);
+            $this->sendFundEmailReport($fundReport);
+        }   
 
         return $fundReport;
+    }
+
+    protected function sendTradingBandsEmailReport($fundReport){
+        $fund = $fundReport->fund()->first();
+        $asOf = $fundReport->as_of->format('Y-m-d');
+        $isAdmin = $fundReport->isAdmin();
+
+        $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin);
+        $pdf = new FundPDF();
+        $pdf->createTradeBandsPDF($arr, $isAdmin);
     }
 
     protected function createAccountReports($fundReport)
@@ -355,7 +371,8 @@ Trait FundTrait
         $isAdmin = $fundReport->isAdmin();
 
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
-        $pdf = new FundPDF($arr, $isAdmin);
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, $isAdmin);
 
         $this->fundEmailReport($fundReport, $pdf);
     }
@@ -377,9 +394,14 @@ Trait FundTrait
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];
+        $processed = [];
         foreach ($portfolio->portfolioAssets()->get() as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
+            if (in_array($asset->name, $processed)) {
+                continue;
+            }
+            $processed[] = $asset->name;
 
             // skip if asset name is not in curAssets
             if (!in_array($asset->name, $assetNames)) {
@@ -403,4 +425,59 @@ Trait FundTrait
         }
         return $assetPerf;
     }
+
+    // create an array of assets and their historical prices
+    // this is used to create the asset bands for the line graph
+    // asset bands are highlight the max, min, and target values used to trigger trades
+    // this data is the real value of assets (quantity * price) 
+    private function createMonthlyAssetBandsResponse($fund, $asOf, $arr)
+    {
+        /** @var PortfolioExt $portfolio */
+        $portfolio = $fund->portfolios()->first();
+
+        /** @var PortfolioAsset $pa */
+        $assetPerf = [];
+        $processed = [];
+        // TODO get unique assets from portfolioAssets
+        $uniqueAssets = PortfolioAsset::query()
+            ->where('portfolio_id', $portfolio->id)
+            ->select('asset_id')
+            ->distinct()
+            ->get();
+        // foreach ($portfolio->portfolioAssets()->get() as $pa) {
+        foreach ($uniqueAssets as $pa) {
+            /** @var AssetExt $asset */
+            $asset = $pa->asset()->first();
+            if (in_array($asset->name, $processed)) {
+                Log::debug("Skip $asset->name");
+                continue;
+            } else {
+                Log::debug("Add $asset->name");
+            }
+            $processed[] = $asset->name;
+
+            $allShares = [];
+            // loop through the history of the portfolio assets for this asset
+            PortfolioAsset::query()
+                ->where('portfolio_id', $portfolio->id)
+                ->where('asset_id', $asset->id)
+                // ->where('end_dt', '<=', $asOf)
+                ->orderBy('start_dt', 'asc')
+                ->get()
+                ->each(function ($pa) use (&$allShares) {
+                    $allShares[] = ['timestamp' => $pa->start_dt, 'shares' => $pa->position, 'end_dt' => $pa->end_dt];
+                });
+
+            // get last share
+            $lastShare = end($allShares);
+            if (substr($lastShare['end_dt'],0,10) < '9999-12-31') {
+                $allShares[] = ['timestamp' => $lastShare['end_dt'], 'shares' => 0];
+            }
+            $perf = $this->createMonthlyPerformanceResponseFor($asOf, 'createAssetPeformanceArray', false, $allShares, $asset);
+
+            $assetPerf[$asset->name] = $perf;
+        }
+        return $assetPerf;
+    }
+
 }

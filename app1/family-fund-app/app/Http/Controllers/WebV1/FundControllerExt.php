@@ -75,7 +75,8 @@ class FundControllerExt extends FundController
 
         $isAdmin = $this->isAdmin();
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
-        $pdf = new FundPDF($arr, $isAdmin, $debug_html);
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, $isAdmin, $debug_html);
 
         return $pdf->inline('fund.pdf');
     }
@@ -87,7 +88,7 @@ class FundControllerExt extends FundController
      *
      * @return Response
      */
-    public function tradeBandsAsOf($id, $tport, $asOf)
+    public function tradeBandsAsOf($id, $asOf)
     {
         $fund = $this->fundRepository->find($id);
 
@@ -100,8 +101,30 @@ class FundControllerExt extends FundController
 
         return view('funds.show_trade_bands')
             ->with('api', $arr)
-            ->with('asOf', $arr['asOf'])
-            ->with('tport', $tport);
+            ->with('asOf', $arr['asOf']);
     }
 
+    /**
+     * @param int $id
+     * @param string $asOf
+     * @return Response
+     * @throws PathAlreadyExists
+     */
+    public function showTradeBandsPDFAsOf($id, $asOf=null)
+    {
+        $debug_html = false;
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $isAdmin = $this->isAdmin();
+        $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin);
+        $pdf = new FundPDF();
+        $pdf->createTradeBandsPDF($arr, $isAdmin, $debug_html);
+
+        return $pdf->inline('fund.pdf');
+    }
 }

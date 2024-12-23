@@ -4,6 +4,7 @@ namespace App\Charts;
 
 class LineChart extends BaseChart
 {
+    
     public function createBaseChart($rotation, $mode)
     {
         $this->setup();
@@ -32,6 +33,8 @@ class LineChart extends BaseChart
         $this->image->drawLegend($legendX, $this->margin, [
             "Style" => LEGEND_NOBORDER,
             "Mode" => LEGEND_HORIZONTAL,
+            "BoxWidth" => 14,
+            "BoxHeight" => 14,
         ]);
     }
 
@@ -39,21 +42,19 @@ class LineChart extends BaseChart
     {
         $this->createBaseChart(45, SCALE_MODE_FLOATING);
 
-//        $this->data->setSerieWeight($this->seriesName1, 1.5);
-//        $this->data->setSerieWeight($this->seriesName2, 1.5);
         $this->setFont("labels");
-        $this->image->drawLineChart([
-            // "DisplayValues" => true,
-            // "DisplayColor" => DISPLAY_AUTO
-        ]);
+    }
+
+    public function drawZoneChart(string $label1, string $label2, 
+            array $format) 
+    {
+        $this->image->drawZoneChart($label1, $label2, $format);
     }
 
     public function createStepChart()
     {
         $this->createBaseChart(45, SCALE_MODE_FLOATING);
 
-        // $this->data->setSerieTicks($this->seriesName1, 4);
-//        $this->data->setSerieWeight($this->seriesName1, 1.5);
         $this->setFont("labels");
         $this->image->drawStepChart([
             // "DisplayValues" => true,

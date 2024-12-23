@@ -166,6 +166,7 @@ So, some server must be kept on, from that we can wake the other servers.
 * Create Fund
 * Create portfolio
 * Create an initial transaction for the fund
+* Check initial balance
 
 ### Making an investment into a fund
 

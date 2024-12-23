@@ -44,7 +44,8 @@ class PDFTest extends TestCase
         $fund = $this->factory->fund;
 
         $arr = $this->createFullFundResponse($fund, $this->asOf, $isAdmin);
-        $pdf = new FundPDF($arr, $isAdmin, true);
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, $isAdmin, true);
         $pdfFile = $pdf->file();
         Log::debug($pdfFile);
         $this->assertNotNull($pdfFile);

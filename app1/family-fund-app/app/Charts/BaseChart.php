@@ -34,9 +34,8 @@ class BaseChart
     public $height = 400;
 
     public $margin = 30;
-
-    protected $image;
-    protected $data;
+    public $image;
+    public $data;
 
     protected $longestLabel = 0;
     protected $longestValue = 0;
@@ -61,11 +60,14 @@ class BaseChart
         "13" => ["R" => 192, "G" => 192, "B" => 192, "Alpha" => 100], // 'silver'
     ];
 
+    public function __construct()
+    {
+        $this->data = new Data();
+    }
 
     protected function setup()
     {
         /* Create and populate the Data object */
-        $this->data = new Data();
         $this->data->Palette = $this->Palette;
 
         $i = 0;
@@ -74,6 +76,7 @@ class BaseChart
             $this->seriesName[$i] = $name;
             $this->data->addPoints($values, $name);
             $this->data->setSerieDescription($name, $this->titles[$i]);
+            $this->data->setSerieWeight($name, 1.5);
             if ($i == 0)
                 $this->data->setAxisName(0, $this->titles[$i]);
             $i ++;

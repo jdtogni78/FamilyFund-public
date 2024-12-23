@@ -6,11 +6,16 @@ use App\Charts\BarChart;
 use App\Charts\DoughnutChart;
 use App\Charts\LineChart;
 use Illuminate\Support\Facades\Log;
+use PhpParser\Node\Scalar\MagicConst\Line;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 trait ChartBaseTrait
 {
     private $files = [];
+    public $chart;
+    private $hasZone = false;
+    private $zone_label1 = null;
+    private $zone_label2 = null;
 
     public function createYearlyPerformanceGraph(array $api, TemporaryDirectory $tempDir)
     {
@@ -33,9 +38,10 @@ trait ChartBaseTrait
         $values3 = $this->getGraphData($api['cash']);
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->createLineChart($file, $labels,
+        $this->addLineChart($labels,
             ["Monthly Value", "SP500", "Cash"],
             [$values1, $values2, $values3]);
+        $this->createLineChart($file);
     }
 
     public function createGroupMonthlyPerformanceGraphs(array $api, TemporaryDirectory $tempDir)
@@ -58,7 +64,8 @@ trait ChartBaseTrait
             }
 
             $this->files[$name] = $file = $tempDir->path($name);
-            $this->createLineChart($file, $labels, $titles, $graphValues);
+            $this->addLineChart($labels, $titles, $graphValues);
+            $this->createLineChart($file);
             $i++;
         }
 
@@ -82,15 +89,49 @@ trait ChartBaseTrait
         $this->createStepChart(array_values($data), $labels1, $file, "Shares");
     }
 
-    public function createLineChart(string $file, array $labels,
-                                    array $titles, array $values)
+    public function addZone(string $label1, string $label2, 
+                            array $boundary1, array $boundary2) 
     {
-        $chart = new LineChart();
-        $chart->labels = $labels;
-        $chart->titles = $titles;
-        $chart->seriesValues = $values;
-        $chart->createChart();
-        $chart->saveAs($file);
+        $this->zone_label1 = $label1;
+        $this->zone_label2 = $label2;
+        $this->chart->data->addPoints($boundary1, $label1);
+        $this->chart->data->addPoints($boundary2, $label2);
+        // $this->chart->data->setSerieDrawable([$label1, $label2], false);
+        Log::debug("addZone: " . json_encode($this->chart->data->Data));
+        $this->hasZone = true;
+    }
+
+    public function createLineChart(string $file, $colorIndex = 0, $label1 = null)
+    {
+        $this->chart->createChart();
+        // TODO: find out how to control color
+        // if ($label1) {
+        //     $this->chart->data->DataSet["Series"][$label1]["Color"]["R"] = $this->chart->Palette[$colorIndex];
+        //     $this->chart->data->DataSet["Series"]["$label1 target"]["Color"] = $this->chart->Palette[13];
+        // }
+        $this->chart->image->drawLineChart();
+
+        if ($this->hasZone) {
+            $color = $this->chart->Palette[13];
+            $this->chart->drawZoneChart($this->zone_label1, $this->zone_label2, 
+                [
+                    "AreaR" => $color['R'], "AreaG" => $color['G'], "AreaB" => $color['B'], "AreaAlpha" => 20,
+                    "LineR" => $color['R'], "LineG" => $color['G'], "LineB" => $color['B'], "LineAlpha" => 20,
+                    // "LineTicks" => 1,
+                ]
+            );
+        }
+        $this->chart->saveAs($file);
+        return $this->chart;
+    }
+
+    public function addLineChart(array $labels, array $titles, array $values)
+    {
+        $this->chart = new LineChart();
+        $this->chart->labels = $labels;
+        $this->chart->titles = $titles;
+        $this->chart->seriesValues = $values;
+        return $this->chart;
     }
 
     public function createStepChart(array $values, array $labels, string $file, $title)

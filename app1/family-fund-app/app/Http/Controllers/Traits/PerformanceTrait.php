@@ -29,20 +29,27 @@ trait PerformanceTrait
         $value = 0;
         $assetShares = 0;
         $symbol = $asset->name;
+        // Log::debug("createAssetPeformanceArray $symbol $asOf");
         try {
             // find asset price with latest timestamp before asOf
             foreach ($all_shares as $shares) {
-                if ($shares['timestamp'] <= $asOf) {
+                // Log::debug("shares['timestamp']: " . $shares['timestamp'] . " asOf: " . $asOf);
+                if (substr($shares['timestamp'],0,10) <= $asOf) {
                     $assetShares = $shares['shares'];
                 } else {
                     break;
                 }
             }
+            // Log::debug("assetShares: $assetShares");
             $ap = $asset->priceAsOf($asOf)->first();
-            if (empty($ap))
+            // Log::debug("ap: $ap");
+            if (empty($ap)) {
+                Log::debug("no price for $symbol at $asOf");
                 $value = 0;
-            else
+            } else {
                 $value = $assetShares * $ap->price;
+                // Log::debug("value: $value");
+            }
         } catch (\Exception $e) {
             Log::error("while calculating $symbol $asOf: " . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -50,6 +57,9 @@ trait PerformanceTrait
         $yp = array();
         $yp['value']        = Utils::currency($value);
         $yp['shares']       = Utils::shares($assetShares);
+        if ($ap) {
+            $yp['price']        = Utils::currency($ap->price);
+        }
         return $yp;
     }
 
@@ -107,7 +117,7 @@ trait PerformanceTrait
         $total = 0;
         foreach ($trans as $tran) {
             if ($tran['timestamp'] <= $asOf) {
-                $timestamp = substr("" . $tran['timestamp'],0,10);
+                $timestamp = substr($tran['timestamp'],0,10);
                 $this->debug("cash value: " . $tran['value'] . " at " . $timestamp);
                 $total += $tran['value'];
                 $allValues[$timestamp] = $total;
@@ -224,4 +234,5 @@ trait PerformanceTrait
         }
         return $ret;
     }
+
 }

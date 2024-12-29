@@ -143,7 +143,7 @@ trait AccountTrait
         return $arr;
     }
 
-    protected function createAccountMatchingResponse($account, $asOf): array
+    protected function createAccountMatchingResponse(AccountExt $account, $asOf): array
     {
         $this->debug("amresp: " . json_encode($account) . " " . $asOf);
         $tsAsOf = (new Carbon($asOf))->getTimestamp();

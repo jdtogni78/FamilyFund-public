@@ -3,16 +3,16 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Models\FundReportExt;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class FundQuarterlyReport extends Mailable
+class FundReportEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $fund;
+    public $fundReport;
     public ?User $user;
     public $pdf;
     public $asOf;
@@ -22,9 +22,9 @@ class FundQuarterlyReport extends Mailable
      *
      * @return void
      */
-    public function __construct($fund, $user, $asOf, $pdf)
+    public function __construct($fundReport, $user, $asOf, $pdf)
     {
-        $this->fund = $fund;
+        $this->fundReport = $fundReport;
         $this->user = $user;
         $this->asOf = $asOf;
         $this->pdf = $pdf;
@@ -41,16 +41,17 @@ class FundQuarterlyReport extends Mailable
         if ($this->user != null) {
             $name = $this->user->name;
         }
+        $reportName = FundReportExt::$emailSubjects[$this->fundReport->type];
         $arr = [
             'to' => $name,
-            'report_name' => $this->fund->name.' quarterly report',
+            'report_name' => $this->fundReport->fund->name . ' ' . $reportName,
         ];
 
         return $this->view('emails.reports.quarterly_report')
             ->with("api", $arr)
-            ->subject("Fund Quarterly Report - ". $this->asOf)
+            ->subject($reportName . " - " . $this->asOf)
             ->attach($this->pdf, [
-                'as' => 'fund_report_'.$this->asOf.'.pdf',
+                'as' => 'fund_report_' . $this->asOf . '.pdf',
                 'mime' => 'application/pdf',
             ]);
     }

@@ -81,6 +81,11 @@ class FundControllerExt extends FundController
         return $pdf->inline('fund.pdf');
     }
 
+    public function tradeBands($id)
+    {
+        return $this->tradeBandsAsOf($id, null);
+    }
+    
     /**
      * Display the specified Fund.
      *

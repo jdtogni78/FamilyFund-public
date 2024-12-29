@@ -8,7 +8,7 @@ use App\Http\Resources\FundReportResource;
 use App\Http\Resources\FundResource;
 use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
-use App\Mail\FundQuarterlyReport;
+use App\Mail\FundReportEmail;
 use App\Models\AccountExt;
 use App\Models\AccountReport;
 use App\Models\AssetExt;
@@ -196,8 +196,8 @@ Trait FundTrait
     {
         // ignore if as_of is high date
         $isHighDate = $fundReport->as_of->format('Y-m-d') == '9999-12-31';
-        $isAll = $fundReport->type === 'ALL';
-        $isTradingBands = $fundReport->type === 'TRADING_BANDS';
+        $isAll = $fundReport->type === FundReportExt::TYPE_ALL;
+        $isTradingBands = $fundReport->type === FundReportExt::TYPE_TRADING_BANDS;
         if ($isTradingBands) {
             $this->sendTradingBandsEmailReport($fundReport);
         } else {
@@ -208,7 +208,7 @@ Trait FundTrait
         return $fundReport;
     }
 
-    protected function sendTradingBandsEmailReport($fundReport){
+    protected function sendTradingBandsEmailReport(FundReportExt $fundReport){
         $fund = $fundReport->fund()->first();
         $asOf = $fundReport->as_of->format('Y-m-d');
         $isAdmin = $fundReport->isAdmin();
@@ -216,6 +216,7 @@ Trait FundTrait
         $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin);
         $pdf = new FundPDF();
         $pdf->createTradeBandsPDF($arr, $isAdmin);
+        $this->fundEmailReport($fundReport, $pdf);
     }
 
     protected function createAccountReports($fundReport)
@@ -278,7 +279,7 @@ Trait FundTrait
             throw new Exception($this->noEmailMessage . implode(", ", $noEmail));
     }
 
-    protected function fundEmailReport($fundReport, FundPDF $pdf): void
+    protected function fundEmailReport(FundReportExt $fundReport, FundPDF $pdf): void
     {
         $fund = $fundReport->fund()->first();
         $asOf = $fundReport->as_of->format('Y-m-d');
@@ -302,7 +303,7 @@ Trait FundTrait
                 if ($this->verbose) Log::debug("pdfFile: " . json_encode($pdfFile));
                 if ($this->verbose) Log::debug("fund: " . json_encode($fund));
                 $user = $account->user()->first();
-                $reportData = new FundQuarterlyReport($fund, $user, $asOf, $pdfFile);
+                $reportData = new FundReportEmail($fundReport, $user, $asOf, $pdfFile);
 
                 $sentMsg = $this->sendMail($reportData, $account->email_cc);
                 if (null == $sentMsg) {

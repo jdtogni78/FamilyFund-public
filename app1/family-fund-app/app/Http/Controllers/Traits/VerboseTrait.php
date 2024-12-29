@@ -6,7 +6,7 @@ use Log;
 
 trait VerboseTrait
 {
-    protected $verbose = false;
+    public $verbose = false;
 
     public function debug($message, $data = []) {
         if ($this->verbose) Log::debug($message, $data);

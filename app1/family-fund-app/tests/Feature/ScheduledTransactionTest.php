@@ -2,11 +2,9 @@
 
 use App\Http\Controllers\Traits\ScheduledJobTrait;
 use App\Models\FundReportExt;
-use App\Models\ScheduledJob;
 use App\Models\ScheduledJobExt;
 use App\Models\ScheduleExt;
 use App\Models\TransactionExt;
-use App\Repositories\ScheduledJobRepository;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
@@ -42,8 +40,9 @@ class ScheduledTransactionTest extends TestCase
         $this->debug("\n\n\n");
         /** @var DataFactory $factory */
         $factory = $this->factory;
-        $date = Carbon::today()->subDays(7)->previous(Carbon::MONDAY);
-        $origDate = $date->copy();
+        $expectedDate = Carbon::today()->subDays(7)->previous(Carbon::MONDAY);
+        $firstDate = $expectedDate->copy()->subDays(3);
+        $date = $firstDate->copy();
         $value = 100;
         $dow = 1;
 
@@ -52,18 +51,25 @@ class ScheduledTransactionTest extends TestCase
         list ($schedule, $job, $stran) = $factory->createScheduledTransaction(
             ScheduleExt::TYPE_DAY_OF_WEEK, $dow, $date, $value);
 
-        $expectedCount = 1; // 1 for monday
-        $tran = $this->_testScheduledJob($date, ScheduledJobExt::ENTITY_TRANSACTION, $job, $expectedCount);
+        $expectedCount = 2; // 1 for monday, 1 for first time ever
+        // $this->verbose = true;
+        $trans = $this->_testScheduledJob($date, ScheduledJobExt::ENTITY_TRANSACTION, $job, $expectedCount);
 
         // type, status, value, shares, timestamp, account_id, descr, flags, scheduled_job_id,
-        $this->assertEquals($origDate->toDateString(), $tran->timestamp->toDateString());
-        $this->assertEquals($value, $tran->value);
-        $this->assertEquals(TransactionExt::TYPE_PURCHASE, $tran->type);
-        $this->assertEquals(TransactionExt::STATUS_CLEARED, $tran->status);
-        $this->assertGreaterThan(0, $tran->shares);
-        $this->assertEquals($stran->account_id, $tran->account_id);
-        $this->assertEquals($stran->descr, $tran->descr);
-        $this->assertEquals($stran->flags, $tran->flags);
+        $this->debug('trans: ' . json_encode($trans));
+        $this->debug('expectedDate: ' . $expectedDate->toDateString());
+        $this->debug('firstDate: ' . $firstDate->toDateString());
+        $this->assertEquals($firstDate->toDateString(), $trans[0]->timestamp->toDateString());
+        $this->assertEquals($expectedDate->toDateString(), $trans[1]->timestamp->toDateString());
+        foreach ($trans as $tran) {
+            $this->assertEquals($value, $tran->value);
+            $this->assertEquals(TransactionExt::TYPE_PURCHASE, $tran->type);
+            $this->assertEquals(TransactionExt::STATUS_CLEARED, $tran->status);
+            $this->assertGreaterThan(0, $tran->shares);
+            $this->assertEquals($stran->account_id, $tran->account_id);
+            $this->assertEquals($stran->descr, $tran->descr);
+            $this->assertEquals($stran->flags, $tran->flags);
+        }
     }
 
     protected function createFundReport(array $input) {
@@ -78,7 +84,7 @@ class ScheduledTransactionTest extends TestCase
         $this->debug("\n\n\n");
         $factory = $this->factory;
         $date = Carbon::today()->subDays(7)->previous(Carbon::SUNDAY);
-        $origDate = $date->copy();
+        $firstDate = $date->copy();
 
         // create prices to trick "missing data for fund report"
         $asset = $factory->createAsset('FFIB');
@@ -87,7 +93,7 @@ class ScheduledTransactionTest extends TestCase
             $factory->createAssetPrice($asset, 10.2, $date, $tomorrow);
             $date = $tomorrow;
         }
-        $date = $origDate->copy();
+        $date = $firstDate->copy();
 
         /* @var ScheduledJobExt $job */
         /* @var FundReportExt $srep */
@@ -98,38 +104,44 @@ class ScheduledTransactionTest extends TestCase
         $rep = $this->_testScheduledJob($date, ScheduledJobExt::ENTITY_FUND_REPORT, $job, $expectedCount);
 
         $this->debug('job: ' . json_encode($job->toArray()));
+        $this->debug('rep: ' . json_encode($rep));
 
         // type, as_of,
-        $this->assertEquals($origDate->next(Carbon::TUESDAY)->toDateString(), $rep->as_of->toDateString());
-        $this->assertEquals($srep->type, $rep->type);
+        $this->assertEquals($firstDate->next(Carbon::TUESDAY)->toDateString(), $rep[1]->as_of->toDateString());
+        $this->assertEquals($firstDate->subDays(7)->toDateString(), $rep[0]->as_of->toDateString());
+        $this->assertEquals($srep->type, $rep[0]->type);
+        $this->assertEquals($srep->type, $rep[1]->type);
     }
 
     private function _testScheduledJob(Carbon $date, $entityDescrFilter, ScheduledJobExt $job, $expected=1): mixed
     {
         $all = [];
+        // $this->verbose = true;
         $this->debug("******* test sched fund report ********");
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $this->debug('At date: ' . $date->toDateString() . ', dow: ' . $date->dayOfWeek);
             $all[] = list($ret, $errors) = $this->scheduleDueJobs($date, $entityDescrFilter);
             $this->debug('Scheduled jobs: ' . json_encode($ret));
             $date->addDay();
         }
         // count all scheduled jobs by this schedule id
-        $found = null;
+        $found = [];
         $count = 0;
         foreach ($all as list ($ret, $errors)) {
             foreach ($ret as $obj) {
                 if ($obj->scheduled_job_id == $job->id) {
                     $count++;
-                    $found = $obj;
-                    $this->debug('Scheduled job: ' . json_encode($found->toArray()));
+                    $found[] = $obj;
+                    $this->debug('Found scheduled job: ' . json_encode($obj->toArray()));
                 }
             }
         }
         $this->assertEquals($expected, $count, 'One scheduled job');
         $this->debug('job: ' . json_encode($job->toArray()));
 
-        $this->assertEquals($job->id, $found?->scheduled_job_id);
+        foreach ($found as $obj) {  
+            $this->assertEquals($job->id, $obj->scheduled_job_id);
+        }
         return $found;
     }
 }

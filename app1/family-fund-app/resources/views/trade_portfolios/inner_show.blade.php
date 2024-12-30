@@ -3,8 +3,8 @@
     <div class="col">
         <div class="card">
             <div class="card-header">
-                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTP" 
-                role="button" aria-expanded="false" aria-controls="collapseTP">
+                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTP{{ $tradePortfolio->id }}" 
+                role="button" aria-expanded="false" aria-controls="collapseTP{{ $tradePortfolio->id }}">
                 Trade Portfolio {{ $extraTitle ?? '' }}
                 </a>
                 <a href="{{ route('tradePortfolios.index') }}" class="btn btn-light">Back</a>
@@ -19,7 +19,7 @@
                     </div>
                 @endif
             </div>
-            <div class="collapse" id="collapseTP">
+            <div class="collapse" id="collapseTP{{ $tradePortfolio->id }}">
                 <div class="card-body">
                     @include('trade_portfolios.show_fields')
                 </div>
@@ -31,12 +31,12 @@
     <div class="col">
         <div class="card">
             <div class="card-header">
-                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTPIT" 
-                role="button" aria-expanded="false" aria-controls="collapseTPIT">
+                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTPIT{{ $tradePortfolio->id }}" 
+                role="button" aria-expanded="false" aria-controls="collapseTPIT{{ $tradePortfolio->id }}">
                 Trade Portfolio Items {{ $extraTitle ?? '' }}
                 </a>
             </div>
-            <div class="collapse" id="collapseTPIT">
+            <div class="collapse" id="collapseTPIT{{ $tradePortfolio->id }}">
                 <div class="card-body">
                     @php($tradePortfolioItems = $tradePortfolio['items'])
                     @include('trade_portfolio_items.table')
@@ -49,12 +49,12 @@
     <div class="col">
         <div class="card">
             <div class="card-header">
-                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTPGT" 
-                role="button" aria-expanded="false" aria-controls="collapseTPGT">
+                <a class="btn btn-primary" data-toggle="collapse" href="#collapseTPGT{{ $tradePortfolio->id }}" 
+                role="button" aria-expanded="false" aria-controls="collapseTPGT{{ $tradePortfolio->id }}">
                 Trade Portfolio Group Targets {{ $extraTitle ?? '' }}
                 </a>
             </div>
-            <div class="collapse" id="collapseTPGT">
+            <div class="collapse" id="collapseTPGT{{ $tradePortfolio->id }}">
                 <div class="card-body">
                     @include('trade_portfolios.group_table')
                 </div>

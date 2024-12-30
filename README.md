@@ -154,13 +154,13 @@ mac app: https://apps.apple.com/us/app/wakeoncommand/id1484204619?mt=12
 Could not make the WOL work from VPN, only inside the network.
 So, some server must be kept on, from that we can wake the other servers.
 
-### Adding an account
+### Adding an account in FamilyFund
 
 * Create a user via the web interface
 * Create an account for that user
 * Add a transaction - this will create a balance for the account
 
-### Adding a fund
+### Adding a fund in FamilyFund
 
 * Create an account with no user id for the fund
 * Create Fund
@@ -174,6 +174,10 @@ So, some server must be kept on, from that we can wake the other servers.
 * When should the new cash be available
 * Making transaction before cash was recognized caused miscalculation and validation error
 
+### Adding an account in IBKR
+
+* Add an additional account
+* <plaid-monarch-line-redacted>
 
 ### Server Setup
 sudo apt install mariadb-client

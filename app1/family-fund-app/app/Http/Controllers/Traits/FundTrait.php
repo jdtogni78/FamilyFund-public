@@ -92,7 +92,8 @@ Trait FundTrait
         $arr['unallocated_shares_percent'] = Utils::percent($shares ? $unallocated / $shares : 0);
         $arr['allocated_shares'] = Utils::shares($allocated = $shares - $unallocated);
         $arr['allocated_shares_percent'] = Utils::percent($shares ? $allocated / $shares : 0);
-        $arr['share_value'] = Utils::currency($shares ? $value / $shares : 0);
+        $arr['share_value'] = Utils::currency($sharePrice = $shares ? $value / $shares : 0);
+        $arr['unallocated_value'] = Utils::currency($unallocatedValue = $unallocated * $sharePrice);
 
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
         $arr['max_cash_value'] = $fund->portfolio()->maxCashBetween($prevYearAsOf, $asOf);

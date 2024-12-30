@@ -199,12 +199,12 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseAT" 
-                            role="button" aria-expanded="false" aria-controls="collapseAT">
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseATrans" 
+                            role="button" aria-expanded="false" aria-controls="collapseATrans">
                             Transactions
                             </a>
                         </div>
-                        <div class="collapse" id="collapseAT">
+                        <div class="collapse" id="collapseATrans">
                             <div class="card-body">
                                 @include('accounts.transactions_table')
                             </div>
@@ -217,12 +217,12 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <a class="btn btn-primary" data-toggle="collapse" href="#collapseAT" 
-                                role="button" aria-expanded="false" aria-controls="collapseAT">
+                                <a class="btn btn-primary" data-toggle="collapse" href="#collapseAccounts" 
+                                role="button" aria-expanded="false" aria-controls="collapseAccounts">
                                 Accounts (ADMIN)
                                 </a>
                             </div>
-                            <div class="collapse" id="collapseAT">
+                            <div class="collapse" id="collapseAccounts">
                                 <div class="card-body">
                                     @include('funds.accounts_table')
                                 </div>

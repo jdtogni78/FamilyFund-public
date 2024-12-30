@@ -78,11 +78,11 @@ trait ChartBaseTrait
         $data = [];
         Log::debug("createSharesLineChart: " . json_encode($arr));
         foreach ($arr as $v) {
-            $data[substr($v['timestamp'], 0,10)] = $v['balances']['OWN'] * $v['share_price'];
+            // max of last value and current value
+            $data[substr($v['timestamp'], 0,10)] = max($data[substr($v['timestamp'], 0,10)] ?? 0, 
+                    $v['balances']['OWN'] * $v['share_price']);
         };
         asort($data);
-//        Log::debug("data");
-//        Log::debug($data);
 
         $this->files[$name] = $file = $tempDir->path($name);
         $labels1 = array_keys($data);

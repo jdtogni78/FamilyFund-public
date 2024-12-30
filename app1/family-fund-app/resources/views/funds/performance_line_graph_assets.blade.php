@@ -18,7 +18,9 @@
 
         ind = 0;
         for (let symbol in perf) {
-            let data = Object.values(perf[symbol]).map(function(e) {return e.value;});
+            d1 = Object.keys(perf[symbol])[0];
+            v1 = perf[symbol][d1].price;
+            data = Object.values(perf[symbol]).map(function(e) {return e.price/v1;});
             datasets.push({
                 label: symbol,
                 data: data,

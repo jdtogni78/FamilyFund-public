@@ -31,6 +31,14 @@
     </div>
 </div>
 <div class="form-group col-sm-6">
+    @php $field = 'unallocated_value'; @endphp
+    {!! Form::label($field, 'Unallocated Value:') !!}
+    <div class="input-group">
+        <div class="input-group-text">$</div>
+        {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
+    </div>
+</div>
+<div class="form-group col-sm-6">
     @php $field = 'value'; @endphp
     {!! Form::label($field, 'Total Value:') !!}
     <div class="input-group">

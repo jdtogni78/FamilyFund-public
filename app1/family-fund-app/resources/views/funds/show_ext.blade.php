@@ -61,6 +61,40 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseLR" 
+                            role="button" aria-expanded="false" aria-controls="collapseLR">
+                            Linear Regression
+                            </a>
+                        </div>
+                        <div class="collapse" id="collapseLR">
+                            <div class="card-body">
+                                @include('funds.performance_line_graph_linreg')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseLRTable" 
+                            role="button" aria-expanded="false" aria-controls="collapseLRTable">
+                            Linear Regression Table
+                            </a>
+                        </div>
+                        <div class="collapse" id="collapseLRTable">
+                            <div class="card-body">
+                                @include('funds.linreg_table')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @foreach($api['asset_monthly_performance'] as $group => $perf)
                 <div class="row">
                     <div class="col">

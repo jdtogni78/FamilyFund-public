@@ -28,6 +28,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Phpml\Regression\LeastSquares;
 
 Trait FundTrait
 {
@@ -181,6 +182,9 @@ Trait FundTrait
         $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
         $arr['asset_monthly_performance'] = $assetPerf;
 
+        // create a linear regression projection for the next 10 years
+        $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf);
+
         /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
             $items = $tradePortfolio->tradePortfolioItems()->get();
@@ -191,6 +195,40 @@ Trait FundTrait
 
         $arr['asOf'] = $asOf;
         return $arr;
+    }
+
+    public function createLinearRegressionResponse($monthly_performance, $asOf) {
+        // create a linear regression projection for the next 10 years
+        // $samples = [[60], [61], [62], [63], [65]];
+        // $targets = [3.1, 3.6, 3.8, 4, 4.1];
+        $samples = [];
+        $targets = [];
+        foreach ($monthly_performance as $month => $perf) {
+            // convert date to number
+            $samples[] = [strtotime($month)];
+            $targets[] = $perf['value'];
+        }
+
+        if (count($samples) < 2) {
+            return ['m' => 0, 'intercept' => 0, 'predictions' => []];
+        }
+
+        $regression = new LeastSquares();
+        $regression->train($samples, $targets);
+
+        $linReg = [];
+        $linReg['m'] = $regression->getCoefficients()[0];
+        $linReg['intercept'] = $regression->getIntercept();
+
+        $year = substr($asOf,0,4);
+        $predictions = [];
+        for ($i = 0; $i < 10; $i++) {
+            $year++;
+            $when = $year.'-01-01';
+            $predictions[$when] = Utils::currency($regression->predict([strtotime($when)]));
+        }
+        $linReg['predictions'] = $predictions;
+        return $linReg;
     }
 
     public function sendFundReport($fundReport)

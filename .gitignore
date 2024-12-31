@@ -7,3 +7,4 @@ backups
 /tutorials/
 /app1/datadir_dev/
 /app1/datadir_prod/
+/vendor/

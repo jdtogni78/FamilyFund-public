@@ -13,16 +13,16 @@
     <script type="text/javascript">
         var api = {!! json_encode($api) !!};
 
-        let labels = Object.keys(api.monthly_performance);
-        let data = Object.values(api.monthly_performance).map(function(e) {return e.value;});
-        let datasets = [{
+        labels = Object.keys(api.monthly_performance);
+        data = Object.values(api.monthly_performance).map(function(e) {return e.value;});
+        datasets = [{
             label: 'Monthly Value',
             data: data,
             backgroundColor: [graphColors[0]],
             borderColor: [graphColors[0]],
         }];
 
-        let addSP500 = {!! $addSP500 !!};
+        addSP500 = {!! $addSP500 !!};
         if (addSP500) {
             let sp500 = Object.values(api.sp500_monthly_performance).map(function(e) {return e.value;});
             datasets.push({

@@ -10,7 +10,7 @@
                 <th>Transaction Id</th>
                 <th>Start Dt</th>
                 <th>End Dt</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -38,3 +38,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#accountBalances-table').DataTable();
+    });
+</script>
+@endpush

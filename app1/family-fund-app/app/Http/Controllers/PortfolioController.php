@@ -9,7 +9,7 @@ use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
-
+use App\Models\FundExt;
 class PortfolioController extends AppBaseController
 {
     /** @var PortfolioRepository $portfolioRepository*/
@@ -42,7 +42,11 @@ class PortfolioController extends AppBaseController
      */
     public function create()
     {
-        return view('portfolios.create');
+        $api = [
+            'fundMap' => FundExt::fundMap(),
+        ];
+        return view('portfolios.create')
+            ->with('api', $api);
     }
 
     /**

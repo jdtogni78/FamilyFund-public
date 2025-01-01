@@ -6,13 +6,24 @@ use App\Models\Fund;
 use App\Repositories\AccountRepository;
 use App\Repositories\AccountBalanceRepository;
 use App\Models\Utils;
-
+use App\Repositories\FundRepository;
 /**
  * Class FundExt
  * @package App\Models
  */
 class FundExt extends Fund
 {
+    public static function fundMap()
+    {
+        $fundRepo = \App::make(FundRepository::class);
+        $recs = $fundRepo->all([], null, null, ['id', 'name'])->toArray();
+        $out = [null => 'Please Select Fund'];
+        foreach ($recs as $row) {
+            $out[$row['id']] = $row['name'];
+        }
+        return $out;
+    }
+
     public function portfolio()
     {
         $portfolios = $this->portfolios();

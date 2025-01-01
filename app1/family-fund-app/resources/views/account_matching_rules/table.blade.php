@@ -4,7 +4,7 @@
             <tr>
                 <th>Account Id</th>
                 <th>Matching Rule Id</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -26,3 +26,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#accountMatchingRules-table').DataTable();
+    });
+</script>
+@endpush

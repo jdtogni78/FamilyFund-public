@@ -10,7 +10,7 @@
                 <th>Position</th>
                 <th>Start Dt</th>
                 <th>End Dt</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -38,3 +38,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#portfolioAssets-table').DataTable();
+    });
+</script>
+@endpush

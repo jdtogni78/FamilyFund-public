@@ -9,7 +9,7 @@
                 <th>Price</th>
                 <th>Start Dt</th>
                 <th>End Dt</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -17,8 +17,8 @@
             <tr>
                 <td>{{ $assetPrice->id }}</td>
                 <td>{{ $assetPrice->asset_id }}</td>
-                <td>{{ $assetPrice->asset()->first()->name }}</td>
-                <td>{{ $assetPrice->asset()->first()->type }}</td>
+                <td>{{ $assetPrice->asset()->first()?->name }}</td>
+                <td>{{ $assetPrice->asset()->first()?->type }}</td>
                 <td>{{ $assetPrice->price }}</td>
                 <td>{{ $assetPrice->start_dt }}</td>
                 <td>{{ $assetPrice->end_dt }}</td>
@@ -36,3 +36,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#assetPrices-table').DataTable();
+    });
+</script>
+@endpush

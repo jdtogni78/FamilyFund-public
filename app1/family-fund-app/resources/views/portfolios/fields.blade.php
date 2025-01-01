@@ -1,7 +1,7 @@
 <!-- Fund Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('fund_id', 'Fund Id:') !!}
-    {!! Form::number('fund_id', null, ['class' => 'form-control']) !!}
+    {!! Form::select('fund_id', $api['fundMap'], null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Source Field -->

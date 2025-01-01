@@ -1,7 +1,7 @@
 <!-- Fund Id Field -->
 <div class="form-group">
     {!! Form::label('fund_id', 'Fund Id:') !!}
-    <p>{{ $portfolio->fund_id }}</p>
+    <p>{{ $portfolio->fund->name }}</p>
 </div>
 
 <!-- Source Field -->

@@ -13,7 +13,7 @@
             <th>Descr</th>
             <th>Flags</th>
             <th>Scheduled Job Id</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
@@ -44,3 +44,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#transactions-table').DataTable();
+    });
+</script>
+@endpush

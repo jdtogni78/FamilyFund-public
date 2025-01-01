@@ -8,6 +8,8 @@ use App\Repositories\AccountRepository;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use App\Models\UserExt;
+use App\Models\FundExt;
 
 class AccountController extends AppBaseController
 {
@@ -41,7 +43,12 @@ class AccountController extends AppBaseController
      */
     public function create()
     {
-        return view('accounts.create');
+        $api = [
+            'userMap' => UserExt::userMap(),
+            'fundMap' => FundExt::fundMap(),
+        ];
+        return view('accounts.create')
+            ->with('api', $api);
     }
 
     /**

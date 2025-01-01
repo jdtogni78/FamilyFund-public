@@ -7,7 +7,7 @@
             <th>Email</th>
             <th>Email Verified At</th>
             <th>Remember Token</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
@@ -32,3 +32,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#users-table').DataTable();
+    });
+</script>
+@endpush

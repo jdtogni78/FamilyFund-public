@@ -7,8 +7,10 @@
                 <th>Nickname</th>
                 <th>Email Cc</th>
                 <th>User Id</th>
+                <th>User Name</th>
                 <th>Fund Id</th>
-                <th colspan="3">Action</th>
+                <th>Fund Name</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -18,8 +20,10 @@
                 <td>{{ $account->code }}</td>
                 <td>{{ $account->nickname }}</td>
                 <td>{{ $account->email_cc }}</td>
-                <td>{{ $account->user_id }}</td>
-                <td>{{ $account->fund_id }}</td>
+                <td>{{ $account->user->id ?? '-' }}</td>
+                <td>{{ $account->user->name ?? '-' }}</td>
+                <td>{{ $account->fund->id ?? '-' }}</td>
+                <td>{{ $account->fund->name ?? '-' }}</td>
                 <td>
                     {!! Form::open(['route' => ['accounts.destroy', $account->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
@@ -34,3 +38,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#accounts-table').DataTable();
+    });
+</script>
+@endpush

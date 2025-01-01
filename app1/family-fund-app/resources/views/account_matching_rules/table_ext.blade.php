@@ -4,9 +4,10 @@
             <tr>
                 <th>Account Id</th>
                 <th>Account Nickname</th>
-                <th>Matching Rule Id</th>
-                <th>Matching Rule Name</th>
-                <th colspan="3">Action</th>
+                <th>MR Id</th>
+                <th>MR Name</th>
+                <th>MR Period</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -16,6 +17,7 @@
                 <td>{{ $accountMatchingRule->account->nickname }}</td>
                 <td>{{ $accountMatchingRule->matching_rule_id }}</td>
                 <td>{{ $accountMatchingRule->matchingRule->name }}</td>
+                <td>{{ $accountMatchingRule->matchingRule->date_start }} - {{ $accountMatchingRule->matchingRule->date_end }}</td>
                 <td>
                     {!! Form::open(['route' => ['accountMatchingRules.destroy', $accountMatchingRule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
@@ -30,3 +32,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#accountMatchingRules-table').DataTable();
+    });
+</script>
+@endpush

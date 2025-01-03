@@ -19,11 +19,4 @@ class UserExt extends User
         return $userMap;
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     **/
-    public function accounts()
-    {
-        return $this->hasMany(\App\Models\AccountExt::class, 'user_id');
-    }
 }

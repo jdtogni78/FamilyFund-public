@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-data_models="$*"
+data_models="Address Person IdDocument Phone"
 for model in $data_models; do
-    docker exec familyfund \
+    #docker exec familyfund \
         php artisan infyom:api ${model} \
         --fieldsFile resources/model_schemas/${model}.json \
         --skip=scaffold_requests,routes,scaffold_routes,views,menu,dump-autoload,api_controller,api_routes,controller,scaffold_controller

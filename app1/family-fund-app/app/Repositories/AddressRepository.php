@@ -5,9 +5,19 @@ namespace App\Repositories;
 use App\Models\Address;
 use App\Repositories\BaseRepository;
 
+/**
+ * Class AddressRepository
+ * @package App\Repositories
+ * @version January 6, 2025, 1:02 am UTC
+*/
+
 class AddressRepository extends BaseRepository
 {
+    /**
+     * @var array
+     */
     protected $fieldSearchable = [
+        'person_id',
         'type',
         'is_primary',
         'street',
@@ -17,17 +27,24 @@ class AddressRepository extends BaseRepository
         'city',
         'state',
         'zip_code',
-        'country',
-        'person_id'
+        'country'
     ];
 
-    public function getFieldsSearchable(): array
+    /**
+     * Return searchable fields
+     *
+     * @return array
+     */
+    public function getFieldsSearchable()
     {
         return $this->fieldSearchable;
     }
 
-    public function model(): string
+    /**
+     * Configure the Model
+     **/
+    public function model()
     {
         return Address::class;
     }
-} 
+}

@@ -5,21 +5,38 @@ namespace App\Repositories;
 use App\Models\IdDocument;
 use App\Repositories\BaseRepository;
 
+/**
+ * Class IdDocumentRepository
+ * @package App\Repositories
+ * @version January 6, 2025, 1:02 am UTC
+*/
+
 class IdDocumentRepository extends BaseRepository
 {
+    /**
+     * @var array
+     */
     protected $fieldSearchable = [
+        'person_id',
         'type',
-        'number',
-        'person_id'
+        'number'
     ];
 
-    public function getFieldsSearchable(): array
+    /**
+     * Return searchable fields
+     *
+     * @return array
+     */
+    public function getFieldsSearchable()
     {
         return $this->fieldSearchable;
     }
 
-    public function model(): string
+    /**
+     * Configure the Model
+     **/
+    public function model()
     {
         return IdDocument::class;
     }
-} 
+}

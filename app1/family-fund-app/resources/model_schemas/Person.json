@@ -1,0 +1,85 @@
+[
+    {
+        "name": "id",
+        "dbType": "bigInteger,true,true",
+        "htmlType": "number",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "primary": true,
+        "inForm": false,
+        "inIndex": false,
+        "inView": false
+    },
+    {
+        "name": "first_name",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "last_name",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "email",
+        "dbType": "string",
+        "htmlType": "email",
+        "validations": "required|email|max:255|unique:persons",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "birthday",
+        "dbType": "date",
+        "htmlType": "date",
+        "validations": "required|date",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "legal_guardian_id",
+        "dbType": "bigInteger,false,true",
+        "htmlType": "select",
+        "validations": "nullable|exists:persons,id",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": false,
+        "relation": "mt1,Person,legal_guardian_id,id"
+    },
+    {
+        "name": "created_at",
+        "dbType": "timestamp",
+        "htmlType": "date",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "inForm": false,
+        "inIndex": false
+    },
+    {
+        "name": "updated_at",
+        "dbType": "timestamp",
+        "htmlType": "date",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "inForm": false,
+        "inIndex": false
+    }
+] 

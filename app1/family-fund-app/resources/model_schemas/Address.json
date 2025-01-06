@@ -1,0 +1,146 @@
+[
+    {
+        "name": "id",
+        "dbType": "bigInteger,true,true",
+        "htmlType": "number",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "primary": true,
+        "inForm": false,
+        "inIndex": false,
+        "inView": false
+    },
+    {
+        "name": "person_id",
+        "dbType": "bigInteger,false,true",
+        "htmlType": "select",
+        "validations": "required|exists:persons,id",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true,
+        "relation": "mt1,Person,person_id,id"
+    },
+    {
+        "name": "type",
+        "dbType": "string",
+        "htmlType": "select:home,work,other",
+        "validations": "required|in:home,work,other",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "is_primary",
+        "dbType": "boolean",
+        "htmlType": "checkbox",
+        "validations": "boolean",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "street",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "number",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:20",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "complement",
+        "dbType": "string,nullable",
+        "htmlType": "text",
+        "validations": "nullable|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": false
+    },
+    {
+        "name": "neighborhood",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "city",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "state",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:2",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "zip_code",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:10",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true
+    },
+    {
+        "name": "country",
+        "dbType": "string",
+        "htmlType": "text",
+        "validations": "required|string|max:255",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true,
+        "default": "Brazil"
+    },
+    {
+        "name": "created_at",
+        "dbType": "timestamp",
+        "htmlType": "date",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "inForm": false,
+        "inIndex": false
+    },
+    {
+        "name": "updated_at",
+        "dbType": "timestamp",
+        "htmlType": "date",
+        "validations": "",
+        "searchable": false,
+        "fillable": false,
+        "inForm": false,
+        "inIndex": false
+    }
+] 

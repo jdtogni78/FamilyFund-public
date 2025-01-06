@@ -2,15 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Eloquent as Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * Class Person
+ * @package App\Models
+ * @version January 6, 2025, 1:02 am UTC
+ *
+ * @property \App\Models\Person $legalGuardian
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property string $birthday
+ * @property integer $legal_guardian_id
+ */
 class Person extends Model
 {
+    use SoftDeletes;
+
     use HasFactory;
+
+    public $table = 'people';
     
-    protected $table = 'persons';
-    protected $fillable = [
+
+    protected $dates = ['deleted_at'];
+
+
+
+    public $fillable = [
         'first_name',
         'last_name',
         'email',
@@ -18,57 +39,38 @@ class Person extends Model
         'legal_guardian_id'
     ];
 
+    /**
+     * The attributes that should be casted to native types.
+     *
+     * @var array
+     */
     protected $casts = [
-        'birthday' => 'date'
+        'id' => 'integer',
+        'first_name' => 'string',
+        'last_name' => 'string',
+        'email' => 'string',
+        'birthday' => 'date',
+        'legal_guardian_id' => 'integer'
     ];
 
-    public function phones()
-    {
-        return $this->hasMany(Phone::class);
-    }
+    /**
+     * Validation rules
+     *
+     * @var array
+     */
+    public static $rules = [
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|email|max:255|unique:persons',
+        'birthday' => 'required|date',
+        'legal_guardian_id' => 'nullable|exists:persons,id'
+    ];
 
-    public function idDocuments()
-    {
-        return $this->hasMany(IdDocument::class);
-    }
-
-    public function addresses()
-    {
-        return $this->hasMany(Address::class);
-    }
-
-    public function primaryAddress()
-    {
-        return $this->hasOne(Address::class)->where('is_primary', true);
-    }
-
-    public function user()
-    {
-        return $this->hasOne(User::class);
-    }
-
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
     public function legalGuardian()
     {
-        return $this->belongsTo(Person::class, 'legal_guardian_id');
+        return $this->belongsTo(\App\Models\Person::class, 'legal_guardian_id', 'id');
     }
-
-    public function wards()
-    {
-        return $this->hasMany(Person::class, 'legal_guardian_id');
-    }
-
-    public function accountsAsBeneficiary()
-    {
-        return $this->hasMany(Account::class, 'beneficiary_id');
-    }
-
-    public function contactForAccounts()
-    {
-        return $this->belongsToMany(Account::class, 'account_contact_persons');
-    }
-
-    public function getFullNameAttribute()
-    {
-        return "{$this->first_name} {$this->last_name}";
-    }
-} 
+}

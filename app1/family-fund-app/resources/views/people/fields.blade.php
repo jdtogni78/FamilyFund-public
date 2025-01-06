@@ -53,7 +53,7 @@
             @if(!isset($person) || isset($isEdit))
                 <div class="row phone-entry">
                     <div class="col-sm-4">
-                        {!! Form::text('phones[0][number]', null, ['class' => 'form-control', 'placeholder' => 'Phone Number']) !!}
+                        {!! Form::text('phones[0][number]', null, ['class' => 'form-control', 'placeholder' => 'Phone Number 0']) !!}
                     </div>
                     <div class="col-sm-3">
                         {!! Form::select('phones[0][type]', ['mobile' => 'Mobile', 'home' => 'Home', 'work' => 'Work', 'other' => 'Other'], null, ['class' => 'form-control']) !!}
@@ -76,16 +76,11 @@
         <div class="addresses-container">
             @if(isset($person))
                 @foreach($person->addresses as $index => $address)
-                    @include('persons.address_fields', ['index' => $index, 'address' => $address])
+                    @include('people.address_fields', ['index' => $index, 'address' => $address])
                 @endforeach
             @endif
             @if(!isset($person) || isset($isEdit))
-                @include('persons.address_fields', ['index' => 0])
-                <div class="row address-entry">
-                    <div class="col-sm-1">
-                        <button type="button" class="btn btn-danger btn-sm remove-address d-none"><i class="fa fa-trash"></i></button>
-                    </div>
-                </div>
+                @include('people.address_fields', ['index' => 0])
             @endif
         </div>
         <button type="button" class="btn btn-info add-address">Add Address</button>
@@ -105,7 +100,7 @@
                         </div>
                         <div class="col-sm-4">
                             {!! Form::text("documents[$index][number]", 
-                                $doc->number, ['class' => 'form-control', 'placeholder' => 'Document Number']) !!}
+                                $doc->number, ['class' => 'form-control', 'placeholder' => 'Document Number 0']) !!}
                         </div>
                     </div>
                 @endforeach
@@ -166,9 +161,8 @@
             template.find('input, select').each(function() {
                 var name = $(this).attr('name').replace('[0]', '[' + index + ']');
                 $(this).attr('name', name).val('');
-                // update placeholder
-                var currentPlaceholder = $(this).attr('placeholder');
-                $(this).attr('placeholder', currentPlaceholder + index);
+                // update address title
+                template.find('.address-title').text('Address ' + index);
                 if(index > 0) {
                     template.find('.remove-address').removeClass('d-none');
                 }

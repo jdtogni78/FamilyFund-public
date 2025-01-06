@@ -23,18 +23,18 @@ class CreatePersonRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:persons',
+            'email' => 'required|email|max:255|unique:persons,email,NULL,id,deleted_at,NULL',
             'birthday' => 'required|date',
             'phones' => 'required|array|min:1',
-            'phones.*.number' => 'required|string|max:20',
+            'phones.*.number' => 'required|string|max:30',
             'phones.*.type' => 'required|in:mobile,home,work,other',
             'addresses.*.street' => 'required|string|max:255',
             'addresses.*.number' => 'required|string|max:20',
-            'addresses.*.neighborhood' => 'required|string|max:255',
+            'addresses.*.county' => 'nullable|string|max:255',
             'addresses.*.city' => 'required|string|max:255',
             'addresses.*.state' => 'required|string|max:2',
             'addresses.*.zip_code' => 'required|string|max:10',
-            'documents.*.type' => 'required|in:CPF,RG,CNH,passport,other',
+            'documents.*.type' => 'required|in:CPF,RG,CNH,Passport,SSN,other',
             'documents.*.number' => 'required|string|max:50',
         ];
     }

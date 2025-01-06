@@ -32,10 +32,10 @@
     {!! Form::text('complement', null, ['class' => 'form-control','maxlength' => 255]) !!}
 </div>
 
-<!-- Neighborhood Field -->
+<!-- County Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('neighborhood', 'Neighborhood:') !!}
-    {!! Form::text('neighborhood', null, ['class' => 'form-control','maxlength' => 255]) !!}
+    {!! Form::label('county', 'County:') !!}
+    {!! Form::text('county', null, ['class' => 'form-control','maxlength' => 255]) !!}
 </div>
 
 <!-- City Field -->

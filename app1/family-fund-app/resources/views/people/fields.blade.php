@@ -37,34 +37,11 @@
         <div class="phones-container">
             @if(isset($person))
                 @foreach($person->phones as $index => $phone)
-                    <div class="row phone-entry">
-                        <div class="col-sm-4">
-                            {!! Form::text("phones[$index][number]", $phone->number, ['class' => 'form-control', 'placeholder' => 'Phone Number']) !!}
-                        </div>
-                        <div class="col-sm-3">
-                            {!! Form::select("phones[$index][type]", ['mobile' => 'Mobile', 'home' => 'Home', 'work' => 'Work', 'other' => 'Other'], $phone->type, ['class' => 'form-control']) !!}
-                        </div>
-                        <div class="col-sm-2">
-                            {!! Form::checkbox("phones[$index][is_primary]", 1, $phone->is_primary) !!} Primary
-                        </div>
-                    </div>
+                    @include('people.phone_fields', ['index' => $index, 'phone' => $phone])
                 @endforeach
             @endif
-            @if(!isset($person) || isset($isEdit))
-                <div class="row phone-entry">
-                    <div class="col-sm-4">
-                        {!! Form::text('phones[0][number]', null, ['class' => 'form-control', 'placeholder' => 'Phone Number 0']) !!}
-                    </div>
-                    <div class="col-sm-3">
-                        {!! Form::select('phones[0][type]', ['mobile' => 'Mobile', 'home' => 'Home', 'work' => 'Work', 'other' => 'Other'], null, ['class' => 'form-control']) !!}
-                    </div>
-                    <div class="col-sm-2">
-                        {!! Form::checkbox('phones[0][is_primary]', 1, true) !!} Primary
-                    </div>
-                    <div class="col-sm-1">
-                        <button type="button" class="btn btn-danger btn-sm remove-phone d-none"><i class="fa fa-trash"></i></button>
-                    </div>
-                </div>
+            @if(!isset($person) || (isset($isEdit) && $person->phones->isEmpty()))
+                @include('people.phone_fields', ['index' => 0])
             @endif
         </div>
         <button type="button" class="btn btn-info add-phone">Add Phone</button>
@@ -79,7 +56,7 @@
                     @include('people.address_fields', ['index' => $index, 'address' => $address])
                 @endforeach
             @endif
-            @if(!isset($person) || isset($isEdit))
+            @if(!isset($person) || (isset($isEdit) && $person->addresses->isEmpty()))
                 @include('people.address_fields', ['index' => 0])
             @endif
         </div>
@@ -89,40 +66,17 @@
     <!-- ID Documents Fields -->
     <div class="form-group">
         <h4>ID Documents</h4>
-        <div class="documents-container">
+        <div class="id_documents-container">
             @if(isset($person))
                 @foreach($person->idDocuments as $index => $doc)
-                    <div class="row document-entry">
-                        <div class="col-sm-4">
-                            {!! Form::select("documents[$index][type]", 
-                                ['CPF' => 'CPF', 'RG' => 'RG', 'CNH' => 'CNH', 'passport' => 'Passport', 'other' => 'Other'], 
-                                $doc->type, ['class' => 'form-control']) !!}
-                        </div>
-                        <div class="col-sm-4">
-                            {!! Form::text("documents[$index][number]", 
-                                $doc->number, ['class' => 'form-control', 'placeholder' => 'Document Number 0']) !!}
-                        </div>
-                    </div>
+                    @include('people.id_document_fields', ['index' => $index, 'doc' => $doc])
                 @endforeach
             @endif
-            @if(!isset($person) || isset($isEdit))
-                <div class="row document-entry">
-                    <div class="col-sm-4">
-                        {!! Form::select('documents[0][type]', 
-                            ['CPF' => 'CPF', 'RG' => 'RG', 'CNH' => 'CNH', 'passport' => 'Passport', 'other' => 'Other'], 
-                            null, ['class' => 'form-control']) !!}
-                    </div>
-                    <div class="col-sm-4">
-                        {!! Form::text('documents[0][number]', null, 
-                            ['class' => 'form-control', 'placeholder' => 'Document Number']) !!}
-                    </div>
-                    <div class="col-sm-1">
-                        <button type="button" class="btn btn-danger btn-sm remove-document d-none"><i class="fa fa-trash"></i></button>
-                    </div>
-                </div>
+            @if(!isset($person) || (isset($isEdit) && $person->idDocuments->isEmpty()))
+                @include('people.id_document_fields', ['index' => 0, 'doc' => null])
             @endif
         </div>
-        <button type="button" class="btn btn-info add-document">Add Document</button>
+        <button type="button" class="btn btn-info add-id_document">Add Document</button>
     </div>
 
     <!-- Submit Field -->
@@ -144,12 +98,30 @@
                 // update placeholder
                 var currentPlaceholder = $(this).attr('placeholder');
                 $(this).attr('placeholder', currentPlaceholder + index);
+                // set is_primary to false if not set, or if its null
                 if(index > 0) {
                     template.find('.remove-phone').removeClass('d-none');
                 }
             });
+            template.find('.is_primary').prop('checked', false);
             $('.phones-container').append(template);
         });
+
+        // when is_primary is set to true, set all other is_primary to false
+        $('.phones-container').on('change', '.is_primary', function() {
+            $('.phones-container').find('.is_primary').not(this).prop('checked', false);
+        });
+        // same for addresses
+        $('.addresses-container').on('change', '.is_primary', function() {
+            $('.addresses-container').find('.is_primary').not(this).prop('checked', false);
+        });
+        
+        // hide all remove-phone buttons except the first one
+        $('.phones-container').find('.remove-phone').not(':first').removeClass('d-none');
+        // hide all remove-address buttons except the first one
+        $('.addresses-container').find('.remove-address').not(':first').removeClass('d-none');
+        // hide all remove-document buttons except the first one
+        $('.id_documents-container').find('.remove-id_document').not(':first').removeClass('d-none');
 
         $('.phones-container').on('click', '.remove-phone', function() {
             $(this).closest('.phone-entry').remove();
@@ -163,6 +135,8 @@
                 $(this).attr('name', name).val('');
                 // update address title
                 template.find('.address-title').text('Address ' + index);
+                // set is_primary to false if not set, or if its null
+                $(this).attr('is_primary', false);
                 if(index > 0) {
                     template.find('.remove-address').removeClass('d-none');
                 }
@@ -174,23 +148,23 @@
             $(this).closest('.address-entry').remove();
         });
 
-        $('.add-document').click(function() {
-            var index = $('.document-entry').length;
-            var template = $('.document-entry').first().clone();
+        $('.add-id_document').click(function() {
+            var index = $('.id_document-entry').length;
+            var template = $('.id_document-entry').first().clone();
             template.find('input, select').each(function() {
                 var name = $(this).attr('name').replace('[0]', '[' + index + ']');
                 $(this).attr('name', name).val('');
                 var currentPlaceholder = $(this).attr('placeholder');
                 $(this).attr('placeholder', currentPlaceholder + index);
                 if(index > 0) {
-                    template.find('.remove-document').removeClass('d-none');
+                    template.find('.remove-id_document').removeClass('d-none');
                 }
             });
-            $('.documents-container').append(template);
+            $('.id_documents-container').append(template);
         });
 
-        $('.documents-container').on('click', '.remove-document', function() {
-            $(this).closest('.document-entry').remove();
+        $('.id_documents-container').on('click', '.remove-id_document', function() {
+            $(this).closest('.id_document-entry').remove();
         });
     });
 

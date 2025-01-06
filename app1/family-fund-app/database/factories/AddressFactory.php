@@ -28,7 +28,7 @@ class AddressFactory extends Factory
         'street' => $this->faker->word,
         'number' => $this->faker->word,
         'complement' => $this->faker->word,
-        'neighborhood' => $this->faker->word,
+        'county' => $this->faker->word,
         'city' => $this->faker->word,
         'state' => $this->faker->word,
         'zip_code' => $this->faker->word,

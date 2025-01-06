@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('iddocuments', function (Blueprint $table) {
             $table->bigInteger('id', true, true);
             $table->foreignId('person_id')->constrained('persons')->onDelete('cascade');
-            $table->enum('type', ['CPF', 'RG', 'CNH', 'passport', 'other']);
+            $table->enum('type', ['CPF', 'RG', 'CNH', 'Passport', 'SSN', 'other']);
             $table->string('number');
             $table->timestamps();
             $table->softDeletes();

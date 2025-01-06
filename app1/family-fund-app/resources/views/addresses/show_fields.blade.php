@@ -34,10 +34,10 @@
     <p>{{ $address->complement }}</p>
 </div>
 
-<!-- Neighborhood Field -->
+<!-- County Field -->
 <div class="form-group">
-    {!! Form::label('neighborhood', 'Neighborhood:') !!}
-    <p>{{ $address->neighborhood }}</p>
+    {!! Form::label('county', 'County:') !!}
+    <p>{{ $address->county }}</p>
 </div>
 
 <!-- City Field -->

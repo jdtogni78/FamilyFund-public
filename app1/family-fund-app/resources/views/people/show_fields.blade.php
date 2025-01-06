@@ -47,7 +47,7 @@
                 <li>
                     {{ $address->type }}: {{ $address->street }}, {{ $address->number }}
                     {{ $address->complement ? ', '.$address->complement : '' }}
-                    - {{ $address->neighborhood }}, {{ $address->city }}/{{ $address->state }}
+                    - {{ $address->county }}, {{ $address->city }}/{{ $address->state }}
                     {{ $address->is_primary ? '(Primary)' : '' }}
                 </li>
             @endforeach

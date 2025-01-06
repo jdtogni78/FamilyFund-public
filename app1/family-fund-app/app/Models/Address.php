@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $street
  * @property string $number
  * @property string $complement
- * @property string $neighborhood
+ * @property string $county
  * @property string $city
  * @property string $state
  * @property string $zip_code
@@ -44,7 +44,7 @@ class Address extends Model
         'street',
         'number',
         'complement',
-        'neighborhood',
+        'county',
         'city',
         'state',
         'zip_code',
@@ -64,7 +64,7 @@ class Address extends Model
         'street' => 'string',
         'number' => 'string',
         'complement' => 'string',
-        'neighborhood' => 'string',
+        'county' => 'string',
         'city' => 'string',
         'state' => 'string',
         'zip_code' => 'string',
@@ -79,11 +79,11 @@ class Address extends Model
     public static $rules = [
         'person_id' => 'required|exists:persons,id',
         'type' => 'required|in:home,work,other',
-        'is_primary' => 'boolean',
+        'is_primary' => 'boolean|default:false',
         'street' => 'required|string|max:255',
         'number' => 'required|string|max:20',
         'complement' => 'nullable|string|max:255',
-        'neighborhood' => 'required|string|max:255',
+        'county' => 'required|string|max:255',
         'city' => 'required|string|max:255',
         'state' => 'required|string|max:2',
         'zip_code' => 'required|string|max:10',

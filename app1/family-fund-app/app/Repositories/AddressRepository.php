@@ -23,7 +23,7 @@ class AddressRepository extends BaseRepository
         'street',
         'number',
         'complement',
-        'neighborhood',
+        'county',
         'city',
         'state',
         'zip_code',

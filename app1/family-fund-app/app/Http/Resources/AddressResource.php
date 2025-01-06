@@ -22,7 +22,7 @@ class AddressResource extends JsonResource
             'street' => $this->street,
             'number' => $this->number,
             'complement' => $this->complement,
-            'neighborhood' => $this->neighborhood,
+            'county' => $this->county,
             'city' => $this->city,
             'state' => $this->state,
             'zip_code' => $this->zip_code,

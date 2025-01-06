@@ -7,7 +7,7 @@
         <th>Is Primary</th>
         <th>Street</th>
         <th>Number</th>
-        <th>Neighborhood</th>
+        <th>County</th>
         <th>City</th>
         <th>State</th>
         <th>Zip Code</th>
@@ -23,7 +23,7 @@
             <td>{{ $address->is_primary }}</td>
             <td>{{ $address->street }}</td>
             <td>{{ $address->number }}</td>
-            <td>{{ $address->neighborhood }}</td>
+            <td>{{ $address->county }}</td>
             <td>{{ $address->city }}</td>
             <td>{{ $address->state }}</td>
             <td>{{ $address->zip_code }}</td>

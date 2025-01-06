@@ -15,7 +15,8 @@
                          <div class="card">
                              <div class="card-header">
                                  <strong>Details</strong>
-                                  <a href="{{ route('people.index') }}" class="btn btn-light">Back</a>
+                                 <a href="{{ route('people.index') }}" class="btn btn-light">Back</a>
+                                 <a href="{{ route('people.edit', $person->id) }}" class="btn btn-primary">Edit</a>
                              </div>
                              <div class="card-body">
                                  <div class="row">

@@ -59,7 +59,7 @@ class Phone extends Model
         'person_id' => 'required|exists:persons,id',
         'number' => 'required|string|max:20',
         'type' => 'required|in:mobile,home,work,other',
-        'is_primary' => 'boolean'
+        'is_primary' => 'boolean|default:false'
     ];
 
     /**

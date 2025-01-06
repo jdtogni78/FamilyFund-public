@@ -54,7 +54,7 @@ class IdDocument extends Model
      */
     public static $rules = [
         'person_id' => 'required|exists:persons,id',
-        'type' => 'required|in:CPF,RG,CNH,passport,other',
+        'type' => 'required|in:CPF,RG,CNH,Passport,SSN,other',
         'number' => 'required|string|max:50'
     ];
 

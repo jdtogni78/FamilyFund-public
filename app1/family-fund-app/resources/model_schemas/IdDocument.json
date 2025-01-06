@@ -25,8 +25,8 @@
     {
         "name": "type",
         "dbType": "string",
-        "htmlType": "select:CPF,RG,CNH,passport,other",
-        "validations": "required|in:CPF,RG,CNH,passport,other",
+        "htmlType": "select:CPF,RG,CNH,Passport,SSN,other",
+        "validations": "required|in:CPF,RG,CNH,Passport,SSN,other",
         "searchable": true,
         "fillable": true,
         "inForm": true,

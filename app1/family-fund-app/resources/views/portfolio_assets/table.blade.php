@@ -1,4 +1,4 @@
-<div class="table-responsive-sm">
+<div class="table-responsive">
     <table class="table table-striped" id="portfolioAssets-table">
         <thead>
             <tr>

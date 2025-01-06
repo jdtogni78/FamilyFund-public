@@ -67,4 +67,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
 });
 
+Route::resource('persons', App\Http\Controllers\PersonController::class);
+
 

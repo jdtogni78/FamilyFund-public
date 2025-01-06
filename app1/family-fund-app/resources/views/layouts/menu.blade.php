@@ -118,3 +118,9 @@
         <span>Scheduled Jobs</span>
     </a>
 </li>
+<li class="{{ Request::is('persons*') ? 'active' : '' }}">
+    <a href="{{ route('persons.index') }}">
+        <i class="fa fa-users"></i>
+        <span>Persons</span>
+    </a>
+</li>

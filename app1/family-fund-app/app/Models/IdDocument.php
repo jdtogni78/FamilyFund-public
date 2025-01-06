@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class IdDocument
  * @package App\Models
- * @version January 6, 2025, 1:02 am UTC
+ * @version January 6, 2025, 1:17 am UTC
  *
  * @property \App\Models\Person $person
  * @property integer $person_id

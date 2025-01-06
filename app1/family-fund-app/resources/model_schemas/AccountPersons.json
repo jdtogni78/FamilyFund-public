@@ -1,0 +1,24 @@
+[
+    {
+        "name": "account_id",
+        "dbType": "bigInteger",
+        "htmlType": "select",
+        "validations": "required",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
+        "name": "person_id",
+        "dbType": "bigInteger",
+        "htmlType": "select",
+        "validations": "required",
+        "searchable": true,
+        "fillable": true,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    }
+]

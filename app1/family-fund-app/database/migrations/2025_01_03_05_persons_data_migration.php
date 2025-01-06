@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\Person;
 use App\Models\Account;
 use App\Models\AccountContactPerson;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     public function up()
@@ -51,9 +51,9 @@ return new class extends Migration
 
     public function down()
     {
-        // delete all persons
-        Person::truncate();
-        // delete all account_contact_persons
+        // run in a transaction
         AccountContactPerson::truncate();
+        Person::truncate();
+
     }
 }; 

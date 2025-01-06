@@ -12,13 +12,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('persons', function (Blueprint $table) {
-            $table->id();
+            $table->bigInteger('id', true, true);
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->nullable();
             $table->date('birthday')->nullable();
             $table->foreignId('legal_guardian_id')->nullable()->constrained('persons');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Add person_id to users table

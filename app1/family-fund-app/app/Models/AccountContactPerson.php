@@ -11,11 +11,11 @@ class AccountContactPerson extends Model
 
     public function account()
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(\App\Models\Account::class);
     }
 
     public function person()
     {
-        return $this->belongsTo(Person::class);
+        return $this->belongsTo(\App\Models\Person::class);
     }
 }

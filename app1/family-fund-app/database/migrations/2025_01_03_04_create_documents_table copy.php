@@ -9,11 +9,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('iddocuments', function (Blueprint $table) {
-            $table->id();
+            $table->bigInteger('id', true, true);
             $table->foreignId('person_id')->constrained('persons')->onDelete('cascade');
             $table->enum('type', ['CPF', 'RG', 'CNH', 'passport', 'other']);
             $table->string('number');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

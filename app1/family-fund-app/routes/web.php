@@ -40,9 +40,10 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfolios.showRebalance');
 
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
+    Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\AccountMatchingRuleController::class);
-    Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
+    Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('assetPrices', App\Http\Controllers\AssetPriceController::class);
     Route::resource('assets', App\Http\Controllers\AssetController::class);
     Route::resource('matchingRules', App\Http\Controllers\MatchingRuleController::class);
@@ -53,12 +54,17 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
     Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
-    Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
+    Route::resource('addresses', App\Http\Controllers\AddressController::class);
+    Route::resource('phones', App\Http\Controllers\PhoneController::class);
+    Route::resource('persons', App\Http\Controllers\PersonController::class);
+    Route::resource('people', App\Http\Controllers\PersonController::class);
+    Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
+    // Route::resource('accountPersons', App\Http\Controllers\AccountPersonController::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');

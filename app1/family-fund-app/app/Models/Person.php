@@ -5,11 +5,11 @@ namespace App\Models;
 use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Class Person
  * @package App\Models
- * @version January 6, 2025, 1:02 am UTC
+ * @version January 6, 2025, 1:17 am UTC
  *
  * @property \App\Models\Person $legalGuardian
  * @property string $first_name
@@ -24,7 +24,7 @@ class Person extends Model
 
     use HasFactory;
 
-    public $table = 'people';
+    public $table = 'persons';
     
 
     protected $dates = ['deleted_at'];
@@ -73,4 +73,59 @@ class Person extends Model
     {
         return $this->belongsTo(\App\Models\Person::class, 'legal_guardian_id', 'id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function phones(): HasMany
+    {
+        return $this->hasMany(\App\Models\Phone::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(\App\Models\Address::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function idDocuments(): HasMany
+    {
+        return $this->hasMany(\App\Models\IdDocument::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function guardedChildren(): HasMany
+    {
+        return $this->hasMany(\App\Models\Person::class, 'legal_guardian_id', 'id');
+    }
+
+    // full name
+    public function getFullNameAttribute(): string
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * @return Phone
+     **/
+    public function primaryPhone(): ?Phone
+    {
+        return $this->phones()->where('is_primary', true)->first();
+    }
+
+    /**
+     * @return Address
+     **/
+    public function primaryAddress(): ?Address
+    {
+        return $this->addresses()->where('is_primary', true)->first();
+    }
+
 }

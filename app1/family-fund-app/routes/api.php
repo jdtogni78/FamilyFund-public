@@ -76,3 +76,15 @@ Route::resource('trade_portfolio_items', App\Http\Controllers\API\TradePortfolio
 
 Route::resource('schedules', App\Http\Controllers\API\ScheduleAPIController::class);
 Route::resource('scheduled_jobs', App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt::class);
+
+
+Route::resource('addresses', App\Http\Controllers\API\AddressAPIController::class);
+
+
+Route::resource('people', App\Http\Controllers\API\PersonAPIController::class);
+
+
+Route::resource('id_documents', App\Http\Controllers\API\IdDocumentAPIController::class);
+
+
+Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class);

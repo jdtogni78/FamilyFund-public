@@ -12,7 +12,7 @@ use Response;
 
 class PersonController extends AppBaseController
 {
-    /** @var PersonRepository $personRepository */
+    /** @var PersonRepository $personRepository*/
     private $personRepository;
 
     public function __construct(PersonRepository $personRepo)
@@ -22,25 +22,35 @@ class PersonController extends AppBaseController
 
     /**
      * Display a listing of the Person.
+     *
+     * @param Request $request
+     *
+     * @return Response
      */
     public function index(Request $request)
     {
-        $persons = $this->personRepository->all();
+        $people = $this->personRepository->all();
 
-        return view('persons.index')
-            ->with('persons', $persons);
+        return view('people.index')
+            ->with('people', $people);
     }
 
     /**
      * Show the form for creating a new Person.
+     *
+     * @return Response
      */
     public function create()
     {
-        return view('persons.create');
+        return view('people.create');
     }
 
     /**
      * Store a newly created Person in storage.
+     *
+     * @param CreatePersonRequest $request
+     *
+     * @return Response
      */
     public function store(CreatePersonRequest $request)
     {
@@ -48,34 +58,17 @@ class PersonController extends AppBaseController
 
         $person = $this->personRepository->create($input);
 
-        // Handle phones
-        if (isset($input['phones'])) {
-            foreach ($input['phones'] as $phoneData) {
-                $person->phones()->create($phoneData);
-            }
-        }
-
-        // Handle addresses
-        if (isset($input['addresses'])) {
-            foreach ($input['addresses'] as $addressData) {
-                $person->addresses()->create($addressData);
-            }
-        }
-
-        // Handle ID documents
-        if (isset($input['documents'])) {
-            foreach ($input['documents'] as $documentData) {
-                $person->idDocuments()->create($documentData);
-            }
-        }
-
         Flash::success('Person saved successfully.');
 
-        return redirect(route('persons.index'));
+        return redirect(route('people.index'));
     }
 
     /**
      * Display the specified Person.
+     *
+     * @param int $id
+     *
+     * @return Response
      */
     public function show($id)
     {
@@ -83,14 +76,19 @@ class PersonController extends AppBaseController
 
         if (empty($person)) {
             Flash::error('Person not found');
-            return redirect(route('persons.index'));
+
+            return redirect(route('people.index'));
         }
 
-        return view('persons.show')->with('person', $person);
+        return view('people.show')->with('person', $person);
     }
 
     /**
      * Show the form for editing the specified Person.
+     *
+     * @param int $id
+     *
+     * @return Response
      */
     public function edit($id)
     {
@@ -98,14 +96,20 @@ class PersonController extends AppBaseController
 
         if (empty($person)) {
             Flash::error('Person not found');
-            return redirect(route('persons.index'));
+
+            return redirect(route('people.index'));
         }
 
-        return view('persons.edit')->with('person', $person);
+        return view('people.edit')->with('person', $person);
     }
 
     /**
      * Update the specified Person in storage.
+     *
+     * @param int $id
+     * @param UpdatePersonRequest $request
+     *
+     * @return Response
      */
     public function update($id, UpdatePersonRequest $request)
     {
@@ -113,44 +117,25 @@ class PersonController extends AppBaseController
 
         if (empty($person)) {
             Flash::error('Person not found');
-            return redirect(route('persons.index'));
+
+            return redirect(route('people.index'));
         }
 
-        $input = $request->all();
-
-        $person = $this->personRepository->update($input, $id);
-
-        // Update phones
-        if (isset($input['phones'])) {
-            $person->phones()->delete(); // Remove existing phones
-            foreach ($input['phones'] as $phoneData) {
-                $person->phones()->create($phoneData);
-            }
-        }
-
-        // Update addresses
-        if (isset($input['addresses'])) {
-            $person->addresses()->delete(); // Remove existing addresses
-            foreach ($input['addresses'] as $addressData) {
-                $person->addresses()->create($addressData);
-            }
-        }
-
-        // Update ID documents
-        if (isset($input['documents'])) {
-            $person->idDocuments()->delete(); // Remove existing documents
-            foreach ($input['documents'] as $documentData) {
-                $person->idDocuments()->create($documentData);
-            }
-        }
+        $person = $this->personRepository->update($request->all(), $id);
 
         Flash::success('Person updated successfully.');
 
-        return redirect(route('persons.index'));
+        return redirect(route('people.index'));
     }
 
     /**
      * Remove the specified Person from storage.
+     *
+     * @param int $id
+     *
+     * @throws \Exception
+     *
+     * @return Response
      */
     public function destroy($id)
     {
@@ -158,13 +143,14 @@ class PersonController extends AppBaseController
 
         if (empty($person)) {
             Flash::error('Person not found');
-            return redirect(route('persons.index'));
+
+            return redirect(route('people.index'));
         }
 
         $this->personRepository->delete($id);
 
         Flash::success('Person deleted successfully.');
 
-        return redirect(route('persons.index'));
+        return redirect(route('people.index'));
     }
-} 
+}

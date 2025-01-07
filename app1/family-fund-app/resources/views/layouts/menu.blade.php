@@ -160,13 +160,13 @@
                 <span>Users</span>
             </a>
         </li>
-        <li class="nav-item {{ Request::is('addresses*') ? 'active' : '' }}">
+        <!-- <li class="nav-item {{ Request::is('addresses*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('addresses.index') }}">
                 <i class="nav-icon fa fa-map-marker"></i>
                 <span>Addresses</span>
             </a>
-        </li>
-        <li class="nav-item {{ Request::is('id_documents*') ? 'active' : '' }}">
+        </li> -->
+        <!-- <li class="nav-item {{ Request::is('id_documents*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('id_documents.index') }}">
                 <i class="nav-icon fa fa-id-card"></i>
                 <span>Id Documents</span>
@@ -177,6 +177,6 @@
                 <i class="nav-icon fa fa-phone"></i>
                 <span>Phones</span>
             </a>
-        </li>
+        </li> -->
     </ul>
 </li>

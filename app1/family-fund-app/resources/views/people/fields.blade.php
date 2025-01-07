@@ -26,7 +26,7 @@
     <!-- Legal Guardian Id Field -->
     <div class="form-group">
         {!! Form::label('legal_guardian_id', 'Legal Guardian Id:') !!}
-        {!! Form::select('legal_guardian_id', [], null, ['class' => 'form-control']) !!}
+        {!! Form::select('legal_guardian_id', $legalGuardians, null, ['class' => 'form-control']) !!}
     </div>
 </div>
 
@@ -41,7 +41,7 @@
                 @endforeach
             @endif
             @if(!isset($person) || (isset($isEdit) && $person->phones->isEmpty()))
-                @include('people.phone_fields', ['index' => 0])
+                @include('people.phone_fields', ['index' => 0, 'phone' => null])
             @endif
         </div>
         <button type="button" class="btn btn-info add-phone">Add Phone</button>
@@ -57,7 +57,7 @@
                 @endforeach
             @endif
             @if(!isset($person) || (isset($isEdit) && $person->addresses->isEmpty()))
-                @include('people.address_fields', ['index' => 0])
+                @include('people.address_fields', ['index' => 0, 'address' => null])
             @endif
         </div>
         <button type="button" class="btn btn-info add-address">Add Address</button>

@@ -10,6 +10,7 @@ use App\Repositories\PhoneRepository;
 use App\Repositories\IdDocumentRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
+use App\Models\PersonExt;
 use Flash;
 use Response;
 use Illuminate\Support\Facades\Log;
@@ -115,7 +116,10 @@ class PersonController extends AppBaseController
             return redirect(route('people.index'));
         }
 
-        return view('people.edit')->with('person', $person);
+        return view('people.edit')
+            ->with('person', $person)
+            ->with('isEdit', true)
+            ->with('legalGuardians', PersonExt::legalGuardiansMap());
     }
 
     /**

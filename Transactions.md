@@ -145,6 +145,7 @@ graph LR
     FS --> |2: reduce shares| FC --> |3: withdraw and reduce cash position| Cash 
 ```
 
+**NOTE - Withdrawals of shares with matching must be approved to avoid gamming the system.**
 ### Account Investment
 
 Note that a deposit requires two transactions:

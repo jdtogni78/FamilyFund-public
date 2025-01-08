@@ -38,7 +38,9 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfolios.split');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
         ->name('tradePortfolios.showRebalance');
-
+    Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
+        ->name('transactions.preview');
+        
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);

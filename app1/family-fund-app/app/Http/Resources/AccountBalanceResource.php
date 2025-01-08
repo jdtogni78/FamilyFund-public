@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 class AccountBalanceResource extends JsonResource
 {
@@ -14,6 +15,7 @@ class AccountBalanceResource extends JsonResource
      */
     public function toArray($request)
     {
+        // Log::info(print_r($this, true));
         return [
             'id' => $this->id,
             'type' => $this->type,

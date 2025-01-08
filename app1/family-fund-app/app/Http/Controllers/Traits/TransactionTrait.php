@@ -13,19 +13,29 @@ trait TransactionTrait
 {
     use VerboseTrait;
 
-    public function createTransaction(array $input): ?TransactionExt
+    public function createTransaction(array $input): array
     {
+        $dryRun = $input['dry_run'] ?? false;
         if ($input['type'] !== TransactionExt::TYPE_INITIAL) {
             $input['shares'] = null;
         }
         $this->debug('TransactionTrait::createTransaction: ' . json_encode($input));
 
         $transaction = null;
-        DB::transaction(function () use ($input, &$transaction) {
+        $newBal = null;
+        $oldShares = null;
+        $fundCash = null;
+        $match = null;
+        $shareValue = null;
+        DB::transaction(function () use ($input, &$transaction, &$newBal, &$oldShares, &$fundCash, &$match, &$shareValue, $dryRun) {
+            /* @var TransactionExt $transaction */
             $transaction = $this->transactionRepository->create($input);
-            $transaction->processPending();
+            list($newBal, $oldShares, $fundCash, $match, $shareValue) = $transaction->processPending();
+            if ($dryRun) {
+                DB::rollBack();
+            }
         });
-        return $transaction;
+        return [$transaction, $newBal, $oldShares, $fundCash, $match, $shareValue];
     }
 
     protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): TransactionExt {

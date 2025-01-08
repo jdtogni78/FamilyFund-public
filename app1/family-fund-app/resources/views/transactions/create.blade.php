@@ -18,7 +18,7 @@
                                 <strong>Create Transaction</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::open(['route' => 'transactions.store']) !!}
+                                {!! Form::open(['route' => 'transactions.preview', 'method' => 'get']) !!}
                                @include('transactions.fields')
                                 {!! Form::close() !!}
                             </div>

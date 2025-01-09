@@ -68,6 +68,7 @@ class TransactionControllerExt extends TransactionController
         try {
             list($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue) = $this->createTransaction($input);
         } catch (Exception $e) {
+            Log::error('TransactionControllerExt::preview: error: ' . $e->getMessage());
             Log::error($e);
             Flash::error($e->getMessage());
             return back()->withError($e->getMessage())->withInput();

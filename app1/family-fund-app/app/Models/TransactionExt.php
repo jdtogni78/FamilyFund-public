@@ -162,7 +162,7 @@ class TransactionExt extends Transaction
                     throw new Exception("Account does not have enough shares ($acctAvailableShares) to support sale of ($allShares)");
                 }
                 if ($this->flags == null) {
-                    throw new Exception("Unexpected: Sale transactions must be no match");
+                    throw new Exception("Unexpected: Sale transactions must have the no match flag");
                 }
             }
         } else {
@@ -207,8 +207,9 @@ class TransactionExt extends Transaction
             }
         }
         if ($this->type == TransactionExt::TYPE_SALE) {
-            $this->shares = -$this->shares;
-            $allShares = -$allShares;
+            if ($this->shares > 0) $this->shares = -$this->shares;
+            if ($this->value > 0) $this->value = -$this->value;
+            if ($allShares > 0) $allShares = -$allShares;
         }
         list($newBal, $oldShares) = $this->createBalance($this->shares, $timestamp);
 

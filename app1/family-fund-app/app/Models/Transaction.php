@@ -93,7 +93,7 @@ class Transaction extends Model
     ];
 
     public static $create_rules = [
-        'type' => 'required|in:PUR,INI',
+        'type' => 'required|in:PUR,INI,SAL',
         'status' => 'required|in:P,S',
         'value' => 'required|numeric',
         'shares' => 'nullable|numeric',

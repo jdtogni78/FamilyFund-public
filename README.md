@@ -121,7 +121,7 @@ docker exec -it familyfund php artisan queue:work
 
 docker-compose -f docker-compose.yml -f docker-compose.${RUNTIME}.yml up mariadb familyfund
 
-### Change Password Command Line
+### Change/reset Password Command Line
 
 php artisan tinker
     $user = App\Models\UserExt::where('email', 'admin@dev.familyfund.local')->first();

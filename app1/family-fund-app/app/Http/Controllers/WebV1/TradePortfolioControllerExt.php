@@ -20,10 +20,12 @@ use Mockery\Exception;
 use Response;
 use App\Http\Controllers\TradePortfolioController;
 use Symfony\Component\HttpFoundation\Request;
+use App\Http\Controllers\Traits\MailTrait;
+use App\Mail\TradePortfolioAnnouncementMail;
 
 class TradePortfolioControllerExt extends TradePortfolioController
 {
-    use VerboseTrait;
+    use VerboseTrait, MailTrait;
 
     public function __construct(TradePortfolioRepository $tradePortfolioRepo)
     {
@@ -152,6 +154,37 @@ class TradePortfolioControllerExt extends TradePortfolioController
         return $api;
     }
 
+    // create a view to compare the old and new trade portfolios
+    public function showDiff($id)
+    {
+        $api = $this->createDiffAPIResponse($id);
+        return view('trade_portfolios.show_diff')->with('api', $api);
+    }
+
+    public function createDiffAPIResponse($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+        // find the previous trade portfolio (by date)
+        $prevTP = $tradePortfolio->previous();
+        $api = [
+            'old' => $prevTP,
+            'new' => $tradePortfolio,
+        ];
+        $api['old']['items'] = $prevTP->tradePortfolioItems()->get();
+        $api['new']['items'] = $tradePortfolio->tradePortfolioItems()->get();
+        return $api;
+    }
+
+    public function announce($id)
+    {
+        $api = $this->createDiffAPIResponse($id);
+        $email = new TradePortfolioAnnouncementMail($api);
+        $to = $api['new']->portfolio()->first()->fund()->first()->account()->first()->email_cc;
+        $this->sendMail($email, $to);
+        return redirect(route('tradePortfolios.show', $api['new']->id));
+    }
+
+    // TODO - May be deprecaded? Needs corrections...
     public function createRebalanceResponse(TradePortfolioExt $tradePortfolio, Carbon $start, Carbon $end)
     {
         $items = $tradePortfolio->tradePortfolioItems()->get();
@@ -160,6 +193,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $port = $tradePortfolio->portfolio();
         $assets = [];
         $porfolioAssets = new Collection();
+        $all = [];
 
         for (; $date->lt($end); $date->addDay()) {
             $this->debug("date: " . $date->toDateString());

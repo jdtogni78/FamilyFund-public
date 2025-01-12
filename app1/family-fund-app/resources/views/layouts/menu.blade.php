@@ -1,7 +1,7 @@
-<li class="nav-item nav-dropdown {{ Request::is('funds*') ? 'active' : '' }}">
+<li class="nav-item nav-dropdown {{ Request::is('accounts*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-money"></i>
-        <span>Funds & Accounts</span>
+        <span>Funds Menu</span>
     </a>
     <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('funds*') ? 'active' : '' }}">
@@ -18,38 +18,44 @@
         </li>
         <li class="nav-item {{ Request::is('portfolioAssets*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('portfolioAssets.index') }}">
-                <i class="nav-icon icon-cursor"></i>
+                <i class="nav-icon fa fa-list"></i>
                 <span>Portfolio Assets</span>
             </a>
         </li>
+    </ul>
+</li>
+<li class="nav-item nav-dropdown {{ Request::is('accounts*') ? 'active' : '' }}">
+    <a class="nav-link nav-dropdown-toggle" href="#">
+        <i class="nav-icon fa fa-bank"></i>
+        <span>Accounts Menu</span>
+    </a>
+    <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('accounts*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('accounts.index') }}">
                 <i class="nav-icon fa fa-bank"></i>
                 <span>Accounts</span>
             </a>
-            <div class="collapse" id="accountSubmenu">
-                <ul class="nav nav-treeview">
-                    <li class="nav-item {{ Request::is('matchingRules*') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('matchingRules.index') }}">
-                            <i class="nav-icon icon-cursor"></i>
-                            <span>Matching Rules</span>
-                        </a>
-                    </li>
-                    <li class="nav-item {{ Request::is('accountMatchingRules*') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('accountMatchingRules.index') }}">
-                        <i class="nav-icon icon-cursor"></i>
-                        <span>Account Matching Rules</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </li>
-        <li class="nav-item {{ Request::is('accountBalances*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('accountBalances.index') }}">
-                <i class="nav-icon fa fa-balance-scale"></i>
-                <span>Balances</span>
+        <li class="nav-item {{ Request::is('matchingRules*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('matchingRules.index') }}">
+                <i class="nav-icon fa fa-link"></i>
+                <span>Matching Rules</span>
             </a>
         </li>
+        <li class="nav-item {{ Request::is('accountMatchingRules*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('accountMatchingRules.index') }}">
+                <i class="nav-icon fa fa-book"></i>
+                <span>Account Matching Rules</span>
+            </a>
+        </li>
+    </ul>
+</li>
+<li class="nav-item nav-dropdown {{ Request::is('accounts*') ? 'active' : '' }}">
+    <a class="nav-link nav-dropdown-toggle" href="#">
+        <i class="nav-icon fa fa-money"></i>
+        <span>Transactions Menu</span>
+    </a>
+    <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('transactions*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('transactions.index') }}">
                 <i class="nav-icon fa fa-money"></i>
@@ -60,6 +66,12 @@
             <a class="nav-link" href="{{ route('transactionMatchings.index') }}">
                 <i class="nav-icon fa fa-link"></i>
                 <span>Matchings</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('accountBalances*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('accountBalances.index') }}">
+                <i class="nav-icon fa fa-balance-scale"></i>
+                <span>Balances</span>
             </a>
         </li>
     </ul>
@@ -180,3 +192,4 @@
         </li> -->
     </ul>
 </li>
+

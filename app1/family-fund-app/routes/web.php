@@ -36,11 +36,19 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfolios.split');
     Route::patch('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doSplit')
         ->name('tradePortfolios.split');
+    Route::get('tradePortfolios/{id}/show_diff', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showDiff')
+        ->name('tradePortfolios.show_diff');
+    Route::get('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')
+        ->name('tradePortfolios.announce');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
         ->name('tradePortfolios.showRebalance');
     Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
-        
+    Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkCreate')
+        ->name('accountMatchingRules.create_bulk');
+    Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkStore')
+        ->name('accountMatchingRules.store_bulk');
+
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);

@@ -18,6 +18,27 @@ class TradePortfolioExt extends TradePortfolio
         'end_dt' => 'required',
     ];
 
+    public static function portMap() {
+        $portfolios = TradePortfolio::all();
+        $map = ['none' => 'Select Portfolio'];
+        foreach ($portfolios as $portfolio) {
+            $map[$portfolio->id] = $portfolio->id 
+                . ' ' . $portfolio->source . ' '
+                . ' ' . $portfolio->portfolio->fund->name . ' '
+                . ' (' . $portfolio->start_dt . ' - ' . $portfolio->end_dt . ')';
+        }
+        return $map;
+    }
+
+    public function previous()
+    {
+        $tp = TradePortfolio::where('start_dt', '<', $this->start_dt)
+            ->where('portfolio_id', $this->portfolio_id)
+            ->orderBy('start_dt', 'desc')
+            ->first();
+        return $tp;
+    }
+
     public function portfolio()
     {
         $portfolios = TradePortfolio::portfolio($this);

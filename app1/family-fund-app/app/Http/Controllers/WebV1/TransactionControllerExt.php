@@ -11,16 +11,13 @@ use App\Models\AccountExt;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
 use App\Repositories\TransactionRepository;
-use App\Http\Controllers\AppBaseController;
 use Exception;
 use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Illuminate\Support\Facades\Log;
 use Response;
-use App\Http\Resources\TransactionResource;
-use App\Http\Resources\AccountBalanceResource;
-use App\Http\Resources\PortfolioAssetResource;
-use App\Http\Resources\AccountResource;
+
+
 class TransactionControllerExt extends TransactionController
 {
     use TransactionTrait;
@@ -75,38 +72,8 @@ class TransactionControllerExt extends TransactionController
         }
 
         Log::info('TransactionControllerExt::preview: input: ' . json_encode($input));
-        // transform match in resources
-        $newMatches = [];
-        if (isset($matches)) {
-            foreach ($matches as $match) {
-                Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
-                $account = (new AccountResource($match[0][0]->account()->first()))->resolve();
-                $match[0][0] = (new AccountBalanceResource($match[0][0]))->resolve();
-                $match[0][0]['account'] = $account;
-                $match[1] = (new TransactionResource($match[1]))->resolve();
-                $newMatches[] = $match;
-            }
-        }
-        $api1 = [
-            'dry_run' => true,
-            'transaction' => (new TransactionResource($transaction))->resolve(),
-            'newBal' => (new AccountBalanceResource($newBal))->resolve(),
-            'oldShares' => $oldShares,
-            'fundCash' => $fundCash,
-            'mtch' => $newMatches,
-            'shareValue' => $shareValue,
-        ];
-        $api1['transaction']['account'] = (new AccountResource($transaction->account()->first()))->resolve();
-        $api1['newBal']['account'] = (new AccountResource($newBal->account()->first()))->resolve();
-        $api1['transaction']['status'] = $tran_status;
-        if (isset($fundCash)) {
-            $api1['fundCash'][0] = (new PortfolioAssetResource($fundCash[0]))->resolve();
-        }
-        // remove created_at and updated_at from api1
-        unset($api1['transaction']['created_at']);
-        unset($api1['transaction']['updated_at']);
-        unset($api1['newBal']['created_at']);
-        unset($api1['newBal']['updated_at']);
+        $transaction->status = $tran_status;
+        $api1 = $this->getPreviewData($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue);
 
         Log::info('TransactionControllerExt::preview: api: ' . json_encode($api1));
         return view('transactions.preview')

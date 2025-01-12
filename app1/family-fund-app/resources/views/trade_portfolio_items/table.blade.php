@@ -2,18 +2,20 @@
     <table class="table table-striped" id="tradePortfolioItems-table">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Trade Portfolio Id</th>
                 <th>Symbol</th>
                 <th>Type</th>
                 <th>Group</th>
                 <th>Target Share</th>
                 <th>Deviation trigger</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($tradePortfolioItems as $tradePortfolioItem)
             <tr>
+                <td>{{ $tradePortfolioItem->id }}</td>
                 <td>{{ $tradePortfolioItem->trade_portfolio_id }}</td>
                 <td>{{ $tradePortfolioItem->symbol }}</td>
                 <td>{{ $tradePortfolioItem->type }}</td>
@@ -37,3 +39,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#tradePortfolioItems-table').DataTable();
+        });
+    </script>
+@endpush

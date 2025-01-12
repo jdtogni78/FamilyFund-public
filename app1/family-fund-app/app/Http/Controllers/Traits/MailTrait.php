@@ -16,7 +16,8 @@ Trait MailTrait
             $mailto->cc($emailsCC);
             Log::info("Adding cc " . $emailsCC);
         }
-        $msg = "Email to " . $emails;
+        Log::info("Sending email to " . json_encode($emails));
+        $msg = "Email to " . json_encode($emails);
         Log::info($msg);
         $mailto->send($data);
 

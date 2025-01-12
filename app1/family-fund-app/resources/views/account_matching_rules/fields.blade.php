@@ -1,13 +1,13 @@
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('account_id', 'Account Id:') !!}
-    {!! Form::number('account_id', null, ['class' => 'form-control']) !!}
+    {!! Form::select('account_id', $api['account'], null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Matching Rule Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('matching_rule_id', 'Matching Rule Id:') !!}
-    {!! Form::number('matching_rule_id', null, ['class' => 'form-control']) !!}
+    {!! Form::select('matching_rule_id', $api['mr'], null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->

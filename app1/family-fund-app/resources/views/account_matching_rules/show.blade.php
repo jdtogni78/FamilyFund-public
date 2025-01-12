@@ -23,6 +23,18 @@
                          </div>
                      </div>
                  </div>
+                 <div class="row">
+                     <div class="col-lg-12">
+                         <div class="card">
+                             <div class="card-header">
+                                 <strong>Matching Rule</strong>
+                             </div>
+                             <div class="card-body">
+                                 @include('matching_rules.show_fields', ['matchingRule' => $api['mr']])
+                             </div>
+                         </div>
+                     </div>
+                 </div>
           </div>
     </div>
 @endsection

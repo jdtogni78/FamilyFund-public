@@ -21,6 +21,15 @@ class AssetExt extends Asset
         'deleted_at' => 'nullable'
     ];
 
+    public static function assetMap() {
+        $assets = AssetExt::all();
+        $map = ['none' => 'Select Asset'];
+        foreach ($assets as $asset) {
+            $map[$asset->id] = $asset->name;
+        }
+        return $map;
+    }
+
     public static function isCashInput($input):bool {
         return $input['name'] == 'CASH' || $input['type'] == 'CSH';
     }

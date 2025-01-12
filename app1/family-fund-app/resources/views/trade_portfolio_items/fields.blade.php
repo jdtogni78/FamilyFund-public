@@ -1,19 +1,19 @@
 <!-- Trade Portfolio Id Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('trade_portfolio_id', 'Trade Portfolio Id:') !!}
-    {!! Form::number('trade_portfolio_id', null, ['class' => 'form-control']) !!}
+    {!! Form::select('trade_portfolio_id', $api['portMap'], null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Symbol Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('symbol', 'Symbol:') !!}
-    {!! Form::text('symbol', null, ['class' => 'form-control','maxlength' => 50]) !!}
+    {!! Form::select('symbol', $api['assetMap'], null, ['class' => 'form-control','maxlength' => 50]) !!}
 </div>
 
 <!-- Type Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('type', 'Type:') !!}
-    {!! Form::text('type', null, ['class' => 'form-control','maxlength' => 50]) !!}
+    {!! Form::select('type', $api['typeMap'], null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Target Share Field -->

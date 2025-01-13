@@ -172,6 +172,10 @@ class TradePortfolioControllerExt extends TradePortfolioController
         ];
         $api['old']['items'] = $prevTP->tradePortfolioItems()->get();
         $api['new']['items'] = $tradePortfolio->tradePortfolioItems()->get();
+        $api['old']->annotateTotalShares();
+        $api['new']->annotateTotalShares();
+        $api['old']['portfolio'] = $prevTP->portfolio();
+        $api['new']['portfolio'] = $tradePortfolio->portfolio();
         return $api;
     }
 
@@ -179,7 +183,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
     {
         $api = $this->createDiffAPIResponse($id);
         $email = new TradePortfolioAnnouncementMail($api);
-        $to = $api['new']->portfolio()->first()->fund()->first()->account()->first()->email_cc;
+        $to = $api['new']->portfolio()->first()->fund()->first()->fundAccount()->email_cc;
         $this->sendMail($email, $to);
         return redirect(route('tradePortfolios.show', $api['new']->id));
     }

@@ -15,6 +15,7 @@
                         <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                         <a href="{{ route('tradePortfolios.split', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-code-fork"></i></a>
                         <a href="{{ route('funds.show_trade_bands', [$tradePortfolio->portfolio()->fund()->first()->id, $tradePortfolio->id, $asOf]) }}" class='btn btn-ghost-info'><i class="fa fa-wave-square"></i></a>
+                        <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
                         {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger no_mobile', 'onclick' => "return confirm('Are you sure?')"]) !!}
                     </div>
                 @endif
@@ -35,6 +36,7 @@
                 role="button" aria-expanded="false" aria-controls="collapseTPIT{{ $tradePortfolio->id }}">
                 Trade Portfolio Items {{ $extraTitle ?? '' }}
                 </a>
+                <a href="{{ route('tradePortfoliosItems.createWithParams', ['tradePortfolioId' => $tradePortfolio->id]) }}" class="btn btn-ghost-info"><i class="fa fa-plus"></i></a>
             </div>
             <div class="collapse" id="collapseTPIT{{ $tradePortfolio->id }}">
                 <div class="card-body">

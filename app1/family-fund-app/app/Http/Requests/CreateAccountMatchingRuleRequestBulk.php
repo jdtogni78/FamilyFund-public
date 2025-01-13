@@ -25,9 +25,9 @@ class CreateAccountMatchingRuleRequestBulk extends FormRequest
      */
     public function rules()
     {
-        return [
-            'account_ids' => 'required|array',
-            'matching_rule_id' => 'required|integer',
-        ];
+        $rules = AccountMatchingRule::$rules;
+        $rules['account_ids'] = 'required|array:integer';
+        $rules['matching_rule_id'] = 'required|integer';
+        return $rules;
     }
 }

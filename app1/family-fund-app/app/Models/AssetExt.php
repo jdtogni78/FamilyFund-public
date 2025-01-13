@@ -30,6 +30,15 @@ class AssetExt extends Asset
         return $map;
     }
 
+    public static function symbolMap() {
+        $assets = AssetExt::all();
+        $map = ['none' => 'Select Asset'];
+        foreach ($assets as $asset) {
+            $map[$asset->name] = $asset->name;
+        }
+        return $map;
+    }
+
     public static function isCashInput($input):bool {
         return $input['name'] == 'CASH' || $input['type'] == 'CSH';
     }

@@ -42,6 +42,8 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfolios.announce');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
         ->name('tradePortfolios.showRebalance');
+    Route::get('tradePortfoliosItems/createWithParams', 'App\Http\Controllers\WebV1\TradePortfolioItemControllerExt@createWithParams')
+        ->name('tradePortfoliosItems.createWithParams');
     Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
     Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkCreate')
@@ -66,7 +68,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
-    Route::resource('tradePortfolioItems', App\Http\Controllers\TradePortfolioItemController::class);
+    Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
     Route::resource('addresses', App\Http\Controllers\AddressController::class);

@@ -392,6 +392,7 @@ Trait FundTrait
     protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?FundReportExt
     {
         // check if there is data to run fund report & is due
+        Log::info('Checking if got assets after '.$shouldRunBy);
         $hasNewAssets = AssetPrice::query()
             ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
         if ($hasNewAssets > 0) {

@@ -1,10 +1,7 @@
-version: '2'
-# DEPRECATED
-
 services:
   mariadb:
     container_name: db
-    image: docker.io/bitnami/mariadb:10.6
+    image: mariadb:lts
     environment:
       - ALLOW_EMPTY_PASSWORD=no
 

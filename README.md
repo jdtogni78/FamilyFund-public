@@ -149,6 +149,7 @@ ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
 ### Wake on LAN
 <router-model-redacted> setup: <wol-router-faq-redacted>
 setup server to wake up: https://www.cyberciti.biz/tips/linux-send-wake-on-lan-wol-magic-packets.html
+make sure to enable upon reboot:https://pimylifeup.com/ubuntu-enable-wake-on-lan/
 mac app: https://apps.apple.com/us/app/wakeoncommand/id1484204619?mt=12
 
 Could not make the WOL work from VPN, only inside the network.

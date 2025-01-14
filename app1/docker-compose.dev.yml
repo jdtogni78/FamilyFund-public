@@ -1,5 +1,3 @@
-version: '2'
-# DEPRECATED
 services:
   mariadb:
     environment:

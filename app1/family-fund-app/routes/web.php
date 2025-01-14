@@ -77,6 +77,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('people', App\Http\Controllers\PersonController::class);
     Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
     // Route::resource('accountPersons', App\Http\Controllers\AccountPersonController::class);
+    Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
+    Route::resource('cashDeposits', App\Http\Controllers\CashDepositController::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');

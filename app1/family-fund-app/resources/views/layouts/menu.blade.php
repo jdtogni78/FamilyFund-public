@@ -74,6 +74,18 @@
                 <span>Balances</span>
             </a>
         </li>
+        <li class="nav-item {{ Request::is('depositRequests*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('depositRequests.index') }}">
+                <i class="nav-icon fa fa-download"></i>
+                <span>Deposit Requests</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('cashDeposits*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('cashDeposits.index') }}">
+                <i class="nav-icon fa fa-upload"></i>
+                <span>Cash Deposits</span>
+            </a>
+        </li>
     </ul>
 </li>
 <li class="nav-item nav-dropdown {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
@@ -192,4 +204,3 @@
         </li> -->
     </ul>
 </li>
-

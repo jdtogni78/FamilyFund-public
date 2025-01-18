@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class CashDepositRepository
  * @package App\Repositories
- * @version January 14, 2025, 4:21 am UTC
+ * @version January 14, 2025, 5:04 am UTC
 */
 
 class CashDepositRepository extends BaseRepository
@@ -19,7 +19,10 @@ class CashDepositRepository extends BaseRepository
     protected $fieldSearchable = [
         'date',
         'description',
-        'value'
+        'value',
+        'status',
+        'account_id',
+        'transaction_id'
     ];
 
     /**

@@ -19,14 +19,13 @@
                           </div>
                           <div class="card-body">
                               {!! Form::model($cashDeposit, ['route' => ['cashDeposits.update', $cashDeposit->id], 'method' => 'patch']) !!}
-
-                              @include('cash_deposits.fields')
-
+                              @include('cash_deposits.fields', ['isEdit' => true])
                               {!! Form::close() !!}
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
          </div>
     </div>
 @endsection

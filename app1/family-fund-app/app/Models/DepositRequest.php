@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class DepositRequest
  * @package App\Models
- * @version January 14, 2025, 4:25 am UTC
+ * @version January 14, 2025, 5:03 am UTC
  *
  * @property \App\Models\Account $account
  * @property \App\Models\CashDeposit $cashDeposit
@@ -38,6 +38,7 @@ class DepositRequest extends Model
         'date',
         'description',
         'status',
+        'amount',
         'account_id',
         'cash_deposit_id',
         'transaction_id'
@@ -52,7 +53,8 @@ class DepositRequest extends Model
         'id' => 'integer',
         'date' => 'date',
         'description' => 'string',
-        'status' => 'string',
+        'status' => 'string:3',
+        'amount' => 'decimal:2',
         'account_id' => 'integer',
         'cash_deposit_id' => 'integer',
         'transaction_id' => 'integer'
@@ -64,9 +66,10 @@ class DepositRequest extends Model
      * @var array
      */
     public static $rules = [
-        'date' => 'required',
-        'description' => 'required',
-        'status' => 'required|in:PENDING,APPROVED,REJECTED',
+        'date' => 'nullable',
+        'description' => 'nullable',
+        'status' => 'required|in:PEN,APP,REJ,COM',
+        'amount' => 'required|numeric|min:0',
         'account_id' => 'required',
         'cash_deposit_id' => 'nullable',
         'transaction_id' => 'nullable'

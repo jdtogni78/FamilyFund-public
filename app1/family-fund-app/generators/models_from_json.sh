@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-data_models="DepositRequest"
+data_models="CashDeposit"
 for model in $data_models; do
     # docker exec familyfund \
         php artisan infyom:scaffold ${model} \

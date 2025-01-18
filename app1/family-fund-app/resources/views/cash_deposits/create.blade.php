@@ -20,7 +20,7 @@
                             <div class="card-body">
                                 {!! Form::open(['route' => 'cashDeposits.store']) !!}
 
-                                   @include('cash_deposits.fields')
+                                   @include('cash_deposits.fields', ['isEdit' => false])
 
                                 {!! Form::close() !!}
                             </div>

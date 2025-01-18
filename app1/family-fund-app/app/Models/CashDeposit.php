@@ -9,11 +9,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class CashDeposit
  * @package App\Models
- * @version January 14, 2025, 4:21 am UTC
+ * @version January 14, 2025, 5:04 am UTC
  *
+ * @property \App\Models\Transaction $transaction
+ * @property \App\Models\Account $account
  * @property string $date
  * @property string $description
  * @property number $value
+ * @property string $status
+ * @property integer $account_id
+ * @property integer $transaction_id
  */
 class CashDeposit extends Model
 {
@@ -31,7 +36,10 @@ class CashDeposit extends Model
     public $fillable = [
         'date',
         'description',
-        'value'
+        'amount',
+        'status',
+        'account_id',
+        'transaction_id'
     ];
 
     /**
@@ -43,7 +51,10 @@ class CashDeposit extends Model
         'id' => 'integer',
         'date' => 'date',
         'description' => 'string',
-        'value' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'status' => 'string:3',
+        'account_id' => 'integer',
+        'transaction_id' => 'integer'
     ];
 
     /**
@@ -52,10 +63,32 @@ class CashDeposit extends Model
      * @var array
      */
     public static $rules = [
-        'date' => 'required',
+        'date' => 'nullable',
         'description' => 'nullable',
-        'value' => 'required|numeric|min:0'
+        'amount' => 'required|numeric|min:0',
+        'status' => 'required|in:PEN,DEP,ALL,COM,CAN',
+        'account_id' => 'required',
+        'transaction_id' => 'nullable'
     ];
 
-    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function transaction()
+    {
+        return $this->belongsTo(\App\Models\TransactionExt::class, 'transaction_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function account()
+    {
+        return $this->belongsTo(\App\Models\AccountExt::class, 'account_id');
+    }
+
+    public function depositRequests()
+    {
+        return $this->hasMany(\App\Models\DepositRequestExt::class, 'cash_deposit_id');
+    }
 }

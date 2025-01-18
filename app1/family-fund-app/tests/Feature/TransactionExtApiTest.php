@@ -1,4 +1,6 @@
-<?php namespace Tests\APIs;
+<?php 
+
+namespace Tests\Feature;
 
 use App\Http\Resources\TransactionResource;
 use App\Models\AssetExt;

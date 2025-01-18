@@ -15,10 +15,13 @@ class CreateCashDepositsTable extends Migration
     public function up()
     {
         Schema::create('cash_deposits', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->date('date');
+            $table->bigInteger('id', true, true);
+            $table->date('date')->nullable();
             $table->string('description')->nullable();
-            $table->decimal('value', 13, 2);
+            $table->decimal('amount', 13, 2);
+            $table->enum('status', ['PENDING', 'DEPOSITED', 'ALLOCATED']);
+            $table->foreignId('account_id')->constrained('accounts');
+            $table->foreignId('transaction_id')->nullable()->constrained('transactions');
             $table->timestamps();
             $table->softDeletes();
         });

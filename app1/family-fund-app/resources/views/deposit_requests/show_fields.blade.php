@@ -10,6 +10,12 @@
     <p>{{ $depositRequest->description }}</p>
 </div>
 
+<!-- Amount Field -->
+<div class="form-group">
+    {!! Form::label('amount', 'Amount:') !!}
+    <p>{{ $depositRequest->amount }}</p>
+</div>
+
 <!-- Status Field -->
 <div class="form-group">
     {!! Form::label('status', 'Status:') !!}

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\CashDeposit;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\CashDepositExt;
 
 class CashDepositFactory extends Factory
 {
@@ -22,9 +23,12 @@ class CashDepositFactory extends Factory
     public function definition()
     {
         return [
-            'date' => $this->faker->word,
-        'description' => $this->faker->word,
-        'value' => $this->faker->word
+            'date' => $this->faker->dateTime(),
+            'description' => $this->faker->word,
+            'amount' => $this->faker->numberBetween(1, 1000),
+            'status' => CashDepositExt::STATUS_PENDING,
+            'account_id' => null,
+            'transaction_id' => null
         ];
     }
 }

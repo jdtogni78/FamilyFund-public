@@ -16,9 +16,10 @@ class CreateDepositRequestsTable extends Migration
     {
         Schema::create('deposit_requests', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->date('date');
-            $table->string('description');
+            $table->date('date')->nullable();
+            $table->string('description')->nullable();
             $table->string('status');
+            $table->decimal('amount', 13, 2);
             $table->foreignId('account_id')->constrained();
             $table->foreignId('transaction_id')->nullable()->constrained();
             $table->foreignId('cash_deposit_id')->nullable()->constrained();

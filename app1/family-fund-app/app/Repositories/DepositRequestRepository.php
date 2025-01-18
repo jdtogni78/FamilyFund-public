@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class DepositRequestRepository
  * @package App\Repositories
- * @version January 14, 2025, 4:25 am UTC
+ * @version January 14, 2025, 5:03 am UTC
 */
 
 class DepositRequestRepository extends BaseRepository

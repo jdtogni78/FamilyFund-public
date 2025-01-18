@@ -85,7 +85,7 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $rss = new TradePortfolioResource($tradePortfolio);
         $ret = $rss->toArray(NULL);
 
-        $port = $tradePortfolio->portfolio();
+        $port = $tradePortfolio->portfolio;
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
         if ($port != null) {
             $maxCash = $port->maxCashBetween($prevYearAsOf, $asOf);

@@ -50,6 +50,10 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('accountMatchingRules.create_bulk');
     Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkStore')
         ->name('accountMatchingRules.store_bulk');
+    Route::get('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@assign')
+        ->name('cashDeposits.assign');
+    Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
+            ->name('cashDeposits.do_assign');
 
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
@@ -78,7 +82,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
     // Route::resource('accountPersons', App\Http\Controllers\AccountPersonController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
-    Route::resource('cashDeposits', App\Http\Controllers\CashDepositController::class);
+    Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');

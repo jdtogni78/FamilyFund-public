@@ -44,7 +44,7 @@ class TradePortfolioExt extends TradePortfolio
         $portfolios = TradePortfolio::portfolio($this);
         if ($portfolios->count() > 1)
             throw new \Exception("Every trade portfolio must have at most 1 portfolio (found " . $portfolios->count() . ")");
-        return $portfolios->first();
+        return $portfolios;
     }
 
     public function splitWithItems($start_dt, $end_dt)

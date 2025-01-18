@@ -27,10 +27,29 @@
 
 <!-- Value Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('value', 'Value:') !!}
-    {!! Form::number('value', null, ['class' => 'form-control']) !!}
+    {!! Form::label('amount', 'Amount:') !!}
+    {!! Form::number('amount', null, ['class' => 'form-control','min' => 0]) !!}
 </div>
 
+<!-- Status Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('status', 'Status:') !!}
+    {!! Form::select('status', $api['statusMap'], null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Account Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('account_id', 'Account Id:') !!}
+    {!! Form::select('account_id', $api['fundAccountMap'], null, ['class' => 'form-control']) !!}
+</div>
+
+@if ($isEdit)
+<!-- Transaction Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('transaction_id', 'Transaction Id:') !!}
+    {!! Form::text('transaction_id', null, ['class' => 'form-control']) !!}
+</div>
+@endif
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
     {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}

@@ -147,7 +147,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
 
         $api = [
             'tradePortfolio' => $tradePortfolio,
-            'portfolio' => $tradePortfolio->portfolio(),
+            'portfolio' => $tradePortfolio->portfolio,
         ];
 
         $api['api'] = $api;
@@ -174,8 +174,8 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $api['new']['items'] = $tradePortfolio->tradePortfolioItems()->get();
         $api['old']->annotateTotalShares();
         $api['new']->annotateTotalShares();
-        $api['old']['portfolio'] = $prevTP->portfolio();
-        $api['new']['portfolio'] = $tradePortfolio->portfolio();
+        $api['old']['portfolio'] = $prevTP->portfolio;
+        $api['new']['portfolio'] = $tradePortfolio->portfolio;
         return $api;
     }
 
@@ -183,7 +183,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
     {
         $api = $this->createDiffAPIResponse($id);
         $email = new TradePortfolioAnnouncementMail($api);
-        $to = $api['new']->portfolio()->first()->fund()->first()->fundAccount()->email_cc;
+        $to = $api['new']->portfolio->fund()->first()->fundAccount()->email_cc;
         $this->sendMail($email, $to);
         return redirect(route('tradePortfolios.show', $api['new']->id));
     }
@@ -194,7 +194,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $items = $tradePortfolio->tradePortfolioItems()->get();
         /** @var Carbon $date */
         $date = $start->copy();
-        $port = $tradePortfolio->portfolio();
+        $port = $tradePortfolio->portfolio;
         $assets = [];
         $porfolioAssets = new Collection();
         $all = [];
@@ -202,7 +202,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         for (; $date->lt($end); $date->addDay()) {
             $this->debug("date: " . $date->toDateString());
             $data = [];
-            $port_value = $tradePortfolio->portfolio()->valueAsOf($date);
+            $port_value = $tradePortfolio->portfolio->valueAsOf($date);
             $this->debug("port_value: $port_value");
 
             $pas = $port->assetsAsOf($date);
@@ -285,7 +285,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $tradePortfolio->items = $tradePortfolio->tradePortfolioItems()->get();
         $api = [
             'tradePortfolio' => $tradePortfolio,
-            'portfolio' => $tradePortfolio->portfolio(),
+            'portfolio' => $tradePortfolio->portfolio,
             'portfolioAssets' => $porfolioAssets,
             'rebalance' => $all,
         ];

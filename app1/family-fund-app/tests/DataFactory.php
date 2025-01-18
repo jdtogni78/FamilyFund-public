@@ -27,6 +27,10 @@ use Carbon\Carbon;
 use Log;
 use Nette\Utils\DateTime;
 use App\Http\Controllers\Traits\VerboseTrait;
+use App\Models\CashDepositExt;
+use App\Models\DepositRequest;
+use App\Models\DepositRequestExt;
+use App\Models\CashDeposit;
 
 class DataFactory
 {
@@ -392,6 +396,26 @@ class DataFactory
                 'end_dt' => $end_dt,
                 'shares' => $shares
             ]);
+    }
+
+    public function createCashDeposit($amount, $date=null) {
+        if ($date == null) $date = Carbon::today();
+        return CashDeposit::factory()->create([
+            'amount' => $amount,
+            'account_id' => $this->fundAccount->id,
+            'status' => CashDepositExt::STATUS_PENDING,
+            'description' => 'test cash deposit',
+            'date' => $date,
+        ]);
+    }
+
+    public function createDepositRequest($cd, $account, $amount) {
+        return DepositRequest::factory()->create([
+            'cash_deposit_id' => $cd->id,
+            'account_id' => $account->id,
+            'amount' => $amount,
+            'status' => DepositRequestExt::STATUS_PENDING,
+        ]);
     }
 
 }

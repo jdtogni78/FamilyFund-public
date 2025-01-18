@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DepositRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\DepositRequestExt;
 
 class DepositRequestFactory extends Factory
 {
@@ -22,12 +23,12 @@ class DepositRequestFactory extends Factory
     public function definition()
     {
         return [
-            'date' => $this->faker->word,
-        'description' => $this->faker->word,
-        'status' => $this->faker->word,
-        'account_id' => $this->faker->word,
-        'cash_deposit_id' => $this->faker->word,
-        'transaction_id' => $this->faker->word
+            'date' => $this->faker->dateTime(),
+            'description' => $this->faker->word,
+            'status' => DepositRequestExt::STATUS_PENDING,
+            'account_id' => null,
+            'cash_deposit_id' => null,
+            'transaction_id' => null
         ];
     }
 }

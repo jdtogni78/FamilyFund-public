@@ -15,7 +15,7 @@
         "name": "date",
         "dbType": "date",
         "htmlType": "date",
-        "validations": "required",
+        "validations": "nullable",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -36,7 +36,7 @@
         "inView": true
     },
     {
-        "name": "value",
+        "name": "amount",
         "dbType": "decimal,13,2",
         "htmlType": "number",
         "validations": "required|numeric|min:0",
@@ -49,9 +49,9 @@
     },
     {
         "name": "status",
-        "dbType": "enum",
+        "dbType": "string:3",
         "htmlType": "select",
-        "validations": "required|in:PENDING,DEPOSITED,ALLOCATED",
+        "validations": "required|in:PEN,DEP,ALL,COM,CAN",
         "searchable": true,
         "fillable": true,
         "primary": false,

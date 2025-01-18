@@ -25,6 +25,12 @@
     {!! Form::text('description', null, ['class' => 'form-control']) !!}
 </div>
 
+<!-- Amount Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('amount', 'Amount:') !!}
+    {!! Form::number('amount', null, ['class' => 'form-control', 'step' => '0.01']) !!}
+</div>
+
 <!-- Status Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('status', 'Status:') !!}
@@ -50,6 +56,7 @@
     {!! Form::text('transaction_id', null, ['class' => 'form-control']) !!}
 </div>
 @endif
+
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
     {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}

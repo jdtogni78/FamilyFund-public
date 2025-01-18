@@ -4,6 +4,7 @@
             <tr>
                 <th>Date</th>
         <th>Description</th>
+        <th>Amount</th>
         <th>Status</th>
         <th>Account Id</th>
         <th>Cash Deposit Id</th>
@@ -16,6 +17,7 @@
             <tr>
                 <td>{{ $depositRequest->date }}</td>
             <td>{{ $depositRequest->description }}</td>
+            <td>{{ $depositRequest->amount }}</td>
             <td>{{ $depositRequest->status }}</td>
             <td>{{ $depositRequest->account_id }}</td>
             <td>{{ $depositRequest->cash_deposit_id }}</td>

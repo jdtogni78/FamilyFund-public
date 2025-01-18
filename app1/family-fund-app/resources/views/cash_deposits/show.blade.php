@@ -23,6 +23,20 @@
                          </div>
                      </div>
                  </div>
+                 @isset($cashDeposit->transaction_id)
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Transaction</strong>
+                                </div>
+                                <div class="card-body">
+                                    @include('transactions.show_fields', ['transaction' => $cashDeposit->transaction])
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                 @endisset
           </div>
     </div>
 @endsection

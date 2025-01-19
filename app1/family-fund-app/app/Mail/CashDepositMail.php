@@ -30,14 +30,11 @@ class CashDepositMail extends Mailable
      */
     public function build()
     {
-        $arr = [
-            'to' => $this->data['to'],
-            'report_name' => 'Cash Deposit Detected',
-        ];
+        $this->data['to'] = $this->data['cash_deposit']->account->email_cc;
+        $this->data['report_name'] = 'Cash Deposit Detected';
 
         return $this->view('emails.cash_deposit')
             ->with("data", $this->data)
-            ->with("api", $arr)
             ->subject("Cash Deposit Detected");
     }
 }

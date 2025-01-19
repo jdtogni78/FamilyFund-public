@@ -142,4 +142,20 @@ class Transaction extends Model
     {
         return $this->hasOne(\App\Models\AccountBalance::class, 'transaction_id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     **/
+    public function cashDeposit()
+    {
+        return $this->hasOne(\App\Models\CashDepositExt::class, 'transaction_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     **/
+    public function depositRequest()
+    {
+        return $this->hasOne(\App\Models\DepositRequestExt::class, 'transaction_id');
+    }
 }

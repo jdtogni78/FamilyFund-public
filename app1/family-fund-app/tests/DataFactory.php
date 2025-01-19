@@ -89,7 +89,8 @@ class DataFactory
             $this->fundTransaction = $this->createTransaction($value, $this->fundAccount, TransactionExt::TYPE_INITIAL,
                 TransactionExt::STATUS_CLEARED, null, $timestamp);
 
-            $this->fundBalance = $this->createBalance($shares, $this->fundTransaction, $this->fundAccount, $timestamp);
+            $balance = $this->createBalance($shares, $this->fundTransaction, $this->fundAccount, $timestamp);
+            $this->fundBalance = $balance['balance'];
 
             $this->cash = AssetExt::getCashAsset();
 

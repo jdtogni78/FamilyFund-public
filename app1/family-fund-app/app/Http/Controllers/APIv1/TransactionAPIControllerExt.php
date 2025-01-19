@@ -47,7 +47,8 @@ class TransactionAPIControllerExt extends TransactionAPIController
         $input = $request->all();
         $transaction = null;
         try {
-            list($transaction, $newBal, $oldShares, $fundCash, $match) = $this->createTransaction($input);
+            $transaction_data = $this->createTransaction($input);
+            $transaction = $transaction_data['transaction'];
         } catch (Exception $e) {
             return $this->sendError($e->getMessage(), Response::HTTP_OK);
         }

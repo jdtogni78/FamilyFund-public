@@ -19,13 +19,13 @@
 <!-- Status Field -->
 <div class="form-group">
     {!! Form::label('status', 'Status:') !!}
-    <p>{{ $api['statusMap'][$depositRequest->status] }}</p>
+    <p>{{ $depositRequest->status_string() }}</p>
 </div>
 
 <!-- Account Id Field -->
 <div class="form-group">
     {!! Form::label('account_id', 'Account Id:') !!}
-    <p>{{ $depositRequest->account_id }}</p>
+    <p>{{ $depositRequest->account->nickname }}</p>
 </div>
 
 <!-- Cash Deposit Id Field -->

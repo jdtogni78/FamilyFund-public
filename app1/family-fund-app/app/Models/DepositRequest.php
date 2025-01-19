@@ -80,7 +80,7 @@ class DepositRequest extends Model
      **/
     public function account()
     {
-        return $this->belongsTo(\App\Models\Account::class, 'account_id');
+        return $this->belongsTo(\App\Models\AccountExt::class, 'account_id');
     }
 
     /**
@@ -88,7 +88,7 @@ class DepositRequest extends Model
      **/
     public function cashDeposit()
     {
-        return $this->belongsTo(\App\Models\CashDeposit::class, 'cash_deposit_id');
+        return $this->belongsTo(\App\Models\CashDepositExt::class, 'cash_deposit_id');
     }
 
     /**
@@ -96,6 +96,6 @@ class DepositRequest extends Model
      **/
     public function transaction()
     {
-        return $this->belongsTo(\App\Models\Transaction::class, 'transaction_id');
+        return $this->belongsTo(\App\Models\TransactionExt::class, 'transaction_id');
     }
 }

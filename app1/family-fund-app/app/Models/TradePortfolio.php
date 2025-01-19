@@ -40,6 +40,8 @@ class TradePortfolio extends Model
     public $fillable = [
         'account_name',
         'portfolio_id',
+        'tws_query_id',
+        'tws_token',
         'cash_target',
         'cash_reserve_target',
         'max_single_order',
@@ -59,6 +61,8 @@ class TradePortfolio extends Model
         'id' => 'integer',
         'account_name' => 'string',
         'portfolio_id' => 'integer',
+        'tws_query_id' => 'string',
+        'tws_token' => 'string',
         'cash_target' => 'decimal:2',
         'cash_reserve_target' => 'decimal:2',
         'max_single_order' => 'decimal:2',
@@ -77,6 +81,8 @@ class TradePortfolio extends Model
     public static $rules = [
         'account_name' => 'nullable|string|max:50',
         'portfolio_id' => 'nullable|integer',
+        'tws_query_id' => 'nullable|string|max:50',
+        'tws_token' => 'nullable|string|max:100',
         'cash_target' => 'required|numeric:between:0,0.99',
         'cash_reserve_target' => 'required|numeric:between:0,0.99',
         'max_single_order' => 'required|numeric',

@@ -26,9 +26,9 @@
                     </thead>
                     <tbody>
                         <tr id="deposit-template" style="display:none">
-                            <td>{!! Form::text('deposits[0][description]', null, ['class' => 'form-control']) !!}</td>
-                            <td>{!! Form::number('deposits[0][amount]', null, ['class' => 'form-control', 'step' => '0.01']) !!}</td>
-                            <td>{!! Form::select('deposits[0][account_id]', $api['accountMap'], null, ['class' => 'form-control']) !!}</td>
+                            <td>{!! Form::text('_deposits[0][description]', null, ['class' => 'form-control']) !!}</td>
+                            <td>{!! Form::number('_deposits[0][amount]', null, ['class' => 'form-control', 'step' => '0.01']) !!}</td>
+                            <td>{!! Form::select('_deposits[0][account_id]', $api['accountMap'], null, ['class' => 'form-control']) !!}</td>
                             <td>
                                 <button type="button" class="btn btn-danger remove-row">
                                     <i class="fa fa-trash"></i>
@@ -71,8 +71,8 @@
                 template.addClass('deposit');
                 template.attr('id', 'deposit-' + index);
                 // update the index
-                template.find('input').each(function() {
-                    $(this).attr('name', $(this).attr('name').replace('[0]', '[' + index + ']'));
+                template.find('input, select').each(function() {
+                    $(this).attr('name', $(this).attr('name').replace('_deposits[0]', 'deposits[' + index + ']'));
                 });
                 $('#deposit-requests-table tbody').append(template);
             });
@@ -95,7 +95,7 @@
                     }
                 });
                 $('#total-assigned').text(totalAmount.toFixed(2));
-                $('#total-unassigned').text(expectedAmount - totalAmount.toFixed(2));
+                $('#total-unassigned').text((expectedAmount - totalAmount).toFixed(2));
                 if (totalAmount != expectedAmount) {
                     $('#total-amount-error').removeClass('text-success');
                     $('#total-amount-error').addClass('text-danger');

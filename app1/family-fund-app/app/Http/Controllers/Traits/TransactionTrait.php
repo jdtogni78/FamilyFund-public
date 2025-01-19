@@ -8,10 +8,7 @@ use App\Models\TransactionExt;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Mail\TransactionMail;
-use App\Http\Resources\AccountResource;
-use App\Http\Resources\AccountBalanceResource;
-use App\Http\Resources\PortfolioAssetResource;
+use App\Mail\TransactionEmail;
 
 trait TransactionTrait
 {
@@ -25,24 +22,20 @@ trait TransactionTrait
         }
         $this->debug('TransactionTrait::createTransaction: ' . json_encode($input));
 
-        $transaction = null;
-        $newBal = null;
-        $oldShares = null;
-        $fundCash = null;
-        $matches = null;
-        $shareValue = null;
-        DB::transaction(function () use ($input, &$transaction, &$newBal, &$oldShares, &$fundCash, &$matches, &$shareValue, $dryRun) {
+        $transaction_data = null;
+        DB::transaction(function () use ($input, &$transaction_data, $dryRun) {
             /* @var TransactionExt $transaction */
             $transaction = $this->transactionRepository->create($input);
-            list($newBal, $oldShares, $fundCash, $matches, $shareValue) = $transaction->processPending();
+            $transaction_data = $transaction->processPending();
             if ($dryRun) {
                 DB::rollBack();
             } else {
-                $api1 = $this->getPreviewData($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue);
-                $this->sendTransactionConfirmation($transaction, $api1);
+                $api1 = $this->getPreviewData($transaction_data);
+                $this->sendTransactionConfirmation($api1);
+                DB::commit();
             }
         });
-        return [$transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue];
+        return $transaction_data;
     }
 
     protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): TransactionExt {
@@ -67,43 +60,36 @@ trait TransactionTrait
         return $newTran;
     }
 
-    protected function getPreviewData($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue) {
-        $newMatches = [];
-        if (isset($matches)) {
-            foreach ($matches as $match) {
-                Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
-                $account = (new AccountResource($match[0][0]->account()->first()))->resolve();
-                $match[0][0] = (new AccountBalanceResource($match[0][0]))->resolve();
-                $match[0][0]['account'] = $account;
-                $match[1] = (new TransactionResource($match[1]))->resolve();
-                $newMatches[] = $match;
+    protected function getPreviewData($transaction_data) {
+        if (isset($transaction_data['matches'])) {
+            foreach ($transaction_data['matches'] as $match) {
+                // Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
+                // must access fields to load
+                $matchTran = $match['transaction'];
+                $matchTran->cashDeposit?->id;
+                $matchTran->depositRequest?->id;
+                $matchTran->referenceTransactionMatching?->id;
+                $matchTran->account?->id;
             }
         }
-        $api1 = [
-            'dry_run' => true,
-            'transaction' => (new TransactionResource($transaction))->resolve(),
-            'newBal' => (new AccountBalanceResource($newBal))->resolve(),
-            'oldShares' => $oldShares,
-            'fundCash' => $fundCash,
-            'mtch' => $newMatches,
-            'shareValue' => $shareValue,
-        ];
-        $api1['transaction']['account'] = (new AccountResource($transaction->account()->first()))->resolve();
-        $api1['newBal']['account'] = (new AccountResource($newBal->account()->first()))->resolve();
-        if (isset($fundCash)) {
-            $api1['fundCash'][0] = (new PortfolioAssetResource($fundCash[0]))->resolve();
-        }
-        // remove created_at and updated_at from api1
-        unset($api1['transaction']['created_at']);
-        unset($api1['transaction']['updated_at']);
-        unset($api1['newBal']['created_at']);
-        unset($api1['newBal']['updated_at']);
-        return $api1;
+
+        $transaction = $transaction_data['transaction'];
+        
+        // load fields to avoid lazy loading
+        $transaction->cashDeposit?->id;
+        $transaction->depositRequest?->id;
+        $transaction->referenceTransactionMatching?->id;
+        $transaction->account?->id;
+        Log::info('TransactionTrait::getPreviewData: balance: ' . json_encode(array_keys($transaction_data)));
+        $transaction_data['balance']?->account?->id;
+
+        return $transaction_data;
     }
 
-    protected function sendTransactionConfirmation($transaction, $api1) {
-        $to = $transaction->account()->get()->first()->email_cc;
-        $tranMail = new TransactionMail($transaction, $api1);
+    protected function sendTransactionConfirmation($transaction_data) {
+        $transaction = $transaction_data['transaction'];
+        $to = $transaction->account->email_cc;
+        $tranMail = new TransactionEmail($transaction_data);
         $this->sendMail($tranMail, $to);
     }
 }

@@ -59,6 +59,10 @@ class TransactionExt extends Transaction
         TransactionExt::FLAGS_NO_MATCH => 'No matching',
     ];
 
+    public function status_string() {
+        return self::$statusMap[$this->status];
+    }
+
     /**
      * @throws \Exception
      */
@@ -100,8 +104,9 @@ class TransactionExt extends Transaction
                 'start_dt' => $timestamp,
                 'end_dt' => '9999-12-31',
             ]);
+        $newBal['oldShares'] = $oldShares;
         $this->debug("NEW BAL " . json_encode($newBal));
-        return [$newBal, $oldShares];
+        return $newBal;
     }
 
     /**
@@ -211,19 +216,25 @@ class TransactionExt extends Transaction
             if ($this->value > 0) $this->value = -$this->value;
             if ($allShares > 0) $allShares = -$allShares;
         }
-        list($newBal, $oldShares) = $this->createBalance($this->shares, $timestamp);
+        $balance = $this->createBalance($this->shares, $timestamp);
 
         $noMatch = $this->flags == TransactionExt::FLAGS_NO_MATCH;
         $createMatch = !($isFundAccount || $noMatch);
         $this->debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
-        $match = null;
+        $matches = [];
         if ($createMatch) {
-            $match = $this->createMatching($account, $verbose, $shareValue, $allShares, $fundAvailableShares, $acctAvailableShares);
+            $matches = $this->createMatching($account, $verbose, $shareValue, $allShares, $fundAvailableShares, $acctAvailableShares);
         }
 
         $this->status = TransactionExt::STATUS_CLEARED;
         $this->save();
-        return [$newBal, $oldShares, $fundCash, $match, $shareValue];
+        return [
+            'transaction' => $this,
+            'balance' => $balance,
+            'fundCash' => $fundCash,
+            'matches' => $matches,
+            'shareValue' => $shareValue,
+        ];
     }
 
     protected function validateBalanceOverlap(mixed $accountBalanceRepo, mixed $account_id, $timestamp): mixed
@@ -235,9 +246,11 @@ class TransactionExt extends Transaction
             ->whereDate('start_dt', '>=', $timestamp);
         $bal2 = $query->first();
         if ($bal2 != null) {
+            $account = $bal2->account()->first();
             Log::error("There is already a balance on this period " . $timestamp .
-                ": " . json_encode($bal2->toArray()));
-            throw new Exception("Cannot add balance at " . $timestamp
+                " for account " . $account->nickname . " (" . $account->id . "): " . json_encode($bal2->toArray()));
+            throw new Exception("Cannot add balance for account " . $account->nickname . " (" . $account->id 
+                . ") at " . $timestamp
                 . " as there is already a balance on this period " . $bal2->id);
         }
 
@@ -272,7 +285,9 @@ class TransactionExt extends Transaction
             if ($bal->start_dt > $timestamp) {
                 Log::error("There is already a balance on this period " . $timestamp .
                     ": " . json_encode($bal->toArray()));
-                throw new Exception("Cannot add balance at " . $timestamp
+                $account = $bal->account()->first();
+                throw new Exception("Cannot add balance for account " . $account->nickname . " (" . $account->id 
+                    . ") at " . $timestamp
                     . " before previous balance " . $bal->start_dt);
             }
         }
@@ -317,7 +332,6 @@ class TransactionExt extends Transaction
 
         $input['type'] = 'MAT';
         $descr = "Match transaction $this->id";
-        $repo = \App::make(TransactionRepository::class);
         $ret = [];
         foreach ($account->accountMatchingRules()->get() as $amr) {
             $matchValue = $amr->match($this);
@@ -338,7 +352,7 @@ class TransactionExt extends Transaction
 
                 $this->debug("MATCHTRAN " . json_encode($input));
                 /** @var TransactionExt $matchTran */
-                $matchTran = $repo->create($input);
+                $matchTran = TransactionExt::create($input);
                 $matchBal = $matchTran->createBalance($matchTran->shares, $matchTran->timestamp);
 
                 $match = TransactionMatching::factory()
@@ -348,7 +362,10 @@ class TransactionExt extends Transaction
                         'reference_transaction_id' => $this->id
                     ]);
 
-                $ret[] = [$matchBal, $matchTran];
+                $ret[] = [
+                    'balance' => $matchBal,
+                    'transaction' => $matchTran,
+                ];
             }
         }
         return $ret;

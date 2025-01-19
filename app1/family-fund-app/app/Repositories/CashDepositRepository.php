@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\CashDeposit;
+use App\Models\CashDepositExt;
 use App\Repositories\BaseRepository;
 
 /**
@@ -40,6 +40,6 @@ class CashDepositRepository extends BaseRepository
      **/
     public function model()
     {
-        return CashDeposit::class;
+        return CashDepositExt::class;
     }
 }

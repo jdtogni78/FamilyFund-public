@@ -24,6 +24,8 @@ class TradePortfolioFactory extends Factory
         return [
             'account_name' => $this->faker->word,
 //            'portfolio_id' => $this->faker->word,
+            'tws_query_id' => $this->faker->word,
+            'tws_token' => $this->faker->word,
             'cash_target' => $this->faker->randomNumber(2)/100,
             'cash_reserve_target' => $this->faker->randomNumber(2)/100,
             'max_single_order' => $this->faker->randomNumber(2)/100,

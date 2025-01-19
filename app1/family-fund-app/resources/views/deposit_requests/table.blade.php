@@ -3,23 +3,25 @@
         <thead>
             <tr>
                 <th>Date</th>
-        <th>Description</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>Account Id</th>
-        <th>Cash Deposit Id</th>
-        <th>Transaction Id</th>
-                <th colspan="3">Action</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Account Id</th>
+                <th>Account</th>
+                <th>Cash Deposit Id</th>
+                <th>Transaction Id</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($depositRequests as $depositRequest)
             <tr>
-                <td>{{ $depositRequest->date }}</td>
+            <td>{{ $depositRequest->date ? $depositRequest->date->format('Y-m-d') : 'N/A' }}</td>
             <td>{{ $depositRequest->description }}</td>
-            <td>{{ $depositRequest->amount }}</td>
-            <td>{{ $depositRequest->status }}</td>
+            <td>${{ number_format($depositRequest->amount, 2) }}</td>
+            <td>{{ $depositRequest->status_string() }}</td>
             <td>{{ $depositRequest->account_id }}</td>
+            <td>{{ $depositRequest->account->nickname }}</td>
             <td>{{ $depositRequest->cash_deposit_id }}</td>
             <td>{{ $depositRequest->transaction_id }}</td>
                 <td>
@@ -36,3 +38,11 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#depositRequests-table').DataTable();
+        });
+    </script>
+@endpush

@@ -13,7 +13,7 @@ class CashDepositFactory extends Factory
      *
      * @var string
      */
-    protected $model = CashDeposit::class;
+    protected $model = CashDepositExt::class;
 
     /**
      * Define the model's default state.

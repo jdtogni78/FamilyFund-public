@@ -20,6 +20,26 @@
         </p>
     </div>
 
+    <!-- TWS Query Id Field -->
+    <div class="form-group  col-sm-6">
+        {!! Form::label('tws_query_id', 'TWS Query Id:') !!}
+        <p>{{ $api['old']->tws_query_id }}
+            @if(isset($api['new']) && $api['new']['tws_query_id'] != $api['old']['tws_query_id'])
+                -> <span class="text-success">{{ $api['new']['tws_query_id'] }}</span>
+            @endif
+        </p>
+    </div>
+
+    <!-- TWS Token Field -->
+    <div class="form-group  col-sm-6">
+        {!! Form::label('tws_token', 'TWS Token:') !!}
+        <p>{{ $api['old']->tws_token }}
+            @if(isset($api['new']) && $api['new']['tws_token'] != $api['old']['tws_token'])
+                -> <span class="text-success">{{ $api['new']['tws_token'] }}</span>
+            @endif
+        </p>
+    </div>
+
     <!-- Fund Name Field -->
     <div class="form-group  col-sm-6">
         {!! Form::label('portfolio_name', 'Portfolio Source:') !!}

@@ -28,7 +28,7 @@
 <!-- Value Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('amount', 'Amount:') !!}
-    {!! Form::number('amount', null, ['class' => 'form-control','min' => 0]) !!}
+    {!! Form::number('amount', null, ['class' => 'form-control','min' => 0, 'step' => '0.01']) !!}
 </div>
 
 <!-- Status Field -->

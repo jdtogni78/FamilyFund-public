@@ -23,18 +23,10 @@ class DepositRequestControllerExt extends DepositRequestController
 
     private function getApi()
     {
-        $statusMap = DepositRequestExt::statusMap();
         $accountMap = AccountExt::accountMap();
         return [
-            'statusMap' => $statusMap,
             'accountMap' => $accountMap,
         ];
-    }
-
-    public function show($id)
-    {
-        $api = $this->getApi();
-        return parent::show($id)->with('api', $api);
     }
 
     public function edit($id)

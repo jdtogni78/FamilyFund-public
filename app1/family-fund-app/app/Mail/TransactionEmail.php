@@ -6,12 +6,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class TransactionMail extends Mailable
+class TransactionEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $transaction;
-    public $api1;
+    public $transaction_data;
     public $to;
 
     /**
@@ -19,10 +18,9 @@ class TransactionMail extends Mailable
      *
      * @return void
      */
-    public function __construct($transaction, $api1)
+    public function __construct($transaction_data)
     {
-        $this->transaction = $transaction;
-        $this->api1 = $api1;
+        $this->transaction_data = $transaction_data;
     }
 
     /**
@@ -33,13 +31,13 @@ class TransactionMail extends Mailable
     public function build()
     {
         $arr = [
-            'to' => $this->transaction->account()->get()->first()->user()->get()->first()->name,
+            'to' => $this->transaction_data['transaction']->account->email_cc,
             'report_name' => 'Transaction Confirmation',
         ];
 
         return $this->view('emails.transaction')
             ->with("api", $arr)
-            ->with("api1", $this->api1)
+            ->with("api1", $this->transaction_data)
             ->subject("Transaction Confirmation");
     }
 }

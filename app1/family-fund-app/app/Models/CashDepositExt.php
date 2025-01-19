@@ -20,4 +20,8 @@ class CashDepositExt extends CashDeposit
             self::STATUS_CANCELLED => 'Cancelled',
         ];
     }
+
+    public function status_string() {
+        return self::statusMap()[$this->status];
+    }
 }

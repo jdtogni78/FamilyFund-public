@@ -19,6 +19,8 @@ class TradePortfolioRepository extends BaseRepository
     protected $fieldSearchable = [
         'account_name',
         'portfolio_id',
+        'tws_query_id',
+        'tws_token',
         'cash_target',
         'cash_reserve_target',
         'max_single_order',

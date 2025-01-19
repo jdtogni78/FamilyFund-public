@@ -54,7 +54,11 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('cashDeposits.assign');
     Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
             ->name('cashDeposits.do_assign');
-
+    Route::get('tradePortfolios/{id}/preview_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@previewCashDeposits')
+        ->name('tradePortfolios.preview_deposits');
+    Route::post('tradePortfolios/{id}/do_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doCashDeposits')
+        ->name('tradePortfolios.do_deposits');
+        
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);

@@ -12,7 +12,9 @@
             <th>Account Nickname</th>
             <th>Descr</th>
             <th>Flags</th>
+            <th>Matched by</th>
             <th>Scheduled Job Id</th>
+
             <th>Action</th>
         </tr>
         </thead>
@@ -29,6 +31,7 @@
                 <td>{{ $transaction->account->nickname }}</td>
                 <td>{{ $transaction->descr }}</td>
                 <td>{{ $transaction->flags }}</td>
+                <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
                 <td>{{ $transaction->scheduled_job_id }}</td>
                 <td>
                     {!! Form::open(['route' => ['transactions.destroy', $transaction->id], 'method' => 'delete']) !!}

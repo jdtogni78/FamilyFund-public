@@ -23,7 +23,7 @@
 </div>
 
 <!-- Timestamp Field -->
-<div class="form-group col-sm-6">
+<div class="form-group col-sm6">
     {!! Form::label('timestamp', 'Timestamp:') !!}
     {!! Form::date('timestamp', null, ['class' => 'form-control', 'id' => 'timestamp']) !!}
 </div>
@@ -146,11 +146,6 @@
     {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255]) !!}
 </div>
 
-<!-- Scheduled Job Id Field -->
-{{--<div class="form-group col-sm-6">--}}
-{{--    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}--}}
-{{--    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}--}}
-{{--</div>--}}
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">

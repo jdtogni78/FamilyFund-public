@@ -82,12 +82,12 @@ class AccountMatchingRuleExt extends AccountMatchingRule
                 $account = $this->account()->first();
                 // I could have used the "used" value, but when is first time we gotta calculate
                 $deposits = $account->depositedValueBetween($mr->date_start, $mr->date_end);
-                $applicable = $this->applicableValue($deposits, $tranToMatch->value);
-                $matchValue = $applicable * ($mr->match_percent / 100.0);
+                $applicable = round($this->applicableValue($deposits, $tranToMatch->value), 2);
+                $matchValue = round($applicable * ($mr->match_percent / 100.0), 2);
                 $this->debug("match: " . json_encode([$used, $possible, $deposits, $applicable,
                             $tranToMatch->value, $tranToMatch->id, $matchValue]));
                 if ($applicable > $tranToMatch->value) {
-                    throw new Exception("Matching more than the transaction value: tran id " + $tranToMatch->id);
+                    throw new Exception("Matching ({$matchValue}) more than the transaction value: ({$tranToMatch->value}) tran id " . $tranToMatch->id);
                 }
                 return $matchValue;
             }

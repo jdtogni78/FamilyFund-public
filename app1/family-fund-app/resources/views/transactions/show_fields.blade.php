@@ -52,3 +52,15 @@
     <p>{{ $transaction->scheduled_job_id }}</p>
 </div>
 
+<!-- Cash Deposit Id Field -->
+<div class="form-group">
+    {!! Form::label('cash_deposit_id', 'Cash Deposit Id:') !!}
+    <p>{{ $transaction->cashDeposit?->id }}</p>
+</div> 
+
+<!-- Deposit Request Id Field -->
+<div class="form-group">
+    {!! Form::label('deposit_request_id', 'Deposit Request Id:') !!}
+    <p>{{ $transaction->depositRequest?->id }}</p>
+</div> 
+

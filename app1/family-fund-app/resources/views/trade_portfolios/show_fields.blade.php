@@ -18,6 +18,18 @@
         <p>{{ $api['portfolio']['source'] }}</p>
     </div>
 
+    <!-- TWS Query Id Field -->
+    <div class="form-group  col-sm-6">
+        {!! Form::label('tws_query_id', 'TWS Query Id:') !!}
+        <p>{{ $tradePortfolio->tws_query_id }}</p>
+    </div>
+
+    <!-- TWS Token Field -->
+    <div class="form-group  col-sm-6">
+        {!! Form::label('tws_token', 'TWS Token:') !!}
+        <p>{{ $tradePortfolio->tws_token }}</p>
+    </div>
+
     @include('trade_portfolios.show_dates')
 
     <!-- Cash Target Field -->

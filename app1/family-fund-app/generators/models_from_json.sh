@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-data_models="CashDeposit"
+data_models=("TradePortfolio")
 for model in $data_models; do
+    echo "Generating ${model}..."
     # docker exec familyfund \
         php artisan infyom:scaffold ${model} \
         --fieldsFile resources/model_schemas/${model}.json \

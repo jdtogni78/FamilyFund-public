@@ -63,7 +63,7 @@ class TransactionControllerExt extends TransactionController
         $tran_status = $input['status'];
 
         try {
-            list($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue) = $this->createTransaction($input);
+            $transaction_data = $this->createTransaction($input);
         } catch (Exception $e) {
             Log::error('TransactionControllerExt::preview: error: ' . $e->getMessage());
             Log::error($e);
@@ -72,8 +72,9 @@ class TransactionControllerExt extends TransactionController
         }
 
         Log::info('TransactionControllerExt::preview: input: ' . json_encode($input));
-        $transaction->status = $tran_status;
-        $api1 = $this->getPreviewData($transaction, $newBal, $oldShares, $fundCash, $matches, $shareValue);
+        $transaction_data['transaction']->status = $tran_status;
+        $api1 = $this->getPreviewData($transaction_data);
+        $api1['dry_run'] = true;
 
         Log::info('TransactionControllerExt::preview: api: ' . json_encode($api1));
         return view('transactions.preview')

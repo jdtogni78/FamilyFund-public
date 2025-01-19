@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\CashDepositExt;
 use App\Models\Account;
 use App\Models\DepositRequestExt;
+use App\Http\Requests\AssignDepositRequestsRequest;
 
 class CashDepositTratTest extends TestCase
 {
@@ -203,5 +204,42 @@ class CashDepositTratTest extends TestCase
         $this->assertEquals(0, count($data));
     }
 
+    public function test_assign_cash_deposit() {
+        $cd = $this->factory->createCashDeposit(96.83);
+        $cd->status = CashDepositExt::STATUS_PENDING;
+        $cd->date = null;
+        $cd->save();
+        
+        $user1 = $this->factory->createUser();
+        $user2 = $this->factory->createUser();
+
+        $request = new AssignDepositRequestsRequest();
+        $request->unassigned = 36.80;
+        $request->deposits = [
+            ['amount' => 30.01, 'account_id' => $user1->accounts[0]->id],
+        ];
+        try {
+            $this->assignCashDeposit($cd->id, $request);
+        } catch (\Exception $e) {
+            $this->assertEquals('Total amount of deposit requests (66.81) does not match the '
+                . 'cash deposit amount (96.83)', $e->getMessage());
+        }
+        $cd = CashDepositExt::find($cd->id);
+        $this->assertEquals(CashDepositExt::STATUS_PENDING, $cd->status);
+
+        $request->deposits = [
+            ['amount' => 30.01, 'account_id' => $user1->accounts[0]->id],
+            ['amount' => 30.02, 'account_id' => $user2->accounts[0]->id],
+        ];
+
+        $this->assignCashDeposit($cd->id, $request);
+        $cd = CashDepositExt::find($cd->id);
+        $this->assertEquals(CashDepositExt::STATUS_ALLOCATED, $cd->status);
+        $this->assertEquals(30.01, $cd->depositRequests[0]->amount);
+        $this->assertEquals($user1->accounts[0]->id, $cd->depositRequests[0]->account_id);
+        $this->assertEquals(30.02, $cd->depositRequests[1]->amount);
+        $this->assertEquals($user2->accounts[0]->id, $cd->depositRequests[1]->account_id);
+    }
 }
+
 

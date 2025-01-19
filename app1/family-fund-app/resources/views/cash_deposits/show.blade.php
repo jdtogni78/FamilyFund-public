@@ -23,15 +23,42 @@
                          </div>
                      </div>
                  </div>
-                 @isset($cashDeposit->transaction_id)
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <strong>Transaction</strong>
+                 @isset($cashDeposit->depositRequests)
+                 <div class="row">
+                     <div class="col-lg-12">
+                         <div class="card">
+                             <div class="card-header">
+                                 <strong>Deposit Requests</strong>
+                            </div>
+                            <div class="card-body">
+                                @include('deposit_requests.table', ['depositRequests' => $cashDeposit->depositRequests])
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endisset
+                @php
+                    $depTrans = [];
+                    foreach ($cashDeposit?->depositRequests as $dr) {
+                        if ($dr->transaction) $depTrans[] = $dr->transaction;
+                    }
+                    $transactions = [];
+                    if ($cashDeposit->transaction?->id) {
+                        $transactions[] = $cashDeposit->transaction;
+                    }
+                    if (count($depTrans) > 0) {
+                        $transactions = array_merge($transactions, $depTrans);
+                    }
+                @endphp
+                @isset($transactions)
+                 <div class="row">
+                     <div class="col-lg-12">
+                         <div class="card">
+                             <div class="card-header">
+                                 <strong>Transaction</strong>
                                 </div>
                                 <div class="card-body">
-                                    @include('transactions.show_fields', ['transaction' => $cashDeposit->transaction])
+                                    @include('transactions.table', ['transactions' => $transactions])
                                 </div>
                             </div>
                         </div>

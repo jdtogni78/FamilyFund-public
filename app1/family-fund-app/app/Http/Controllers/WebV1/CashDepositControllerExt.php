@@ -16,6 +16,8 @@ use App\Models\CashDeposit;
 use App\Models\DepositRequestExt;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Traits\CashDepositTrait;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\MessageBag;
 
 class CashDepositControllerExt extends CashDepositController
 {
@@ -30,9 +32,8 @@ class CashDepositControllerExt extends CashDepositController
     public function getApi()
     {
         $api = [];
-        $api['statusMap'] = CashDepositExt::statusMap();
         $api['fundAccountMap'] = AccountExt::fundAccountMap();
-        $api['accountMap'] = AccountExt::accountMap();
+        $api['statusMap'] = CashDepositExt::statusMap();
         return $api;
     }
 
@@ -74,7 +75,9 @@ class CashDepositControllerExt extends CashDepositController
         try {
             $this->assignCashDeposit($id, $request);
         } catch (\Exception $e) {
-            return redirect()->route('cashDeposits.assign', $id)->with('error', $e->getMessage());
+            Log::error($e->getMessage());
+            return redirect()->route('cashDeposits.assign', $id)
+                ->withErrors(new MessageBag(['error' => $e->getMessage()]));
         }
         
         return redirect()->route('cashDeposits.index');

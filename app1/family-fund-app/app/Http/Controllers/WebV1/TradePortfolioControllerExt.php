@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\Traits\VerboseTrait;
+use App\Http\Controllers\Traits\MailTrait;
+use App\Http\Controllers\Traits\CashDepositTrait;
+
 use App\Http\Requests\SplitTradePortfolioRequest;
 use App\Http\Resources\PortfolioAssetResource;
 use App\Models\AssetExt;
@@ -20,12 +23,16 @@ use Mockery\Exception;
 use Response;
 use App\Http\Controllers\TradePortfolioController;
 use Symfony\Component\HttpFoundation\Request;
-use App\Http\Controllers\Traits\MailTrait;
 use App\Mail\TradePortfolioAnnouncementMail;
+use Illuminate\Support\MessageBag;
+use App\Models\CashDepositExt;
+use App\Models\AccountExt;
+use App\Models\TransactionExt;
+use App\Http\Controllers\Traits\TransactionTrait;
 
 class TradePortfolioControllerExt extends TradePortfolioController
 {
-    use VerboseTrait, MailTrait;
+    use VerboseTrait, MailTrait, CashDepositTrait, TransactionTrait;
 
     public function __construct(TradePortfolioRepository $tradePortfolioRepo)
     {
@@ -293,4 +300,30 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $api['api'] = $api;
         return $api;
     }
+
+    public function previewCashDeposits($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+        $data = $this->executeCashDeposits($tradePortfolio, true);
+        $errors = $data['errors'];
+        $api = [
+            'accountMap' => AccountExt::accountMap(),
+        ];
+
+        return view('cash_deposits.preview')
+            ->with('data', $data)
+            ->with('api', $api)
+            ->with('tradePortfolio', $tradePortfolio)
+            ->withErrors(new MessageBag($errors));
+    }
+    
+    public function doCashDeposits($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+        $ret = $this->executeCashDeposits($tradePortfolio, false);
+        $errors = $ret['errors'];
+        return redirect(route('tradePortfolios.index'))
+            ->withErrors(new MessageBag($errors));
+    }
+
 }

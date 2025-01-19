@@ -10,6 +10,18 @@
     {!! Form::number('portfolio_id', $portfolio_id ?? null, ['class' => 'form-control']) !!}
 </div>
 
+<!-- TWS Query Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('tws_query_id', 'TWS Query Id:') !!}
+    {!! Form::text('tws_query_id', null, ['class' => 'form-control', 'maxlength' => 50]) !!}
+</div>
+
+<!-- TWS Token Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('tws_token', 'TWS Token:') !!}
+    {!! Form::text('tws_token', null, ['class' => 'form-control', 'maxlength' => 100]) !!}
+</div>
+
 @include('trade_portfolios.edit_dates')
 
 <!-- Cash Target Field -->

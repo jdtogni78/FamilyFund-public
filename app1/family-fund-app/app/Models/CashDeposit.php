@@ -87,6 +87,9 @@ class CashDeposit extends Model
         return $this->belongsTo(\App\Models\AccountExt::class, 'account_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
     public function depositRequests()
     {
         return $this->hasMany(\App\Models\DepositRequestExt::class, 'cash_deposit_id');

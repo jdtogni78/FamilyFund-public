@@ -26,12 +26,13 @@ class AssignDepositRequestsRequest extends FormRequest
     {
         $rules = [];
         $rules['unassigned'] = 'required|numeric|min:0';
-        $rules['deposits']               = 'required|array';
-        $rules['deposits.*.description'] = 'nullable|string';
-        $rules['deposits.*.amount']      = 'required|numeric|min:0';
-        $rules['deposits.*.account_id']  = 'required|exists:accounts,id';
-        $rules['deposit_ids']   = 'required|array';
-        $rules['deposit_ids.*'] = 'required|exists:deposit_requests,id';
+        $rules['deposit_ids.*'] = 'nullable|exists:deposit_requests,id';
+        
+        foreach ($this->input('deposits', []) as $key => $deposit) {
+            $rules['deposits.*.description'] = 'nullable|string';
+            $rules['deposits.*.amount']      = 'required|numeric|min:0.01';
+            $rules['deposits.*.account_id']  = 'required|exists:accounts,id';
+        }
         return $rules;
     }
 }

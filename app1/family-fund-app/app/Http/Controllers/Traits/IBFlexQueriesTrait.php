@@ -29,13 +29,15 @@ trait IBFlexQueriesTrait
         </FlexStatementResponse>
     */
 
-    public function getIBFlexQuery($queryId, $token, $url) {
+    public function getIBFlexQueryBaseUrl() {
+        return 'https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/SendRequest?t=TTT&q=QQQ&v=3';
+    }
+
+    public function getIBFlexQuery($queryId, $token) {
         // request the flex query executin from TWS
         // https://www.ibkrguides.com/clientportal/performanceandstatements/flex-web-service.htm
-        $url = $this->getIBFlexQueryUrl($queryId, $token, $url);
-        print_r($url);
+        $url = $this->getIBFlexQueryUrl($queryId, $token);
         $response = Http::get($url);
-        print_r($response->body());
         // parse the response xml   
         $xml = simplexml_load_string($response->body());
         if ($xml->Status == 'Fail') {
@@ -43,9 +45,7 @@ trait IBFlexQueriesTrait
         }
 
         $url = (string)$xml->Url . '?&t=' . $token . '&q=' . $xml->ReferenceCode . '&v=3';
-        print_r($url);
         $response = Http::get($url);
-        print_r($response->body());
         if ($response->status() != 200) {
             $xml = simplexml_load_string($response->body());
             throw new \Exception('IBFlex query generation failed: ' . $xml->ErrorCode . ' - ' . $xml->ErrorMessage);
@@ -54,8 +54,8 @@ trait IBFlexQueriesTrait
         return $response;
     }
 
-    public function getIBFlexQueryUrl($queryId, $token, $url) {
-        $url = str_replace('TTT', $token, $url);
+    public function getIBFlexQueryUrl($queryId, $token) {
+        $url = str_replace('TTT', $token, $this->getIBFlexQueryBaseUrl());
         $url = str_replace('QQQ', $queryId, $url);
         return $url;
     }

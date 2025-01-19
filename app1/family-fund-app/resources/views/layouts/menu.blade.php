@@ -80,12 +80,6 @@
                 <span>Deposit Requests</span>
             </a>
         </li>
-        <li class="nav-item {{ Request::is('cashDeposits*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('cashDeposits.index') }}">
-                <i class="nav-icon fa fa-upload"></i>
-                <span>Cash Deposits</span>
-            </a>
-        </li>
     </ul>
 </li>
 <li class="nav-item nav-dropdown {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
@@ -99,6 +93,12 @@
             <a class="nav-link" href="{{ route('tradePortfolios.index') }}">
                 <i class="nav-icon fa fa-exchange"></i>
                 <span>Trade Portfolios</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('cashDeposits*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('cashDeposits.index') }}">
+                <i class="nav-icon fa fa-download"></i>
+                <span>Cash Deposits</span>
             </a>
         </li>
         <li class="nav-item {{ Request::is('tradePortfolioItems*') ? 'active' : '' }}">

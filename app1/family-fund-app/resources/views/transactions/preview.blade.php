@@ -34,41 +34,44 @@
                                 </ul>
                                 @endif
 
-                                @if(null !== $api1['newBal'])
-                                    <h6>Balance Change for {{ $api1['newBal']['account']['nickname'] }}:</h6>
+                                @if(null !== $api1['balance'])
+                                    @php($balance = $api1['newBal'])
+                                    <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($api1['oldShares'], 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance['oldShares'], 4) }}</span>
                                             -> 
-                                            <span class="text-success">{{ number_format($api1['newBal']['shares'], 4) }}</span>
-                                            <span class="text-primary">({{ number_format($api1['newBal']['shares'] - $api1['oldShares'], 4) }})</span>
+                                            <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance['oldShares'], 4) }})</span>
                                         </li>
-                                        <li>Effective Date: {{ $api1['newBal']['start_dt'] }}</li>
+                                        <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
                                 @endif
 
-                                @if(null !== $api1['mtch'])
-                                    @foreach($api1['mtch'] as $mtch_arr)
+                                @if(null !== $api1['matches'])
+                                    @foreach($api1['matches'] as $match)
+                                    @php($transaction = $match['transaction'])
+                                    @php($balance = $match['balance'])
                                     <h6>Matching Transaction:</h6>
                                     <ul>
-                                        <li>Description: {{ $mtch_arr[1]['descr'] }}</li>
-                                        <li>Value: ${{ number_format($mtch_arr[1]['value'], 2) }}</li>
-                                        <li>Shares: {{ number_format($mtch_arr[1]['shares'], 4) }}
+                                        <li>Description: {{ $transaction['descr'] }}</li>
+                                        <li>Value: ${{ number_format($transaction['value'], 2) }}</li>
+                                        <li>Shares: {{ number_format($transaction['shares'], 4) }}
                                             <span class="text-primary">
-                                                ({{ $mtch_arr[1]['shares'] }} * ${{ number_format($api1['shareValue'], 2) }} =
-                                                ${{ number_format($mtch_arr[1]['shares'] * $api1['shareValue'], 2) }})</span>
+                                                ({{ $transaction['shares'] }} * ${{ number_format($api1['shareValue'], 2) }} =
+                                                ${{ number_format($transaction['shares'] * $api1['shareValue'], 2) }})</span>
                                         </li>
                                     </ul>
 
-                                    <h6>Balance Change for {{ $mtch_arr[0][0]['account']['nickname'] }}:</h6>
+                                    <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($mtch_arr[0][1], 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance['oldShares'], 4) }}</span>
                                             -> 
-                                            <span class="text-success">{{ number_format($mtch_arr[0][0]['shares'], 4) }}</span>
-                                            <span class="text-primary">({{ number_format($mtch_arr[0][0]['shares'] - $mtch_arr[0][1], 4) }})</span>
+                                            <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance['oldShares'], 4) }})</span>
                                         </li>
-                                        <li>Effective Date: {{ $mtch_arr[0][0]['start_dt'] }}</li>
+                                        <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
                                     @endforeach
                                 @endif

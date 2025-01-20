@@ -23,7 +23,8 @@ trait TransactionTrait
         $this->debug('TransactionTrait::createTransaction: ' . json_encode($input));
 
         $transaction_data = null;
-        DB::transaction(function () use ($input, &$transaction_data, $dryRun) {
+        DB::beginTransaction();
+        try {
             /** @var TransactionExt $transaction */
             $transaction = $this->transactionRepository->create($input);
             $transaction_data = $transaction->processPending();
@@ -33,7 +34,11 @@ trait TransactionTrait
                 $api1 = $this->getPreviewData($transaction_data);
                 $this->sendTransactionConfirmation($api1);
             }
-        });
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+        DB::commit();
         return $transaction_data;
     }
 

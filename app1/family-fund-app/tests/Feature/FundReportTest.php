@@ -2,6 +2,7 @@
 namespace Tests\Feature;
 
 use App\Mail\FundQuarterlyReport;
+use App\Mail\FundReportEmail;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
@@ -38,8 +39,8 @@ class FundReportTest extends TestCase
 
         Mail::fake();
         $this->postAPI();
-        Mail::assertSent(FundQuarterlyReport::class, function ($mail) use ($email, $fund) {
-            return $mail->fund->id === $fund->id &&
+        Mail::assertSent(FundReportEmail::class, function ($mail) use ($email, $fund) {
+            return $mail->fundReport->fund->id === $fund->id &&
                 $mail->hasTo($email);
         });
 
@@ -49,7 +50,7 @@ class FundReportTest extends TestCase
 
         Mail::fake();
         $this->postAPI('ADM', Response::HTTP_UNPROCESSABLE_ENTITY);
-        Mail::assertNotSent(FundQuarterlyReport::class);
+        Mail::assertNotSent(FundReportEmail::class);
 
 
         Mail::fake();
@@ -57,13 +58,13 @@ class FundReportTest extends TestCase
         $factory->userAccount->email_cc = null;
         $factory->userAccount->save();
         $this->postAPI('ALL', Response::HTTP_UNPROCESSABLE_ENTITY);
-        Mail::assertNotSent(FundQuarterlyReport::class);
+        Mail::assertNotSent(FundReportEmail::class);
 
         Mail::fake();
         $factory->userAccount->email_cc = $email;
         $factory->userAccount->save();
         $this->postAPI('ALL');
-        Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email, $fund));
+        Mail::assertSent(FundReportEmail::class, $this->validateEmail($email, $fund));
 
 
         Mail::fake();
@@ -72,8 +73,8 @@ class FundReportTest extends TestCase
         $email2 = $factory->userAccount->email_cc;
         $factory->createTransactionWithMatching();
         $this->postAPI('ALL');
-        Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email, $fund));
-        Mail::assertSent(FundQuarterlyReport::class, $this->validateEmail($email2, $fund));
+        Mail::assertSent(FundReportEmail::class, $this->validateEmail($email, $fund));
+        Mail::assertSent(FundReportEmail::class, $this->validateEmail($email2, $fund));
     }
 
     protected function postAPI($type = 'ADM', $code=200): mixed
@@ -106,7 +107,7 @@ class FundReportTest extends TestCase
     public function validateEmail($email, $fund): \Closure
     {
         return function ($mail) use ($email, $fund) {
-            return $mail->fund->id === $fund->id &&
+            return $mail->fundReport->fund->id === $fund->id &&
                 $mail->hasTo($email);
         };
     }

@@ -180,7 +180,7 @@ class DataFactory
 
     public function makeTransaction($value=100, $account=null, $type=TransactionExt::TYPE_PURCHASE,
                                     $status=TransactionExt::STATUS_PENDING, $flags=null, $timestamp=null, $shares=null) {
-        Log::debug("makeTransaction: " . json_encode($account) . " " . $type . " " . $status . " " . $value . " " . $flags . " " . $timestamp . " " . $shares);
+        $this->debug("makeTransaction: " . json_encode($account) . " " . $type . " " . $status . " " . $value . " " . $flags . " " . $timestamp . " " . $shares);
         if ($account == null) {
             if (count($this->userAccounts) > $this->userNum) {
                 $account = $this->userAccounts[$this->userNum];
@@ -375,6 +375,7 @@ class DataFactory
 
     public function dumpBalances()
     {
+        Log::debug("dumpBalances");
         $accounts = array_merge([$this->fundAccount], $this->userAccounts);
         Log::debug("[BALANCES]\n");
         foreach ($accounts as $account) {

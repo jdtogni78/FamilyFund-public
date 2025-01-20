@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Traits;
 
 use App\Models\ScheduledJob;
 use App\Models\ScheduledJobExt;
-use App\Repositories\ScheduledJobRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -13,10 +12,6 @@ Trait ScheduledJobTrait
 {
     use FundTrait, TransactionTrait, VerboseTrait;
     private $handlers = [];
-
-    public function __construct() {
-        $this->setupHandlers();
-    }
 
     public function setupHandlers()
     {
@@ -39,7 +34,7 @@ Trait ScheduledJobTrait
             if ($model !== null) $ret[] = $model;
             if ($error !== null) $errors[] = $error;
         }
-        return array($ret, $errors);
+        return [$ret, $errors];
     }
 
     private function scheduleDueJob($asOf, ScheduledJob $schedule, $entityDescrFilter=null) {
@@ -73,6 +68,7 @@ Trait ScheduledJobTrait
 
     private function scheduleDue($shouldRunByDate, ScheduledJob $schedule, Carbon $asOf): ?Model
     {
+        $this->setupHandlers();
         $func = $this->handlers[$schedule->entity_descr];
         return $this->$func($shouldRunByDate, $schedule, $asOf);
     }

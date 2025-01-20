@@ -69,6 +69,7 @@ trait ApiTestTrait
 
     public function assertModelData(Array $expectedData, Array $actualData, Array $ignoredKeys, $path)
     {
+        Log::debug("assertModelData: " . json_encode($expectedData) . " " . json_encode($actualData) . " " . json_encode($ignoredKeys) . " " . $path);
         $all_keys = array_diff(
             array_merge(array_keys($actualData), array_keys($expectedData)),
             $ignoredKeys);

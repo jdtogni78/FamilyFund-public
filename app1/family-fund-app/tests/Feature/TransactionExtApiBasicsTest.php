@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\TransactionEmail;
 use App\Models\TransactionExt;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -12,6 +13,7 @@ use Tests\ApiTestTrait;
 use App\Models\Transaction;
 use App\Models\TransactionMatching;
 use DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\DataFactory;
 
 class TransactionExtApiBasicsTest extends TestCase
@@ -46,11 +48,12 @@ class TransactionExtApiBasicsTest extends TestCase
 
         $url = '/api/transactions';
         if ($this->verbose) Log::debug("*** $url " .json_encode($tranArr));
+        Mail::fake();
         $this->response = $this->json(
             'POST',
             $url, $tranArr
         );
-
+        Mail::assertSent(TransactionEmail::class);
         if ($this->verbose) Log::debug($this->response->getContent());
         $tranArr['status'] = $status;
         $tranArr['shares'] = $shares;
@@ -85,7 +88,8 @@ class TransactionExtApiBasicsTest extends TestCase
 
         foreach($data['trans'] as $dtran) {
             if ($this->verbose) Log::debug("*** " .json_encode($dtran));
-            $transaction = $factory->makeTransaction($dtran['value'], null, TransactionExt::TYPE_PURCHASE, 'P', null, new Carbon());
+            $timestamp = Carbon::now()->subDays(1);
+            $transaction = $factory->makeTransaction($dtran['value'], null, TransactionExt::TYPE_PURCHASE, 'P', null, $timestamp);
             $this->postTransaction($transaction, $dtran['shares']);
 
             $response = json_decode($this->response->getContent(), true);

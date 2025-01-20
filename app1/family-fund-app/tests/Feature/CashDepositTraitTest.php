@@ -22,8 +22,9 @@ use App\Models\CashDepositExt;
 use App\Models\Account;
 use App\Models\DepositRequestExt;
 use App\Http\Requests\AssignDepositRequestsRequest;
+use Illuminate\Support\Arr;
 
-class CashDepositTratTest extends TestCase
+class CashDepositTraitTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
     use CashDepositTrait;
@@ -106,29 +107,35 @@ class CashDepositTratTest extends TestCase
         $this->assertEquals('DETAIL', $data[0]['LevelOfDetail']);
     }
 
-    public function assert_sample_csv1($successes, $errors, $data) {
+    public function assert_sample_csv1($data) {
+        $errors = $data['errors'];
         $this->assertEquals(1, count($errors));
         $this->assertEquals('Trade portfolio not found for fund account: U0000002', $errors[0]);
+        $successes = $data['successes'];
         $this->assertEquals(1, count($successes));
 
-        $this->assertEquals('2025-01-13', $data['cash_deposit']->date->format('Y-m-d'));
-        $this->assertEquals(96.83, $data['cash_deposit']->amount);
-        $this->assertEquals('30868684949 - FROM WISE US INC', $data['cash_deposit']->description);
-        $this->assertEquals($this->factory->fundAccount->id, $data['cash_deposit']->account_id);
-
-        $this->assertEquals('2025-01-13', $data['transaction']->timestamp->format('Y-m-d'));
-        $this->assertEquals(96.83, $data['transaction']->value);
-        $this->assertEquals(TransactionExt::TYPE_PURCHASE, $data['transaction']->type);
-        $this->assertEquals(TransactionExt::FLAGS_CASH_ADDED, $data['transaction']->flags);
-        $this->assertEquals('Cash Deposit ' . $data['cash_deposit']->id, $data['transaction']->descr);
-        $this->assertEquals(TransactionExt::STATUS_CLEARED, $data['transaction']->status);
-        $this->assertEquals($this->factory->fundAccount->id, $data['transaction']->account_id);
+        $cashDeposit = $data['data'][0]['cash_deposit'];
+        $this->assertEquals('2025-01-13', $cashDeposit->date->format('Y-m-d'));
+        $this->assertEquals(96.83, $cashDeposit->amount);
+        $this->assertEquals('30868684949 - FROM WISE US INC', $cashDeposit->description);
+        $this->assertEquals($this->factory->fundAccount->id, $cashDeposit->account_id);
+        
+        $transactions = $data['transactions'];
+        // get last transaction
+        $transaction = Arr::last($transactions)['transaction'];
+        $this->assertEquals('2025-01-13', $transaction->timestamp->format('Y-m-d'));
+        $this->assertEquals(96.83, $transaction->value);
+        $this->assertEquals(TransactionExt::TYPE_PURCHASE, $transaction->type);
+        $this->assertEquals(TransactionExt::FLAGS_CASH_ADDED, $transaction->flags);
+        $this->assertEquals('Cash Deposit ' . $cashDeposit->id, $transaction->descr);
+        $this->assertEquals(TransactionExt::STATUS_CLEARED, $transaction->status);
+        $this->assertEquals($this->factory->fundAccount->id, $transaction->account_id);
     }
 
     public function test_parse_cash_deposit() {
-        list($successes, $errors, $data) = $this->parseCashDepositString($this->sample_csv1());
-        $this->assert_sample_csv1($successes, $errors, $data[0]);
-        $this->assertEquals(CashDepositExt::STATUS_DEPOSITED, $data[0]['cash_deposit']->status);
+        $data = $this->parseCashDepositString($this->sample_csv1());
+        $this->assert_sample_csv1($data);
+        $this->assertEquals(CashDepositExt::STATUS_DEPOSITED, $data['data'][0]['cash_deposit']->status);
     }
 
 
@@ -159,18 +166,19 @@ class CashDepositTratTest extends TestCase
         $dr5->save();
 
         $str = $this->sample_csv1();        
-        list($successes, $errors, $data) = $this->parseCashDepositString($str);
-        $this->assert_sample_csv1($successes, $errors, $data[0]);
-        $this->assertEquals(CashDepositExt::STATUS_COMPLETED, $data[0]['cash_deposit']->status);
+        $data = $this->parseCashDepositString($str);
+        
+        $this->assert_sample_csv1($data);
+        $data = $data['data'][0];
+        $this->assertEquals(CashDepositExt::STATUS_COMPLETED, $data['cash_deposit']->status);
 
-        $deposits = $data[0]['deposits'];
-        $totalAmount = $deposits[1];
+        $deposits = $data['deposits'];
+        $totalAmount = $data['total_deposits'];
         $this->assertEquals(66.83, $totalAmount);
 
-        $unassigned = $deposits[2];
+        $unassigned = $data['unassigned'];
         $this->assertEquals(30.00, $unassigned);
 
-        $deposits = $deposits[0];
         $this->assertEquals(4, count($deposits));
 
         $dep = $deposits[0]['deposit'];
@@ -198,10 +206,10 @@ class CashDepositTratTest extends TestCase
         $this->assertEquals(DepositRequestExt::STATUS_REJECTED, $dep->status);
 
         // re-run the csv - no new cash deposit should be created
-        list($successes, $errors, $data) = $this->parseCashDepositString($str);
-        $this->assertEquals(0, count($successes));
-        $this->assertEquals(1, count($errors));
-        $this->assertEquals(0, count($data));
+        $data = $this->parseCashDepositString($str);
+        $this->assertEquals(0, count($data['successes']));
+        $this->assertEquals(1, count($data['errors']));
+        $this->assertEquals(0, count($data['data']));
     }
 
     public function test_assign_cash_deposit() {
@@ -218,12 +226,10 @@ class CashDepositTratTest extends TestCase
         $request->deposits = [
             ['amount' => 30.01, 'account_id' => $user1->accounts[0]->id],
         ];
-        try {
-            $this->assignCashDeposit($cd->id, $request);
-        } catch (\Exception $e) {
-            $this->assertEquals('Total amount of deposit requests (66.81) does not match the '
-                . 'cash deposit amount (96.83)', $e->getMessage());
-        }
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Total amount of deposit requests (66.81) does not match the cash deposit amount (96.83)');
+        $this->assignCashDeposit($cd->id, $request);
+
         $cd = CashDepositExt::find($cd->id);
         $this->assertEquals(CashDepositExt::STATUS_PENDING, $cd->status);
 

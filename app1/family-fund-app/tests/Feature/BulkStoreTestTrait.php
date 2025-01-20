@@ -101,12 +101,15 @@ trait BulkStoreTestTrait
     public function testBasic()
     {
         // test new asset
+        // $this->verbose = true;
         $this->createSampleReq();
         $this->postBulkAPI();
         $this->validateSampleRequest('validateUniqueHistorical');
 
         $oldVal = $this->post['symbols'][1][$this->field];
         $this->post['symbols'][1][$this->field] = 44.11;
+        $ap = \App\Models\AssetPrice::where('asset_id', 202)->get();
+        Log::debug("ap: " . json_encode($ap));
         $this->postError();
 
         $this->post['symbols'][1][$this->field] = $oldVal;
@@ -270,6 +273,7 @@ trait BulkStoreTestTrait
         $assetsArr = $this->updateObject->toArray();
         $assetsArr['symbols'] = $this->symbols->toArray();
         $this->post = $assetsArr;
+        $this->debug("createSampleReq: " . json_encode($assetsArr));
         return $assetsArr;
     }
 

@@ -246,7 +246,7 @@ trait CashDepositTrait
         }
         return [
             'deposits' => $data,
-            'totalDeposits' => $totalDeposits,
+            'total_deposits' => $totalDeposits,
             'unassigned' => $cashDeposit->amount - $totalDeposits,
             'transactions' => $transactions,
         ];
@@ -337,7 +337,8 @@ trait CashDepositTrait
     private function executeCashDeposits($tradePortfolio, $dry_run=true)
     {
         $ret = [];
-        DB::transaction(function () use ($tradePortfolio, &$ret, &$dry_run) {
+        DB::beginTransaction();
+        try {
             $content = $this->getCashDeposits($tradePortfolio->tws_query_id, $tradePortfolio->tws_token);
             Log::info('TradePortfolioControllerExt::preview: content: ' . $content);
             $ret = $this->parseCashDepositString($content);
@@ -365,7 +366,11 @@ trait CashDepositTrait
                     // $this->sendCashDepositConfirmation($item);
                 }
             }
-        });
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+        DB::commit();
         return $ret;
     }
 }

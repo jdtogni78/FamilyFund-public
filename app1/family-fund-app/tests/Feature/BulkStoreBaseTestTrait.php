@@ -3,8 +3,9 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Traits\VerboseTrait;
+use App\Models\AssetPrice;
 use Illuminate\Http\Response;
-
+use Illuminate\Support\Facades\Log;
 trait BulkStoreBaseTestTrait
 {
     use VerboseTrait;
@@ -22,6 +23,8 @@ trait BulkStoreBaseTestTrait
     {
         if ($error_code == null) $error_code = Response::HTTP_UNPROCESSABLE_ENTITY;
         $this->postForError($post, $error_code);
+        $vals = AssetPrice::where('asset_id', '>', 202)->get();
+        Log::debug("postError: " . json_encode($vals));
         $this->assertApiError($error_code);
     }
 

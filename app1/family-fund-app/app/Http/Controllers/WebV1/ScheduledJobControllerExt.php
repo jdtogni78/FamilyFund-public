@@ -35,11 +35,16 @@ class ScheduledJobControllerExt extends ScheduledJobController
         $children = $this->getChildren($scheduledJob);
 
         $errors = [];
-        DB::transaction(function () use ($scheduledJob, $asOf, &$data, &$errors, &$shouldRunBy) {
+        DB::beginTransaction();
+        try {
             list ($data, $error, $shouldRunBy) = $this->scheduleDueJob(new Carbon($asOf), $scheduledJob);
             if (null !== $error) $errors[] = $error->getMessage();            
             DB::rollBack();
-        });
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+        DB::commit();
 
         Log::info('Errors: ' . json_encode($errors));
 

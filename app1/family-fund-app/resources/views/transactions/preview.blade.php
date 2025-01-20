@@ -22,45 +22,44 @@
                             </div>
                             <div class="card-body">
                                 @if(null !== $api1['transaction'])
+                                @php($transaction = $api1['transaction'])
                                 <h6>Transaction Details:</h6>
                                 <ul>
-                                    <li>Account: {{ $api1['transaction']['account']['nickname'] }}</li>
-                                    <li>Value: ${{ number_format($api1['transaction']['value'], 2) }}</li>
-                                    <li>Date: {{ $api1['transaction']['timestamp'] }}</li>
-                                    <li>Shares: {{ number_format($api1['transaction']['shares'], 4) }} 
-                                        <span class="text-primary">(${{ number_format($api1['shareValue'], 2) }} * 
-                                            {{ number_format($api1['transaction']['shares'], 4) }} = 
-                                            ${{ number_format($api1['transaction']['shares'] * $api1['shareValue'], 2) }})</span></li>
+                                    <li>Account: {{ $transaction->account->nickname }}</li>
+                                    <li>Value: ${{ number_format($transaction->value, 2) }}</li>
+                                    <li>Date: {{ $transaction->timestamp->format('Y-m-d') }}</li>
+                                    <li>Shares: {{ number_format($transaction->shares, 4) }} 
+                                        <span class="text-{{ $transaction->shares > 0 ? 'success' : 'danger' }}">(${{ number_format($api1['shareValue'], 2) }} * 
+                                            {{ number_format($transaction->shares, 4) }} = {{ $transaction->shares > 0 ? '+' : '' }}${{ number_format($transaction->shares * $api1['shareValue'], 2) }})</span></li>
                                     <li>Share Value: ${{ number_format($api1['shareValue'], 2) }}</li>
+                                </ul>
+                                @php($balance = $transaction->balance)
+                                <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
+                                <ul>
+                                    <li>Share Balance: 
+                                        <span class="text-muted">{{ number_format($balance->previousBalance?->shares, 4) }}</span>
+                                        -> 
+                                        @php($delta = $balance->shares - $balance->previousBalance?->shares)
+                                        <span class="text-{{ $delta < 0 ? 'danger' : 'success' }}">
+                                            {{ number_format($balance->shares, 4) }}
+                                            ({{ $delta > 0 ? '+' : '' }}{{ number_format($delta, 4) }})</span>
+                                    </li>
+                                    <li>Effective Date: {{ $balance->start_dt }}</li>
                                 </ul>
                                 @endif
 
-                                @if(null !== $api1['balance'])
-                                    @php($balance = $api1['balance'])
-                                    <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
-                                    <ul>
-                                        <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($balance->previousBalance?->shares, 4) }}</span>
-                                            -> 
-                                            <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance->previousBalance?->shares, 4) }})</span>
-                                        </li>
-                                        <li>Effective Date: {{ $balance->start_dt }}</li>
-                                    </ul>
-                                @endif
 
                                 @if(null !== $api1['matches'])
-                                    @foreach($api1['matches'] as $match)
-                                    @php($transaction = $match['transaction'])
-                                    @php($balance = $match['balance'])
+                                    @foreach($api1['matches'] as $transaction)
+                                    @php($balance = $transaction->balance)
                                     <h6>Matching Transaction:</h6>
                                     <ul>
-                                        <li>Description: {{ $transaction['descr'] }}</li>
-                                        <li>Value: ${{ number_format($transaction['value'], 2) }}</li>
-                                        <li>Shares: {{ number_format($transaction['shares'], 4) }}
-                                            <span class="text-primary">
-                                                ({{ $transaction['shares'] }} * ${{ number_format($api1['shareValue'], 2) }} =
-                                                ${{ number_format($transaction['shares'] * $api1['shareValue'], 2) }})</span>
+                                        <li>Description: {{ $transaction->descr }}</li>
+                                        <li>Value: ${{ number_format($transaction->value, 2) }}</li>
+                                        <li>Shares: {{ number_format($transaction->shares, 4) }}
+                                            <span class="text-{{ $transaction->shares > 0 ? 'success' : 'danger' }}">
+                                                ({{ $transaction->shares }} * ${{ number_format($api1['shareValue'], 2) }} =
+                                                {{ $transaction->shares > 0 ? '+' : '' }}${{ number_format($transaction->shares * $api1['shareValue'], 2) }})</span>
                                         </li>
                                     </ul>
 
@@ -69,8 +68,10 @@
                                         <li>Share Balance: 
                                             <span class="text-muted">{{ number_format($balance->previousBalance?->shares, 4) }}</span>
                                             -> 
-                                            <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance->previousBalance?->shares, 4) }})</span>
+                                            @php($delta = $balance->shares - $balance->previousBalance?->shares)
+                                            <span class="text-{{ $delta < 0 ? 'danger' : 'success' }}">
+                                                {{ number_format($balance->shares, 4) }}
+                                                ({{ $delta > 0 ? '+' : '' }}{{ number_format($delta, 4) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
@@ -78,17 +79,26 @@
                                 @endif
 
                                 @if(null !== $api1['fundCash'])
-                                    <h6>Fund Cash Position for {{ $api1['transaction']['account']['nickname'] }}:</h6>
+                                    <h6>Fund Cash Position for {{ $transaction->account->nickname }}:</h6>
                                     <ul>
                                         <li>Cash Balance: 
                                             <span class="text-muted">${{ number_format($api1['fundCash'][1], 2) }}</span>
                                             -> 
-                                            <span class="text-success">${{ number_format($api1['fundCash'][0]['position'], 2) }}</span>
-                                            <span class="text-primary">({{ number_format($api1['fundCash'][0]['position'] - $api1['fundCash'][1], 2) }})</span>
+                                            @php($delta = $api1['fundCash'][0]['position'] - $api1['fundCash'][1])
+                                            <span class="text-{{ $delta < 0 ? 'danger' : 'success' }}">${{ number_format($api1['fundCash'][0]['position'], 2) }}
+                                            ({{ $delta > 0 ? '+' : '' }}{{ number_format($delta, 2) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $api1['fundCash'][0]['start_dt'] }}</li>
                                     </ul>
                                 @endif
+                                @isset($api1['shares_today'])
+                                    <h6>Current Account Value as of {{ $api1['today']->format('Y-m-d') }}:</h6>
+                                    <ul>
+                                        <li>Share Value: <strong>${{ number_format($api1['share_value_today'], 2) }}</strong></li>
+                                        <li>Total Shares: <strong>{{ number_format($api1['shares_today'], 4) }}</strong></li>
+                                        <li>Total Value: <strong>${{ number_format($api1['value_today'], 2) }}</strong></li>
+                                    </ul>
+                                @endisset
                                 <div class="form-group row mb-3">
                                     @php($transaction = $api1['transaction'])
                                     @if($transaction->id !== null)

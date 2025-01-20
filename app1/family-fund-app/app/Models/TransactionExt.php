@@ -116,7 +116,7 @@ class TransactionExt extends Transaction
      */
     public function processPending()
     {
-        // $this->verbose = true;
+        $this->verbose = true;
         Log::info("Processing Transaction: " . json_encode($this->toArray()));
         if ($this->status === TransactionExt::STATUS_SCHEDULED) {
             Log::info("Nothing to do for scheduled transaction: " . $this->id);
@@ -239,7 +239,6 @@ class TransactionExt extends Transaction
         $this->save();
         return [
             'transaction' => $this,
-            'balance' => $balance,
             'fundCash' => $fundCash,
             'matches' => $matches,
             'shareValue' => $shareValue,
@@ -357,7 +356,7 @@ class TransactionExt extends Transaction
                 $this->debug("MATCHTRAN " . json_encode($input));
                 /** @var TransactionExt $matchTran */
                 $matchTran = TransactionExt::create($input);
-                // $matchTran->verbose = true;
+                $matchTran->verbose = $this->verbose;
                 $matchBal = $matchTran->createBalance($matchTran->shares, $matchTran->timestamp);
 
                 $match = TransactionMatching::factory()
@@ -369,10 +368,7 @@ class TransactionExt extends Transaction
 
                 $shareValue = $account->fund->shareValueAsOf($matchTran->timestamp);
 
-                $ret[] = [
-                    'balance' => $matchBal,
-                    'transaction' => $matchTran,
-                ];
+                $ret[] = $matchTran;
             }
         }
         return $ret;

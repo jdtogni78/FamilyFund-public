@@ -50,13 +50,13 @@ class TransactionControllerExt extends TransactionController
         ];
     }
 
-    public function preview(PreviewTransactionRequest $request) : Response
+    public function preview(PreviewTransactionRequest $request)
     {
         $input = $request->all();
         $tran_status = $input['status'];
 
         try {
-            $transaction_data = $this->createTransaction($input, true);
+            $api1 = $this->createTransaction($input, true);
         } catch (Exception $e) {
             Log::error('TransactionControllerExt::preview: error: ' . $e->getMessage());
             Log::error($e);
@@ -66,8 +66,8 @@ class TransactionControllerExt extends TransactionController
 
         Log::info('TransactionControllerExt::preview: input: ' . json_encode($input));
         // $transaction_data['transaction']->status = $tran_status;
-        $transaction_data['transaction']->id = null;
-        $api1 = $this->getPreviewData($transaction_data);
+        $api1['transaction']->id = null;
+        $api1['transaction']->status = $tran_status;
 
         Log::info('TransactionControllerExt::preview: api: ' . json_encode($api1));
         return view('transactions.preview')
@@ -109,9 +109,8 @@ class TransactionControllerExt extends TransactionController
         }
 
         DB::beginTransaction();
-        $transaction_data = $transaction->processPending();
+        $api1 = $transaction->processPending();
         DB::rollBack();
-        $api1 = $this->getPreviewData($transaction_data);
         
         return view('transactions.preview')
             ->with('api1', $api1)

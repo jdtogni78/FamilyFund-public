@@ -23,7 +23,7 @@
 </div>
 
 <!-- Timestamp Field -->
-<div class="form-group col-sm6">
+<div class="form-group col-sm-6">
     {!! Form::label('timestamp', 'Timestamp:') !!}
     {!! Form::date('timestamp', null, ['class' => 'form-control', 'id' => 'timestamp']) !!}
 </div>

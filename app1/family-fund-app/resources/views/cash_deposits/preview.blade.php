@@ -90,7 +90,7 @@
                             @php($balances = [])
                             @isset($data['transactions'])
                                 @foreach($data['transactions'] as $transaction_data)
-                                    @php($balances[] = $transaction_data['balance'])
+                                    @php($balances[] = $transaction_data['transaction']->balance)
                                 @endforeach
                             @endisset
                             @include('account_balances.table', ['accountBalances' => $balances])

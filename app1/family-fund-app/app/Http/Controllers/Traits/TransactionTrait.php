@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Mail\TransactionEmail;
 use Flash;
+use App\Models\AccountExt;
+
 trait TransactionTrait
 {
     use VerboseTrait, MailTrait;
@@ -33,19 +35,19 @@ trait TransactionTrait
         try {
             /** @var TransactionExt $transaction */
             $transaction_data = $transaction->processPending();
+            $api = $this->getPreviewData($transaction_data);
             if ($dry_run) {
                 Flash::success('Transaction preview ready.');
                 DB::rollBack();
             } else {
                 Flash::success('Transaction processed successfully.');
-                $api1 = $this->getPreviewData($transaction_data);
-                $this->sendTransactionConfirmation($api1);
+                $this->sendTransactionConfirmation($api);
             }
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
         }
-        return $transaction_data;
+        return $api;
     }
 
     protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): TransactionExt {
@@ -73,28 +75,40 @@ trait TransactionTrait
 
     protected function getPreviewData($transaction_data) {
         if (isset($transaction_data['matches'])) {
-            foreach ($transaction_data['matches'] as $match) {
+            foreach ($transaction_data['matches'] as $key => $match) {
                 // Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
                 // must access fields to load
-                $matchTran = $match['transaction'];
+                Log::info('TransactionTrait::getPreviewData: match: ' . json_encode($match));
+                $matchTran = TransactionExt::find($match->id);
                 $matchTran->cashDeposit?->id;
                 $matchTran->depositRequest?->id;
                 $matchTran->referenceTransactionMatching?->id;
                 $matchTran->account?->id;
-                $match['balance']?->previousBalance?->id;
+                $matchTran->balance?->previousBalance?->id;
+                $transaction_data['matches'][$key] = $matchTran;
             }
         }
 
         $transaction = $transaction_data['transaction'];
         
         // load fields to avoid lazy loading
+        $transaction = TransactionExt::find($transaction->id);
         $transaction->cashDeposit?->id;
         $transaction->depositRequest?->id;
         $transaction->referenceTransactionMatching?->id;
         $transaction->account?->id;
-        Log::info('TransactionTrait::getPreviewData: balance: ' . json_encode(array_keys($transaction_data)));
-        $transaction_data['balance']?->account?->id;
-        $transaction_data['balance']?->previousBalance?->id;
+        $transaction->balance?->account?->id;
+        $transaction->balance?->previousBalance?->id;
+        Log::info('TransactionTrait::getPreviewData: balance: ' . json_encode($transaction->balance));
+        
+        /** @var AccountExt $account */
+        $account = $transaction->account;
+        $today = new Carbon();
+        $transaction_data['today'] = $today;
+        $transaction_data['shares_today'] = $account->sharesAsOf($today);
+        $transaction_data['value_today'] = $account->valueAsOf($today);
+        $transaction_data['share_value_today'] = $account->shareValueAsOf($today);
+        $transaction_data['transaction'] = $transaction;
 
         return $transaction_data;
     }

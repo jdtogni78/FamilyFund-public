@@ -345,8 +345,8 @@ trait CashDepositTrait
             $data = $ret['data'];
             $transactions = $ret['transactions'];
 
-            foreach ($transactions as $key => $transaction) {
-                $api1 = $this->getPreviewData($transaction);
+            foreach ($transactions as $key => $transaction_data) {
+                $api1 = $this->getPreviewData($transaction_data);
                 $transactions[$key] = $api1;
             }
             $ret['transactions'] = $transactions;

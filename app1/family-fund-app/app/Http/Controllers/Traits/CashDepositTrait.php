@@ -267,50 +267,50 @@ trait CashDepositTrait
             throw new \Exception('Cash deposit is already completed or cancelled');
         }
 
-        DB::beginTransaction();
-        $totalAmount = $unassigned;
-        Log::info('unassigned: ' . $unassigned);
-        Log::info('totalAmount: ' . $totalAmount);
-        if (isset($request->deposits) && count($request->deposits) > 0) {
-            Log::info('request->deposits: ' . count($request->deposits));
-            foreach ($request->deposits as $deposit) {
-                Log::info('deposit: ' . json_encode($deposit));
-                $deposit['date'] = $cashDeposit->date;
-                $deposit['status'] = DepositRequestExt::STATUS_APPROVED;
-                $deposit['cash_deposit_id'] = $cashDeposit->id;
-                $cashDeposit->depositRequests()->create($deposit);
-                $totalAmount += $deposit['amount'];
-                Log::info('totalAmount: ' . $totalAmount);
+        DB::transaction(function () use ($cashDeposit, $unassigned, $request) {
+            $totalAmount = $unassigned;
+            Log::info('unassigned: ' . $unassigned);
+            Log::info('totalAmount: ' . $totalAmount);
+            if (isset($request->deposits) && count($request->deposits) > 0) {
+                Log::info('request->deposits: ' . count($request->deposits));
+                foreach ($request->deposits as $deposit) {
+                    Log::info('deposit: ' . json_encode($deposit));
+                    $deposit['date'] = $cashDeposit->date;
+                    $deposit['status'] = DepositRequestExt::STATUS_APPROVED;
+                    $deposit['cash_deposit_id'] = $cashDeposit->id;
+                    $cashDeposit->depositRequests()->create($deposit);
+                    $totalAmount += $deposit['amount'];
+                    Log::info('totalAmount: ' . $totalAmount);
+                }
             }
-        }
-        Log::info('totalAmount: ' . $totalAmount);
-        if (isset($request->deposit_ids) && count($request->deposit_ids) > 0) {
-            Log::info('deposit_ids: ' . count($request->deposit_ids));
-            foreach ($request->deposit_ids as $depositId) {
-                $depositRequest = DepositRequestExt::find($depositId);
-                $depositRequest->status = DepositRequestExt::STATUS_APPROVED;
-                $depositRequest->cash_deposit_id = $cashDeposit->id;
-                $depositRequest->save();
-                $totalAmount += $depositRequest->amount;
-                Log::info('totalAmount: ' . $totalAmount);
+            Log::info('totalAmount: ' . $totalAmount);
+            if (isset($request->deposit_ids) && count($request->deposit_ids) > 0) {
+                Log::info('deposit_ids: ' . count($request->deposit_ids));
+                foreach ($request->deposit_ids as $depositId) {
+                    $depositRequest = DepositRequestExt::find($depositId);
+                    $depositRequest->status = DepositRequestExt::STATUS_APPROVED;
+                    $depositRequest->cash_deposit_id = $cashDeposit->id;
+                    $depositRequest->save();
+                    $totalAmount += $depositRequest->amount;
+                    Log::info('totalAmount: ' . $totalAmount);
+                }
             }
-        }
-        // round to 2 decimal places
-        $totalAmount = round($totalAmount, 2);
-        $cashDeposit->amount = round($cashDeposit->amount, 2);
-        if ($totalAmount != $cashDeposit->amount) {
-            DB::rollBack();
-            throw new \Exception('Total amount of deposit requests (' . $totalAmount 
-                . ') does not match the cash deposit amount (' . $cashDeposit->amount . ')');
-        }
+            // round to 2 decimal places
+            $totalAmount = round($totalAmount, 2);
+            $cashDeposit->amount = round($cashDeposit->amount, 2);
+            if ($totalAmount != $cashDeposit->amount) {
+                DB::rollBack();
+                throw new \Exception('Total amount of deposit requests (' . $totalAmount 
+                    . ') does not match the cash deposit amount (' . $cashDeposit->amount . ')');
+            }
 
-        if ($cashDeposit->status == CashDepositExt::STATUS_DEPOSITED) {
-            $cashDeposit->status = CashDepositExt::STATUS_COMPLETED;
-        } else {
-            $cashDeposit->status = CashDepositExt::STATUS_ALLOCATED;
-        }
-        $cashDeposit->save();
-        DB::commit();
+            if ($cashDeposit->status == CashDepositExt::STATUS_DEPOSITED) {
+                $cashDeposit->status = CashDepositExt::STATUS_COMPLETED;
+            } else {
+                $cashDeposit->status = CashDepositExt::STATUS_ALLOCATED;
+            }
+            $cashDeposit->save();
+        });
     }
 
 
@@ -364,7 +364,6 @@ trait CashDepositTrait
                     // send emails for each cash deposit
                     // $this->sendCashDepositConfirmation($item);
                 }
-                DB::commit();
             }
         });
         return $ret;

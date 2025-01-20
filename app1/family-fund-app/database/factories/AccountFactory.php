@@ -24,7 +24,7 @@ class AccountFactory extends Factory
         return [
             'code' => $this->faker->word,
         'nickname' => $this->faker->word,
-        'email_cc' => $this->faker->word,
+        'email_cc' => $this->faker->word . '@dstrader.com',
         // 'user_id' => $this->faker->word,
         'fund_id' => $this->faker->word,
         //'updated_at' => $this->faker->date('Y-m-d H:i:s'),

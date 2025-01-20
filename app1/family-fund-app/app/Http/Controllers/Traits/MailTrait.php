@@ -18,13 +18,15 @@ Trait MailTrait
         }
         Log::info("Sending email to " . json_encode($emails));
         $msg = "Email to " . json_encode($emails);
-        Log::info($msg);
         $mailto->send($data);
 
         if (Mail::failures()) {
             Log::error($msg . " failed");
             return $msg . " failed";
+        } else {
+            Log::info($msg . " sent");
         }
         return null;
     }
 }
+

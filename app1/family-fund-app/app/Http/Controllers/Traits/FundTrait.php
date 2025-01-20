@@ -391,16 +391,40 @@ Trait FundTrait
 
     protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?FundReportExt
     {
-        // check if there is data to run fund report & is due
-        Log::info('Checking if got assets after '.$shouldRunBy);
+        $shouldRunByDate = Carbon::parse($shouldRunBy);
+        $dayOfWeek = $shouldRunByDate->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+        
+        // Calculate lookback days based on day of week
+        $lookbackDays = 2; // Base lookback for holidays
+        // if today, or yesterday or 2 days ago falls on a weekend, add days
+        if (in_array($dayOfWeek, [0, 1, 2])) {
+            $lookbackDays += 2;
+        } elseif ($dayOfWeek == 6) {
+            $lookbackDays += 1;
+        }
+        
+        $lookbackDate = $shouldRunByDate->copy()->subDays($lookbackDays);
+        $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l') 
+            . ') to ' . $shouldRunByDate->format('Y-m-d') . ' (' . $shouldRunByDate->format('l') . ')';
+        Log::info('Checking if got assets between '.$period.' (lookback: '.$lookbackDays.' days)');
         $hasNewAssets = AssetPrice::query()
-            ->whereDate('start_dt', '>=', $shouldRunBy)->limit(1)->count();
+            ->whereBetween('start_dt', [$lookbackDate, $shouldRunBy])
+            ->limit(1)
+            ->count();
+
         if ($hasNewAssets > 0) {
             Log::info('Creating fund report for schedule: ' . $job->id);
             $report = $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
             return $report;
         } else {
-            Log::warning('Missing data for fund report schedule ' . $job->id);
+            $msg = 'No data for fund report schedule ' . $job->id . ' between ' . $period . '. Lookback: ' . $lookbackDays . ' days';
+            // if today is past 4 days of the schedule, error
+            $diff = $shouldRunByDate->diffInDays($asOf);
+            if ($diff > 4) {
+                throw new Exception($msg . ' (' . $diff . ' days past due date)');
+            } else {
+                Log::warning($msg);
+            }
         }
         return null;
     }

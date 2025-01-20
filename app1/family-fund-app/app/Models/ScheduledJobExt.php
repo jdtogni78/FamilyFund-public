@@ -38,10 +38,14 @@ class ScheduledJobExt extends ScheduledJob
 
         $this->debug('shouldRunBy', [
             'today' => $today->toDateString(),
-            'lastAsOf' => $lastReportDate?->toDateString(),
+            'lastRun' => $lastReportDate?->toDateString(),
             'shouldRunBy' => $shouldRunBy->toDateString(),
         ]);
-        return $shouldRunBy;
+        return [
+            'today' => $today,
+            'lastRun' => $lastReportDate,
+            'shouldRunBy' => $shouldRunBy,
+        ];
     }
 
     public function lastGeneratedReportDate() : ?Carbon
@@ -55,8 +59,8 @@ class ScheduledJobExt extends ScheduledJob
             ->orderBy($field, 'desc')
             ->first();
         $this->info("lastGeneratedReport $this->id " . json_encode($ret));
-        $lastAsOf = $ret != null? Carbon::parse($ret->$field) : null;
-        return $lastAsOf;
+        $lastRun = $ret != null? Carbon::parse($ret->$field) : null;
+        return $lastRun;
     }
 
     // get scheduled jobs that relate to this transaction

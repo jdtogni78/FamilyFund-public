@@ -24,7 +24,7 @@ trait TransactionTrait
 
         $transaction_data = null;
         DB::transaction(function () use ($input, &$transaction_data, $dryRun) {
-            /* @var TransactionExt $transaction */
+            /** @var TransactionExt $transaction */
             $transaction = $this->transactionRepository->create($input);
             $transaction_data = $transaction->processPending();
             if ($dryRun) {
@@ -32,7 +32,6 @@ trait TransactionTrait
             } else {
                 $api1 = $this->getPreviewData($transaction_data);
                 $this->sendTransactionConfirmation($api1);
-                DB::commit();
             }
         });
         return $transaction_data;

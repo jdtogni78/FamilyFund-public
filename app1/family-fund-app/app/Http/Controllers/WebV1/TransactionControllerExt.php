@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Illuminate\Support\Facades\Log;
 use Response;
-
+use App\Models\ScheduledJobExt;
 
 class TransactionControllerExt extends TransactionController
 {

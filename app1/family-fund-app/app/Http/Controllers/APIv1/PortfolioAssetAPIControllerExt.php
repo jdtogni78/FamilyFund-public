@@ -39,15 +39,15 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
         $timestamp = $input['timestamp'];
         $symbols = $request->collect('symbols')->toArray();
 
-        DB::beginTransaction();
-        $this->endDateRemovedAssets($source, $timestamp, $symbols);
-        try {
-            $this->genericBulkStore($request, 'position');
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        DB::transaction(function () use ($source, $timestamp, $symbols, $request) {
+            $this->endDateRemovedAssets($source, $timestamp, $symbols);
+            try {
+                $this->genericBulkStore($request, 'position');
+            } catch (Exception $e) {
+                DB::rollback();
+                return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        });
         return $this->sendResponse([], 'Bulk position update successful!');
     }
 

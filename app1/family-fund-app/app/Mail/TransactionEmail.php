@@ -11,7 +11,6 @@ class TransactionEmail extends Mailable
     use Queueable, SerializesModels;
 
     public $transaction_data;
-    public $to;
 
     /**
      * Create a new message instance.
@@ -30,14 +29,11 @@ class TransactionEmail extends Mailable
      */
     public function build()
     {
-        $arr = [
-            'to' => $this->transaction_data['transaction']->account->email_cc,
-            'report_name' => 'Transaction Confirmation',
-        ];
+        $this->transaction_data['to'] = $this->transaction_data['transaction']->account->email_cc;
+        $this->transaction_data['report_name'] = 'Transaction Confirmation';
 
         return $this->view('emails.transaction')
-            ->with("api", $arr)
-            ->with("api1", $this->transaction_data)
+            ->with("api", $this->transaction_data)
             ->subject("Transaction Confirmation");
     }
 }

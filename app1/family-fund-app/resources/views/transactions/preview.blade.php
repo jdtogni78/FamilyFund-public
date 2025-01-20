@@ -35,14 +35,14 @@
                                 @endif
 
                                 @if(null !== $api1['balance'])
-                                    @php($balance = $api1['newBal'])
+                                    @php($balance = $api1['balance'])
                                     <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($balance['oldShares'], 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance->oldShares, 4) }}</span>
                                             -> 
                                             <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance['oldShares'], 4) }})</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance->oldShares, 4) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
@@ -66,10 +66,10 @@
                                     <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($balance['oldShares'], 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance->oldShares, 4) }}</span>
                                             -> 
                                             <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance['oldShares'], 4) }})</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance->oldShares, 4) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>

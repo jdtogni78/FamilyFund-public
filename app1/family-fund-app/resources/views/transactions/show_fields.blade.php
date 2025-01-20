@@ -46,12 +46,6 @@
     <p>{{ $transaction->flags }}</p>
 </div>
 
-<!-- Scheduled Job Id Field -->
-<div class="form-group">
-    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
-    <p>{{ $transaction->scheduled_job_id }}</p>
-</div>
-
 <!-- Cash Deposit Id Field -->
 <div class="form-group">
     {!! Form::label('cash_deposit_id', 'Cash Deposit Id:') !!}

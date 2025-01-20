@@ -33,14 +33,14 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
      */
     public function bulkStore(CreatePriceUpdateAPIRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $this->genericBulkStore($request, 'price');
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        DB::transaction(function () use ($request) {
+            try {
+                $this->genericBulkStore($request, 'price');
+            } catch (Exception $e) {
+                DB::rollback();
+                return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        });
         return $this->sendResponse([], 'Bulk price update successful!');
     }
 

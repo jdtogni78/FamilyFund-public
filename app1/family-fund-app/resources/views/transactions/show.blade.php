@@ -24,9 +24,28 @@
                 </div>
             </div>
         </div>
-        @if($transaction->scheduledJobs()->count() > 0)
-            @php($scheduledJobs = $transaction->scheduledJobs())
-            @include('scheduled_jobs.table')
-        @endif
+        @isset($transaction->scheduledJob)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Scheduled Job</strong>
+                </div>
+                <div class="card-body">
+                    @include('scheduled_jobs.table', ['scheduledJobs' => [$transaction->scheduledJob]])
+                </div>
+            </div>
+            @if($transaction->scheduledJob->entity_descr == \App\Models\ScheduledJobExt::ENTITY_TRANSACTION)
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Transaction Template</strong>
+                    </div>
+                    <div class="card-body">
+                        @include('transactions.table', ['transactions' => [
+                            \App\Models\TransactionExt::find($transaction->scheduledJob->entity_id)
+                        ]])
+                    </div>
+                </div>
+            @endif
+        @endisset
+
     </div>
 @endsection

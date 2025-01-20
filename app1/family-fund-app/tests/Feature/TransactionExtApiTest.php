@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Resources\TransactionResource;
+use App\Mail\FundReportEmail;
 use App\Models\AssetExt;
 use App\Models\TransactionExt;
 use CpChart\Data;
@@ -16,6 +17,8 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Transaction;
 use Exception;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TransactionEmail;
 
 class TransactionExtApiTest extends TestCase
 {
@@ -37,32 +40,50 @@ class TransactionExtApiTest extends TestCase
 //        $this->verbose = true;
     }
 
+    public function test_sale_transactions() {
+        $factory = $this->factory;
+        $timestamp = '2025-01-01';
+
+        $this->postTransactionError(100, TransactionExt::TYPE_SALE, TransactionExt::STATUS_PENDING, $timestamp);
+        $this->assertEquals('Account does not have enough shares (0) to support sale of (100.0000)', $this->message);
+        
+        $this->postPurchase(100, 100, null, $timestamp);
+
+        $this->postTransactionError(100, TransactionExt::TYPE_SALE, TransactionExt::STATUS_PENDING, $timestamp);
+        $this->assertEquals('Unexpected: Sale transactions must have the no match flag', $this->message);
+
+        $this->postTransaction(50, TransactionExt::TYPE_SALE, TransactionExt::STATUS_PENDING, TransactionExt::FLAGS_NO_MATCH, $timestamp);
+    }
+
     /**
      * @test
      */
     public function test_validation_errors()
     {
+        $timestamp = '2025-01-01';
+        // post some tran
+        $this->postPurchase(500, 500, null, $timestamp);
         // reject clear tran
         $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_CLEARED);
 
         // reject non purchase
-        $this->postTransactionError(100, 'SAL', 'P');
-        $this->postTransactionError(100, 'MAT', 'P');
-        $this->postTransactionError(100, 'REP', 'P');
-        $this->postTransactionError(100, 'BOR', 'P');
+        // $this->postTransactionError(100, TransactionExt::TYPE_SALE, TransactionExt::STATUS_PENDING, $timestamp, null, 200, TransactionExt::FLAGS_NO_MATCH);
+        $this->postTransactionError(100, TransactionExt::TYPE_MATCHING, TransactionExt::STATUS_PENDING, $timestamp);
+        $this->postTransactionError(100, TransactionExt::TYPE_REPAY, TransactionExt::STATUS_PENDING, $timestamp);
+        $this->postTransactionError(100, TransactionExt::TYPE_BORROW, TransactionExt::STATUS_PENDING, $timestamp);
 
         // invalid type
-        $this->postTransactionError(100, '123', 'P');
+        $this->postTransactionError(100, '123', TransactionExt::STATUS_PENDING, $timestamp);
 
         //  reject timestamp in future
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '9999-12-31');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '9999-12-31');
         //  reject timestamp year old
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2020-01-01');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '2020-01-01');
         //  reject no timestamp
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING);
 
         // reject has shares
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2022-01-01', 200);
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '2022-01-01', 200);
     }
 
     /**
@@ -82,7 +103,7 @@ class TransactionExtApiTest extends TestCase
 
         // fail to post tran in the past
         // TODO better error code
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, 'P', '2021-01-01');
+        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '2021-01-01');
         $this->assertEquals($transactions->count(), 1);
     }
 
@@ -92,8 +113,8 @@ class TransactionExtApiTest extends TestCase
     public function test_fund_tran()
     {
         $factory = $this->factory;
-        $timestamp = now()->format('Y-m-d');
-        $tomorrow = now()->addDay()->format('Y-m-d');
+        $timestamp = now()->subDay()->format('Y-m-d');
+        $tomorrow = now()->format('Y-m-d');
         $d_3 = now()->addDays(3)->format('Y-m-d');
 
 //        $factory->dumpTransactions($factory->fundAccount);
@@ -195,7 +216,8 @@ class TransactionExtApiTest extends TestCase
     public function test_matching()
     {
         $factory = $this->factory;
-        $timestamp = now()->format('Y-m-d');
+        $now = now()->subDay();
+        $timestamp = $now->format('Y-m-d');
         $year = now()->year;
         $transactions = $factory->userAccount->transactions();
 
@@ -217,7 +239,7 @@ class TransactionExtApiTest extends TestCase
         $this->validateTran($this->tranRes, 100, 100, 100, TransactionExt::STATUS_CLEARED, $timestamp);
         $this->validateTran($match, 50, 50, 150);
 
-        $tomorrow = now()->addDay()->format('Y-m-d');
+        $tomorrow = $now->addDay()->format('Y-m-d');
         $this->postPurchase(100, 100, null, $tomorrow);
         $this->validateTran($this->tranRes, 100, 100, 250);
 //        $this->dumpTrans();
@@ -227,8 +249,8 @@ class TransactionExtApiTest extends TestCase
     public function test_multi_matching()
     {
         $factory = $this->factory;
-        $timestamp = now()->format('Y-m-d');
-        $timestamp2 = now()->addDay()->format('Y-m-d');
+        $timestamp = now()->subDay()->format('Y-m-d');
+        $timestamp2 = now()->format('Y-m-d');
         $year = now()->year;
         $transactions = $factory->userAccount->transactions();
 
@@ -296,9 +318,9 @@ class TransactionExtApiTest extends TestCase
 //    pending tran and other apis / methods
 //        see on account ui
 
-    protected function postTransactionError($value, $type, $status, $timestamp=null, $shares=null, $code=200): void
+    protected function postTransactionError($value, $type, $status, $timestamp=null, $shares=null, $code=200, $flags=null): void
     {
-        $this->postTransaction($value, $type, $status, null, $timestamp, $shares);
+        $this->postTransaction($value, $type, $status, $flags, $timestamp, $shares);
         $this->assertApiError($code);
     }
 
@@ -306,9 +328,12 @@ class TransactionExtApiTest extends TestCase
     {
         $transaction = $this->factory->makeTransaction($value, $account, $type, $status, $flags, $timestamp, $shares)->toArray();
         $url = '/api/transactions';
+        Mail::fake();
         $this->postAPI($url, $transaction);
+        // if success, send email
         if ($this->data != null && array_key_exists('id', $this->data)) {
             $this->tranRes = Transaction::find($this->data['id']);
+            Mail::assertSent(TransactionEmail::class);
         }
     }
 

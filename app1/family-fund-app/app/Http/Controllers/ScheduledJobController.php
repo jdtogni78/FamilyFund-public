@@ -13,7 +13,7 @@ use Response;
 class ScheduledJobController extends AppBaseController
 {
     /** @var ScheduledJobRepository $scheduledJobRepository*/
-    protected $scheduledJobRepository;
+    public $scheduledJobRepository;
 
     public function __construct(ScheduledJobRepository $scheduledJobRepo)
     {

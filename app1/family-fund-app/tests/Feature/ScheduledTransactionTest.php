@@ -83,7 +83,9 @@ class ScheduledTransactionTest extends TestCase
     public function test_sched_fund_report() {
         $this->debug("\n\n\n");
         $factory = $this->factory;
-        $date = Carbon::today()->subDays(7)->previous(Carbon::SUNDAY);
+        // needs data to exist, lets use an older sunday
+        // $date = Carbon::today()->subDays(7)->previous(Carbon::SUNDAY);
+        $date = Carbon::createFromDate(2024, 12, 22);
         $firstDate = $date->copy();
 
         // create prices to trick "missing data for fund report"
@@ -117,7 +119,7 @@ class ScheduledTransactionTest extends TestCase
     {
         $all = [];
         // $this->verbose = true;
-        $this->debug("******* test sched fund report ********");
+        Log::info("Test sched fund report from " . $date->format('Y-m-d') . "  to " . $date->addDays(10)->format('Y-m-d') . " ********");
         for ($i = 0; $i < 10; $i++) {
             $this->debug('At date: ' . $date->toDateString() . ', dow: ' . $date->dayOfWeek);
             $all[] = list($ret, $errors) = $this->scheduleDueJobs($date, $entityDescrFilter);

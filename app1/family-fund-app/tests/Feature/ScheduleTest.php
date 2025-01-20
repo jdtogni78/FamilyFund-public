@@ -6,6 +6,8 @@ use App\Models\ScheduleExt;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
+// class Eloquent not found
+use Illuminate\Database\Eloquent\Model;
 
 class ScheduleTest extends TestCase
 {

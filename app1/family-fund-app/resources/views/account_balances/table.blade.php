@@ -19,7 +19,7 @@
             <tr>
                 <td>{{ $accountBalance->id }}</td>
                 <td>{{ $accountBalance->type }}</td>
-                <td>{{ isset($accountBalance['oldShares']) ? $accountBalance['oldShares'] : '-' }}</td>
+                <td>{{ isset($accountBalance->oldShares) ? $accountBalance->oldShares : '-' }}</td>
                 <td>{{ $accountBalance->shares }}</td>
                 <td>{{ $accountBalance->account_id }}</td>
                 <td>{{ $accountBalance->account->nickname }}</td>

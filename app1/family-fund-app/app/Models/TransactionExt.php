@@ -104,7 +104,7 @@ class TransactionExt extends Transaction
                 'start_dt' => $timestamp,
                 'end_dt' => '9999-12-31',
             ]);
-        $newBal['oldShares'] = $oldShares;
+        $newBal->oldShares = $oldShares;
         $this->debug("NEW BAL " . json_encode($newBal));
         return $newBal;
     }
@@ -120,6 +120,9 @@ class TransactionExt extends Transaction
             return;
         }
         $timestamp = $this->timestamp;
+        if (!isset($timestamp)) {
+            throw new Exception("Cannot process transaction without timestamp");
+        }
         if ($timestamp->gt(Carbon::today())) {
             Log::warning("Keep pending state as transaction is in the future: " . $timestamp);
             return;

@@ -36,6 +36,12 @@
                 <span>Accounts</span>
             </a>
         </li>
+        <li class="nav-item {{ Request::is('goals*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('goals.index') }}">
+                <i class="nav-icon fa fa-bullseye"></i>
+                <span>Goals</span>
+            </a>
+        </li>
         <li class="nav-item {{ Request::is('matchingRules*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('matchingRules.index') }}">
                 <i class="nav-icon fa fa-link"></i>
@@ -204,3 +210,4 @@
         </li> -->
     </ul>
 </li>
+

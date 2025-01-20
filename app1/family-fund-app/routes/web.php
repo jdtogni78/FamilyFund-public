@@ -65,34 +65,34 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('scheduledJobs/{id}/preview/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@previewScheduledJob')
         ->name('scheduledJobs.preview');
 
-    Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
-    Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\AccountMatchingRuleController::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
+    Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
+    Route::resource('addresses', App\Http\Controllers\AddressController::class);
+    Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
     Route::resource('assetPrices', App\Http\Controllers\AssetPriceController::class);
     Route::resource('assets', App\Http\Controllers\AssetController::class);
+    Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
+    Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
+    Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
+    Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
+    Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
+    Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
+    Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
     Route::resource('matchingRules', App\Http\Controllers\MatchingRuleController::class);
+    Route::resource('people', App\Http\Controllers\PersonController::class);
+    Route::resource('persons', App\Http\Controllers\PersonController::class);
+    Route::resource('phones', App\Http\Controllers\PhoneController::class);
     Route::resource('portfolioAssets', App\Http\Controllers\PortfolioAssetController::class);
     Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
+    Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
+    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
+    Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
+    Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
+    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
     Route::resource('transactions', App\Http\Controllers\WebV1\TransactionControllerExt::class);
     Route::resource('users', App\Http\Controllers\UserController::class);
-    Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
-    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
-    Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
-    Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
-    Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
-    Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
-    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
-    Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
-    Route::resource('addresses', App\Http\Controllers\AddressController::class);
-    Route::resource('phones', App\Http\Controllers\PhoneController::class);
-    Route::resource('persons', App\Http\Controllers\PersonController::class);
-    Route::resource('people', App\Http\Controllers\PersonController::class);
-    Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
-    // Route::resource('accountPersons', App\Http\Controllers\AccountPersonController::class);
-    Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
-    Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');
@@ -100,7 +100,5 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
 });
-
-Route::resource('persons', App\Http\Controllers\PersonController::class);
 
 

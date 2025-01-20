@@ -2,6 +2,7 @@
     <table class="table table-striped" id="matchingRules-table">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Dollar Range Start</th>
                 <th>Dollar Range End</th>
@@ -15,6 +16,7 @@
         <tbody>
         @foreach($matchingRules as $matchingRule)
             <tr>
+                <td>{{ $matchingRule->id }}</td>
                 <td>{{ $matchingRule->name }}</td>
                 <td>{{ $matchingRule->dollar_range_start }}</td>
                 <td>{{ $matchingRule->dollar_range_end }}</td>

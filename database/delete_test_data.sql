@@ -6,6 +6,7 @@ delete from deposit_requests where 1=1;
 delete from cash_deposits where 1=1;
 delete from transactions where id > 2000;
 delete from account_matching_rules where account_id > 300;
+delete from matching_rules where id > 14;
 delete from accounts where fund_id > 300;
 delete from portfolio_assets where portfolio_id > 300;
 delete from portfolios where id > 300;

@@ -79,8 +79,8 @@ trait ChartBaseTrait
         Log::debug("createSharesLineChart: " . json_encode($arr));
         foreach ($arr as $v) {
             // max of last value and current value
-            $data[substr($v['timestamp'], 0,10)] = max($data[substr($v['timestamp'], 0,10)] ?? 0, 
-                    $v['balances']['OWN'] * $v['share_price']);
+            $data[substr($v->timestamp, 0,10)] = max($data[substr($v->timestamp, 0,10)] ?? 0, 
+                    $v->balance->shares * $v->share_price);
         };
         asort($data);
 

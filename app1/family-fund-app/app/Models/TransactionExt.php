@@ -104,7 +104,7 @@ class TransactionExt extends Transaction
                 'type' => 'OWN',
                 'shares' => $oldShares + $shares,
                 'start_dt' => $timestamp,
-                'previous_balance_id' => $bal->id,
+                'previous_balance_id' => $bal?->id,
                 'end_dt' => '9999-12-31',
             ]);
         $this->debug("NEW BAL " . json_encode($newBal));

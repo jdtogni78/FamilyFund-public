@@ -124,9 +124,9 @@ class TradePortfolioExtTest extends TestCase
             // trade_portfolio_id, symbol, type, target_share, deviation_trigger
             $newItem = $newTP->tradePortfolioItems()->get()->where('symbol', $item->symbol)->first();
             $this->assertNotNull($newItem, "New item is not null");
-            $this->assertTrue($item->target_share == $newItem->target_share,
+            $this->assertEquals($item->target_share, $newItem->target_share,
                 "Target share: " . $item->target_share . " == " . $newItem->target_share);
-            $this->assertTrue($item->deviation_trigger == $newItem->deviation_trigger,
+            $this->assertEquals($item->deviation_trigger, $newItem->deviation_trigger,
                 "Deviation trigger: " . $item->deviation_trigger . " == " . $newItem->deviation_trigger);
             $this->assertEquals($item->type, $newItem->type,
                 "Type: " . $item->type . " == " . $newItem->type);

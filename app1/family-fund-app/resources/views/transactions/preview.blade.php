@@ -26,6 +26,7 @@
                                 <ul>
                                     <li>Account: {{ $api1['transaction']['account']['nickname'] }}</li>
                                     <li>Value: ${{ number_format($api1['transaction']['value'], 2) }}</li>
+                                    <li>Date: {{ $api1['transaction']['timestamp'] }}</li>
                                     <li>Shares: {{ number_format($api1['transaction']['shares'], 4) }} 
                                         <span class="text-primary">(${{ number_format($api1['shareValue'], 2) }} * 
                                             {{ number_format($api1['transaction']['shares'], 4) }} = 

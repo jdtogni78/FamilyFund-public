@@ -4,6 +4,7 @@
     <ul>
         <li>Account: {{ $transaction->account->nickname }}</li>
         <li>Value: ${{ number_format($transaction->value, 2) }}</li>
+        <li>Date: {{ $transaction->timestamp }}</li>
         <li>Shares: {{ number_format($transaction->shares, 4) }} 
             <span class="text-primary">(${{ number_format($api['shareValue'], 2) }} * 
                 {{ number_format($transaction->shares, 4) }} = 

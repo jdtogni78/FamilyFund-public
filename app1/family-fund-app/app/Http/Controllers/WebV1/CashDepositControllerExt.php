@@ -33,6 +33,7 @@ class CashDepositControllerExt extends CashDepositController
     {
         $api = [];
         $api['fundAccountMap'] = AccountExt::fundAccountMap();
+        $api['accountMap'] = AccountExt::accountMap();
         $api['statusMap'] = CashDepositExt::statusMap();
         return $api;
     }

@@ -15,7 +15,12 @@
                     <div class="card">
                         <div class="card-header">
                             <strong>Details</strong>
-                            <a href="{{ route('transactions.index') }}" class="btn btn-light">Back</a>
+                            <div class="btn-group">
+                                @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
+                                    <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
+                                @endif
+                                <a href="{{ route('transactions.index') }}" class="btn btn-light">Back</a>
+                            </div>
                         </div>
                         <div class="card-body">
                             @include('transactions.show_fields')
@@ -45,6 +50,58 @@
                     </div>
                 </div>
             @endif
+        @endisset
+        @isset($transaction->accountBalance)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Account Balances</strong>
+                </div>
+                <div class="card-body">
+                    @include('account_balances.table', ['accountBalances' => [$transaction->accountBalance]])
+                </div>
+            </div>
+        @endisset
+
+        @isset($transaction->cashDeposit)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Cash Deposit</strong>
+                </div>
+                <div class="card-body">
+                    @include('cash_deposits.table', ['cashDeposits' => [$transaction->cashDeposit]])
+                </div>
+            </div>
+        @endisset
+
+        @isset($transaction->depositRequest)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Deposit Request</strong>
+                </div>
+                <div class="card-body">
+                    @include('deposit_requests.table', ['depositRequests' => [$transaction->depositRequest]])
+                </div>
+            </div>
+        @endisset
+
+        @isset($transaction->matchedTransaction)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Matched Transaction</strong>
+                </div>
+                <div class="card-body">
+                    @include('transactions.table', ['transactions' => [$transaction->matchedTransaction]])
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <strong>Reference Transaction</strong>
+                </div>
+                <div class="card-body">
+                    @include('transactions.table', ['transactions' => [$transaction->referenceTransaction]])
+                </div>
+            </div>
         @endisset
 
     </div>

@@ -13,7 +13,7 @@
                 {!! Form::open(['route' => ['cashDeposits.do_assign', $cashDeposit->id], 'method' => 'post']) !!}
                 <div class="form-group col-sm-6">
                     {!! Form::label('unassigned', 'Unassigned Amount:') !!}
-                    {!! Form::number('unassigned', 0, ['step' => '0.01', 'class' => 'form-control']) !!}
+                    {!! Form::number('unassigned', 0, ['step' => '0.01', 'class' => 'form-control', 'id' => 'unassigned']) !!}
                 </div>
                 <table class="table" id="deposit-requests-table">
                     <thead>
@@ -83,17 +83,19 @@
 
             function updateTotalAmount() {
                 var totalAmount = 0;
-                var unassignedAmount = parseFloat($('#unassigned').val());
+                var unassignedAmount = parseFloat($('input[name="unassigned"]').val());
                 totalAmount += unassignedAmount;
                 $('.deposit').each(function() {
                     totalAmount += parseFloat($(this).find('input[name$="[amount]"]').val());
                 });
+                console.log(totalAmount);
                 $('.deposit-ids').each(function() {
                     console.log($(this).find('td:nth-child(2)'));
                     if ($(this).find('input[type="checkbox"]').is(':checked')) {
                         totalAmount += parseFloat($(this).find('td:nth-child(2)').text());
                     }
                 });
+                console.log(totalAmount);
                 $('#total-assigned').text(totalAmount.toFixed(2));
                 $('#total-unassigned').text((expectedAmount - totalAmount).toFixed(2));
                 if (totalAmount != expectedAmount) {

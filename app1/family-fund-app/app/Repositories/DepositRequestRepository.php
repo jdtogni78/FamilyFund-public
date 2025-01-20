@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\DepositRequest;
+use App\Models\DepositRequestExt;
 use App\Repositories\BaseRepository;
 
 /**
@@ -40,6 +40,6 @@ class DepositRequestRepository extends BaseRepository
      **/
     public function model()
     {
-        return DepositRequest::class;
+        return DepositRequestExt::class;
     }
 }

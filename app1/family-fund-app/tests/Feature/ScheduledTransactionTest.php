@@ -1,6 +1,7 @@
 <?php namespace Tests\APIs;
 
 use App\Http\Controllers\Traits\ScheduledJobTrait;
+use App\Models\AccountBalance;
 use App\Models\FundReportExt;
 use App\Models\ScheduledJobExt;
 use App\Models\ScheduleExt;
@@ -63,7 +64,10 @@ class ScheduledTransactionTest extends TestCase
         $this->assertEquals('2024-12-14', $trans[0]->timestamp->toDateString());
         $this->assertEquals('2024-12-16', $trans[1]->timestamp->toDateString());
         $this->assertEquals('2024-12-23', $trans[2]->timestamp->toDateString());
+
+        $balValue = 0;
         foreach ($trans as $tran) {
+            /** @var TransactionExt $tran */
             $this->assertEquals($value, $tran->value);
             $this->assertEquals(TransactionExt::TYPE_PURCHASE, $tran->type);
             $this->assertEquals(TransactionExt::STATUS_CLEARED, $tran->status);
@@ -71,6 +75,10 @@ class ScheduledTransactionTest extends TestCase
             $this->assertEquals($stran->account_id, $tran->account_id);
             $this->assertEquals($stran->descr, $tran->descr);
             $this->assertEquals($stran->flags, $tran->flags);
+            // make sure there is a balance
+            $bal = $tran->balanceAsOf($tran->timestamp);
+            $balValue += $tran->shares;
+            $this->assertEquals($balValue, $bal->shares);
         }
     }
 

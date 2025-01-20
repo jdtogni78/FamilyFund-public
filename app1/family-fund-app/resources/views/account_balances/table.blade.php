@@ -4,7 +4,8 @@
             <tr>
                 <th>Id</th>
                 <th>Type</th>
-                <th>Old Shares</th>
+                <th>Previous Id</th>
+                <th>Previous Shares</th>
                 <th>Shares</th>
                 <th>Account Id</th>
                 <th>Account Nickname</th>
@@ -19,7 +20,8 @@
             <tr>
                 <td>{{ $accountBalance->id }}</td>
                 <td>{{ $accountBalance->type }}</td>
-                <td>{{ isset($accountBalance->oldShares) ? $accountBalance->oldShares : '-' }}</td>
+                <td>{{ $accountBalance->previousBalance?->id }}</td>
+                <td>{{ $accountBalance->previousBalance?->shares }}</td>
                 <td>{{ $accountBalance->shares }}</td>
                 <td>{{ $accountBalance->account_id }}</td>
                 <td>{{ $accountBalance->account->nickname }}</td>

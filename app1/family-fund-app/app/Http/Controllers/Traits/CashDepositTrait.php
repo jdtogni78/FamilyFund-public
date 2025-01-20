@@ -358,6 +358,10 @@ trait CashDepositTrait
             } else {
                 // send emails for each transaction
                 foreach ($transactions as $transaction_data) {
+                    // ignore matches as they are reported in the original transaction
+                    if (!isset($transaction_data['matches'])) {
+                        continue;
+                    }
                     $api1 = $this->getPreviewData($transaction_data);
                     $this->sendTransactionConfirmation($api1);
                 }

@@ -46,6 +46,10 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('tradePortfoliosItems.createWithParams');
     Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
+    Route::get('transactions/preview_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@previewPending')
+        ->name('transactions.preview_pending');
+    Route::post('transactions/process_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@processPending')
+        ->name('transactions.process_pending');
     Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkCreate')
         ->name('accountMatchingRules.create_bulk');
     Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkStore')

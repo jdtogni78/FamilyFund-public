@@ -44,7 +44,7 @@ Trait ScheduledJobTrait
             return;
         }
         /** @var ScheduledJobExt $schedule */
-        $schedule->verbose = true;
+        // $schedule->verbose = true;
         $shouldRunBy = $schedule->shouldRunBy($asOf);
         $shouldRunByDate = $shouldRunBy['shouldRunBy'];
         

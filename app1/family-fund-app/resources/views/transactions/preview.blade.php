@@ -39,10 +39,10 @@
                                     <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($balance->oldShares, 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance->previousBalance?->shares, 4) }}</span>
                                             -> 
                                             <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance->oldShares, 4) }})</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance->previousBalance?->shares, 4) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
@@ -66,10 +66,10 @@
                                     <h6>Balance Change for {{ $balance->account->nickname }}:</h6>
                                     <ul>
                                         <li>Share Balance: 
-                                            <span class="text-muted">{{ number_format($balance->oldShares, 4) }}</span>
+                                            <span class="text-muted">{{ number_format($balance->previousBalance?->shares, 4) }}</span>
                                             -> 
                                             <span class="text-success">{{ number_format($balance->shares, 4) }}</span>
-                                            <span class="text-primary">({{ number_format($balance->shares - $balance->oldShares, 4) }})</span>
+                                            <span class="text-primary">({{ number_format($balance->shares - $balance->previousBalance?->shares, 4) }})</span>
                                         </li>
                                         <li>Effective Date: {{ $balance->start_dt }}</li>
                                     </ul>
@@ -89,9 +89,13 @@
                                     </ul>
                                 @endif
                                 <div class="form-group row mb-3">
+                                    @php($transaction = $api1['transaction'])
+                                    @if($transaction->id !== null)
+                                    {!! Form::open(['route' => ['transactions.process_pending', $transaction->id], 'method' => 'post']) !!}
+                                    @else
                                     {!! Form::open(['route' => 'transactions.store']) !!}
+                                    @endif
                                         <div class="form-group col-sm-12">
-                                            @php($transaction = $api1['transaction'])
                                             @include('transactions.preview_fields')
                                             {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
                                             {!! Form::button('Cancel', ['class' => 'btn btn-secondary', 'onclick' => 'window.history.back()']) !!}

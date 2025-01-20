@@ -146,9 +146,7 @@
     {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255]) !!}
 </div>
 
-
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::hidden('dry_run', 'true') !!}
     {!! Form::submit('Preview', ['class' => 'btn btn-primary']) !!}
 </div>

@@ -22,8 +22,8 @@
         @foreach($transactions as $transaction)
             <tr>
                 <td>{{ $transaction->id }}</td>
-                <td>{{ $transaction->type }}</td>
-                <td>{{ $transaction->status }}</td>
+                <td>{{ $transaction->type_string() }}</td>
+                <td>{{ $transaction->status_string() }}</td>
                 <td>{{ $transaction->value }}</td>
                 <td>{{ $transaction->shares }}</td>
                 <td>{{ $transaction->timestamp }}</td>
@@ -38,6 +38,9 @@
                     <div class='btn-group'>
                         <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
+                            <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
+                        @endif
                         {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
                     </div>
                     {!! Form::close() !!}

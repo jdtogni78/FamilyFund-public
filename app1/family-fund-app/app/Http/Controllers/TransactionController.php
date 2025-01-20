@@ -60,6 +60,7 @@ class TransactionController extends AppBaseController
         $transaction = $this->transactionRepository->create($input);
 
         Flash::success('Transaction saved successfully.');
+        Log::debug('SHOULD TO BE HERE: Transaction saved successfully.');
 
         return redirect(route('transactions.index'));
     }

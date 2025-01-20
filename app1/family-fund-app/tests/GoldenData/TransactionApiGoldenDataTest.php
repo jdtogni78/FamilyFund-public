@@ -8,7 +8,7 @@ use Tests\ApiTestTrait;
 use App\Models\Transaction;
 use App\Models\AccountBalance;
 use App\Models\Utils;
-
+use App\Models\TransactionExt;
 class TransactionApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

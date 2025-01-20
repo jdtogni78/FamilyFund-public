@@ -263,29 +263,6 @@ class TradePortfolioControllerExt extends TradePortfolioController
             $all[$date->toDateString()] = $data;
         }
 
-//        // delete all items where data is same before and after
-//        $date = $start->copy();
-//        for (; $date->lt($end); $date->addDay()) {
-//            $prevdt = $date->copy()->subDay();
-//            $nextdt = $date->copy()->addDay();
-//            if (array_key_exists($prevdt->toDateString(), $all) &&
-//                array_key_exists($nextdt->toDateString(), $all)) {
-//                $prev = $all[$prevdt->toDateString()];
-//                $next = $all[$nextdt->toDateString()];
-//                $same = true;
-//                foreach ($prev as $key => $value) {
-//                    if ($key == 'port_value') continue;
-//                    if ($prev[$key] != $next[$key]) {
-//                        $same = false;
-//                        break;
-//                    }
-//                }
-//                if ($same) {
-//                    unset($all[$date->toDateString()]);
-//                }
-//            }
-//        }
-
         $porfolioAssets = $porfolioAssets->unique('id')
             ->sortBy('start_dt')
             ->sortBy('asset_id');

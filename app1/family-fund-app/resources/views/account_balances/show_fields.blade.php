@@ -10,6 +10,18 @@
     <p>{{ $accountBalance->shares }}</p>
 </div>
 
+<!-- Previous Shares Field -->
+<div class="form-group">
+    {!! Form::label('previous_shares', 'Previous Shares:') !!}
+    <p>{{ $accountBalance->previousBalance?->shares }}</p>
+</div>
+
+<!-- Previous Balance Id Field -->
+<div class="form-group">
+    {!! Form::label('previous_balance_id', 'Previous Balance Id:') !!}
+    <p>{{ $accountBalance->previousBalance?->id }}</p>
+</div>
+
 <!-- Account Id Field -->
 <div class="form-group">
     {!! Form::label('account_id', 'Account Id:') !!}

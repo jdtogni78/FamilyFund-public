@@ -63,12 +63,16 @@ class TransactionExt extends Transaction
         return self::$statusMap[$this->status];
     }
 
+    public function type_string() {
+        return self::$typeMap[$this->type];
+    }
+
     /**
      * @throws \Exception
      */
     public function createBalance($shares, $timestamp)
     {
-        $this->debug("Creating Balance: " . json_encode($this->toArray()));
+        Log::debug("Creating Balance: " . json_encode($this->toArray()));
         if ($shares == null || $shares == 0) {
             throw new Exception("Balances need transactions with shares");
         }
@@ -76,12 +80,11 @@ class TransactionExt extends Transaction
             throw new Exception("Transaction already has a balance associated");
         }
 
-        $accountBalanceRepo = \App::make(AccountBalanceRepository::class);
         $account_id = $this->account()->first()->id;
 
         // TODO: move it to balance classes
-        $otherBalance = $this->validateBalanceOverlap($accountBalanceRepo, $account_id, $timestamp);
-        $bal = $this->validateLatestBalance($accountBalanceRepo, $account_id, $timestamp);
+        $otherBalance = $this->validateBalanceOverlap($account_id, $timestamp);
+        $bal = $this->validateLatestBalance($account_id, $timestamp);
 
         $oldShares = 0;
         if ($bal != null) {
@@ -95,16 +98,15 @@ class TransactionExt extends Transaction
             throw new Exception("Unexpected: There are existent balances that were end-dated - not safe to proceed");
         }
 
-        $newBal = $accountBalanceRepo
-            ->create([
+        $newBal = AccountBalance::create([
                 'account_id' => $account_id,
                 'transaction_id' => $this->id,
                 'type' => 'OWN',
                 'shares' => $oldShares + $shares,
                 'start_dt' => $timestamp,
+                'previous_balance_id' => $bal->id,
                 'end_dt' => '9999-12-31',
             ]);
-        $newBal->oldShares = $oldShares;
         $this->debug("NEW BAL " . json_encode($newBal));
         return $newBal;
     }
@@ -114,10 +116,14 @@ class TransactionExt extends Transaction
      */
     public function processPending()
     {
+        // $this->verbose = true;
         Log::info("Processing Transaction: " . json_encode($this->toArray()));
         if ($this->status === TransactionExt::STATUS_SCHEDULED) {
             Log::info("Nothing to do for scheduled transaction: " . $this->id);
             return;
+        }
+        if ($this->status !== TransactionExt::STATUS_PENDING) {
+            throw new Exception("Only pending transactions can be processed: " . $this->status_string());
         }
         $timestamp = $this->timestamp;
         if (!isset($timestamp)) {
@@ -223,7 +229,7 @@ class TransactionExt extends Transaction
 
         $noMatch = $this->flags == TransactionExt::FLAGS_NO_MATCH;
         $createMatch = !($isFundAccount || $noMatch);
-        $this->debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
+        Log::debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
         $matches = [];
         if ($createMatch) {
             $matches = $this->createMatching($account, $verbose, $shareValue, $allShares, $fundAvailableShares, $acctAvailableShares);
@@ -240,10 +246,9 @@ class TransactionExt extends Transaction
         ];
     }
 
-    protected function validateBalanceOverlap(mixed $accountBalanceRepo, mixed $account_id, $timestamp): mixed
+    protected function validateBalanceOverlap(mixed $account_id, $timestamp): mixed
     {
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
+        $query = AccountBalance::where('account_id', $account_id)
             ->where('type', 'OWN')
             ->whereDate('end_dt', '<', $timestamp)
             ->whereDate('start_dt', '>=', $timestamp);
@@ -257,8 +262,7 @@ class TransactionExt extends Transaction
                 . " as there is already a balance on this period " . $bal2->id);
         }
 
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
+        $query = AccountBalance::where('account_id', $account_id)
             ->where('type', 'OWN')
             ->whereDate('end_dt', '<', '9999-12-31');
         $bal2 = $query->first();
@@ -266,20 +270,17 @@ class TransactionExt extends Transaction
     }
 
     public function balanceAsOf($asOf) {
-        $accountBalanceRepo = \App::make(AccountBalanceRepository::class);
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $this->account_id)
+        $query = AccountBalance::where('account_id', $this->account_id)
             ->where('type', 'OWN')
-            ->whereDate('end_dt', '<', $asOf)
-            ->whereDate('start_dt', '>=', $asOf);
+            ->whereDate('end_dt', '>', $asOf)
+            ->whereDate('start_dt', '<=', $asOf);
         $bal = $query->first();
         return $bal;
     }
 
-    protected function validateLatestBalance(mixed $accountBalanceRepo, mixed $account_id, $timestamp): mixed
+    protected function validateLatestBalance(mixed $account_id, $timestamp): mixed
     {
-        $query = $accountBalanceRepo->makeModel()->newQuery()
-            ->where('account_id', $account_id)
+        $query = AccountBalance::where('account_id', $account_id)
             ->where('type', 'OWN')
             ->whereDate('end_dt', '=', '9999-12-31');
         $bal = $query->first();
@@ -356,6 +357,7 @@ class TransactionExt extends Transaction
                 $this->debug("MATCHTRAN " . json_encode($input));
                 /** @var TransactionExt $matchTran */
                 $matchTran = TransactionExt::create($input);
+                // $matchTran->verbose = true;
                 $matchBal = $matchTran->createBalance($matchTran->shares, $matchTran->timestamp);
 
                 $match = TransactionMatching::factory()
@@ -364,6 +366,8 @@ class TransactionExt extends Transaction
                         'transaction_id' => $matchTran->id,
                         'reference_transaction_id' => $this->id
                     ]);
+
+                $shareValue = $account->fund->shareValueAsOf($matchTran->timestamp);
 
                 $ret[] = [
                     'balance' => $matchBal,

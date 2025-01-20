@@ -74,46 +74,41 @@ trait AccountTrait
         $transactions = $account->transactions()->get();
         $arr = array();
         foreach ($transactions as $transaction) {
-            $tran = array();
+            // $tran = array();
             if ($transaction->timestamp->gte(Carbon::createFromFormat('Y-m-d', $asOf)))
                 continue;
-            $tran['id']     = $transaction->id;
-            $tran['type']   = $transaction->type;
-            $tran['status'] = $transaction->status;
-            $tran['shares'] = Utils::shares($transaction->shares);
-            $tran['value']  = Utils::currency($value = $transaction->value);
-            $tran['share_price'] = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
+            // $tran['id']     = $transaction->id;
+            // $tran['type']   = $transaction->type;
+            // $tran['status'] = $transaction->status;
+            // $tran['shares'] = Utils::shares($transaction->shares);
+            $value = $transaction->value;
+            // $tran['value']  = Utils::currency($value);
+            $transaction->share_price = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
 //            $tran['calculated_share_price'] = Utils::currency($fund->shareValueAsOf($transaction->timestamp));
-            $tran['current_value'] = Utils::currency($current = $transaction->shares * $shareValue);
-            $tran['current_performance'] = Utils::percent($current/$value - 1);
-            $tran['timestamp'] = $transaction->timestamp;
+            $transaction->current_value = Utils::currency($current = $transaction->shares * $shareValue);
+            $transaction->current_performance = Utils::percent($current/$value - 1);
+            // $transaction->timestamp = $transaction->timestamp;
 
-            $matching = $transaction->transactionMatching()->first();
+            $matching = $transaction->transactionMatching;
             if ($matching) {
                 Log::debug('tran id: ' . $transaction->id . ' matching id: ' . $matching->id);
-                $tran['reference_transaction'] = $matching->referenceTransaction()->first()->id;
-                $tran['current_value'] = Utils::currency(0);
-                $tran['current_performance'] = Utils::percent(0);
+                // $tran['reference_transaction'] = $matching->referenceTransaction()->first()->id;
+                $transaction->current_value = Utils::currency(0);
+                $transaction->current_performance = Utils::percent(0);
             }
 
-            $refMatch = $transaction->referenceTransactionMatching()->first();
+            $refMatch = $transaction->referenceTransactionMatching;
             if ($refMatch) {
                 Log::debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
-                $refTrans = $refMatch->transaction()->first();
+                $refTrans = $refMatch->transaction;
                 $current = ($refTrans->shares + $transaction->shares) * $shareValue;
                 Log::debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
                 Log::debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
-                $tran['current_value'] = Utils::currency($current);
-                $tran['current_performance'] = Utils::percent(($current)/$value - 1);
+                $transaction->current_value = Utils::currency($current);
+                $transaction->current_performance = Utils::percent(($current)/$value - 1);
             }
 
-            $bals = [];
-            foreach ($transaction->accountBalance()->get() as $balance) {
-                $bals[$balance->type] = $balance->shares;
-            }
-            $tran['balances'] = $bals;
-
-            array_push($arr, $tran);
+            array_push($arr, $transaction);
         }
 
         return $arr;

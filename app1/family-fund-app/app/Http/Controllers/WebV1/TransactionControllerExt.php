@@ -17,6 +17,7 @@ use Laracasts\Flash\Flash;
 use Illuminate\Support\Facades\Log;
 use Response;
 use App\Models\ScheduledJobExt;
+use Illuminate\Support\Facades\DB;
 
 class TransactionControllerExt extends TransactionController
 {
@@ -36,8 +37,7 @@ class TransactionControllerExt extends TransactionController
     {
         $api = $this->getApi();
         return view('transactions.create')
-            ->with('api', $api)
-            ->with('api1', ['dry_run' => false]);
+            ->with('api', $api);
     }
 
     protected function getApi()
@@ -50,20 +50,13 @@ class TransactionControllerExt extends TransactionController
         ];
     }
 
-    /**
-     * Preview a newly created Transaction.
-     *
-     * @param CreateTransactionRequest $request
-     *
-     * @return Response
-     */
-    public function preview(PreviewTransactionRequest $request)
+    public function preview(PreviewTransactionRequest $request) : Response
     {
         $input = $request->all();
         $tran_status = $input['status'];
 
         try {
-            $transaction_data = $this->createTransaction($input);
+            $transaction_data = $this->createTransaction($input, true);
         } catch (Exception $e) {
             Log::error('TransactionControllerExt::preview: error: ' . $e->getMessage());
             Log::error($e);
@@ -72,9 +65,9 @@ class TransactionControllerExt extends TransactionController
         }
 
         Log::info('TransactionControllerExt::preview: input: ' . json_encode($input));
-        $transaction_data['transaction']->status = $tran_status;
+        // $transaction_data['transaction']->status = $tran_status;
+        $transaction_data['transaction']->id = null;
         $api1 = $this->getPreviewData($transaction_data);
-        $api1['dry_run'] = true;
 
         Log::info('TransactionControllerExt::preview: api: ' . json_encode($api1));
         return view('transactions.preview')
@@ -95,7 +88,7 @@ class TransactionControllerExt extends TransactionController
         Log::info('TransactionControllerExt::store: input: ' . json_encode($input));
 
         try {
-            $this->createTransaction($input);
+            $this->createTransaction($input, false);
         } catch (Exception $e) {
             Log::error($e);
             Flash::error($e->getMessage());
@@ -106,22 +99,37 @@ class TransactionControllerExt extends TransactionController
         return redirect(route('transactions.index'));
     }
 
-    /**
-     * Display the specified Transaction.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
-    public function show($id)
+    public function previewPending($id)
     {
         $transaction = $this->transactionRepository->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
-
             return redirect(route('transactions.index'));
         }
+
+        DB::beginTransaction();
+        $transaction_data = $transaction->processPending();
+        DB::rollBack();
+        $api1 = $this->getPreviewData($transaction_data);
+        
+        return view('transactions.preview')
+            ->with('api1', $api1)
+            ->with('api', $this->getApi());
+    }
+
+    public function processPending($id)
+    {
+        $transaction = TransactionExt::find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+            return redirect(route('transactions.index'));
+        }
+
+        DB::beginTransaction();
+        $transaction_data = $this->processTransaction($transaction, false);
+        DB::commit();
 
         return view('transactions.show')
             ->with('transaction', $transaction);

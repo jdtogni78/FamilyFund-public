@@ -158,4 +158,9 @@ class Transaction extends Model
     {
         return $this->hasOne(\App\Models\DepositRequestExt::class, 'transaction_id');
     }
+
+    public function balance()
+    {
+        return $this->hasOne(\App\Models\AccountBalance::class, 'transaction_id');
+    }
 }

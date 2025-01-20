@@ -22,6 +22,13 @@
     {!! Form::number('transaction_id', null, ['class' => 'form-control']) !!}
 </div>
 
+<!-- Previous Balance Id Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('previous_balance_id', 'Previous Balance Id:') !!}
+    {!! Form::number('previous_balance_id', null, ['class' => 'form-control']) !!}
+</div>
+
+
 <!-- Start Dt Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('start_dt', 'Start Dt:') !!}

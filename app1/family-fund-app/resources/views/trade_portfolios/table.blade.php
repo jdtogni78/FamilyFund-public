@@ -51,7 +51,9 @@
                             {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger no_mobile', 'onclick' => "return confirm('Are you sure?')"]) !!}
                         @endif
                         <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
-                        <a href="{{ route('tradePortfolios.preview_deposits', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-download"></i></a>
+                        @if($tradePortfolio->tws_token != null)
+                            <a href="{{ route('tradePortfolios.preview_deposits', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-download"></i></a>
+                        @endif
                     </div>
                     {!! Form::close() !!}
                 </td>

@@ -91,7 +91,6 @@
                             @isset($data['transactions'])
                                 @foreach($data['transactions'] as $transaction_data)
                                     @php($balances[] = $transaction_data['balance'])
-                                    {{ print_r(gettype($transaction_data['balance'])) }}
                                 @endforeach
                             @endisset
                             @include('account_balances.table', ['accountBalances' => $balances])

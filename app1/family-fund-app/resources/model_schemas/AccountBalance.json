@@ -27,7 +27,7 @@
         "name": "shares",
         "dbType": "decimal,19,4",
         "htmlType": null,
-        "validations": "required|numeric",
+        "validations": "required|numeric|min:0.0001",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -52,6 +52,18 @@
         "dbType": "bigInteger,false,true",
         "htmlType": null,
         "validations": "required",
+        "searchable": true,
+        "fillable": true,
+        "primary": false,
+        "inForm": true,
+        "inIndex": true,
+        "inView": true
+    },
+    {
+        "name": "previous_balance_id",
+        "dbType": "bigInteger,false,true",
+        "htmlType": null,
+        "validations": "nullable",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -114,5 +126,9 @@
     {
         "type": "relation",
         "relation": "mt1,Transaction,transaction_id"
+    },
+    {
+        "type": "relation",
+        "relation": "mt1,AccountBalance,previous_balance_id"
     }
 ]

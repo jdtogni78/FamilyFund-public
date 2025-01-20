@@ -58,3 +58,8 @@
     <p>{{ $transaction->depositRequest?->id }}</p>
 </div> 
 
+<!-- Balance Field -->
+<div class="form-group">
+    {!! Form::label('balance', 'Balance:') !!}
+    <p>{{ $transaction->balance?->id }}</p>
+</div> 

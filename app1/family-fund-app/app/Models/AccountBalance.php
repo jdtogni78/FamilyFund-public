@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property number $shares
  * @property integer $account_id
  * @property integer $transaction_id
+ * @property integer $previous_balance_id
  * @property string $start_dt
  * @property string $end_dt
  */
@@ -41,6 +42,7 @@ class AccountBalance extends Model
         'shares',
         'account_id',
         'transaction_id',
+        'previous_balance_id',
         'start_dt',
         'end_dt'
     ];
@@ -56,6 +58,7 @@ class AccountBalance extends Model
         'shares' => 'decimal:4',
         'account_id' => 'integer',
         'transaction_id' => 'integer',
+        'previous_balance_id' => 'integer',
         'start_dt' => 'date',
         'end_dt' => 'date'
     ];
@@ -67,11 +70,11 @@ class AccountBalance extends Model
      */
     public static $rules = [
         'type' => 'nullable|string|max:3',
-        'shares' => 'required|numeric',
-        'account_id' => 'nullable',
-        'transaction_id' => 'required',
-        'start_dt' => 'required',
-        'end_dt' => 'required',
+        'shares' => 'required|numeric|min:0.0001',
+        'account_id' => 'nullable|exists:accounts,id',
+        'transaction_id' => 'required|exists:transactions,id',
+        'start_dt' => 'required|date',
+        'end_dt' => 'required|date',
         'updated_at' => 'nullable',
         'created_at' => 'nullable'
     ];
@@ -90,5 +93,13 @@ class AccountBalance extends Model
     public function transaction()
     {
         return $this->belongsTo(\App\Models\TransactionExt::class, 'transaction_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function previousBalance()
+    {
+        return $this->belongsTo(\App\Models\AccountBalance::class, 'previous_balance_id');
     }
 }

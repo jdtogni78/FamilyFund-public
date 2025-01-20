@@ -51,9 +51,7 @@ class AccountExt extends Account
 
     public function depositedValueBetween($start, $end)
     {
-        $transactionsRepo = \App::make(TransactionRepository::class);
-        $query = $transactionsRepo->makeModel()->newQuery()
-            ->where('account_id', $this->id)
+        $query = TransactionExt::where('account_id', $this->id)
             ->whereDate('timestamp', '>', $start)
             ->whereDate('timestamp', '<', $end);
         $trans = $query->get();

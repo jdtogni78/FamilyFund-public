@@ -4,6 +4,11 @@ FROM docker.io/bitnami/laravel:11.5.0
 
 RUN apt-get update -y && apt update -y
 
+RUN ARCH=$(dpkg --print-architecture) \
+    && curl -sLO https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb \
+    && apt update -y && apt install -y ./wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb \
+    && rm wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb
+
 RUN apt-get install -y \
     git \
     golang-go \
@@ -13,10 +18,6 @@ RUN apt-get install -y \
 RUN go install github.com/mailhog/mhsendmail@latest \
 # RUN go get github.com/mailhog/mhsendmail \
     && cp ~/go/bin/mhsendmail /usr/local/bin/
-
-RUN curl -sLO https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_arm64.deb \
-    && apt install -y ./wkhtmltox_0.12.6.1-3.bookworm_arm64.deb \
-    && rm wkhtmltox_0.12.6.1-3.bookworm_arm64.deb
 
 RUN apt-get remove -y \
     git \

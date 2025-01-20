@@ -9,14 +9,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Mail\TransactionEmail;
-
+use Flash;
 trait TransactionTrait
 {
     use VerboseTrait, MailTrait;
 
-    public function createTransaction(array $input): array
+    public function createTransaction(array $input, bool $dry_run = false): array
     {
-        $dryRun = $input['dry_run'] ?? false;
         if ($input['type'] !== TransactionExt::TYPE_INITIAL) {
             $input['shares'] = null;
         }
@@ -24,13 +23,21 @@ trait TransactionTrait
 
         $transaction_data = null;
         DB::beginTransaction();
+        $transaction = $this->transactionRepository->create($input);
+        $transaction_data = $this->processTransaction($transaction, $dry_run);
+        DB::commit();
+        return $transaction_data;
+    }
+
+    protected function processTransaction(TransactionExt $transaction, bool $dry_run): array {
         try {
             /** @var TransactionExt $transaction */
-            $transaction = $this->transactionRepository->create($input);
             $transaction_data = $transaction->processPending();
-            if ($dryRun) {
+            if ($dry_run) {
+                Flash::success('Transaction preview ready.');
                 DB::rollBack();
             } else {
+                Flash::success('Transaction processed successfully.');
                 $api1 = $this->getPreviewData($transaction_data);
                 $this->sendTransactionConfirmation($api1);
             }
@@ -38,7 +45,6 @@ trait TransactionTrait
             DB::rollback();
             throw $e;
         }
-        DB::commit();
         return $transaction_data;
     }
 
@@ -51,6 +57,7 @@ trait TransactionTrait
             // duplicate transaction
             DB::transaction(function () use ($tran, $schedule, $asOf, &$newTran) {
                 $newTran = $tran->replicate();
+                // $newTran->verbose = true;
                 $newTran->timestamp = $asOf;
                 $newTran->status = TransactionExt::STATUS_PENDING;
                 $newTran->shares = null;
@@ -74,6 +81,7 @@ trait TransactionTrait
                 $matchTran->depositRequest?->id;
                 $matchTran->referenceTransactionMatching?->id;
                 $matchTran->account?->id;
+                $match['balance']?->previousBalance?->id;
             }
         }
 
@@ -86,6 +94,7 @@ trait TransactionTrait
         $transaction->account?->id;
         Log::info('TransactionTrait::getPreviewData: balance: ' . json_encode(array_keys($transaction_data)));
         $transaction_data['balance']?->account?->id;
+        $transaction_data['balance']?->previousBalance?->id;
 
         return $transaction_data;
     }
@@ -93,6 +102,7 @@ trait TransactionTrait
     protected function sendTransactionConfirmation($transaction_data) {
         $transaction = $transaction_data['transaction'];
         $to = $transaction->account->email_cc;
+        Log::info('TransactionTrait::sendTransactionConfirmation: ' . json_encode(array_keys($transaction_data)));
         $tranMail = new TransactionEmail($transaction_data);
         $this->sendMail($tranMail, $to);
     }

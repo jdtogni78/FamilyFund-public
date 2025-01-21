@@ -25,7 +25,6 @@ return new class extends Migration
         */
         Schema::create('goals', function (Blueprint $table) {
             $table->bigInteger('id', true, true);
-            $table->foreignId('account_id')->constrained('accounts');
             $table->string('name', 30);
             $table->string('description', 1024)->nullable();
             $table->date('start_dt');

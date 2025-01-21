@@ -40,9 +40,3 @@
     <p>{{ $goal->pct4 }}</p>
 </div>
 
-<!-- Account Id Field -->
-<div class="form-group">
-    {!! Form::label('account_id', 'Account Id:') !!}
-    <p>{{ $goal->account_id }}</p>
-</div>
-

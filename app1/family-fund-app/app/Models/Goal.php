@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class Goal
  * @package App\Models
- * @version January 20, 2025, 10:51 pm UTC
+ * @version January 20, 2025, 11:17 pm UTC
  *
- * @property \App\Models\Account $account
+ * @property \Illuminate\Database\Eloquent\Collection $accounts
  * @property string $name
  * @property string $description
  * @property string $start_dt
@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $target_type
  * @property number $target_amount
  * @property number $pct4
- * @property integer $account_id
  */
 class Goal extends Model
 {
@@ -41,8 +40,7 @@ class Goal extends Model
         'end_dt',
         'target_type',
         'target_amount',
-        'pct4',
-        'account_id'
+        'pct4', 
     ];
 
     /**
@@ -52,7 +50,6 @@ class Goal extends Model
      */
     protected $casts = [
         'id' => 'integer',
-        'account_id' => 'integer',
         'name' => 'string',
         'description' => 'string',
         'start_dt' => 'date',
@@ -60,7 +57,6 @@ class Goal extends Model
         'target_type' => 'string',
         'target_amount' => 'decimal:2',
         'pct4' => 'decimal:2',
-        'account_id' => 'integer'
     ];
 
     /**
@@ -76,14 +72,13 @@ class Goal extends Model
         'target_type' => 'required|string|max:10',
         'target_amount' => 'required|numeric',
         'pct4' => 'required|numeric',
-        'account_id' => 'required'
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      **/
-    public function account()
+    public function accounts()
     {
-        return $this->belongsTo(\App\Models\Account::class, 'account_id', 'id');
+        return $this->belongsToMany(\App\Models\Account::class, 'account_goals');
     }
 }

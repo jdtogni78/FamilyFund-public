@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-data_models=("Goal")
+data_models=("Goal AccountGoal Account")
 for model in $data_models; do
     echo "Generating ${model}..."
     # docker exec familyfund \

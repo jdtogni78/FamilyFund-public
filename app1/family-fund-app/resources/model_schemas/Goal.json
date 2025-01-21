@@ -12,18 +12,6 @@
         "inView": false
     },
     {
-        "name": "account_id",
-        "dbType": "bigInteger,true,false",
-        "htmlType": null,
-        "validations": null,
-        "searchable": false,
-        "fillable": false,
-        "primary": false,
-        "inForm": false,
-        "inIndex": false,
-        "inView": false
-    },
-    {
         "name": "name",
         "dbType": "string,30",
         "htmlType": "text",
@@ -144,19 +132,7 @@
         "inView": false
     },
     {
-        "name": "account_id",
-        "dbType": "bigInteger:unsigned:foreign",
-        "htmlType": "select",
-        "validations": "required",
-        "searchable": true,
-        "fillable": true,
-        "primary": false,
-        "inForm": true,
-        "inIndex": true,
-        "inView": true
-    },
-    {
         "type": "relation",
-        "relation": "mt1,Account,account_id,id"
+        "relation": "mtm,Account,account_goals"
     }
 ]

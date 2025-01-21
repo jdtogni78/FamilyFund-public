@@ -66,6 +66,7 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('scheduledJobs.preview');
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
+    Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\AccountMatchingRuleController::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);

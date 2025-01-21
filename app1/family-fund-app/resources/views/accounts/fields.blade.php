@@ -1,19 +1,19 @@
 <!-- Code Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('code', 'Code:') !!}
-    {!! Form::text('code', null, ['class' => 'form-control','maxlength' => 15,'maxlength' => 15]) !!}
+    {!! Form::text('code', null, ['class' => 'form-control','maxlength' => 15]) !!}
 </div>
 
 <!-- Nickname Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('nickname', 'Nickname:') !!}
-    {!! Form::text('nickname', null, ['class' => 'form-control','maxlength' => 15,'maxlength' => 15]) !!}
+    {!! Form::text('nickname', null, ['class' => 'form-control','maxlength' => 15]) !!}
 </div>
 
 <!-- Email Cc Field -->
 <div class="form-group col-sm-6">
     {!! Form::label('email_cc', 'Email Cc:') !!}
-    {!! Form::text('email_cc', null, ['class' => 'form-control','maxlength' => 1024,'maxlength' => 1024]) !!}
+    {!! Form::text('email_cc', null, ['class' => 'form-control','maxlength' => 1024]) !!}
 </div>
 
 <!-- User Id Field -->

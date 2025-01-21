@@ -126,5 +126,9 @@
     {
         "type": "relation",
         "relation": "1tm,Transaction,account_id"
+    },
+    {
+        "type": "relation",
+        "relation": "mtm,Goal,account_goals"
     }
 ]

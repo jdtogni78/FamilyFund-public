@@ -2,28 +2,23 @@
 
 namespace App\Repositories;
 
-use App\Models\GoalExt;
+use App\Models\AccountGoal;
 use App\Repositories\BaseRepository;
 
 /**
- * Class GoalRepository
+ * Class AccountGoalRepository
  * @package App\Repositories
- * @version January 20, 2025, 11:17 pm UTC
+ * @version January 20, 2025, 11:18 pm UTC
 */
 
-class GoalRepository extends BaseRepository
+class AccountGoalRepository extends BaseRepository
 {
     /**
      * @var array
      */
     protected $fieldSearchable = [
-        'name',
-        'description',
-        'start_dt',
-        'end_dt',
-        'target_type',
-        'target_amount',
-        'pct4'
+        'account_id',
+        'goal_id'
     ];
 
     /**
@@ -41,6 +36,6 @@ class GoalRepository extends BaseRepository
      **/
     public function model()
     {
-        return GoalExt::class;
+        return AccountGoal::class;
     }
 }

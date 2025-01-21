@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Database\Eloquent\Collection $accountBalances
  * @property \Illuminate\Database\Eloquent\Collection $accountMatchingRules
  * @property \Illuminate\Database\Eloquent\Collection $transactions
+ * @property \Illuminate\Database\Eloquent\Collection $goals
  * @property string $code
  * @property string $nickname
  * @property string $email_cc
@@ -29,7 +30,7 @@ class Account extends Model
     use HasFactory;
 
     public $table = 'accounts';
-
+    
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
 
@@ -115,15 +116,12 @@ class Account extends Model
     {
         return $this->hasMany(\App\Models\TransactionExt::class, 'account_id');
     }
-    public function matchingRule()
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     **/
+    public function goals()
     {
-        return $this->belongsTo(MatchingRule::class, 'matching_rule_id');
+        return $this->belongsToMany(\App\Models\GoalExt::class, 'account_goals');
     }
-    public function fetchRepository($query)
-    {
-        return $query->with('accountMatchingRules')->with('matchingRule');
-    }
-    // public function accountMatchings(){
-    //     return $this->hasOneThrough(MatchingRule::class,AccountMatchingRule::class);
-    // }
 }

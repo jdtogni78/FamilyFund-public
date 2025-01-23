@@ -64,18 +64,18 @@
     {!! Form::number('target_amount', null, ['class' => 'form-control']) !!}
 </div>
 
-<!-- Pct4 Field -->
+<!-- Target Pct Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('pct4', 'Pct4:') !!}
-    {!! Form::number('pct4', null, ['class' => 'form-control']) !!}
+    {!! Form::label('target_pct', 'Target Percentage:') !!}
+    {!! Form::number('target_pct', null, ['class' => 'form-control', 'step' => '0.01']) !!}
 </div>
 
 <!-- Accounts Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('accounts[]', 'Accounts:') !!}
-    {!! Form::select('accounts[]', $api['accountMap'] ?? [], null, ['class' => 'form-control', 'multiple' => 'multiple']) !!}
+    {!! Form::label('account_ids[]', 'Accounts:') !!}
+    {!! Form::select('account_ids[]', $api['accountMap'] ?? [], $api['account_ids'] ?? null, 
+        ['class' => 'form-control', 'multiple' => 'multiple', 'id' => 'account_ids']) !!}
 </div>
-
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">

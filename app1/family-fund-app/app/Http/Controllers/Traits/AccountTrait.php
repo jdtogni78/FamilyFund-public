@@ -10,7 +10,7 @@ use App\Models\Utils;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-
+use App\Models\GoalExt;
 trait AccountTrait
 {
     use PerformanceTrait, VerboseTrait, MailTrait;
@@ -25,85 +25,52 @@ trait AccountTrait
         return $arr;
     }
 
-    public function createAccountResponse($account, $asOf)
+    public function createAccountResponse(AccountExt $account, $asOf)
     {
         $this->perfObject = $account;
 
-        $rss = new AccountResource($account);
-        $arr = $rss->toArray(NULL);
-
-        $fund = $account->fund()->first();
-        $arr['fund'] = [
-            'id' => $fund->id,
-            'name' => $fund->name,
-        ];
-        $user = $account->user()->first();
-        if ($user) {
-            $arr['user'] = [
-                'id' => $user->id,
-                'name' => $user->name,
-            ];
-        } else {
-            $arr['user'] = [
-                'id' => 0,
-                'name' => 'N/A',
-            ];
-        }
-
+        $fund = $account->fund;
         $shareValue = $fund->shareValueAsOf($asOf);
         $accountBalance = $account->allSharesAsOf($asOf);
-        $arr['balances'] = array();
-        foreach ($accountBalance as $ab) {
-            $balance = array();
-            $balance['type'] = $ab['type'];
-            $balance['shares'] = Utils::shares($ab['shares']);
-            $balance['market_value'] = Utils::currency($shareValue * $ab['shares']);
-            array_push($arr['balances'], $balance);
+        foreach ($accountBalance as $balance) {
+            $balance->market_value = Utils::currency($shareValue * $balance->shares);
         }
-
-        return $arr;
+        $account->balances = $accountBalance;
+        return $account;
     }
 
     public function createTransactionsResponse($account, $asOf)
     {
         // TODO: move this to a more appropriate place: model? AB controller?
 
-        $fund = $account->fund()->first();
+        $fund = $account->fund;
         $shareValue = $fund->shareValueAsOf($asOf);
 
-        $transactions = $account->transactions()->get();
+        $transactions = $account->transactions;
         $arr = array();
         foreach ($transactions as $transaction) {
-            // $tran = array();
             if ($transaction->timestamp->gte(Carbon::createFromFormat('Y-m-d', $asOf)))
                 continue;
-            // $tran['id']     = $transaction->id;
-            // $tran['type']   = $transaction->type;
-            // $tran['status'] = $transaction->status;
-            // $tran['shares'] = Utils::shares($transaction->shares);
             $value = $transaction->value;
-            // $tran['value']  = Utils::currency($value);
             $transaction->share_price = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
-//            $tran['calculated_share_price'] = Utils::currency($fund->shareValueAsOf($transaction->timestamp));
             $transaction->current_value = Utils::currency($current = $transaction->shares * $shareValue);
             $transaction->current_performance = Utils::percent($current/$value - 1);
-            // $transaction->timestamp = $transaction->timestamp;
+            $transaction->balance?->id;
 
             $matching = $transaction->transactionMatching;
             if ($matching) {
-                Log::debug('tran id: ' . $transaction->id . ' matching id: ' . $matching->id);
-                // $tran['reference_transaction'] = $matching->referenceTransaction()->first()->id;
+                $this->debug('tran id: ' . $transaction->id . ' matching id: ' . $matching->id);
                 $transaction->current_value = Utils::currency(0);
                 $transaction->current_performance = Utils::percent(0);
             }
 
             $refMatch = $transaction->referenceTransactionMatching;
             if ($refMatch) {
-                Log::debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
+                $this->debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
                 $refTrans = $refMatch->transaction;
                 $current = ($refTrans->shares + $transaction->shares) * $shareValue;
-                Log::debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
-                Log::debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
+                $this->debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
+                $this->debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
                 $transaction->current_value = Utils::currency($current);
                 $transaction->current_performance = Utils::percent(($current)/$value - 1);
             }
@@ -124,7 +91,9 @@ trait AccountTrait
         if ($asOf == null) $asOf = date('Y-m-d');
 
         $api = $this;//new AccountAPIControllerExt($this->accountRepository);
-        $arr = $api->createAccountResponse($account, $asOf);
+        $arr = [];
+        $arr['account'] = $api->createAccountResponse($account, $asOf);
+        $arr['goals'] = $api->createGoalsResponse($account, $asOf);
         $arr['monthly_performance'] = $api->createMonthlyPerformanceResponse($asOf);
         $arr['yearly_performance'] = $api->createYearlyPerformanceResponse($asOf);
         $arr['disbursable'] = $api->createDisbursableResponse($arr, $asOf);
@@ -136,6 +105,48 @@ trait AccountTrait
 
         $arr['as_of'] = $asOf;
         return $arr;
+    }
+
+    protected function getGoalPct($value, $target, $pct)
+    {
+        return [
+            'value' => $value,
+            'value_4pct' => $value * $pct,
+            'final_value' => $target,
+            'final_value_4pct' => $target * $pct,
+            'completed_pct' => min(100, ($value / $target) * 100),
+        ];
+    }
+    protected function createGoalsResponse(AccountExt $account, $asOf)
+    {
+        $goals = $account->goals;
+        foreach ($goals as $goal) {
+            $goal->as_of = $asOf;
+            $start_value = $account->valueAsOf($goal->start_dt);
+            
+            $targetValue = 0;
+            if ($goal->target_type == GoalExt::TARGET_TYPE_TOTAL) {
+                $targetValue = $goal->target_amount;
+            } elseif ($goal->target_type == GoalExt::TARGET_TYPE_4PCT) {
+                $targetValue = $goal->target_amount / $goal->target_pct;
+            }
+            $value = $account->balances['OWN']->market_value;
+            $totalDays = $goal->start_dt->diffInDays($goal->end_dt);
+            $currentDays = $goal->start_dt->diffInDays(Carbon::now());
+            
+            $valuePerDay = max(0, ($targetValue - $start_value)) / $totalDays;
+            $expectedValue = $start_value + ($valuePerDay * $currentDays);
+            // Log::debug(json_encode([$goal->id, $goal->target_type, $value, $targetValue, $goal->target_pct, $start_value, $totalDays, $currentDays, $valuePerDay, $expectedValue]));
+
+            $g = [];
+            $g['start_value'] = $this->getGoalPct($start_value, $targetValue, $goal->target_pct);
+            $g['current'] = $this->getGoalPct($value, $targetValue, $goal->target_pct);
+            $g['expected'] = $this->getGoalPct($expectedValue, $targetValue, $goal->target_pct);
+            $goal->progress = $g;
+
+        }
+
+        return $goals;
     }
 
     protected function createAccountMatchingResponse(AccountExt $account, $asOf): array

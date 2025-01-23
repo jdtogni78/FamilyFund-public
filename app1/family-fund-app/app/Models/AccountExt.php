@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Resources\AccountBalanceResource;
 use App\Models\Account;
 use App\Repositories\AccountBalanceRepository;
@@ -18,6 +19,8 @@ use Nette\Utils\DateTime;
  */
 class AccountExt extends Account
 {
+    use VerboseTrait;
+
     public static function fundAccountMap()
     {
         $accountRepo = \App::make(AccountRepository::class);
@@ -93,7 +96,9 @@ class AccountExt extends Account
         $typeCount = array();
         $typeCount['OWN'] = 0;
         $typeCount['BOR'] = 0;
+        $arr = array();
         foreach ($accountBalances as $balance) {
+            $arr[$balance->type] = $balance;
             $typeCount[$balance->type]++;
         }
         foreach ($typeCount as $key => $count) {
@@ -101,7 +106,7 @@ class AccountExt extends Account
                 throw new \Exception("Every account can have only 1 balance active at any given day (found " . $count . ")");
             }
         }
-        return $accountBalances;
+        return $arr;
     }
 
     public function sharesAsOf($now) {
@@ -143,10 +148,10 @@ class AccountExt extends Account
     public static function calculateTWR(array $data): float
     {
         $cumulativeReturn = 1;
-        Log::debug("calculate TWR: " . json_encode($data));
+        // Log::debug("calculate TWR: " . json_encode($data));
         foreach ($data as $period) {
             list($startValue, $endValue, $cashFlow) = $period;
-            Log::debug("** $startValue, $endValue, $cashFlow");
+            // Log::debug("** $startValue, $endValue, $cashFlow");
 
             // Calculate the return for the current period
             if ($startValue == 0) {
@@ -157,12 +162,12 @@ class AccountExt extends Account
 
             // Update the cumulative return
             $cumulativeReturn *= $periodReturn;
-            Log::debug("*** $periodReturn, $cumulativeReturn");
+            // Log::debug("*** $periodReturn, $cumulativeReturn");
         }
 
         // Calculate the final TWR
         $twr = $cumulativeReturn - 1;
-        Log::debug("twr: ". ($twr * 100));
+        // Log::debug("twr: ". ($twr * 100));
 
         return $twr;
     }
@@ -170,7 +175,7 @@ class AccountExt extends Account
 
     public function periodPerformance($from, $to)
     {
-        Log::debug("periodPerformance $from $to");
+        $this->debug("periodPerformance $from $to");
 
         $trans = $this->transactions()
             ->select('timestamp', DB::raw('sum(value) as value'))
@@ -182,11 +187,11 @@ class AccountExt extends Account
 
         $start = $from;
         $startValue = $this->valueAsOf($start);
-        Log::debug("per per $start $startValue");
+        $this->debug("per per $start $startValue");
         $data = [];
         /** @var TransactionExt $tran */
         foreach($trans as $tran) {
-            Log::debug($tran);
+            $this->debug($tran);
             $end = $tran->timestamp; // shares are added next day
 
             $endValue = $this->valueAsOf($end);

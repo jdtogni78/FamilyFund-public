@@ -31,7 +31,7 @@ return new class extends Migration
             $table->date('end_dt');
             $table->string('target_type', 10); // 'TOTAL' or '4PCT'
             $table->decimal('target_amount', 10, 2);
-            $table->decimal('pct4', 5, 2); // up to 99.99%
+            $table->decimal('target_pct', 5, 2); // up to 99.99%
             $table->timestamps();
             $table->softDeletes();
         });

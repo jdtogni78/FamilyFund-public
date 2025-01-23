@@ -19,9 +19,7 @@
                           </div>
                           <div class="card-body">
                               {!! Form::model($goal, ['route' => ['goals.update', $goal->id], 'method' => 'patch']) !!}
-
                               @include('goals.fields')
-
                               {!! Form::close() !!}
                             </div>
                         </div>

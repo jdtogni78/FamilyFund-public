@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class AccountGoal
  * @package App\Models
- * @version January 20, 2025, 11:18 pm UTC
+ * @version January 21, 2025, 12:27 am UTC
  *
  * @property \App\Models\Account $account
  * @property \App\Models\Goal $goal
@@ -24,6 +24,9 @@ class AccountGoal extends Model
 
     public $table = 'account_goals';
     
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+
 
     protected $dates = ['deleted_at'];
 
@@ -52,7 +55,10 @@ class AccountGoal extends Model
      */
     public static $rules = [
         'account_id' => 'required',
-        'goal_id' => 'required'
+        'goal_id' => 'required',
+        'created_at' => 'nullable',
+        'updated_at' => 'nullable',
+        'deleted_at' => 'nullable'
     ];
 
     /**

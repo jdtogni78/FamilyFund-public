@@ -57,8 +57,13 @@ class PDFTest extends TestCase
         $tran = $this->factory->createTransaction();
         $this->factory->createBalance(100, $tran, $this->factory->userAccount);
         $account = $this->factory->userAccount;
+        $this->factory->createGoal($account);
 
         $arr = $this->createAccountViewData($this->asOf, $account);
+        $progress = $arr['goals'][0]->progress;
+        $progress['current']['completed_pct'] = 50;
+        $progress['expected']['completed_pct'] = 90;
+        $arr['goals'][0]->progress = $progress;
         $pdf = new AccountPDF($arr, true);
         $pdfFile = $pdf->file();
         Log::debug($pdfFile);

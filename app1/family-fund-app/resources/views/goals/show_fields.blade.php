@@ -34,9 +34,9 @@
     <p>{{ $goal->target_amount }}</p>
 </div>
 
-<!-- Pct4 Field -->
+<!-- Target Pct Field -->
 <div class="form-group">
-    {!! Form::label('pct4', 'Pct4:') !!}
-    <p>{{ $goal->pct4 }}</p>
+    {!! Form::label('target_pct', 'Target Percentage:') !!}
+    <p>{{ $goal->target_pct }}</p>
 </div>
 

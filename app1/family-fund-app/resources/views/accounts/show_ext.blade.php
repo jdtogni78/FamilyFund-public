@@ -19,6 +19,7 @@
                         </div>
                         <div class="card-body">
                             {!! Form::open(['route' => ['accounts.update', 1]]) !!}
+                            @php($account = $api['account'])
                             @include('accounts.show_fields_ext')
                             {!! Form::close() !!}
                         </div>
@@ -37,6 +38,23 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong>Goals</strong>
+                        </div>
+                        <div class="card-body">
+                            @foreach($account->goals as $goal)
+                                <h3>{{ $goal->name }} ({{ $goal->id }})</h3>
+                                @include('goals.progress_bar')
+                                @include('goals.progress_details')
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col">
                     <div class="card">

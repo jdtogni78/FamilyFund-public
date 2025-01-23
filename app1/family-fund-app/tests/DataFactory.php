@@ -3,6 +3,8 @@
 use App\Models\AccountExt;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
+use App\Models\Goal;
+use App\Models\GoalExt;
 use App\Models\FundReport;
 use App\Models\Schedule;
 use App\Models\ScheduledJob;
@@ -420,4 +422,21 @@ class DataFactory
         ]);
     }
 
+    public function createGoal($account, $target_type=GoalExt::TARGET_TYPE_TOTAL, $target_value=10000, $target_pct=0.04, $start_value=0, $start_dt=null, $end_dt=null) {
+        if ($start_dt == null) $start_dt = Carbon::today();
+        if ($end_dt == null) $end_dt = Carbon::now()->addYears(5);
+        $goal = Goal::factory()->create([
+            'name' => 'test goal',
+            'description' => 'test goal',
+            'target_type' => $target_type,
+            'target_amount' => $target_value,
+            'target_pct' => $target_pct,
+            'start_dt' => $start_dt,
+            'end_dt' => $end_dt,
+        ]);
+        $goal->description = 'test goal ' . $goal->id;
+        $goal->accounts()->sync([$account->id]);
+        $goal->save();
+        return $goal;
+    }   
 }

@@ -8,7 +8,25 @@
                     <strong>Details</strong>
                 </div>
                 <div class="card-body">
+                    @php ($account = $api['account'])
                     @include('accounts.show_fields_pdf')
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <strong>Goals</strong>
+                </div>
+                <div class="card-body">
+                    @foreach($account->goals as $goal)
+                        <h3>{{ $goal->name }} ({{ $goal->id }})</h3>
+                        <img src="{{$files['goals_progress_'.$goal->id.'.png']}}" alt="Monthly Value"/>
+                        @include('goals.progress_details')
+                    @endforeach
+
                 </div>
             </div>
         </div>

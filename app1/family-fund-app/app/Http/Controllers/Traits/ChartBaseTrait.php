@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Traits;
 use App\Charts\BarChart;
 use App\Charts\DoughnutChart;
 use App\Charts\LineChart;
+use App\Charts\ProgressChart;
 use Illuminate\Support\Facades\Log;
 use PhpParser\Node\Scalar\MagicConst\Line;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
@@ -70,7 +71,8 @@ trait ChartBaseTrait
         }
 
     }
-
+    
+    // https://github.com/szymach/c-pchart/blob/3.0/resources/doc/line.md
     protected function createSharesLineChart(array $api, TemporaryDirectory $tempDir)
     {
         $name = 'shares.png';
@@ -87,6 +89,18 @@ trait ChartBaseTrait
         $this->files[$name] = $file = $tempDir->path($name);
         $labels1 = array_keys($data);
         $this->createStepChart(array_values($data), $labels1, $file, "Shares");
+    }
+
+    // https://github.com/szymach/c-pchart/blob/3.0/resources/doc/progress.md
+    public function createGoalsProgressGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        foreach ($api['goals'] as $goal) {
+            $name = 'goals_progress_'.$goal->id.'.png';
+            $this->files[$name] = $file = $tempDir->path($name);
+            $chart = new ProgressChart();
+            $chart->createProgressChart($goal->progress, $file, $goal->name);
+            $chart->saveAs($file);
+        }
     }
 
     public function addZone(string $label1, string $label2, 

@@ -23,7 +23,7 @@ class GoalRepository extends BaseRepository
         'end_dt',
         'target_type',
         'target_amount',
-        'pct4'
+        'target_pct'
     ];
 
     /**

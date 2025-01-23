@@ -17,6 +17,7 @@ services:
       - noreply.domain.com:127.0.0.1
     volumes:
       - ./family-fund-app:/app
+      - ./family-fund-app/docker_tmp:/tmp
 
   mailhog:
     image: mailhog/mailhog

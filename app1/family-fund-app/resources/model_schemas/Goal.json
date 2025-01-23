@@ -84,7 +84,7 @@
         "inView": true
     },
     {
-        "name": "pct4",
+        "name": "target_pct",
         "dbType": "decimal,5,2",
         "htmlType": "number",
         "validations": "required|numeric",

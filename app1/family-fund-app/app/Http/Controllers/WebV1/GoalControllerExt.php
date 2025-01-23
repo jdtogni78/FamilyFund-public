@@ -12,6 +12,9 @@ use Response;
 use App\Http\Controllers\GoalController;
 use App\Models\AccountExt;
 use App\Models\GoalExt;
+use App\Models\Goal;
+use App\Models\AccountGoal;
+use Illuminate\Support\Facades\Log;
 class GoalControllerExt extends GoalController
 {
     public function getApi()
@@ -43,6 +46,41 @@ class GoalControllerExt extends GoalController
     public function edit($id)
     {
         $api = $this->getApi();
+        $goal = Goal::find($id);
+        $goal->accounts = $goal->accounts()->get();
+        $api['account_ids'] = $goal->accounts->pluck('id')->toArray();
         return parent::edit($id)->with('api', $api);
+    }
+
+    public function store(CreateGoalRequest $request)
+    {
+        $input = $request->all();
+        $goal = $this->goalRepository->create($input);
+
+        $goal->accounts()->sync($input['account_ids']);
+        Flash::success('Goal saved successfully.');
+
+        $api = $this->getApi();
+        return redirect(route('goals.index'))->with('api', $api);
+    }
+
+    public function update($id, UpdateGoalRequest $request)
+    {
+        $api = $this->getApi();
+        $goal = Goal::find($id);
+
+        if (empty($goal)) {
+            Flash::error('Goal not found');
+            return redirect(route('goals.index'));
+        }
+
+        Log::info(json_encode($request->all()));
+        $goal->update($request->all());
+        
+        Log::info(json_encode($request->account_ids));
+        $goal->accounts()->sync($request->account_ids);
+
+        Flash::success('Goal updated successfully.');
+        return redirect(route('goals.index'));
     }
 }

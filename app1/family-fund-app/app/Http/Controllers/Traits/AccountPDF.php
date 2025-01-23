@@ -14,7 +14,7 @@ class AccountPDF
         $this->createYearlyPerformanceGraph($arr, $tempDir);
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createSharesLineChart($arr, $tempDir);
-
+        $this->createGoalsProgressGraph($arr, $tempDir);
         $view = 'accounts.show_pdf';
         $pdfFile = 'account.pdf';
         $this->debugHTML($debugHtml, $view, $arr, $tempDir);

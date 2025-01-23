@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Goal;
+use App\Models\GoalExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class GoalFactory extends Factory
@@ -12,7 +12,7 @@ class GoalFactory extends Factory
      *
      * @var string
      */
-    protected $model = Goal::class;
+    protected $model = GoalExt::class;
 
     /**
      * Define the model's default state.
@@ -28,7 +28,7 @@ class GoalFactory extends Factory
         'end_dt' => $this->faker->word,
         'target_type' => $this->faker->word,
         'target_amount' => $this->faker->word,
-        'pct4' => $this->faker->word,
+        'target_pct' => $this->faker->word,
         // 'created_at' => $this->faker->date('Y-m-d H:i:s'),
         // 'updated_at' => $this->faker->date('Y-m-d H:i:s'),
         // 'deleted_at' => $this->faker->date('Y-m-d H:i:s')

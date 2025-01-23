@@ -122,6 +122,6 @@ class Account extends Model
      **/
     public function goals()
     {
-        return $this->belongsToMany(\App\Models\GoalExt::class, 'account_goals');
+        return $this->belongsToMany(\App\Models\GoalExt::class, 'account_goals', 'account_id', 'goal_id');
     }
 }

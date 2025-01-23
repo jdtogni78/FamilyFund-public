@@ -8,7 +8,7 @@
         <th>End Dt</th>
         <th>Target Type</th>
         <th>Target Amount</th>
-        <th>Pct4</th>
+        <th>Target Percentage</th>
                 <th colspan="3">Action</th>
             </tr>
         </thead>
@@ -21,7 +21,7 @@
             <td>{{ $goal->end_dt }}</td>
             <td>{{ $goal->target_type }}</td>
             <td>{{ $goal->target_amount }}</td>
-            <td>{{ $goal->pct4 }}</td>
+            <td>{{ $goal->target_pct }}</td>
                 <td>
                     {!! Form::open(['route' => ['goals.destroy', $goal->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>

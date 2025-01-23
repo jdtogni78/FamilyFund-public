@@ -2,8 +2,7 @@
     <script type="text/javascript">
         var api = {!! json_encode($api) !!};
         var all_labels   = api.transactions.map(function(e){return e.timestamp.substr(0,10);});
-        var all_balances = api.transactions.map(function(e){return e.balances.OWN;});
-        var all_values   = api.transactions.map(function(e){return e.balances.OWN * e.share_price;});
+        var all_balances = api.transactions.map(function(e){return e.balance.shares;});
 
         var balances_labels = [...new Set(all_labels)].sort();
         // sum all balances for each label

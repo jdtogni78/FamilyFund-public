@@ -107,14 +107,14 @@ trait AccountTrait
         return $arr;
     }
 
-    protected function getGoalPct($value, $target, $pct)
+    protected function getGoalPct($value, $start, $target, $pct)
     {
         return [
             'value' => $value,
             'value_4pct' => $value * $pct,
             'final_value' => $target,
             'final_value_4pct' => $target * $pct,
-            'completed_pct' => min(100, ($value / $target) * 100),
+            'completed_pct' => min(100, (($value - $start) / ($target - $start)) * 100),
         ];
     }
     protected function createGoalsResponse(AccountExt $account, $asOf)
@@ -139,9 +139,10 @@ trait AccountTrait
             // Log::debug(json_encode([$goal->id, $goal->target_type, $value, $targetValue, $goal->target_pct, $start_value, $totalDays, $currentDays, $valuePerDay, $expectedValue]));
 
             $g = [];
-            $g['start_value'] = $this->getGoalPct($start_value, $targetValue, $goal->target_pct);
-            $g['current'] = $this->getGoalPct($value, $targetValue, $goal->target_pct);
-            $g['expected'] = $this->getGoalPct($expectedValue, $targetValue, $goal->target_pct);
+            $g['period'] = [$currentDays, $totalDays, ($currentDays / $totalDays) * 100.0];
+            $g['start_value'] = $this->getGoalPct($start_value, $start_value, $targetValue, $goal->target_pct);
+            $g['current'] = $this->getGoalPct($value, $start_value, $targetValue, $goal->target_pct);
+            $g['expected'] = $this->getGoalPct($expectedValue, $start_value, $targetValue, $goal->target_pct);
             $goal->progress = $g;
 
         }

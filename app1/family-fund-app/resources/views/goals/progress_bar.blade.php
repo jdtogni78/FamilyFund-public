@@ -2,7 +2,7 @@
     <div class="progress-group-header">
         <i class="cil-user progress-group-icon fa-solid fa-chart-line"></i>
         <div>Expected Value:&nbsp;</div>
-        <div class="ms-auto font-weight-bold"> {{ number_format($goal->progress['expected']['completed_pct'], 1) }}%</div>
+        <div class="ms-auto font-weight-bold">{{ number_format($goal->progress['expected']['completed_pct'], 1) }}%</div>
     </div>
     <div class="progress-group-bars">
         <div class="progress progress-thin">

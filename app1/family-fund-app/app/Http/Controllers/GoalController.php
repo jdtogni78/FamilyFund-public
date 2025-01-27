@@ -13,7 +13,7 @@ use Response;
 class GoalController extends AppBaseController
 {
     /** @var GoalRepository $goalRepository*/
-    private $goalRepository;
+    public $goalRepository;
 
     public function __construct(GoalRepository $goalRepo)
     {

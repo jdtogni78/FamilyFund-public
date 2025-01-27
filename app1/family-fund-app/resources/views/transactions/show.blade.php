@@ -51,6 +51,29 @@
                 </div>
             @endif
         @endisset
+        @if($transaction->scheduledJobs()->count() > 0)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Scheduled Jobs using this transaction as template</strong>
+                </div>
+                <div class="card-body">
+                    @include('scheduled_jobs.table', ['scheduledJobs' => $transaction->scheduledJobs()])
+                </div>
+            </div>
+        @endif
+        @if($transaction->status == \App\Models\TransactionExt::STATUS_SCHEDULED)
+            <div class="card">
+                <div class="card-header">
+                    <strong>Scheduled Transaction</strong>
+                </div>
+                <div class="card-body">
+                    @php($scheduled_job = \App\Models\ScheduledJobExt::where('entity_id', $transaction->id)
+                        ->where('entity_descr', \App\Models\ScheduledJobExt::ENTITY_TRANSACTION)->first())
+                    @include('transactions.table', ['transactions' => $scheduled_job->entities()])
+                </div>
+            </div>
+        @endif
+
         @isset($transaction->accountBalance)
             <div class="card">
                 <div class="card-header">
@@ -103,6 +126,7 @@
                 </div>
             </div>
         @endisset
+
 
     </div>
 @endsection

@@ -75,4 +75,9 @@ class ScheduledJobExt extends ScheduledJob
         return $sjs;
     }
 
+    public function entities()
+    {
+        return self::$classMap[$this->entity_descr]::where('scheduled_job_id', $this->id)->get();
+    }
+
 }

@@ -101,6 +101,7 @@ class TransactionControllerExt extends TransactionController
 
     public function previewPending($id)
     {
+        /** @var TransactionExt $transaction */
         $transaction = $this->transactionRepository->find($id);
 
         if (empty($transaction)) {
@@ -109,7 +110,8 @@ class TransactionControllerExt extends TransactionController
         }
 
         DB::beginTransaction();
-        $api1 = $transaction->processPending();
+        $transaction_data = $transaction->processPending();
+        $api1 = $this->getPreviewData($transaction_data);
         DB::rollBack();
         
         return view('transactions.preview')

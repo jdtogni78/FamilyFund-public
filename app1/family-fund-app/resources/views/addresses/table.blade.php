@@ -29,13 +29,14 @@
             <td>{{ $address->zip_code }}</td>
             <td>{{ $address->country }}</td>
                 <td>
-                    {!! Form::open(['route' => ['addresses.destroy', $address->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('addresses.show', [$address->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('addresses.edit', [$address->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('addresses.destroy', $address->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this address?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

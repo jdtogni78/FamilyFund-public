@@ -30,4 +30,4 @@ Dear {{$api['to']}},<br>
         </div>
     </div>
 </div>
-@endsection
+</x-app-layout>

@@ -13,13 +13,14 @@
                 <td>{{ $accountMatchingRule->account_id }}</td>
                 <td>{{ $accountMatchingRule->matching_rule_id }}</td>
                 <td>
-                    {!! Form::open(['route' => ['accountMatchingRules.destroy', $accountMatchingRule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('accountMatchingRules.show', [$accountMatchingRule->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('accountMatchingRules.edit', [$accountMatchingRule->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('accountMatchingRules.destroy', $accountMatchingRule->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account matching rule?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

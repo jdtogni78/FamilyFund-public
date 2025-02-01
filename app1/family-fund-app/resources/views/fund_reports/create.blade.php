@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
-                @include('coreui-templates::common.errors')
+                @include('coreui-templates.common.errors')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
@@ -18,15 +18,15 @@
                                 <strong>Create Fund Report</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::open(['route' => 'fundReports.store']) !!}
-
-                                   @include('fund_reports.fields')
-
-                                {!! Form::close() !!}
+                                <form action="{{ route('fundReports.store') }}" method="POST">
+                                    @csrf
+                                    @include('fund_reports.fields')
+                                    <button type="submit" class="btn btn-primary">Create</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
            </div>
     </div>
-@endsection
+</x-app-layout>

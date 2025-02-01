@@ -1,25 +1,25 @@
 <!-- Schedule Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('schedule_id', 'Schedule Id:') !!}
-    {!! Form::number('schedule_id', null, ['class' => 'form-control']) !!}
+<label for="schedule_id">Schedule Id:</label>
+<input type="number" name="schedule_id" class="form-control">
 </div>
 
 <!-- Entity Descr Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('entity_descr', 'Entity Descr:') !!}
-    {!! Form::text('entity_descr', null, ['class' => 'form-control','maxlength' => 255,'maxlength' => 255]) !!}
+<label for="entity_descr">Entity Descr:</label>
+<input type="text" name="entity_descr" class="form-control" maxlength="255">
 </div>
 
 <!-- Entity Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('entity_id', 'Entity Id:') !!}
-    {!! Form::number('entity_id', null, ['class' => 'form-control']) !!}
+<label for="entity_id">Entity Id:</label>
+<input type="number" name="entity_id" class="form-control">
 </div>
 
 <!-- Start Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('start_dt', 'Start Dt:') !!}
-    {!! Form::text('start_dt', null, ['class' => 'form-control','id'=>'start_dt']) !!}
+<label for="start_dt">Start Dt:</label>
+<input type="text" name="start_dt" class="form-control" id="start_dt">
 </div>
 
 @push('scripts')
@@ -39,8 +39,8 @@
 
 <!-- End Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('end_dt', 'End Dt:') !!}
-    {!! Form::text('end_dt', null, ['class' => 'form-control','id'=>'end_dt']) !!}
+<label for="end_dt">End Dt:</label>
+<input type="text" name="end_dt" class="form-control" id="end_dt">
 </div>
 
 @push('scripts')
@@ -60,6 +60,6 @@
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('scheduledJobs.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

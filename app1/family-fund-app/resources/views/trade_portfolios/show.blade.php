@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <script type="text/javascript">
@@ -12,7 +12,7 @@
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
-            @include('coreui-templates::common.errors')
+            @include('coreui-templates.common.errors')
             @isset($split) @if($split==true)
                 <div class="row">
                     <div class="col">
@@ -21,9 +21,9 @@
                                 <strong>Split Trade Portfolio</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::model($tradePortfolio, ['route' => ['tradePortfolios.split', $tradePortfolio->id], 'method' => 'patch']) !!}
+<form method="patch" action="{ route('['route' => ['tradePortfolios.split', $tradePortfolio->id]') }" >
                                 @include('trade_portfolios.split_fields')
-                                {!! Form::close() !!}
+</form>
                             </div>
                         </div>
                     </div>
@@ -35,4 +35,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

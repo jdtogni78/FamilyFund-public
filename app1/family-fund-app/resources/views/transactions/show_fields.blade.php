@@ -1,65 +1,65 @@
 <!-- Type Field -->
 <div class="form-group">
-    {!! Form::label('type', 'Type:') !!}
+<label for="type">Type:</label>
     <p>{{ $transaction->type }}</p>
 </div>
 
 <!-- Status Field -->
 <div class="form-group">
-    {!! Form::label('status', 'Status:') !!}
+<label for="status">Status:</label>
     <p>{{ $transaction->status }}</p>
 </div>
 
 <!-- Value Field -->
 <div class="form-group">
-    {!! Form::label('value', 'Value:') !!}
+<label for="value">Value:</label>
     <p>{{ $transaction->value }}</p>
 </div>
 
 <!-- Shares Field -->
 <div class="form-group">
-    {!! Form::label('shares', 'Shares:') !!}
+<label for="shares">Shares:</label>
     <p>{{ $transaction->shares }}</p>
 </div>
 
 <!-- Timestamp Field -->
 <div class="form-group">
-    {!! Form::label('timestamp', 'Timestamp:') !!}
+<label for="timestamp">Timestamp:</label>
     <p>{{ $transaction->timestamp }}</p>
 </div>
 
 <!-- Account Id Field -->
 <div class="form-group">
-    {!! Form::label('account_id', 'Account Id:') !!}
+<label for="account_id">Account Id:</label>
     <p>{{ $transaction->account_id }}</p>
 </div>
 
 <!-- Descr Field -->
 <div class="form-group">
-    {!! Form::label('descr', 'Descr:') !!}
+<label for="descr">Descr:</label>
     <p>{{ $transaction->descr }}</p>
 </div>
 
 <!-- Flags Field -->
 <div class="form-group">
-    {!! Form::label('flags', 'Flags:') !!}
+<label for="flags">Flags:</label>
     <p>{{ $transaction->flags }}</p>
 </div>
 
 <!-- Cash Deposit Id Field -->
 <div class="form-group">
-    {!! Form::label('cash_deposit_id', 'Cash Deposit Id:') !!}
+<label for="cash_deposit_id">Cash Deposit Id:</label>
     <p>{{ $transaction->cashDeposit?->id }}</p>
 </div> 
 
 <!-- Deposit Request Id Field -->
 <div class="form-group">
-    {!! Form::label('deposit_request_id', 'Deposit Request Id:') !!}
+<label for="deposit_request_id">Deposit Request Id:</label>
     <p>{{ $transaction->depositRequest?->id }}</p>
 </div> 
 
 <!-- Balance Field -->
 <div class="form-group">
-    {!! Form::label('balance', 'Balance:') !!}
+<label for="balance">Balance:</label>
     <p>{{ $transaction->balance?->id }}</p>
 </div> 

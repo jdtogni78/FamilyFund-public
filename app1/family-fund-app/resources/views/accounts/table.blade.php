@@ -25,13 +25,14 @@
                 <td>{{ $account->fund->id ?? '-' }}</td>
                 <td>{{ $account->fund->name ?? '-' }}</td>
                 <td>
-                    {!! Form::open(['route' => ['accounts.destroy', $account->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('accounts.show', [$account->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('accounts.edit', [$account->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('accounts.destroy', $account->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

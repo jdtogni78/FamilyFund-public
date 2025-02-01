@@ -23,16 +23,17 @@
                 <td>{{ $tradePortfolioItem->target_share * 100 }}%</td>
                 <td>{{ $tradePortfolioItem->deviation_trigger * 100}}%</td>
                 <td>
-                    {!! Form::open(['route' => ['tradePortfolioItems.destroy', $tradePortfolioItem->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('tradePortfolioItems.show', [$tradePortfolioItem->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         @if($editable ?? false)
                         @else
-                            <a href="{{ route('tradePortfolioItems.edit', [$tradePortfolioItem->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                            {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <a href="{{ route('tradePortfolioItems.edit', [$tradePortfolioItem->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        <form action="{{ route('tradePortfolioItems.destroy', $tradePortfolioItem->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this trade portfolio item?')"><i class="fa fa-trash"></i></button>
+                        </form>
                         @endif
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

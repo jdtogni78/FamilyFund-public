@@ -15,13 +15,14 @@
             <td>{{ $idDocument->type }}</td>
             <td>{{ $idDocument->number }}</td>
                 <td>
-                    {!! Form::open(['route' => ['idDocuments.destroy', $idDocument->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('idDocuments.show', [$idDocument->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('idDocuments.edit', [$idDocument->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('idDocuments.destroy', $idDocument->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this id document?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

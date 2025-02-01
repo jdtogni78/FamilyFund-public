@@ -1,30 +1,30 @@
 <!-- Code Field -->
 <div class="form-group">
-    {!! Form::label('code', 'Code:') !!}
+<label for="code">Code:</label>
     <p>{{ $account->code }}</p>
 </div>
 
 <!-- Nickname Field -->
 <div class="form-group">
-    {!! Form::label('nickname', 'Nickname:') !!}
+<label for="nickname">Nickname:</label>
     <p>{{ $account->nickname }}</p>
 </div>
 
 <!-- Email Cc Field -->
 <div class="form-group">
-    {!! Form::label('email_cc', 'Email Cc:') !!}
+<label for="email_cc">Email Cc:</label>
     <p>{{ $account->email_cc }}</p>
 </div>
 
 <!-- User Id Field -->
 <div class="form-group">
-    {!! Form::label('user_id', 'User Id:') !!}
+<label for="user_id">User Id:</label>
     <p>{{ $account->user_id }}</p>
 </div>
 
 <!-- Fund Id Field -->
 <div class="form-group">
-    {!! Form::label('fund_id', 'Fund Id:') !!}
+<label for="fund_id">Fund Id:</label>
     <p>{{ $account->fund_id }}</p>
 </div>
 

@@ -1,12 +1,12 @@
-@extends('layouts.app')
-
-@section('content')
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">Funds</li>
-    </ol>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Funds') }}
+        </h2>
+    </x-slot>
     <div class="container-fluid">
         <div class="animated fadeIn">
-             @include('flash::message')
+             @include('layouts.flash-messages')
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
@@ -26,5 +26,5 @@
              </div>
          </div>
     </div>
-@endsection
+</x-app-layout>
 

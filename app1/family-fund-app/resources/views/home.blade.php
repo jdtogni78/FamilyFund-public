@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
   <div class="container-fluid">
@@ -9,4 +9,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-app-layout>

@@ -1,12 +1,12 @@
 <!-- Object Field -->
 <div class="form-group">
-    {!! Form::label('object', 'Object:') !!}
+<label for="object">Object:</label>
     <p>{{ $changeLog->object }}</p>
 </div>
 
 <!-- Content Field -->
 <div class="form-group">
-    {!! Form::label('content', 'Content:') !!}
+<label for="content">Content:</label>
     <p>{{ $changeLog->content }}</p>
 </div>
 

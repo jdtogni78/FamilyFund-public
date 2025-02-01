@@ -1,17 +1,21 @@
 <!-- Fund Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('fund_id', 'Fund Id:') !!}
-    {!! Form::select('fund_id', $api['fundMap'], null, ['class' => 'form-control']) !!}
+    <label for="fund_id">Fund Id:</label>
+    <select name="fund_id" class="form-control">
+        @foreach($api['fundMap'] as $value => $label)
+            <option value="{{ $value }}" {{ $portfolio?->fund_id == $value ? 'selected' : '' }}>{{ $label }}</option>
+        @endforeach
+    </select>
 </div>
 
 <!-- Source Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('source', 'Source:') !!}
-    {!! Form::text('source', null, ['class' => 'form-control','maxlength' => 30,'maxlength' => 30]) !!}
+    <label for="source">Source:</label>
+    <input type="text" name="source" value="{{ $portfolio?->source }}" class="form-control" maxlength="30">
 </div>
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+    <button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('portfolios.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

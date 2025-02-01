@@ -25,13 +25,15 @@
             <td>{{ $depositRequest->cash_deposit_id }}</td>
             <td>{{ $depositRequest->transaction_id }}</td>
                 <td>
-                    {!! Form::open(['route' => ['depositRequests.destroy', $depositRequest->id], 'method' => 'delete']) !!}
-                    <div class='btn-group'>
-                        <a href="{{ route('depositRequests.show', [$depositRequest->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('depositRequests.edit', [$depositRequest->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
-                    </div>
-                    {!! Form::close() !!}
+                    <form action="{{ route('depositRequests.destroy', $depositRequest->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('depositRequests.show', [$depositRequest->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('depositRequests.edit', [$depositRequest->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
         </ol>
     <div class="container-fluid">
          <div class="animated fadeIn">
-             @include('coreui-templates::common.errors')
+             @include('coreui-templates.common.errors')
              <div class="row">
                  <div class="col-lg-12">
                       <div class="card">
@@ -18,9 +18,9 @@
                               <strong>Edit Cash Deposit</strong>
                           </div>
                           <div class="card-body">
-                              {!! Form::model($cashDeposit, ['route' => ['cashDeposits.update', $cashDeposit->id], 'method' => 'patch']) !!}
+<form method="patch" action="{ route('['route' => ['cashDeposits.update', $cashDeposit->id]') }" >
                               @include('cash_deposits.fields', ['isEdit' => true])
-                              {!! Form::close() !!}
+</form>
                             </div>
                         </div>
                     </div>
@@ -28,4 +28,4 @@
             </div>
          </div>
     </div>
-@endsection
+</x-app-layout>

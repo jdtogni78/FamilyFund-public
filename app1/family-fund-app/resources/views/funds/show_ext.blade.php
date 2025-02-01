@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
-            @include('coreui-templates::common.errors')
+            @include('coreui-templates.common.errors')
             <div class="row">
                 <div class="col">
                     <div class="card">
@@ -18,9 +18,10 @@
                             <a href="{{ route('funds.index') }}" class="btn btn-light">Back</a>
                         </div>
                         <div class="card-body">
-                            {!! Form::open(['route' => ['funds.update', 1]]) !!}
-                            @include('funds.show_fields_ext')
-                            {!! Form::close() !!}
+                            <form action="{{ route('funds.update', 1) }}" method="POST">
+                                @csrf
+                                @include('funds.show_fields_ext')
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -267,4 +268,4 @@
             @endisset @endisset
         </div>
     </div>
-@endsection
+</x-app-layout>

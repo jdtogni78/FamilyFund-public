@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -6,7 +6,7 @@
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
-             @include('flash::message')
+             @include('layouts.flash-messages')
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
@@ -27,5 +27,5 @@
              </div>
          </div>
     </div>
-@endsection
+</x-app-layout>
 

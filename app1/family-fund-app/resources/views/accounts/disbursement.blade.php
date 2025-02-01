@@ -5,22 +5,22 @@
 <div class="row">
     <div class="form-group col-sm-6">
         @php $field = 'value'; @endphp
-        {!! Form::label($field, 'Value:') !!}
-        {!! Form::text($field, '$' . $disb[$field], $field_props) !!}
+        <label for="{{ $field }}">Value:</label>
+        <input type="text" name="{{ $field }}" value="{{ '$' . $disb[$field] }}" >
     </div>
     <div class="form-group col-sm-6">
         @php $field = 'limit'; @endphp
-        {!! Form::label($field, 'Cap:') !!}
-        {!! Form::text($field, $disb[$field] . '%', $field_props) !!}
+        <label for="{{ $field }}">Cap:</label>
+        <input type="text" name="{{ $field }}" value="{{ $disb[$field] . '%' }}" >
     </div>
     <div class="form-group col-sm-6">
         @php $field = 'performance'; @endphp
-        {!! Form::label($field, 'Performance:') !!}
-        {!! Form::text($field, $disb[$field] . "%", $field_props) !!}
+        <label for="{{ $field }}">Performance:</label>
+        <input type="text" name="{{ $field }}" value="{{ $disb[$field] . '%' }}" >
     </div>
     <div class="form-group col-sm-6">
         @php $field = 'year'; @endphp
-        {!! Form::label($field, 'Year:') !!}
-        {!! Form::text($field, $disb[$field], $field_props) !!}
+        <label for="{{ $field }}">Year:</label>
+        <input type="text" name="{{ $field }}" value="{{ $disb[$field] }}" >
     </div>
 </div>

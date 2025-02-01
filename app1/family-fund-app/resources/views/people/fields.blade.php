@@ -1,32 +1,36 @@
 <div class="col-md-6">
     <!-- First Name Field -->
     <div class="form-group">
-        {!! Form::label('first_name', 'First Name:') !!}
-        {!! Form::text('first_name', null, ['class' => 'form-control','maxlength' => 255]) !!}
+<label for="first_name">First Name:</label>
+<input type="text" name="first_name" class="form-control" maxlength="255">
     </div>
 
     <!-- Last Name Field -->
     <div class="form-group">
-        {!! Form::label('last_name', 'Last Name:') !!}
-        {!! Form::text('last_name', null, ['class' => 'form-control','maxlength' => 255]) !!}
+<label for="last_name">Last Name:</label>
+<input type="text" name="last_name" class="form-control" maxlength="255">
     </div>
 
     <!-- Email Field -->
     <div class="form-group">
-        {!! Form::label('email', 'Email:') !!}
-        {!! Form::email('email', null, ['class' => 'form-control','maxlength' => 255]) !!}
+<label for="email">Email:</label>
+<input type="email" name="email" value="" class="form-control" maxlength="255]">
     </div>
 
     <!-- Birthday Field -->
     <div class="form-group">
-        {!! Form::label('birthday', 'Birthday:') !!}
-        {!! Form::text('birthday', null, ['class' => 'form-control','id'=>'birthday']) !!}
+<label for="birthday">Birthday:</label>
+<input type="text" name="birthday" class="form-control" id="birthday">
     </div>
 
     <!-- Legal Guardian Id Field -->
     <div class="form-group">
-        {!! Form::label('legal_guardian_id', 'Legal Guardian Id:') !!}
-        {!! Form::select('legal_guardian_id', $legalGuardians, null, ['class' => 'form-control']) !!}
+<label for="legal_guardian_id">Legal Guardian Id:</label>
+<select name="legal_guardian_id" class="form-control">
+    @foreach($legalGuardians as $value => $label)
+        <option value="{ $value }" { null == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
     </div>
 </div>
 
@@ -81,7 +85,7 @@
 
     <!-- Submit Field -->
     <div class="form-group">
-        {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
         <a href="{{ route('people.index') }}" class="btn btn-secondary">Cancel</a>
     </div>
 </div>

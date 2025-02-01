@@ -1,11 +1,11 @@
 <!-- Fund Id Field -->
 <div class="form-group">
-    {!! Form::label('fund_id', 'Fund Id:') !!}
+    <label for="fund_id">Fund Id:</label>
     <p>{{ $portfolio->fund->name }}</p>
 </div>
 
 <!-- Source Field -->
 <div class="form-group">
-    {!! Form::label('source', 'Source:') !!}
+    <label for="source">Source:</label>
     <p>{{ $portfolio->source }}</p>
 </div>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
-                @include('coreui-templates::common.errors')
+                @include('coreui-templates.common.errors')
                 @if (Session::has('error'))
                    <div class="alert alert-danger">{{ Session::get('error') }}</div>
                 @endif
@@ -21,13 +21,14 @@
                                 <strong>Create Transaction</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::open(['route' => 'transactions.preview', 'method' => 'get']) !!}
+<form method="POST" action="{ route('transactions.preview') }">
+@csrf
                                @include('transactions.fields')
-                                {!! Form::close() !!}
+</form>
                             </div>
                         </div>
                     </div>
                 </div>
            </div>
     </div>
-@endsection
+</x-app-layout>

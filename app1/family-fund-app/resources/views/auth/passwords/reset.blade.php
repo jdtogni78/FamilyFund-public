@@ -25,7 +25,7 @@
         <div class="col-md-6">
             <div class="card mx-4">
                 <div class="card-body p-4">
-                    @include('coreui-templates::common.errors')
+                    @include('coreui-templates.common.errors')
                     <form method="post" action="{{ url('/password/reset') }}">
                         @csrf
                         <input type="hidden" name="token" value="{{ $token }}">

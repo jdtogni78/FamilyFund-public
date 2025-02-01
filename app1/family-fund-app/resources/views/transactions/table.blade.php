@@ -34,16 +34,16 @@
                 <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
                 <td>{{ $transaction->scheduled_job_id }}</td>
                 <td>
-                    {!! Form::open(['route' => ['transactions.destroy', $transaction->id], 'method' => 'delete']) !!}
-                    <div class='btn-group'>
-                        <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
-                            <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
-                        @endif
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
-                    </div>
-                    {!! Form::close() !!}
+                    <form action="{{ route('transactions.destroy', $transaction->id) }}" method="DELETE">
+                        <div class='btn-group'>
+                            <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                            @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
+                                <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
+                            @endif
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this transaction?')"><i class="fa fa-trash"></i></button>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

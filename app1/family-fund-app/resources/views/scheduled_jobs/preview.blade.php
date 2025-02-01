@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
      <ol class="breadcrumb">
@@ -9,7 +9,7 @@
      </ol>
      <div class="container-fluid">
         <div class="animated fadeIn">
-            @include('coreui-templates::common.errors')
+            @include('coreui-templates.common.errors')
             <div class="card">
                      <div class="card-header">
                          <strong>Run Info</strong>
@@ -56,4 +56,4 @@
             @endisset
         </div>
     </div>
-@endsection
+</x-app-layout>

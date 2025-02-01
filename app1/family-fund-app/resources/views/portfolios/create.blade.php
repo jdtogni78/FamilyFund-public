@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
-                @include('coreui-templates::common.errors')
+                @include('coreui-templates.common.errors')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
@@ -18,15 +18,14 @@
                                 <strong>Create Portfolio</strong>
                             </div>
                             <div class="card-body">
-                                {!! Form::open(['route' => 'portfolios.store']) !!}
-
-                                   @include('portfolios.fields')
-
-                                {!! Form::close() !!}
+                                <form method="PUT" action="{ route('portfolios.store') }">
+                                    @csrf
+                                    @include('portfolios.fields', ['portfolio' => null])
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
            </div>
     </div>
-@endsection
+</x-app-layout>

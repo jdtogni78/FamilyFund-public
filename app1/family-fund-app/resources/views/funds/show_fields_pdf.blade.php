@@ -4,51 +4,51 @@
 <div class="row" style="min-height: 310px">
     <div class="form-group col-sm-6 col-left">
         @php $field = 'name'; @endphp
-        {!! Form::label($field, 'Name:') !!}
-        {!! Form::text($field, $api[$field], $field_props) !!}
+<label for="{{ $field }}">Name:</label>
+<input type="text" name="{{ $field }}" value="{{ $api[$field] }}" >
     </div>
     <div class="form-group col-sm-6 col-right">
         @php $field = 'shares'; @endphp
-        {!! Form::label($field, 'Shares:') !!}
-        {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
+<label for="{{ $field }}">Shares:</label>
+<input type="number" name="{{ $field }}" value="{{ $api['summary'][$field] }}" >
     </div>
     <div class="form-group col-sm-6 col-left">
         @php $field = 'allocated_shares'; @endphp
-        {!! Form::label($field, 'Allocated Shares:') !!}
+<label for="{{ $field }}">Allocated Shares:</label>
         <div class="input-group">
-            {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
-            {!! Form::number($field . '_percent', $api['summary'][$field . '_percent'],  $field_props) !!}
+<input type="number" name="{{ $field }}" value="{{ $api['summary'][$field] }}" >
+<input type="number" name="{{ $field . '_percent' }}" value="{{ $api['summary'][$field . '_percent'] }}" >
             <div class="input-group-text a">%</div>
         </div>
     </div>
     <div class="form-group col-sm-6 col-right">
         @php $field = 'unallocated_shares'; @endphp
-        {!! Form::label($field, 'Unallocated Shares:') !!}
+<label for="{{ $field }}">Unallocated Shares:</label>
         <div class="">
-            {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
-            {!! Form::number($field . '_percent', $api['summary'][$field . '_percent'],  $field_props) !!}
+<input type="number" name="{{ $field }}" value="{{ $api['summary'][$field] }}" >
+<input type="number" name="{{ $field . '_percent' }}" value="{{ $api['summary'][$field . '_percent'] }}" >
             <div class="input-group-text igt">%</div>
         </div>
     </div>
     <div class="form-group col-sm-6 col-left">
         @php $field = 'value'; @endphp
-        {!! Form::label($field, 'Total Value:') !!}
+<label for="{{ $field }}">Total Value:</label>
         <div class="">
             <div class="input-group-text">$</div>
-            {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
+<input type="number" name="{{ $field }}" value="{{ $api['summary'][$field] }}" >
         </div>
     </div>
     <div class="form-group col-sm-6 col-right">
         @php $field = 'share_value'; @endphp
-        {!! Form::label($field, 'Share Price:') !!}
+<label for="{{ $field }}">Share Price:</label>
         <div class="input-group">
             <div class="input-group-text">$</div>
-            {!! Form::number($field, $api['summary'][$field],  $field_props) !!}
+<input type="number" name="{{ $field }}" value="{{ $api['summary'][$field] }}" >
         </div>
     </div>
     <div class="form-group col-sm-6 col-left">
         @php $field = 'as_of'; @endphp
-        {!! Form::label($field, 'As Of:') !!}
-        {!! Form::text($field, $api[$field],  $field_props) !!}
+<label for="{{ $field }}">As Of:</label>
+<input type="text" name="{{ $field }}" value="{{ $api[$field] }}" >
     </div>
 </div>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
-                @include('coreui-templates::common.errors')
+                @include('coreui-templates.common.errors')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
@@ -44,7 +44,7 @@
                 @include('deposit_requests.multi_fields')
            </div>
     </div>
-@endsection
+</x-app-layout>
 
 @section('scripts')
     <script>
@@ -52,4 +52,4 @@
             $('#transactionCollapse').collapse('show');
         });
     </script>
-@endsection
+</x-app-layout>

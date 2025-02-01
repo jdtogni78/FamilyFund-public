@@ -26,16 +26,17 @@
                 <td>{{ $accountBalance->account_id }}</td>
                 <td>{{ $accountBalance->account->nickname }}</td>
                 <td>{{ $accountBalance->transaction_id }}</td>
-                <td>{{ $accountBalance->start_dt }}</td>
-                <td>{{ $accountBalance->end_dt }}</td>
+                <td>{{ $accountBalance->start_dt->format('Y-m-d') }}</td>
+                <td>{{ $accountBalance->end_dt->format('Y-m-d') }}</td>
                 <td>
-                    {!! Form::open(['route' => ['accountBalances.destroy', $accountBalance->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('accountBalances.show', [$accountBalance->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('accountBalances.edit', [$accountBalance->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('accountBalances.destroy', $accountBalance->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account balance?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

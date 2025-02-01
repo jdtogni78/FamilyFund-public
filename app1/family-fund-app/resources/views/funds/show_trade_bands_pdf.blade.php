@@ -71,4 +71,4 @@
         </div>
       @endif
 @endforeach
-@endsection
+</x-app-layout>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <script type="text/javascript">
@@ -12,7 +12,7 @@
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
-            @include('coreui-templates::common.errors')
+            @include('coreui-templates.common.errors')
             @foreach($api['tradePortfolio']->tradePortfolioItems()->get() as $item)
                 <div class="row">
                     <div class="col-lg-12">
@@ -43,4 +43,4 @@
             @endforeach
         </div>
     </div>
-@endsection
+</x-app-layout>

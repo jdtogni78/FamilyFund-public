@@ -104,7 +104,13 @@ class PortfolioController extends AppBaseController
             return redirect(route('portfolios.index'));
         }
 
-        return view('portfolios.edit')->with('portfolio', $portfolio);
+        $api = [
+            'fundMap' => FundExt::fundMap(),
+        ];
+
+        return view('portfolios.edit')
+            ->with('portfolio', $portfolio)
+            ->with('api', $api);
     }
 
     /**

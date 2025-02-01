@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
         </ol>
     <div class="container-fluid">
          <div class="animated fadeIn">
-             @include('coreui-templates::common.errors')
+             @include('coreui-templates.common.errors')
              <div class="row">
                  <div class="col-lg-12">
                       <div class="card">
@@ -18,15 +18,15 @@
                               <strong>Edit Account Matching Rule</strong>
                           </div>
                           <div class="card-body">
-                              {!! Form::model($accountMatchingRule, ['route' => ['accountMatchingRules.update', $accountMatchingRule->id], 'method' => 'patch']) !!}
+<form method="patch" action="{ route('['route' => ['accountMatchingRules.update', $accountMatchingRule->id]') }" >
 
                               @include('account_matching_rules.fields')
 
-                              {!! Form::close() !!}
+</form>
                             </div>
                         </div>
                     </div>
                 </div>
          </div>
     </div>
-@endsection
+</x-app-layout>

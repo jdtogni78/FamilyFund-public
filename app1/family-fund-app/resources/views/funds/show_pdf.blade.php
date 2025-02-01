@@ -207,4 +207,4 @@
             </div>
         </div>
     @endisset @endisset
-@endsection
+</x-app-layout>

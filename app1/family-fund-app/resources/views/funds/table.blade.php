@@ -15,15 +15,15 @@
                 <td>{{ $fund->name }}</td>
                 <td class="no_mobile">{{ $fund->goal }}</td>
                 <td>
-                    {!! Form::open(['route' => ['funds.destroy', $fund->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('funds.show', [$fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('funds.show_trade_bands', [$fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-wave-square"></i></a>
                         <a href="{{ route('funds.edit', [$fund->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                         <a href="{{ route('portfolios.show', [$fund->portfolios()->first()]) }}" class='btn btn-ghost-info'><i class="fa fa-eye"></i></a>
-{{--                    {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}--}}
+                        <form action="{{ route('funds.destroy', $fund->id) }}" method="DELETE">
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this fund?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

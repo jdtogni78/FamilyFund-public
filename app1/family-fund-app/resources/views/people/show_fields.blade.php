@@ -1,31 +1,31 @@
 <div class="col-md-6">
     <!-- First Name Field -->
     <div class="form-group">
-        {!! Form::label('first_name', 'First Name:') !!}
+<label for="first_name">First Name:</label>
         <p>{{ $person->first_name }}</p>
     </div>
 
     <!-- Last Name Field -->
     <div class="form-group">
-        {!! Form::label('last_name', 'Last Name:') !!}
+<label for="last_name">Last Name:</label>
         <p>{{ $person->last_name }}</p>
     </div>
 
     <!-- Email Field -->
     <div class="form-group">
-        {!! Form::label('email', 'Email:') !!}
+<label for="email">Email:</label>
         <p>{{ $person->email }}</p>
     </div>
 
     <!-- Birthday Field -->
     <div class="form-group">
-        {!! Form::label('birthday', 'Birthday:') !!}
+<label for="birthday">Birthday:</label>
         <p>{{ $person->birthday }}</p>
     </div>
 
     <!-- Legal Guardian Id Field -->
     <div class="form-group">
-        {!! Form::label('legal_guardian_id', 'Legal Guardian:') !!}
+<label for="legal_guardian_id">Legal Guardian:</label>
         <p>{{ $person->legal_guardian_id?->full_name }}</p>
     </div>
 </div>
@@ -65,12 +65,12 @@
 
     <!-- Created/Updated At Fields -->
     <div class="form-group">
-        {!! Form::label('created_at', 'Created At:') !!}
+<label for="created_at">Created At:</label>
         <p>{{ $person->created_at }}</p>
     </div>
 
     <div class="form-group">
-        {!! Form::label('updated_at', 'Updated At:') !!}
+<label for="updated_at">Updated At:</label>
         <p>{{ $person->updated_at }}</p>
     </div>
 </div>

@@ -17,7 +17,7 @@
                         <a href="{{ route('funds.show_trade_bands', [$tradePortfolio->portfolio->fund()->first()->id, $tradePortfolio->id, $asOf]) }}" class='btn btn-ghost-info'><i class="fa fa-wave-square"></i></a>
                         <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
                         <a href="{{ route('tradePortfolios.preview_deposits', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-download"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger no_mobile', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <button type="submit" class="btn btn-ghost-danger no_mobile" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
                     </div>
                 @endif
             </div>

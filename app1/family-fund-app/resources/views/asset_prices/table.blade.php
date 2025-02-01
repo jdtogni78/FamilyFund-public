@@ -23,13 +23,14 @@
                 <td>{{ $assetPrice->start_dt }}</td>
                 <td>{{ $assetPrice->end_dt }}</td>
                 <td>
-                    {!! Form::open(['route' => ['assetPrices.destroy', $assetPrice->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('assetPrices.show', [$assetPrice->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('assetPrices.edit', [$assetPrice->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('assetPrices.destroy', $assetPrice->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this asset price?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

@@ -17,17 +17,18 @@
                 <td>{{ $fundReport->id }}</td>
                 <td>{{ $fundReport->fund_id }}</td>
                 <td>{{ $fundReport->type }}</td>
-                <td>{{ $fundReport->as_of }}</td>
+                <td>{{ $fundReport->as_of->format('Y-m-d') }}</td>
                 <td>{{ $fundReport->scheduled_job_id }}</td>
                 <td>{{ $fundReport->created_at }}</td>
                 <td>
-                    {!! Form::open(['route' => ['fundReports.destroy', $fundReport->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('fundReports.show', [$fundReport->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('fundReports.edit', [$fundReport->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('fundReports.destroy', $fundReport->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this fund report?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

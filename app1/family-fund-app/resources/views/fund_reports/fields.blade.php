@@ -1,19 +1,23 @@
 <!-- Fund Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('fund_id', 'Fund Id:') !!}
-    {!! Form::number('fund_id', null, ['class' => 'form-control']) !!}
+<label for="fund_id">Fund Id:</label>
+<input type="number" name="fund_id" class="form-control">
 </div>
 
 <!-- Type Field with typeMap in api -->
 <div class="form-group col-sm-6">
-    {!! Form::label('type', 'Type:') !!}
-    {!! Form::select('type', $api['typeMap'], 'ADM', ['class' => 'form-control']) !!}
+<label for="type">Type:</label>
+<select name="type" class="form-control">
+    @foreach($api['typeMap'] as $value => $label)
+        <option value="{ $value }" { 'ADM' == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- As Of Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('as_of', 'As Of:') !!}
-    {!! Form::text('as_of', null, ['class' => 'form-control','id'=>'as_of']) !!}
+<label for="as_of">As Of:</label>
+<input type="text" name="as_of" class="form-control" id="as_of">
 </div>
 
 @push('scripts')
@@ -33,12 +37,12 @@
 
 <!-- Fund Report Schedule Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('scheduled_job_id', 'Scheduled Job Id:') !!}
-    {!! Form::number('scheduled_job_id', null, ['class' => 'form-control']) !!}
+<label for="scheduled_job_id">Scheduled Job Id:</label>
+<input type="number" name="scheduled_job_id" class="form-control">
 </div>
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('fundReports.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

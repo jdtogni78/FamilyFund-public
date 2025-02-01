@@ -1,15 +1,15 @@
 <div class="form-group">
-    {!! Form::label('account_id', 'Account Id:') !!}
+<label for="account_id">Account Id:</label>
     <p>{{ $api['account']->id }}</p>
 </div>
 
 <div class="form-group">
-    {!! Form::label('account_nickname', 'Account Nickname:') !!}
+<label for="account_nickname">Account Nickname:</label>
     <p>{{ $api['account']->nickname }}</p>
 </div>
 
 <div class="form-group">
-    {!! Form::label('effective_from', 'Effective From:') !!}
+<label for="effective_from">Effective From:</label>
     <p>{{ max($api['mr']->date_start, $accountMatchingRule->created_at) }}</p>
 </div>
 

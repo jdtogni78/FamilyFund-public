@@ -1,31 +1,31 @@
 <!-- Action Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('action', 'Action:') !!}
-    {!! Form::text('action', null, ['class' => 'form-control','maxlength' => 255,'maxlength' => 255]) !!}
+<label for="action">Action:</label>
+<input type="text" name="action" class="form-control" maxlength="255">
 </div>
 
 <!-- Asset Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('asset_id', 'Asset Id:') !!}
-    {!! Form::number('asset_id', null, ['class' => 'form-control']) !!}
+<label for="asset_id">Asset Id:</label>
+<input type="number" name="asset_id" class="form-control">
 </div>
 
 <!-- Field Field -->
 <div class="form-group col-sm-12 col-lg-12">
-    {!! Form::label('field', 'Field:') !!}
-    {!! Form::textarea('field', null, ['class' => 'form-control']) !!}
+<label for="field">Field:</label>
+<textarea name="field" class="form-control"></textarea>
 </div>
 
 <!-- Content Field -->
 <div class="form-group col-sm-12 col-lg-12">
-    {!! Form::label('content', 'Content:') !!}
-    {!! Form::textarea('content', null, ['class' => 'form-control']) !!}
+<label for="content">Content:</label>
+<textarea name="content" class="form-control"></textarea>
 </div>
 
 <!-- Datetime Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('datetime', 'Datetime:') !!}
-    {!! Form::text('datetime', null, ['class' => 'form-control','id'=>'datetime']) !!}
+<label for="datetime">Datetime:</label>
+<input type="text" name="datetime" class="form-control" id="datetime">
 </div>
 
 @push('scripts')
@@ -45,6 +45,6 @@
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('assetChangeLogs.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

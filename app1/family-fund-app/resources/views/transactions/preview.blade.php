@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -12,7 +12,7 @@
     </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
-                @include('coreui-templates::common.errors')
+                @include('coreui-templates.common.errors')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
@@ -102,16 +102,21 @@
                                 <div class="form-group row mb-3">
                                     @php($transaction = $api1['transaction'])
                                     @if($transaction->id !== null)
-                                    {!! Form::open(['route' => ['transactions.process_pending', $transaction->id], 'method' => 'post']) !!}
+                                    <form method="POST" action="{{ route('transactions.process_pending', $transaction->id) }}" class="form-horizontal">
                                     @else
-                                    {!! Form::open(['route' => 'transactions.store']) !!}
+                                    <form method="POST" action="{{ route('transactions.store') }}" class="form-horizontal">
                                     @endif
+                                        @csrf
                                         <div class="form-group col-sm-12">
                                             @include('transactions.preview_fields')
-                                            {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
-                                            {!! Form::button('Cancel', ['class' => 'btn btn-secondary', 'onclick' => 'window.history.back()']) !!}
+                                            <div class="form-group">
+                                                <div class="col-sm-offset-2 col-sm-10">
+                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                    <button type="reset" class="btn btn-secondary" onclick="window.history.back()">Cancel</button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    {!! Form::close() !!}
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -120,4 +125,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

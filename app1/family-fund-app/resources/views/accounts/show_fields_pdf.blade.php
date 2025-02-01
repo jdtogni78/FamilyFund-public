@@ -3,43 +3,43 @@
 @endphp
 <div class="row" style="min-height: 310px">
     <div class="form-group col-sm-6 col-left">
-        {!! Form::label('nickname', 'Nickname:') !!}
-        {!! Form::text('nickname', $account->nickname, $field_props) !!}
+<label for="nickname">Nickname:</label>
+<input type="text" name="nickname" value="{{ $account->nickname }}" >
     </div>
     <div class="form-group col-sm-6 col-right">
-        {!! Form::label('fund', 'Fund:') !!}
-        {!! Form::text('fund', $account->fund->name, $field_props) !!}
+<label for="fund">Fund:</label>
+<input type="text" name="fund" value="{{ $account->fund->name }}" >
     </div>
     <div class="form-group col-sm-6 col-left">
-        {!! Form::label('user', 'User:') !!}
-        {!! Form::text('user', $account->user->name, $field_props) !!}
+<label for="user">User:</label>
+<input type="text" name="user" value="{{ $account->user->name }}" >
     </div>
     <div class="form-group col-sm-6 col-right">
-        {!! Form::label('email_cc', 'Email CC:') !!}
-        {!! Form::text('email_cc', $account->email_cc, $field_props) !!}
+<label for="email_cc">Email CC:</label>
+<input type="text" name="email_cc" value="{{ $account->email_cc }}" >
     </div>
     @isset($api['balances'][0])
     <div class="form-group col-sm-6 col-left">
-        {!! Form::label('shares', 'Shares:') !!}
-        {!! Form::number('shares', $account->balances['OWN']->shares,  $field_props) !!}
+<label for="shares">Shares:</label>
+<input type="number" name="shares" value="{{ $account->balances['OWN']->shares }}" >
     </div>
     <div class="form-group col-sm-6 col-right">
-        {!! Form::label('market_value', 'Market Value:') !!}
+<label for="market_value">Market Value:</label>
         <div class="input-group">
             <div class="input-group-text a">$</div>
-            {!! Form::number('market_value', $account->balances['OWN']->market_value,  $field_props) !!}
+<input type="number" name="market_value" value="{{ $account->balances['OWN']->market_value }}" >
         </div>
     </div>
     @endisset
     <div class="form-group col-sm-6 col-left">
-        {!! Form::label('matching_available', 'Matching Available:') !!}
+<label for="matching_available">Matching Available:</label>
         <div class="input-group">
             <div class="input-group-text a">$</div>
-            {!! Form::number('matching_available', $api['matching_available'],  $field_props) !!}
+<input type="number" name="matching_available" value="{{ $api['matching_available'] }}" >
         </div>
     </div>
     <div class="form-group col-sm-6 col-left">
-        {!! Form::label('as_of', 'As Of:') !!}
-        {!! Form::text('as_of', $api['as_of'], $field_props) !!}
+<label for="as_of">As Of:</label>
+<input type="text" name="as_of" value="{{ $api['as_of'] }}" >
     </div>
 </div>

@@ -13,7 +13,7 @@ return [
 
         'migration'         => database_path('migrations/'),
 
-        'model'             => app_path('Models/'),
+        'model'             => app_path('Models/Base/'),
 
         'datatables'        => app_path('DataTables/'),
 
@@ -23,7 +23,7 @@ return [
 
         'api_routes'        => base_path('routes/api.php'),
 
-        'request'           => app_path('Http/Requests/'),
+        'request'           => app_path('Http/Requests/Web/'),
 
         'api_request'       => app_path('Http/Requests/API/'),
 

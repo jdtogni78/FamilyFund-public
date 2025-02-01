@@ -25,13 +25,14 @@
                 <td>{{ $portfolioAsset->start_dt }}</td>
                 <td>{{ $portfolioAsset->end_dt }}</td>
                 <td>
-                    {!! Form::open(['route' => ['portfolioAssets.destroy', $portfolioAsset->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('portfolioAssets.show', [$portfolioAsset->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('portfolioAssets.edit', [$portfolioAsset->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('portfolioAssets.destroy', $portfolioAsset->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this portfolio asset?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

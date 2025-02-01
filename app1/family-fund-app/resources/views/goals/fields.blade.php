@@ -1,19 +1,19 @@
 <!-- Name Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('name', 'Name:') !!}
-    {!! Form::text('name', null, ['class' => 'form-control','maxlength' => 30]) !!}
+<label for="name">Name:</label>
+<input type="text" name="name" class="form-control" maxlength="30">
 </div>
 
 <!-- Description Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('description', 'Description:') !!}
-    {!! Form::text('description', null, ['class' => 'form-control','maxlength' => 1024]) !!}
+<label for="description">Description:</label>
+<input type="text" name="description" class="form-control" maxlength="1024">
 </div>
 
 <!-- Start Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('start_dt', 'Start Dt:') !!}
-    {!! Form::text('start_dt', null, ['class' => 'form-control','id'=>'start_dt']) !!}
+<label for="start_dt">Start Dt:</label>
+<input type="text" name="start_dt" class="form-control" id="start_dt">
 </div>
 
 @push('scripts')
@@ -33,8 +33,8 @@
 
 <!-- End Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('end_dt', 'End Dt:') !!}
-    {!! Form::text('end_dt', null, ['class' => 'form-control','id'=>'end_dt']) !!}
+<label for="end_dt">End Dt:</label>
+<input type="text" name="end_dt" class="form-control" id="end_dt">
 </div>
 
 @push('scripts')
@@ -54,31 +54,38 @@
 
 <!-- Target Type Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('target_type', 'Target Type:') !!}
-    {!! Form::select('target_type', $api['targetTypeMap'], null, ['class' => 'form-control']) !!}
+<label for="target_type">Target Type:</label>
+<select name="target_type" class="form-control">
+    @foreach($api['targetTypeMap'] as $value => $label)
+        <option value="{{ $value }}" { null == $value ? 'selected' : '' }>{{ $label }}</option>
+    @endforeach
+</select>
 </div>
 
 <!-- Target Amount Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('target_amount', 'Target Amount:') !!}
-    {!! Form::number('target_amount', null, ['class' => 'form-control']) !!}
+<label for="target_amount">Target Amount:</label>
+<input type="number" name="target_amount" class="form-control">
 </div>
 
 <!-- Target Pct Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('target_pct', 'Target Percentage:') !!}
-    {!! Form::number('target_pct', null, ['class' => 'form-control', 'step' => '0.01']) !!}
+<label for="target_pct">Target Percentage:</label>
+<input type="number" name="target_pct" class="form-control" step="0.01">
 </div>
 
 <!-- Accounts Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('account_ids[]', 'Accounts:') !!}
-    {!! Form::select('account_ids[]', $api['accountMap'] ?? [], $api['account_ids'] ?? null, 
-        ['class' => 'form-control', 'multiple' => 'multiple', 'id' => 'account_ids']) !!}
+<label for="account_ids[]">Accounts:</label>
+<select name="account_ids[]" class="form-control" multiple="multiple" id="account_ids">
+    @foreach($api['accountMap'] as $value => $label)
+        <option value="{{ $value }}" { null == $value ? 'selected' : '' }>{{ $label }}</option>
+    @endforeach
+</select>
 </div>
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('goals.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

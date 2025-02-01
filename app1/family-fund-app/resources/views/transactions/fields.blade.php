@@ -1,31 +1,43 @@
 <!-- Type Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('type', 'Type:') !!}
-    {!! Form::select('type', $api['typeMap'], 'PUR', ['class' => 'form-control']);  !!}
+<label for="type">Type:</label>
+<select name="type" class="form-control">
+    @foreach({{ $api['typeMap'] }} as $value => $label)
+        <option value="{{ $value }}" { PUR == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- Status Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('status', 'Status:') !!}
-    {!! Form::select('status', $api['statusMap'], 'P', ['class' => 'form-control']);  !!}
+<label for="status">Status:</label>
+<select name="status" class="form-control">
+    @foreach({{ $api['statusMap'] }} as $value => $label)
+        <option value="{{ $value }}" { P == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- Value Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('value', 'Value:') !!}
-    {!! Form::number('value', null, ['class' => 'form-control', 'step' => 'any']) !!}
+<label for="value">Value:</label>
+<input type="number" name="value" class="form-control" step="any">
 </div>
 
 <!-- Flags Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('flags', 'Flags:') !!}
-    {!! Form::select('flags', $api['flagsMap'], null, ['class' => 'form-control']);  !!}
+<label for="flags">Flags:</label>
+<select name="flags" class="form-control">
+    @foreach({{ $api['flagsMap'] }} as $value => $label)
+        <option value="{{ $value }}" { null == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- Timestamp Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('timestamp', 'Timestamp:') !!}
-    {!! Form::date('timestamp', null, ['class' => 'form-control', 'id' => 'timestamp']) !!}
+<label for="timestamp">Timestamp:</label>
+<input type="date" name="timestamp" value="" class="form-control" id="timestamp">
 </div>
 
 @push('scripts')
@@ -124,29 +136,33 @@
 
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('account_id', 'Account:') !!}
-    {!! Form::select('account_id', $api['accountMap'], null, ['class' => 'form-control']) !!}
+<label for="account_id">Account:</label>
+<select name="account_id" class="form-control">
+    @foreach($api['accountMap'] as $value => $label)
+        <option value="{ $value }" { null == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- CALC Shares -->
 <div class="form-group col-sm-6">
-    {!! Form::label('shares', 'Shares:') !!}
-    {!! Form::number('shares', null, ['class' => 'form-control', 'readonly' => 'true']) !!}
+<label for="shares">Shares:</label>
+<input type="number" name="shares" class="form-control" readonly="true">
 </div>
 
 <!-- CALC Share Prices -->
 <div class="form-group col-sm-6">
-    {!! Form::label('__share_price', 'Share Price:') !!}
-    {!! Form::text('__share_price', null, ['class' => 'form-control', 'readonly' => 'true']) !!}
+<label for="__share_price">Share Price:</label>
+<input type="text" name="__share_price" class="form-control" readonly="true">
 </div>
 
 <!-- Descr Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('descr', 'Descr:') !!}
-    {!! Form::text('descr', null, ['class' => 'form-control','maxlength' => 255]) !!}
+<label for="descr">Descr:</label>
+<input type="text" name="descr" class="form-control" maxlength="255">
 </div>
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Preview', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Preview</button>
 </div>

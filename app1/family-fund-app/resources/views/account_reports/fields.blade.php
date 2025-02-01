@@ -1,19 +1,23 @@
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('account_id', 'Account Id:') !!}
-    {!! Form::number('account_id', null, ['class' => 'form-control']) !!}
+<label for="account_id">Account Id:</label>
+<input type="number" name="account_id" class="form-control">
 </div>
 
 <!-- Type Field with api typemap -->
 <div class="form-group col-sm-6">
-    {!! Form::label('type', 'Type:') !!}
-    {!! Form::select('type', $api['typeMap'], null, ['class' => 'form-control custom-select']) !!}
+<label for="type">Type:</label>
+<select name="type" class="form-control custom-select">
+    @foreach($api['typeMap'] as $value => $label)
+        <option value="{ $value }" { null == $value ? 'selected' : '' }>{ $label }</option>
+    @endforeach
+</select>
 </div>
 
 <!-- As Of Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('as_of', 'As Of:') !!}
-    {!! Form::text('as_of', null, ['class' => 'form-control','id'=>'as_of']) !!}
+<label for="as_of">As Of:</label>
+<input type="text" name="as_of" class="form-control" id="as_of">
 </div>
 
 @push('scripts')
@@ -33,6 +37,6 @@
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('accountReports.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

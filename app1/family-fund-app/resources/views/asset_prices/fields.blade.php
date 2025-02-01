@@ -1,19 +1,19 @@
 <!-- Asset Id Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('asset_id', 'Asset Id:') !!}
-    {!! Form::number('asset_id', null, ['class' => 'form-control']) !!}
+<label for="asset_id">Asset Id:</label>
+<input type="number" name="asset_id" class="form-control">
 </div>
 
 <!-- Price Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('price', 'Price:') !!}
-    {!! Form::number('price', null, ['class' => 'form-control', 'readonly']) !!}
+<label for="price">Price:</label>
+<input type="number" name="price" class="form-control">
 </div>
 
 <!-- Start Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('start_dt', 'Start Dt:') !!}
-    {!! Form::text('start_dt', null, ['class' => 'form-control','id'=>'start_dt']) !!}
+<label for="start_dt">Start Dt:</label>
+<input type="text" name="start_dt" class="form-control" id="start_dt">
 </div>
 
 @push('scripts')
@@ -33,8 +33,8 @@
 
 <!-- End Dt Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('end_dt', 'End Dt:') !!}
-    {!! Form::text('end_dt', null, ['class' => 'form-control','id'=>'end_dt']) !!}
+<label for="end_dt">End Dt:</label>
+<input type="text" name="end_dt" class="form-control" id="end_dt">
 </div>
 
 @push('scripts')
@@ -54,6 +54,6 @@
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
+<button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('assetPrices.index') }}" class="btn btn-secondary">Cancel</a>
 </div>

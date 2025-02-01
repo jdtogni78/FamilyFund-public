@@ -25,14 +25,15 @@
                 <td>{{ $scheduledJob->start_dt }}</td>
                 <td>{{ $scheduledJob->end_dt }}</td>
                 <td>
-                    {!! Form::open(['route' => ['scheduledJobs.destroy', $scheduledJob->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('scheduledJobs.show', [$scheduledJob->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('scheduledJobs.edit', [$scheduledJob->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                         <a href="{{ route('scheduledJobs.preview', ['id' => $scheduledJob->id, 'asOf' => new Carbon\Carbon()]) }}" class="btn btn-ghost-success"><i class="fa fa-play"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('scheduledJobs.destroy', $scheduledJob->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this scheduled job?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

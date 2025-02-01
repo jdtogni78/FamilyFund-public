@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-app-layout>
 
 @section('content')
     <ol class="breadcrumb">
@@ -9,7 +9,7 @@
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
-            @include('coreui-templates::common.errors')
+            @include('coreui-templates.common.errors')
             @php
                 $valid = [
                     'cash_deposits' => [],
@@ -124,14 +124,15 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                            {!! Form::open(['route' => ['tradePortfolios.do_deposits', $tradePortfolio->id], 'method' => 'post']) !!}
-                            {!! Form::submit('Execute Deposits', ['class' => 'btn btn-primary']) !!}
-                            {!! Form::close() !!}
+                            <form action="{{ route('tradePortfolios.do_deposits', $tradePortfolio->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">Execute Deposits</button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>
 

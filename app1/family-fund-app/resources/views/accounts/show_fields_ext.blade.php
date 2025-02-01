@@ -3,46 +3,46 @@
 @endphp
 <div class="row">
 <div class="form-group col-sm-6">
-    {!! Form::label('nickname', 'Nickname:') !!}
-    {!! Form::text('nickname', $account->nickname, $field_props) !!}
+<label for="nickname">Nickname:</label>
+<input type="text" name="nickname" value="{{ $account->nickname }}" >
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('fund', 'Fund:') !!}
+<label for="fund">Fund:</label>
     <div class="input-group">
-        {!! Form::text('fund', $account->fund->name, $field_props) !!}
+<input type="text" name="fund" value="{{ $account->fund->name }}" >
         <a href="{{ route('funds.show', [$account->fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
     </div>
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('user', 'User:') !!}
-    {!! Form::text('user', $account->user->name, $field_props) !!}
+<label for="user">User:</label>
+<input type="text" name="user" value="{{ $account->user->name }}" >
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('email_cc', 'Email CC:') !!}
-    {!! Form::text('email_cc', $account->email_cc, $field_props) !!}
+<label for="email_cc">Email CC:</label>
+<input type="text" name="email_cc" value="{{ $account->email_cc }}" >
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('shares', 'Shares:') !!}
+<label for="shares">Shares:</label>
     <div class="input-group">
-        {!! Form::number('shares', $account->balances['OWN']->shares,  $field_props) !!}
+<input type="number" name="shares" value="{{ $account->balances['OWN']->shares }}" >
     </div>
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('market_value', 'Market Value:') !!}
-    <div class="input-group">
-        <div class="input-group-text">$</div>
-        {!! Form::number('market_value', $account->balances['OWN']->market_value,  $field_props) !!}
-    </div>
-</div>
-<div class="form-group col-sm-6">
-    {!! Form::label('matching_available', 'Matching Available:') !!}
+<label for="market_value">Market Value:</label>
     <div class="input-group">
         <div class="input-group-text">$</div>
-        {!! Form::number('matching_available', $api['matching_available'],  $field_props) !!}
+<input type="number" name="market_value" value="{{ $account->balances['OWN']->market_value }}" >
     </div>
 </div>
 <div class="form-group col-sm-6">
-    {!! Form::label('as_of', 'As Of:') !!}
-    {!! Form::text('as_of', $api['as_of'], $field_props) !!}
+<label for="matching_available">Matching Available:</label>
+    <div class="input-group">
+        <div class="input-group-text">$</div>
+<input type="number" name="matching_available" value="{{ $api['matching_available'] }}" >
+    </div>
+</div>
+<div class="form-group col-sm-6">
+<label for="as_of">As Of:</label>
+<input type="text" name="as_of" value="{{ $api['as_of'] }}" >
 </div>
 </div>

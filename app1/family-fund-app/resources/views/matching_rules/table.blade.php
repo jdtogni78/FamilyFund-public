@@ -25,13 +25,14 @@
                 <td>{{ $matchingRule->match_percent }}</td>
                 <td>{{ $matchingRule->accountMatchingRules->pluck('account.nickname')->implode(', ') }}</td>
                 <td>
-                    {!! Form::open(['route' => ['matchingRules.destroy', $matchingRule->id], 'method' => 'delete']) !!}
                     <div class='btn-group'>
                         <a href="{{ route('matchingRules.show', [$matchingRule->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('matchingRules.edit', [$matchingRule->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-ghost-danger', 'onclick' => "return confirm('Are you sure?')"]) !!}
+                        <form action="{{ route('matchingRules.destroy', $matchingRule->id) }}" method="DELETE">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this matching rule?')"><i class="fa fa-trash"></i></button>
+                        </form>
                     </div>
-                    {!! Form::close() !!}
                 </td>
             </tr>
         @endforeach

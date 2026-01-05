@@ -16,6 +16,7 @@
                         <div class="card-header">
                             <i class="fa fa-edit fa-lg"></i>
                             <strong>Edit Portfolio</strong>
+                            @include('portfolios.actions', ['portfolio' => $portfolio])
                         </div>
                         <div class="card-body">
                             <form action="{{ route('portfolios.update', $portfolio->id) }}" method="PATCH">

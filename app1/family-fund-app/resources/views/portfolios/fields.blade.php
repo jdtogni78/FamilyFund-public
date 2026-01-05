@@ -17,5 +17,5 @@
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
     <button type="submit" class="btn btn-primary">Save</button>
-    <a href="{{ route('portfolios.index') }}" class="btn btn-secondary">Cancel</a>
+    <a href="{{ redirect()->back()->getTargetUrl() }}" class="btn btn-secondary">Cancel</a>
 </div>

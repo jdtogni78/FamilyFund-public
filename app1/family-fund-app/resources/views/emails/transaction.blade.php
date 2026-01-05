@@ -6,4 +6,4 @@ Dear {{$api['to']}},<br>
 <br>
 
 @include('transactions.show_changes')
-@endsection
+</x-app-layout>

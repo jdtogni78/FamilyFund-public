@@ -16,6 +16,7 @@
                         <div class="card-header">
                             <strong>Details</strong>
                             <a href="{{ route('portfolios.index') }}" class="btn btn-light">Back</a>
+                            @include('portfolios.actions', ['portfolio' => $portfolio])
                         </div>
                         <div class="card-body">
                             @include('portfolios.show_fields')

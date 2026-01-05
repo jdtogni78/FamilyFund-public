@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Traits;
 
-use CpChart\Data;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
-use Mockery\Exception;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 class FundPDF

@@ -1,45 +1,38 @@
-@php
-    $field_props = ['class' => 'form-control', 'readonly']
-@endphp
-<div class="row" style="min-height: 310px">
-    <div class="form-group col-sm-6 col-left">
-<label for="nickname">Nickname:</label>
-<input type="text" name="nickname" value="{{ $account->nickname }}" >
+<div class="detail-list">
+    <div class="detail-item">
+        <span class="detail-label">Account Name</span>
+        <span class="detail-value">{{ $account->nickname }}</span>
     </div>
-    <div class="form-group col-sm-6 col-right">
-<label for="fund">Fund:</label>
-<input type="text" name="fund" value="{{ $account->fund->name }}" >
+    <div class="detail-item">
+        <span class="detail-label">Fund</span>
+        <span class="detail-value">{{ $account->fund->name }}</span>
     </div>
-    <div class="form-group col-sm-6 col-left">
-<label for="user">User:</label>
-<input type="text" name="user" value="{{ $account->user->name }}" >
+    <div class="detail-item">
+        <span class="detail-label">Account Holder</span>
+        <span class="detail-value">{{ $account->user->name }}</span>
     </div>
-    <div class="form-group col-sm-6 col-right">
-<label for="email_cc">Email CC:</label>
-<input type="text" name="email_cc" value="{{ $account->email_cc }}" >
+    <div class="detail-item">
+        <span class="detail-label">Email</span>
+        <span class="detail-value">{{ $account->email_cc }}</span>
     </div>
     @isset($api['balances'][0])
-    <div class="form-group col-sm-6 col-left">
-<label for="shares">Shares:</label>
-<input type="number" name="shares" value="{{ $account->balances['OWN']->shares }}" >
-    </div>
-    <div class="form-group col-sm-6 col-right">
-<label for="market_value">Market Value:</label>
-        <div class="input-group">
-            <div class="input-group-text a">$</div>
-<input type="number" name="market_value" value="{{ $account->balances['OWN']->market_value }}" >
+        <div class="detail-item">
+            <span class="detail-label">Shares</span>
+            <span class="detail-value">{{ number_format($account->balances['OWN']->shares ?? 0, 2) }}</span>
         </div>
-    </div>
+        <div class="detail-item">
+            <span class="detail-label">Market Value</span>
+            <span class="detail-value font-bold text-primary">${{ number_format($account->balances['OWN']->market_value ?? 0, 2) }}</span>
+        </div>
     @endisset
-    <div class="form-group col-sm-6 col-left">
-<label for="matching_available">Matching Available:</label>
-        <div class="input-group">
-            <div class="input-group-text a">$</div>
-<input type="number" name="matching_available" value="{{ $api['matching_available'] }}" >
+    @if($api['matching_available'] > 0)
+        <div class="detail-item">
+            <span class="detail-label">Matching Available</span>
+            <span class="detail-value text-success">${{ number_format($api['matching_available'], 2) }}</span>
         </div>
-    </div>
-    <div class="form-group col-sm-6 col-left">
-<label for="as_of">As Of:</label>
-<input type="text" name="as_of" value="{{ $api['as_of'] }}" >
+    @endif
+    <div class="detail-item">
+        <span class="detail-label">Report Date</span>
+        <span class="detail-value">{{ $api['as_of'] }}</span>
     </div>
 </div>

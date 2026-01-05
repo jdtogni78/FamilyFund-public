@@ -28,3 +28,10 @@ services:
     ports:
       - 1025:1025 # smtp server
       - 8025:8025 # web ui
+
+  quickchart:
+    image: ianw/quickchart
+    container_name: quickchart
+    restart: on-failure
+    ports:
+      - 3400:3400

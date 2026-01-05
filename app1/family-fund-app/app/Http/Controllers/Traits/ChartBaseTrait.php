@@ -2,21 +2,30 @@
 
 namespace App\Http\Controllers\Traits;
 
-use App\Charts\BarChart;
-use App\Charts\DoughnutChart;
-use App\Charts\LineChart;
-use App\Charts\ProgressChart;
+use App\Services\QuickChartService;
 use Illuminate\Support\Facades\Log;
-use PhpParser\Node\Scalar\MagicConst\Line;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 trait ChartBaseTrait
 {
-    private $files = [];
-    public $chart;
-    private $hasZone = false;
-    private $zone_label1 = null;
-    private $zone_label2 = null;
+    private array $files = [];
+    private ?QuickChartService $quickChartService = null;
+
+    // Zone data for line charts with bands
+    private array $pendingLabels = [];
+    private array $pendingTitles = [];
+    private array $pendingValues = [];
+    private array $zoneBoundary1 = [];
+    private array $zoneBoundary2 = [];
+    private bool $hasZone = false;
+
+    protected function getQuickChartService(): QuickChartService
+    {
+        if ($this->quickChartService === null) {
+            $this->quickChartService = new QuickChartService();
+        }
+        return $this->quickChartService;
+    }
 
     public function createYearlyPerformanceGraph(array $api, TemporaryDirectory $tempDir)
     {
@@ -39,10 +48,12 @@ trait ChartBaseTrait
         $values3 = $this->getGraphData($api['cash']);
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->addLineChart($labels,
+        $this->getQuickChartService()->generateLineChart(
+            $labels,
             ["Monthly Value", "SP500", "Cash"],
-            [$values1, $values2, $values3]);
-        $this->createLineChart($file);
+            [$values1, $values2, $values3],
+            $file
+        );
     }
 
     public function createGroupMonthlyPerformanceGraphs(array $api, TemporaryDirectory $tempDir)
@@ -65,14 +76,11 @@ trait ChartBaseTrait
             }
 
             $this->files[$name] = $file = $tempDir->path($name);
-            $this->addLineChart($labels, $titles, $graphValues);
-            $this->createLineChart($file);
+            $this->getQuickChartService()->generateLineChart($labels, $titles, $graphValues, $file);
             $i++;
         }
-
     }
-    
-    // https://github.com/szymach/c-pchart/blob/3.0/resources/doc/line.md
+
     protected function createSharesLineChart(array $api, TemporaryDirectory $tempDir)
     {
         $name = 'shares.png';
@@ -81,106 +89,92 @@ trait ChartBaseTrait
         Log::debug("createSharesLineChart: " . json_encode($arr));
         foreach ($arr as $v) {
             // max of last value and current value
-            $data[substr($v->timestamp, 0,10)] = max($data[substr($v->timestamp, 0,10)] ?? 0, 
-                    $v->balance->shares * $v->share_price);
-        };
+            $data[substr($v->timestamp, 0, 10)] = max(
+                $data[substr($v->timestamp, 0, 10)] ?? 0,
+                $v->balance->shares * $v->share_price
+            );
+        }
         asort($data);
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $labels1 = array_keys($data);
-        $this->createStepChart(array_values($data), $labels1, $file, "Shares");
+        $labels = array_keys($data);
+        $this->createStepChart(array_values($data), $labels, $file, "Shares");
     }
 
-    // https://github.com/szymach/c-pchart/blob/3.0/resources/doc/progress.md
     public function createGoalsProgressGraph(array $api, TemporaryDirectory $tempDir)
     {
         foreach ($api['goals'] as $goal) {
-            $name = 'goals_progress_'.$goal->id.'.png';
+            $name = 'goals_progress_' . $goal->id . '.png';
             $this->files[$name] = $file = $tempDir->path($name);
-            $chart = new ProgressChart();
-            $chart->createProgressChart($goal->progress, $file, $goal->name);
-            $chart->saveAs($file);
+
+            $this->getQuickChartService()->generateProgressChart(
+                $goal->progress['expected_pct'] ?? 0,
+                $goal->progress['current_pct'] ?? 0,
+                $goal->name,
+                $file
+            );
         }
     }
 
-    public function addZone(string $label1, string $label2, 
-                            array $boundary1, array $boundary2) 
+    public function addZone(string $label1, string $label2, array $boundary1, array $boundary2)
     {
-        $this->zone_label1 = $label1;
-        $this->zone_label2 = $label2;
-        $this->chart->data->addPoints($boundary1, $label1);
-        $this->chart->data->addPoints($boundary2, $label2);
-        // $this->chart->data->setSerieDrawable([$label1, $label2], false);
-        Log::debug("addZone: " . json_encode($this->chart->data->Data));
+        $this->zoneBoundary1 = $boundary1;
+        $this->zoneBoundary2 = $boundary2;
         $this->hasZone = true;
     }
 
     public function createLineChart(string $file, $colorIndex = 0, $label1 = null)
     {
-        $this->chart->createChart();
-        // TODO: find out how to control color
-        // if ($label1) {
-        //     $this->chart->data->DataSet["Series"][$label1]["Color"]["R"] = $this->chart->Palette[$colorIndex];
-        //     $this->chart->data->DataSet["Series"]["$label1 target"]["Color"] = $this->chart->Palette[13];
-        // }
-        $this->chart->image->drawLineChart();
-
         if ($this->hasZone) {
-            $color = $this->chart->Palette[13];
-            $this->chart->drawZoneChart($this->zone_label1, $this->zone_label2, 
-                [
-                    "AreaR" => $color['R'], "AreaG" => $color['G'], "AreaB" => $color['B'], "AreaAlpha" => 20,
-                    "LineR" => $color['R'], "LineG" => $color['G'], "LineB" => $color['B'], "LineAlpha" => 20,
-                    // "LineTicks" => 1,
-                ]
+            $this->getQuickChartService()->generateLineChartWithZone(
+                $this->pendingLabels,
+                $this->pendingTitles,
+                $this->pendingValues,
+                $this->zoneBoundary1,
+                $this->zoneBoundary2,
+                $file
+            );
+        } else {
+            $this->getQuickChartService()->generateLineChart(
+                $this->pendingLabels,
+                $this->pendingTitles,
+                $this->pendingValues,
+                $file
             );
         }
-        $this->chart->saveAs($file);
-        return $this->chart;
+
+        // Reset state
+        $this->hasZone = false;
+        $this->zoneBoundary1 = [];
+        $this->zoneBoundary2 = [];
+
+        return null;
     }
 
     public function addLineChart(array $labels, array $titles, array $values)
     {
-        $this->chart = new LineChart();
-        $this->chart->labels = $labels;
-        $this->chart->titles = $titles;
-        $this->chart->seriesValues = $values;
-        return $this->chart;
+        // Store for later use by createLineChart
+        $this->pendingLabels = $labels;
+        $this->pendingTitles = $titles;
+        $this->pendingValues = $values;
+        $this->hasZone = false;
+
+        return null;
     }
 
     public function createStepChart(array $values, array $labels, string $file, $title)
     {
-        $chart = new LineChart();
-        $chart->labels = $labels;
-        $chart->seriesValues = [$values];
-        $chart->titles = [$title];
-        $chart->createStepChart();
-        $chart->saveAs($file);
+        $this->getQuickChartService()->generateStepChart($labels, $values, $title, $file);
     }
 
     public function createBarChart(array $values, $title, array $labels, string $file)
     {
-        $chart = new BarChart();
-        $chart->labels = $labels;
-        $chart->seriesValues = [$values];
-        $chart->titles = [$title];
-        $chart->createChart();
-        $chart->saveAs($file);
+        $this->getQuickChartService()->generateBarChart($labels, $values, $title, $file);
     }
 
-    /**
-     * @param array $values
-     * @param array $labels
-     * @param string $file
-     * @return void
-     */
     protected function createDoughnutChart(array $values, array $labels, string $file): void
     {
-        $chart = new DoughnutChart();
-        $chart->labels = $labels;
-        $chart->seriesValues = [$values];
-        $chart->createChart();
-        $chart->saveAs($file);
+        $this->getQuickChartService()->generateDoughnutChart($labels, $values, $file);
     }
 
     private function getGraphData(mixed $arr): array

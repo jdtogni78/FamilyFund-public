@@ -185,29 +185,28 @@
                     </div>
                 </div>
 
-                <!-- Stock Navigation -->
-                <div class="row mb-3">
-                    <div class="col-lg-12">
-                        <div class="card" id="stockNav" style="position: sticky; top: 0; z-index: 100;">
-                            <div class="card-body py-2">
-                                <div class="d-flex flex-wrap align-items-center">
-                                    <span class="mr-3 text-muted small">Jump to:</span>
-                                    @foreach($api['symbols'] as $idx => $symbolInfo)
-                                        <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
-                                           class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
-                                           data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
-                                            {{ $symbolInfo['symbol'] }}
-                                        </a>
-                                    @endforeach
-                                    <span class="ml-auto">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
-                                            <i class="fa fa-expand"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
-                                            <i class="fa fa-compress"></i>
-                                        </button>
-                                    </span>
-                                </div>
+                <!-- Stock Navigation (Fixed) -->
+                <div id="stockNavPlaceholder" style="height: 60px;"></div>
+                <div id="stockNav" class="card shadow-sm" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1030; border-radius: 0;">
+                    <div class="card-body py-2">
+                        <div class="container-fluid">
+                            <div class="d-flex flex-wrap align-items-center">
+                                <span class="mr-3 text-muted small">Jump to:</span>
+                                @foreach($api['symbols'] as $idx => $symbolInfo)
+                                    <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
+                                       class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
+                                       data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
+                                        {{ $symbolInfo['symbol'] }}
+                                    </a>
+                                @endforeach
+                                <span class="ml-auto">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
+                                        <i class="fa fa-expand"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
+                                        <i class="fa fa-compress"></i>
+                                    </button>
+                                </span>
                             </div>
                         </div>
                     </div>

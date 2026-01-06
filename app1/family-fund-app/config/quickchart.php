@@ -18,9 +18,13 @@ return [
     | Default Chart Dimensions
     |--------------------------------------------------------------------------
     */
-    'width' => 900,
-    'height' => 400,
-    'progress_height' => 200,
+    'width' => 1200,
+    'height' => 500,
+    'progress_height' => 150,
+    'doughnut_width' => 700,
+    'doughnut_height' => 500,
+    'doughnut_large_width' => 1000,
+    'doughnut_large_height' => 600,
 
     /*
     |--------------------------------------------------------------------------
@@ -59,6 +63,22 @@ return [
         '#ec4899',  // Pink
         '#14b8a6',  // Teal
         '#f97316',  // Orange
+        '#4f46e5',  // Deep Indigo
+        '#059669',  // Deep Emerald
+        '#b91c1c',  // Deep Red
+        '#7c3aed',  // Violet
+        '#0369a1',  // Deep Sky
+        '#c026d3',  // Fuchsia
+        '#ca8a04',  // Deep Yellow
+        '#0d9488',  // Deep Teal
+        '#e11d48',  // Rose
+        '#0284c7',  // Light Blue
+        '#15803d',  // Forest Green
+        '#7e22ce',  // Deep Purple
+        '#be123c',  // Deep Rose
+        '#1d4ed8',  // Royal Blue
+        '#047857',  // Dark Emerald
+        '#a21caf',  // Deep Fuchsia
     ],
 
     /*
@@ -73,7 +93,9 @@ return [
     | Font Configuration
     |--------------------------------------------------------------------------
     */
-    'font_family' => 'Inter, system-ui, sans-serif',
-    'font_size' => 12,
-    'title_font_size' => 14,
+    'font_family' => 'Arial, Helvetica, sans-serif',
+    'font_size' => 14,
+    'title_font_size' => 16,
+    'font_color' => '#1e293b',
+    'legend_font_size' => 13,
 ];

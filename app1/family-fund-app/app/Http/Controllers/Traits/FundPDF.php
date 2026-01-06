@@ -171,17 +171,43 @@ class FundPDF
         $name = 'accounts_allocation.png';
         $arr = $api['balances'];
         Log::debug($arr);
-        $labels = array_map(function ($v) {
-            return $v['nickname'];
-        }, $arr);
-        $values = array_map(function ($v) {
-            return $v['shares'];
-        }, $arr);
 
-        $labels[] = 'Unallocated';
-        $values[] = $api['summary']['unallocated_shares'];
+        // Build labels with percentage - group small values (<3%) into "Others"
+        $totalShares = $api['summary']['shares'];
+        $labels = [];
+        $values = [];
+        $othersPct = 0;
+        $othersCount = 0;
+        $minPct = 3.0;  // Minimum percentage to show individually
+
+        foreach ($arr as $balance) {
+            $shares = $balance['shares'] ?? 0;
+            $pct = $totalShares > 0 ? ($shares / $totalShares) * 100 : 0;
+
+            if ($pct >= $minPct) {
+                $labels[] = $balance['nickname'] . ' (' . number_format($pct, 1) . '%)';
+                $values[] = $pct;
+            } else {
+                $othersPct += $pct;
+                $othersCount++;
+            }
+        }
+
+        // Add "Others" if there are small accounts
+        if ($othersPct > 0) {
+            $labels[] = "Others ({$othersCount} accounts, " . number_format($othersPct, 1) . '%)';
+            $values[] = $othersPct;
+        }
+
+        // Add unallocated
+        $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? 0;
+        if ($unallocatedPct > 0) {
+            $labels[] = 'Unallocated (' . number_format($unallocatedPct, 1) . '%)';
+            $values[] = $unallocatedPct;
+        }
 
         $this->files[$name] = $file = $tempDir->path($name);
+        // Use doughnut chart for accounts allocation
         $this->createDoughnutChart($values, $labels, $file);
     }
 
@@ -194,8 +220,9 @@ class FundPDF
             $labels = array_map(function ($v) {
                 return $v['symbol'];
             }, $tradePortfolio->items->toArray());
+            // Convert decimal target_share to percentage for consistent display
             $values = array_map(function ($v) {
-                return $v['target_share'];
+                return $v['target_share'] * 100;
             }, $tradePortfolio->items->toArray());
 
             $this->files[$name] = $file = $tempDir->path($name);

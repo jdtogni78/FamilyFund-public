@@ -33,7 +33,8 @@ trait ChartBaseTrait
         $arr = $api['yearly_performance'];
         $labels = array_keys($arr);
         $title = 'Yearly Value';
-        $values = $this->getGraphData($arr);
+        // Use array_values to convert associative array to indexed array for Chart.js
+        $values = array_values($this->getGraphData($arr));
 
         $this->files[$name] = $file = $tempDir->path($name);
         $this->createBarChart($values, $title, $labels, $file);
@@ -42,23 +43,40 @@ trait ChartBaseTrait
     public function createMonthlyPerformanceGraph(array $api, TemporaryDirectory $tempDir)
     {
         $name = 'monthly_performance.png';
+
+        Log::debug("createMonthlyPerformanceGraph: Starting chart generation");
+
+        if (empty($api['monthly_performance'])) {
+            Log::warning("createMonthlyPerformanceGraph: No monthly_performance data available");
+            return;
+        }
+
         $labels = array_keys($api['monthly_performance']);
-        $values1 = $this->getGraphData($api['monthly_performance']);
-        $values2 = $this->getGraphData($api['sp500_monthly_performance']);
-        $values3 = $this->getGraphData($api['cash']);
+        // Use array_values to convert associative arrays to indexed arrays for Chart.js
+        $values1 = array_values($this->getGraphData($api['monthly_performance']));
+        $values2 = array_values($this->getGraphData($api['sp500_monthly_performance'] ?? []));
+        $values3 = array_values($this->getGraphData($api['cash'] ?? []));
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->getQuickChartService()->generateLineChart(
-            $labels,
-            ["Monthly Value", "SP500", "Cash"],
-            [$values1, $values2, $values3],
-            $file
-        );
+
+        try {
+            $this->getQuickChartService()->generateLineChart(
+                $labels,
+                ["Fund", "SP500", "Cash"],
+                [$values1, $values2, $values3],
+                $file
+            );
+            Log::debug("createMonthlyPerformanceGraph: Chart saved to $file");
+        } catch (\Exception $e) {
+            Log::error("createMonthlyPerformanceGraph failed: " . $e->getMessage());
+        }
     }
 
     public function createGroupMonthlyPerformanceGraphs(array $api, TemporaryDirectory $tempDir)
     {
-        $sp500Values = $this->getGraphData($api['sp500_monthly_performance']);
+        $sp500Variants = ['S&P500', 'SP500', 'SPY', '^GSPC'];
+        $hasSp500 = !empty($api['sp500_monthly_performance']);
+        $sp500Data = $hasSp500 ? $this->getGraphData($api['sp500_monthly_performance']) : [];
         $arr = $api['asset_monthly_performance'];
         $i = 0;
         foreach ($arr as $group => $perf) {
@@ -66,13 +84,25 @@ trait ChartBaseTrait
 
             $titles = [];
             $graphValues = [];
+            $labels = null;
 
-            $titles[] = 'S&P500';
-            $graphValues[] = $sp500Values;
-            $labels = array_keys($sp500Values);
+            // Add S&P500 from dedicated data if available
+            if ($hasSp500) {
+                $titles[] = 'S&P500';
+                $graphValues[] = array_values($sp500Data);
+                $labels = array_keys($sp500Data);
+            }
+
             foreach ($perf as $symbol => $values) {
+                // Skip S&P500 variants only if we already added it from sp500_monthly_performance
+                if ($hasSp500 && in_array(strtoupper($symbol), $sp500Variants)) {
+                    continue;
+                }
                 $titles[] = $symbol;
-                $graphValues[] = $this->getGraphData($values);
+                $graphValues[] = array_values($this->getGraphData($values));
+                if ($labels === null) {
+                    $labels = array_keys($this->getGraphData($values));
+                }
             }
 
             $this->files[$name] = $file = $tempDir->path($name);
@@ -175,6 +205,27 @@ trait ChartBaseTrait
     protected function createDoughnutChart(array $values, array $labels, string $file): void
     {
         $this->getQuickChartService()->generateDoughnutChart($labels, $values, $file);
+    }
+
+    protected function createDoughnutChartLarge(array $values, array $labels, string $file): void
+    {
+        $this->getQuickChartService()->generateDoughnutChart(
+            $labels,
+            $values,
+            $file,
+            config('quickchart.doughnut_large_width', 1000),
+            config('quickchart.doughnut_large_height', 600)
+        );
+    }
+
+    protected function createHorizontalBarChart(array $values, array $labels, string $title, string $file): void
+    {
+        $this->getQuickChartService()->generateHorizontalBarChart($labels, $values, $title, $file);
+    }
+
+    protected function createStackedBarChart(array $values, array $labels, string $title, string $file): void
+    {
+        $this->getQuickChartService()->generateStackedBarChart($labels, $values, $title, $file);
     }
 
     private function getGraphData(mixed $arr): array

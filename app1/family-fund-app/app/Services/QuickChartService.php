@@ -17,6 +17,8 @@ class QuickChartService
     protected string $fontFamily;
     protected int $fontSize;
     protected int $titleFontSize;
+    protected string $fontColor;
+    protected int $legendFontSize;
 
     public function __construct()
     {
@@ -29,6 +31,8 @@ class QuickChartService
         $this->fontFamily = config('quickchart.font_family');
         $this->fontSize = config('quickchart.font_size');
         $this->titleFontSize = config('quickchart.title_font_size');
+        $this->fontColor = config('quickchart.font_color', '#1e293b');
+        $this->legendFontSize = config('quickchart.legend_font_size', 13);
     }
 
     /**
@@ -42,6 +46,21 @@ class QuickChartService
         ?int $width = null,
         ?int $height = null
     ): string {
+        $options = $this->getBaseOptions($title);
+        // Add data labels inside bars
+        $options['plugins']['datalabels'] = [
+            'display' => true,
+            'color' => '#ffffff',
+            'anchor' => 'center',
+            'align' => 'center',
+            'font' => [
+                'weight' => '900',
+                'size' => 16,
+                'family' => 'Arial Black, sans-serif',
+            ],
+            'formatter' => "function(value) { return '$' + value.toLocaleString('en-US', {maximumFractionDigits: 0}); }",
+        ];
+
         $config = [
             'type' => 'bar',
             'data' => [
@@ -54,7 +73,7 @@ class QuickChartService
                     'borderWidth' => 1,
                 ]],
             ],
-            'options' => $this->getBaseOptions($title),
+            'options' => $options,
         ];
 
         return $this->generateChart($config, $filePath, $width, $height);
@@ -70,8 +89,20 @@ class QuickChartService
         string $filePath,
         ?int $width = null,
         ?int $height = null,
-        bool $stepped = false
+        bool $stepped = false,
+        int $maxLabels = 24
     ): string {
+        // Reduce labels to show only maxLabels while keeping all data points
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? $label : '';
+            }
+            $labels = $sparseLabels;
+        }
+
         $chartDatasets = [];
         foreach ($datasets as $i => $data) {
             $color = $this->datasetColors[$i % count($this->datasetColors)];
@@ -83,7 +114,7 @@ class QuickChartService
                 'fill' => false,
                 'tension' => 0.1,
                 'borderWidth' => 2,
-                'pointRadius' => 3,
+                'pointRadius' => 2,
                 'pointBackgroundColor' => $color,
                 'stepped' => $stepped,
             ];
@@ -134,8 +165,20 @@ class QuickChartService
         array $zoneBoundary2,
         string $filePath,
         ?int $width = null,
-        ?int $height = null
+        ?int $height = null,
+        int $maxLabels = 24
     ): string {
+        // Reduce labels to show only maxLabels while keeping all data points
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? $label : '';
+            }
+            $labels = $sparseLabels;
+        }
+
         $chartDatasets = [];
 
         // Add zone as a filled area between boundaries
@@ -198,14 +241,23 @@ class QuickChartService
         array $values,
         string $filePath,
         ?int $width = null,
-        ?int $height = null
+        ?int $height = null,
+        bool $showPercentages = true
     ): string {
         $colors = array_slice($this->datasetColors, 0, count($values));
+
+        // Format labels to show percentages
+        $total = array_sum($values);
+        $formattedLabels = [];
+        foreach ($labels as $i => $label) {
+            $pct = $total > 0 ? ($values[$i] / $total) * 100 : 0;
+            $formattedLabels[] = $showPercentages ? "$label (" . number_format($pct, 1) . "%)" : $label;
+        }
 
         $config = [
             'type' => 'doughnut',
             'data' => [
-                'labels' => $labels,
+                'labels' => $formattedLabels,
                 'datasets' => [[
                     'data' => $values,
                     'backgroundColor' => $colors,
@@ -219,17 +271,208 @@ class QuickChartService
                     'legend' => [
                         'position' => 'right',
                         'labels' => [
+                            'color' => '#000000',
+                            'font' => [
+                                'family' => $this->fontFamily,
+                                'size' => 14,
+                                'weight' => 'bold',
+                            ],
+                            'padding' => 12,
+                        ],
+                    ],
+                    'datalabels' => [
+                        'display' => true,
+                        'color' => '#000000',
+                        'font' => [
+                            'size' => 14,
+                            'weight' => 'bold',
+                        ],
+                        'formatter' => "function(value, context) { var total = context.dataset.data.reduce((a,b) => a+b, 0); var pct = total <= 1.5 ? (value*100).toFixed(1) : (value/total*100).toFixed(1); return pct > 5 ? pct + '%' : ''; }",
+                    ],
+                ],
+            ],
+        ];
+
+        return $this->generateChart(
+            $config,
+            $filePath,
+            $width ?? config('quickchart.doughnut_width', 600),
+            $height ?? config('quickchart.doughnut_height', 450)
+        );
+    }
+
+    /**
+     * Generate a horizontal bar chart (good for many categories)
+     */
+    public function generateHorizontalBarChart(
+        array $labels,
+        array $values,
+        string $title,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null
+    ): string {
+        $colors = array_slice($this->datasetColors, 0, count($values));
+
+        $config = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [[
+                    'data' => $values,
+                    'backgroundColor' => $colors,
+                    'borderWidth' => 0,
+                ]],
+            ],
+            'options' => [
+                'indexAxis' => 'y',
+                'responsive' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => !empty($title),
+                        'text' => $title,
+                        'color' => $this->fontColor,
+                        'font' => [
+                            'family' => $this->fontFamily,
+                            'size' => $this->titleFontSize,
+                            'weight' => 'bold',
+                        ],
+                    ],
+                    'legend' => [
+                        'display' => false,
+                    ],
+                ],
+                'scales' => [
+                    'x' => [
+                        'ticks' => [
+                            'color' => $this->fontColor,
                             'font' => [
                                 'family' => $this->fontFamily,
                                 'size' => $this->fontSize,
                             ],
+                        ],
+                        'grid' => [
+                            'color' => 'rgba(0,0,0,0.1)',
+                        ],
+                    ],
+                    'y' => [
+                        'ticks' => [
+                            'color' => $this->fontColor,
+                            'font' => [
+                                'family' => $this->fontFamily,
+                                'size' => 12,
+                            ],
+                        ],
+                        'grid' => [
+                            'display' => false,
                         ],
                     ],
                 ],
             ],
         ];
 
-        return $this->generateChart($config, $filePath, $width ?? 500, $height ?? 400);
+        // Calculate height based on number of items
+        $calculatedHeight = max(400, count($labels) * 28 + 80);
+
+        return $this->generateChart(
+            $config,
+            $filePath,
+            $width ?? 900,
+            $height ?? $calculatedHeight
+        );
+    }
+
+    /**
+     * Generate a stacked horizontal bar chart (for accounts allocation)
+     */
+    public function generateStackedBarChart(
+        array $labels,
+        array $values,
+        string $title,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null
+    ): string {
+        // Cycle through colors if more items than colors
+        $colors = [];
+        $colorCount = count($this->datasetColors);
+        foreach ($values as $i => $value) {
+            $colors[] = $this->datasetColors[$i % $colorCount];
+        }
+
+        // Create separate datasets for each segment (for stacked effect)
+        $datasets = [];
+        foreach ($values as $i => $value) {
+            $datasets[] = [
+                'label' => $labels[$i],
+                'data' => [$value],
+                'backgroundColor' => $colors[$i],
+                'borderWidth' => 0,
+            ];
+        }
+
+        $config = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => [''],
+                'datasets' => $datasets,
+            ],
+            'options' => [
+                'indexAxis' => 'y',
+                'responsive' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => !empty($title),
+                        'text' => $title,
+                        'color' => $this->fontColor,
+                        'font' => [
+                            'family' => $this->fontFamily,
+                            'size' => $this->titleFontSize,
+                            'weight' => 'bold',
+                        ],
+                    ],
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => [
+                            'color' => '#000000',
+                            'font' => [
+                                'family' => $this->fontFamily,
+                                'size' => 12,
+                                'weight' => 'bold',
+                            ],
+                            'boxWidth' => 14,
+                            'padding' => 10,
+                        ],
+                    ],
+                    'datalabels' => [
+                        'display' => true,
+                        'color' => '#000000',
+                        'font' => [
+                            'weight' => 'bold',
+                            'size' => 12,
+                        ],
+                        'formatter' => "function(value, context) { return value > 5 ? value.toFixed(1) + '%' : ''; }",
+                    ],
+                ],
+                'scales' => [
+                    'x' => [
+                        'stacked' => true,
+                        'display' => false,
+                    ],
+                    'y' => [
+                        'stacked' => true,
+                        'display' => false,
+                    ],
+                ],
+            ],
+        ];
+
+        return $this->generateChart(
+            $config,
+            $filePath,
+            $width ?? 900,
+            $height ?? 200
+        );
     }
 
     /**
@@ -400,6 +643,7 @@ class QuickChartService
                 'title' => [
                     'display' => !empty($title),
                     'text' => $title,
+                    'color' => $this->fontColor,
                     'font' => [
                         'family' => $this->fontFamily,
                         'size' => $this->titleFontSize,
@@ -408,30 +652,46 @@ class QuickChartService
                 ],
                 'legend' => [
                     'labels' => [
+                        'color' => $this->fontColor,
                         'font' => [
                             'family' => $this->fontFamily,
-                            'size' => $this->fontSize,
+                            'size' => $this->legendFontSize,
+                            'weight' => '600',
                         ],
+                        'padding' => 15,
                     ],
                 ],
             ],
             'scales' => [
                 'x' => [
                     'ticks' => [
+                        'color' => $this->fontColor,
                         'font' => [
                             'family' => $this->fontFamily,
                             'size' => $this->fontSize,
+                            'weight' => '500',
                         ],
                         'maxRotation' => 45,
                         'minRotation' => 45,
+                        'autoSkip' => true,
+                        'autoSkipPadding' => 100,
+                        'maxTicksLimit' => 8,
+                    ],
+                    'grid' => [
+                        'color' => 'rgba(0,0,0,0.1)',
                     ],
                 ],
                 'y' => [
                     'ticks' => [
+                        'color' => $this->fontColor,
                         'font' => [
                             'family' => $this->fontFamily,
                             'size' => $this->fontSize,
+                            'weight' => '500',
                         ],
+                    ],
+                    'grid' => [
+                        'color' => 'rgba(0,0,0,0.1)',
                     ],
                 ],
             ],

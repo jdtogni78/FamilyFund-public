@@ -148,16 +148,6 @@
             {{-- Trade Portfolios Comparison --}}
             @include('trade_portfolios.stacked_bar_graph')
 
-            {{-- Trade Portfolios Graphs --}}
-            @foreach($api['tradePortfolios'] as $tradePortfolio)
-                @php($extraTitle = '' . $tradePortfolio->id . ' [' .
-                        $tradePortfolio->start_dt->format('Y-m-d') . ' to ' .
-                        $tradePortfolio->end_dt->format('Y-m-d') . ']')
-                <div class="row mb-4">
-                    @include('trade_portfolios.inner_show_graphs')
-                </div>
-            @endforeach
-
             {{-- Admin Allocation Charts --}}
             @isset($api['balances'])@isset($api['admin'])
             <div class="row mb-4" id="section-allocation">

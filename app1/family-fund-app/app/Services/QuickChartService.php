@@ -44,7 +44,8 @@ class QuickChartService
         string $title,
         string $filePath,
         ?int $width = null,
-        ?int $height = null
+        ?int $height = null,
+        ?array $performances = null
     ): string {
         $options = $this->getBaseOptions($title);
         // Add data labels inside bars
@@ -61,6 +62,11 @@ class QuickChartService
             'formatter' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return '$'+r }",
         ];
 
+        // Generate colors based on performance if provided
+        $barColors = $performances !== null
+            ? $this->generatePerformanceBarColors($performances)
+            : $this->generateBarColors(count($values));
+
         $config = [
             'type' => 'bar',
             'data' => [
@@ -68,8 +74,8 @@ class QuickChartService
                 'datasets' => [[
                     'label' => $title,
                     'data' => $values,
-                    'backgroundColor' => $this->generateBarColors(count($values)),
-                    'borderColor' => $this->colors['primary'],
+                    'backgroundColor' => $barColors,
+                    'borderColor' => $barColors,
                     'borderWidth' => 1,
                 ]],
             ],
@@ -731,6 +737,27 @@ class QuickChartService
                 $colors[] = $this->colors['primary'];
             } else {
                 $colors[] = $this->colors['secondary'];
+            }
+        }
+        return $colors;
+    }
+
+    /**
+     * Generate colors for bar chart based on performance values
+     * Green for positive, red for negative, blue for current (last) bar
+     */
+    protected function generatePerformanceBarColors(array $performances): array
+    {
+        $colors = [];
+        $count = count($performances);
+        for ($i = 0; $i < $count; $i++) {
+            // Last bar is always blue (current period)
+            if ($i === $count - 1) {
+                $colors[] = $this->colors['primary'];
+            } elseif ($performances[$i] >= 0) {
+                $colors[] = $this->colors['success'];
+            } else {
+                $colors[] = $this->colors['danger'];
             }
         }
         return $colors;

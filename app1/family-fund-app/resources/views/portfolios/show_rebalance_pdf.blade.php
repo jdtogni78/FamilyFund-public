@@ -50,35 +50,33 @@
             <div class="card-header">
                 <h4 class="card-header-title">Trade Portfolio Timeline</h4>
             </div>
-            <div class="card-body">
-                <table class="table-compact" width="100%">
+            <div class="card-body" style="padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 10px; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th style="width: 50px;">ID</th>
-                            <th>Period</th>
+                        <tr style="background: #1e40af; color: white;">
+                            <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">ID</th>
+                            <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">Period</th>
                             @foreach($api['symbols'] as $symbolInfo)
-                                <th class="text-center">{{ $symbolInfo['symbol'] }}</th>
+                                <th style="padding: 6px 4px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);">{{ $symbolInfo['symbol'] }}</th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($api['tradePortfolios'] as $tp)
-                            <tr>
-                                <td>#{{ $tp->id }}</td>
-                                <td style="font-size: 11px;">
-                                    {{ \Carbon\Carbon::parse($tp->start_dt)->format('M d, Y') }} -
-                                    {{ \Carbon\Carbon::parse($tp->end_dt)->format('M d, Y') }}
+                        @foreach($api['tradePortfolios'] as $idx => $tp)
+                            <tr style="background: {{ $idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}; border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; font-weight: 600;">#{{ $tp->id }}</td>
+                                <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; white-space: nowrap;">
+                                    {{ \Carbon\Carbon::parse($tp->start_dt)->format('m/d/y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('m/d/y') }}
                                 </td>
                                 @foreach($api['symbols'] as $symbolInfo)
                                     @php
                                         $item = $tp->tradePortfolioItems->firstWhere('symbol', $symbolInfo['symbol']);
                                     @endphp
-                                    <td class="text-center" style="font-size: 11px;">
+                                    <td style="padding: 5px 4px; text-align: center; border-right: 1px solid #e2e8f0;">
                                         @if($item)
-                                            {{ number_format($item->target_share * 100, 1) }}%
-                                            <span style="color: #64748b;">(± {{ number_format($item->deviation_trigger * 100, 1) }})</span>
+                                            <strong>{{ number_format($item->target_share * 100, 0) }}</strong><span style="color: #64748b;">±{{ number_format($item->deviation_trigger * 100, 0) }}</span>
                                         @else
-                                            <span style="color: #94a3b8;">-</span>
+                                            <span style="color: #cbd5e1;">-</span>
                                         @endif
                                     </td>
                                 @endforeach
@@ -92,24 +90,22 @@
         <!-- Current Allocation Status -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4 class="card-header-title">Current Allocation Status</h4>
-                <span class="badge badge-secondary" style="float: right;">as of {{ $lastDate ?? 'N/A' }}</span>
+                <h4 class="card-header-title">Current Allocation Status <span style="font-weight: normal; font-size: 12px; color: #64748b;">(as of {{ $lastDate ?? 'N/A' }})</span></h4>
             </div>
-            <div class="card-body">
-                <table width="100%">
+            <div class="card-body" style="padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 11px; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Type</th>
-                            <th class="col-number">Target</th>
-                            <th class="col-number">Deviation</th>
-                            <th class="col-number">Min</th>
-                            <th class="col-number">Max</th>
-                            <th class="col-number">Current</th>
-                            <th class="text-center">Status</th>
+                        <tr style="background: #1e40af; color: white;">
+                            <th style="padding: 8px; text-align: left;">Symbol</th>
+                            <th style="padding: 8px; text-align: left;">Type</th>
+                            <th style="padding: 8px; text-align: right;">Target</th>
+                            <th style="padding: 8px; text-align: right;">Range</th>
+                            <th style="padding: 8px; text-align: right;">Current</th>
+                            <th style="padding: 8px; text-align: center; width: 60px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @php $rowIdx = 0; @endphp
                         @foreach($api['symbols'] as $symbolInfo)
                             @php
                                 $symbol = $symbolInfo['symbol'];
@@ -123,26 +119,25 @@
                                     $maxPerc = $currentData['max'] * 100;
                                     $isWithinBounds = $currentPerc >= $minPerc && $currentPerc <= $maxPerc;
                                 @endphp
-                                <tr>
-                                    <td><strong>{{ $symbol }}</strong></td>
-                                    <td>{{ $symbolInfo['type'] }}</td>
-                                    <td class="col-number">{{ number_format($targetPerc, 1) }}%</td>
-                                    <td class="col-number">± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
-                                    <td class="col-number" style="color: #64748b;">{{ number_format($minPerc, 1) }}%</td>
-                                    <td class="col-number" style="color: #64748b;">{{ number_format($maxPerc, 1) }}%</td>
-                                    <td class="col-number" style="color: {{ $isWithinBounds ? '#16a34a' : '#dc2626' }}; font-weight: 700;">
+                                <tr style="background: {{ $rowIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}; border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 6px 8px; font-weight: 600;">{{ $symbol }}</td>
+                                    <td style="padding: 6px 8px; color: #64748b;">{{ $symbolInfo['type'] }}</td>
+                                    <td style="padding: 6px 8px; text-align: right;">{{ number_format($targetPerc, 1) }}%</td>
+                                    <td style="padding: 6px 8px; text-align: right; color: #64748b;">{{ number_format($minPerc, 1) }} - {{ number_format($maxPerc, 1) }}%</td>
+                                    <td style="padding: 6px 8px; text-align: right; font-weight: 700; color: {{ $isWithinBounds ? '#16a34a' : '#dc2626' }};">
                                         {{ number_format($currentPerc, 2) }}%
                                     </td>
-                                    <td class="text-center">
+                                    <td style="padding: 6px 8px; text-align: center;">
                                         @if($isWithinBounds)
-                                            <span class="badge badge-success">OK</span>
+                                            <span style="background: #16a34a; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">OK</span>
                                         @elseif($currentPerc < $minPerc)
-                                            <span class="badge badge-danger">Under</span>
+                                            <span style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">UNDER</span>
                                         @else
-                                            <span class="badge badge-warning">Over</span>
+                                            <span style="background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">OVER</span>
                                         @endif
                                     </td>
                                 </tr>
+                                @php $rowIdx++; @endphp
                             @endif
                         @endforeach
                     </tbody>

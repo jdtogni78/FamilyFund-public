@@ -53,7 +53,9 @@ class AccountControllerExt extends AccountController
 
         $arr = $this->createAccountViewData($asOf, $account);
 
-        return view('accounts.show_ext')->with('api', $arr);
+        return view('accounts.show_ext')
+            ->with('api', $arr)
+            ->with('account', $account);
     }
 
     public function showPdfAsOf($id, $asOf)

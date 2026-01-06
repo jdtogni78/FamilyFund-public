@@ -146,42 +146,36 @@
                                                 @php
                                                     $symbol = $symbolInfo['symbol'];
                                                     $currentData = $lastData && isset($lastData[$symbol]) ? $lastData[$symbol] : null;
-                                                    $currentPerc = $currentData ? $currentData['perc'] * 100 : null;
-                                                    $targetPerc = $currentData ? $currentData['target'] * 100 : null;
-                                                    $minPerc = $currentData ? $currentData['min'] * 100 : null;
-                                                    $maxPerc = $currentData ? $currentData['max'] * 100 : null;
-                                                    $isWithinBounds = $currentPerc !== null && $currentPerc >= $minPerc && $currentPerc <= $maxPerc;
+                                                @endphp
+                                                @if($currentData)
+                                                @php
+                                                    $currentPerc = $currentData['perc'] * 100;
+                                                    $targetPerc = $currentData['target'] * 100;
+                                                    $minPerc = $currentData['min'] * 100;
+                                                    $maxPerc = $currentData['max'] * 100;
+                                                    $isWithinBounds = $currentPerc >= $minPerc && $currentPerc <= $maxPerc;
                                                 @endphp
                                                 <tr>
                                                     <td><strong>{{ $symbol }}</strong></td>
                                                     <td>{{ $symbolInfo['type'] }}</td>
-                                                    <td class="text-right">{{ $targetPerc !== null ? number_format($targetPerc, 1) . '%' : 'N/A' }}</td>
-                                                    <td class="text-right">
-                                                        @if($currentData)
-                                                            ± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%
-                                                        @else
-                                                            N/A
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-right text-muted">{{ $minPerc !== null ? number_format($minPerc, 1) . '%' : 'N/A' }}</td>
-                                                    <td class="text-right text-muted">{{ $maxPerc !== null ? number_format($maxPerc, 1) . '%' : 'N/A' }}</td>
-                                                    <td class="text-right {{ $currentPerc !== null ? ($isWithinBounds ? 'text-success' : 'text-danger font-weight-bold') : '' }}">
-                                                        {{ $currentPerc !== null ? number_format($currentPerc, 2) . '%' : 'N/A' }}
+                                                    <td class="text-right">{{ number_format($targetPerc, 1) }}%</td>
+                                                    <td class="text-right">± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
+                                                    <td class="text-right text-muted">{{ number_format($minPerc, 1) }}%</td>
+                                                    <td class="text-right text-muted">{{ number_format($maxPerc, 1) }}%</td>
+                                                    <td class="text-right {{ $isWithinBounds ? 'text-success' : 'text-danger font-weight-bold' }}">
+                                                        {{ number_format($currentPerc, 2) }}%
                                                     </td>
                                                     <td class="text-center">
-                                                        @if($currentPerc !== null)
-                                                            @if($isWithinBounds)
-                                                                <span class="badge badge-success">OK</span>
-                                                            @elseif($currentPerc < $minPerc)
-                                                                <span class="badge badge-danger">Under</span>
-                                                            @else
-                                                                <span class="badge badge-warning">Over</span>
-                                                            @endif
+                                                        @if($isWithinBounds)
+                                                            <span class="badge badge-success">OK</span>
+                                                        @elseif($currentPerc < $minPerc)
+                                                            <span class="badge badge-danger">Under</span>
                                                         @else
-                                                            <span class="badge badge-secondary">N/A</span>
+                                                            <span class="badge badge-warning">Over</span>
                                                         @endif
                                                     </td>
                                                 </tr>
+                                                @endif
                                             @endforeach
                                         </tbody>
                                     </table>

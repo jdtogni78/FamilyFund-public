@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\Traits\PortfolioRebalancePDF;
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Resources\PortfolioAssetResource;
 use App\Models\AssetExt;
@@ -20,6 +21,36 @@ class PortfolioControllerExt extends PortfolioController
     public function __construct(PortfolioRepository $portfolioRepo)
     {
         parent::__construct($portfolioRepo);
+    }
+
+    public function showRebalancePDF($id, $start = null, $end = null)
+    {
+        /** @var PortfolioExt $portfolio */
+        $portfolio = $this->portfolioRepository->find($id);
+
+        if (empty($portfolio)) {
+            Flash::error('Portfolio not found');
+            return redirect(route('portfolios.index'));
+        }
+
+        if ($start === null) {
+            $start = Carbon::now()->subMonths(3);
+        } else {
+            $start = Carbon::parse($start);
+        }
+        if ($end === null) {
+            $end = Carbon::now();
+        } else {
+            $end = Carbon::parse($end);
+        }
+
+        $api = $this->createRebalanceResponse($portfolio, $start, $end);
+        $api['asOf'] = $start;
+        $api['endDate'] = $end;
+
+        $pdf = new PortfolioRebalancePDF($api, false);
+
+        return $pdf->inline('portfolio_rebalance.pdf');
     }
 
     public function showRebalance($id, $start = null, $end = null)

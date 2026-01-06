@@ -21,11 +21,15 @@
             <div class="row mb-4">
                 <div class="col-lg-12">
                     <div class="card border-primary">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">
                                 <i class="fa fa-chart-line mr-2"></i>
                                 Portfolio Rebalance Analysis (Multi-Period)
                             </h4>
+                            <a href="{{ route('portfolios.showRebalancePDF', [$api['portfolio']->id, $api['asOf']->format('Y-m-d'), $api['endDate']->format('Y-m-d')]) }}"
+                               class="btn btn-light btn-sm" target="_blank" title="Download PDF">
+                                <i class="fa fa-file-pdf mr-1"></i> PDF
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -185,29 +189,27 @@
                     </div>
                 </div>
 
-                <!-- Stock Navigation (Fixed) -->
-                <div id="stockNavPlaceholder" style="height: 60px;"></div>
-                <div id="stockNav" class="card shadow-sm" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1030; border-radius: 0;">
+                <!-- Stock Navigation (Sticky) -->
+                <div id="stockNavAnchor"></div>
+                <div id="stockNav" class="card shadow-sm mb-3" style="position: sticky; top: 56px; z-index: 1020; border-radius: 4px; display: none;">
                     <div class="card-body py-2">
-                        <div class="container-fluid">
-                            <div class="d-flex flex-wrap align-items-center">
-                                <span class="mr-3 text-muted small">Jump to:</span>
-                                @foreach($api['symbols'] as $idx => $symbolInfo)
-                                    <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
-                                       class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
-                                       data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
-                                        {{ $symbolInfo['symbol'] }}
-                                    </a>
-                                @endforeach
-                                <span class="ml-auto">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
-                                        <i class="fa fa-expand"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
-                                        <i class="fa fa-compress"></i>
-                                    </button>
-                                </span>
-                            </div>
+                        <div class="d-flex flex-wrap align-items-center">
+                            <span class="mr-3 text-muted small">Jump to:</span>
+                            @foreach($api['symbols'] as $idx => $symbolInfo)
+                                <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
+                                   class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
+                                   data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
+                                    {{ $symbolInfo['symbol'] }}
+                                </a>
+                            @endforeach
+                            <span class="ml-auto">
+                                <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
+                                    <i class="fa fa-expand"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
+                                    <i class="fa fa-compress"></i>
+                                </button>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -269,6 +271,27 @@
 @push('scripts')
 <script type="text/javascript">
 $(document).ready(function() {
+    const $stockNav = $('#stockNav');
+    const $stockNavAnchor = $('#stockNavAnchor');
+
+    // Show/hide nav based on scroll position
+    function updateNavVisibility() {
+        if ($stockNavAnchor.length === 0) return;
+
+        const anchorTop = $stockNavAnchor.offset().top;
+        const scrollTop = $(window).scrollTop();
+
+        // Show nav when scrolled past the anchor point
+        if (scrollTop > anchorTop - 100) {
+            $stockNav.slideDown(200);
+        } else {
+            $stockNav.slideUp(200);
+        }
+    }
+
+    // Initial check
+    updateNavVisibility();
+
     // Smooth scroll for stock navigation
     $('.stock-nav-btn').click(function(e) {
         e.preventDefault();
@@ -279,10 +302,10 @@ $(document).ready(function() {
         const collapseId = '#chartCollapse' + $(this).data('symbol');
         $(collapseId).collapse('show');
 
-        // Scroll to chart with offset for sticky nav
-        const navHeight = $('#stockNav').outerHeight() + 20;
+        // Scroll to chart with offset for sticky nav and main navbar
+        const offset = 120; // navbar + sticky nav height
         $('html, body').animate({
-            scrollTop: $target.offset().top - navHeight
+            scrollTop: $target.offset().top - offset
         }, 300);
 
         // Highlight active button
@@ -311,13 +334,16 @@ $(document).ready(function() {
             .removeClass('fa-chevron-down').addClass('fa-chevron-right');
     });
 
-    // Update active nav button on scroll
+    // Update nav visibility and active button on scroll
     $(window).scroll(function() {
-        const navHeight = $('#stockNav').outerHeight() + 50;
+        updateNavVisibility();
+
+        // Update active nav button
+        const offset = 150;
         let currentSection = null;
 
         $('[id^="chart-"]').each(function() {
-            const sectionTop = $(this).offset().top - navHeight;
+            const sectionTop = $(this).offset().top - offset;
             if ($(window).scrollTop() >= sectionTop) {
                 currentSection = $(this).attr('id');
             }

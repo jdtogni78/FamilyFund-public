@@ -14,19 +14,19 @@ Trait MailTrait
         if (null !== $cc && strlen($cc) > 0) {
             $emailsCC = explode(",", $cc);
             $mailto->cc($emailsCC);
-            Log::info("Adding cc " . $emailsCC);
+            Log::info("Adding cc " . json_encode($emailsCC));
         }
         Log::info("Sending email to " . json_encode($emails));
         $msg = "Email to " . json_encode($emails);
-        $mailto->send($data);
 
-        if (Mail::failures()) {
-            Log::error($msg . " failed");
-            return $msg . " failed";
-        } else {
+        try {
+            $mailto->send($data);
             Log::info($msg . " sent");
+            return null;
+        } catch (\Exception $e) {
+            Log::error($msg . " failed: " . $e->getMessage());
+            return $msg . " failed: " . $e->getMessage();
         }
-        return null;
     }
 }
 

@@ -93,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('persons', App\Http\Controllers\PersonController::class);
     Route::resource('phones', App\Http\Controllers\PhoneController::class);
     Route::resource('portfolioAssets', App\Http\Controllers\PortfolioAssetController::class);
+    Route::resource('portfolioReports', App\Http\Controllers\WebV1\PortfolioReportControllerExt::class);
     Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);

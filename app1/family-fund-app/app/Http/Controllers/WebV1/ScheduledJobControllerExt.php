@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\FundReportExt;
 use App\Models\TransactionExt;
+use App\Models\PortfolioReportExt;
 use Illuminate\Support\MessageBag;
 
 class ScheduledJobControllerExt extends ScheduledJobController
@@ -66,6 +67,10 @@ class ScheduledJobControllerExt extends ScheduledJobController
                 ->get();
         } else if ($scheduledJob->entity_descr == ScheduledJobExt::ENTITY_TRANSACTION) {
             $children = TransactionExt::query()
+                ->where('scheduled_job_id', $scheduledJob->id)
+                ->get();
+        } else if ($scheduledJob->entity_descr == ScheduledJobExt::ENTITY_PORTFOLIO_REPORT) {
+            $children = PortfolioReportExt::query()
                 ->where('scheduled_job_id', $scheduledJob->id)
                 ->get();
         }

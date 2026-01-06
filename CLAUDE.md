@@ -16,13 +16,13 @@ Family Fund is a Laravel 11 financial fund management system for tracking fund s
 
 ## Commands
 
-All commands run from `app1/family-fund-app/`:
+All commands run from `app1/` (NOT `app1/family-fund-app/`):
 
 ```bash
-# Development
+# Development (run from app1/)
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-docker-compose exec familyfund composer install
-npm install && npm run dev
+docker exec familyfund composer install
+npm install && npm run dev   # run from app1/family-fund-app/
 
 # Testing
 php artisan test                              # All tests
@@ -83,9 +83,38 @@ Tests organized in `tests/`:
 
 ## Docker Services
 
-- **familyfund** - Laravel app (bitnami/laravel:11.5.0)
-- **mariadb** - Database (famfun/1234, database: familyfund)
-- **mailhog** - Email testing (UI: localhost:8025)
+**Note:** Uses custom docker-compose at `app1/docker-compose.yml`, NOT Laravel Sail (`family-fund-app/docker-compose.yml`).
+
+Run from `app1/`:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+Services:
+- **familyfund** - Laravel app (custom Dockerfile with wkhtmltopdf)
+- **mariadb** (container: `db`) - Database (famfun/1234, database: familyfund)
+- **mailhog** (container: `mail`) - Email testing (UI: http://localhost:8025)
+- **quickchart** - Chart image generation (http://localhost:3400)
+
+Environment: `.env` uses `MAIL_HOST=mail` to match container name.
+
+## Code Generators
+
+Boilerplate code generators using InfyOm Laravel Generator in `app1/family-fund-app/generators/`:
+
+- **`models_from_table.sh`** - Generate model, controller, repository, views from existing DB table
+  ```bash
+  php artisan infyom:scaffold ModelName --fromTable --tableName table_name
+  ```
+- **`api_from_json.sh`** - Generate API endpoints from JSON schema
+  ```bash
+  php artisan infyom:api ModelName --fieldsFile resources/api_schemas/ModelName.json
+  ```
+- **`models_from_json.sh`** - Generate models from JSON schema
+- **`dump_ddl.sh`** / **`dump_data.sh`** - Database export utilities
+- **`form_to_blade_converter.py`** - Convert forms to Blade templates
+
+The generators create: Model, Repository, Controller, Request classes, Views (index, create, edit, show, fields, table).
 
 ## Development Notes
 

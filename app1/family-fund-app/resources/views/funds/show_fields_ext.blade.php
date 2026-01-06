@@ -32,18 +32,23 @@
         <div class="card h-100">
             <div class="card-body">
                 {{-- Top: Total Value and Share Info --}}
-                <div class="row mb-3">
-                    <div class="col-md-4 text-center border-end">
-                        <small class="text-muted d-block">Total Value</small>
-                        <h3 class="mb-0" style="color: #2563eb;">${{ number_format($summary['value'], 2) }}</h3>
+                <div class="d-flex align-items-center justify-content-between p-2 rounded mb-3" style="background-color: rgba(37, 99, 235, 0.1);">
+                    <div class="d-flex align-items-center">
+                        <span style="width: 10px; height: 10px; background-color: #2563eb; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
+                        <strong style="color: #2563eb;">Total Value</strong>
                     </div>
-                    <div class="col-md-4 text-center border-end">
-                        <small class="text-muted d-block">Total Shares</small>
-                        <h4 class="mb-0">{{ number_format($summary['shares'], 2) }}</h4>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <small class="text-muted d-block">Share Price</small>
-                        <h4 class="mb-0">${{ number_format($summary['share_value'], 2) }}</h4>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="text-center px-3">
+                            <span class="d-block small text-muted">Shares</span>
+                            <strong>{{ number_format($summary['shares'], 2) }}</strong>
+                        </div>
+                        <div class="text-center px-3 border-start border-end">
+                            <span class="d-block small text-muted">Share Price</span>
+                            <strong>${{ number_format($summary['share_value'], 2) }}</strong>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="mb-0" style="color: #2563eb;">${{ number_format($summary['value'], 2) }}</h4>
+                        </div>
                     </div>
                 </div>
 

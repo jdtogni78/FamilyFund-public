@@ -48,7 +48,8 @@
         <!-- Trade Portfolio Timeline (split into chunks if many symbols) -->
         @php
             $maxSymbolsPerTable = 6;
-            $symbolChunks = array_chunk($api['symbols']->toArray(), $maxSymbolsPerTable);
+            $symbolsArray = is_array($api['symbols']) ? $api['symbols'] : $api['symbols']->toArray();
+            $symbolChunks = array_chunk($symbolsArray, $maxSymbolsPerTable);
         @endphp
         @foreach($symbolChunks as $chunkIdx => $symbolChunk)
             <div class="card mb-4">

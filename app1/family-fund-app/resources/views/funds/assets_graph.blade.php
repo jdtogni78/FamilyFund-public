@@ -7,10 +7,10 @@
 var api = {!! json_encode($api) !!};
 
 const assets_labels = api.portfolio.assets.map(function(e) { return e.name; });
-const assets_values = api.portfolio.assets.map(function(e) { return e.value; });
+const assets_values = api.portfolio.assets.map(function(e) { return parseFloat(e.value) || 0; });
 
 // Calculate total for percentages
-const total = assets_values.reduce((sum, v) => sum + v, 0);
+const total = assets_values.reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
 
 const assets_config = {
     type: 'doughnut',
@@ -45,16 +45,17 @@ const assets_config = {
                     weight: 'bold',
                 },
                 formatter: function(value, context) {
-                    const percent = (value / total) * 100;
-                    if (percent < 5) return ''; // Hide labels on small slices
+                    if (!total || total === 0) return '';
+                    const percent = ((parseFloat(value) || 0) / total) * 100;
+                    if (percent < 5 || isNaN(percent)) return ''; // Hide labels on small slices
                     return percent.toFixed(1) + '%';
                 },
             },
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        const value = context.raw;
-                        const percent = (value / total) * 100;
+                        const value = parseFloat(context.raw) || 0;
+                        const percent = total > 0 ? (value / total) * 100 : 0;
                         return context.label + ': ' + formatCurrency(value, 2) + ' (' + percent.toFixed(2) + '%)';
                     }
                 }

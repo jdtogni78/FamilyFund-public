@@ -24,24 +24,18 @@
 
 @push('scripts')
     <script type="text/javascript">
-    (function() {
-        var groupData = {!! json_encode($groupData) !!};
-        var assets_labels = Object.keys(groupData);
-        var assets_shares = Object.values(groupData);
+    $(document).ready(function() {
+        try {
+            var groupData = {!! json_encode($groupData) !!};
+            var labels = Object.keys(groupData);
+            var data = Object.values(groupData);
 
-        new Chart(
-            document.getElementById('tradePortfolioGroupGraph{{ $tradePortfolio->id }}'),
-            {
-                type: 'doughnut',
-                data: {
-                    labels: assets_labels,
-                    datasets: [{
-                        data: assets_shares,
-                        backgroundColor: graphColors,
-                        hoverOffset: 3
-                    }]
-                },
+            createDoughnutChart('tradePortfolioGroupGraph{{ $tradePortfolio->id }}', labels, data, {
+                legendPosition: 'top'
             });
-    })();
+        } catch (e) {
+            console.error('Error creating trade portfolio group chart:', e);
+        }
+    });
     </script>
 @endpush

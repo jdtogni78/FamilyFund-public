@@ -75,6 +75,70 @@
             const step = Math.ceil(labels.length / maxLabels);
             return labels.map((label, i) => (i % step === 0) ? label : '');
         }
+
+        // Shared doughnut chart options
+        function getDoughnutOptions(percents, options = {}) {
+            const legendPosition = options.legendPosition || 'right';
+            const showLabels = options.showLabels !== false;
+            const labelThreshold = options.labelThreshold || 5;
+            const labelFormatter = options.labelFormatter || function(value, context) {
+                const percent = percents[context.dataIndex];
+                if (percent < labelThreshold) return '';
+                return percent.toFixed(1) + '%';
+            };
+            const tooltipFormatter = options.tooltipFormatter || function(context) {
+                const percent = percents[context.dataIndex];
+                return context.label + ': ' + percent.toFixed(1) + '%';
+            };
+
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: legendPosition,
+                        labels: {
+                            color: chartTheme.fontColor,
+                            font: { size: 12, weight: 'bold' },
+                            padding: 8,
+                        }
+                    },
+                    datalabels: showLabels ? {
+                        color: '#ffffff',
+                        font: { size: 11, weight: 'bold' },
+                        textShadowColor: 'rgba(0,0,0,0.5)',
+                        textShadowBlur: 3,
+                        formatter: labelFormatter,
+                    } : { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: tooltipFormatter
+                        }
+                    }
+                }
+            };
+        }
+
+        // Create a doughnut chart with standard styling
+        function createDoughnutChart(canvasId, labels, data, options = {}) {
+            const total = data.reduce((a, b) => a + b, 0);
+            const percents = data.map(v => (v / total) * 100);
+
+            return new Chart(document.getElementById(canvasId), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: graphColors.slice(0, labels.length),
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: getDoughnutOptions(percents, options)
+            });
+        }
         </script>
 
         <!-- Scripts -->

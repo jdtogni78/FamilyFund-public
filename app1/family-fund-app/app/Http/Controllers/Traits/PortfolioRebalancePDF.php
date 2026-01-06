@@ -31,7 +31,7 @@ class PortfolioRebalancePDF
             return;
         }
 
-        $labels = array_keys($rebalance);
+        $originalLabels = array_keys($rebalance);
 
         foreach ($symbols as $symbolInfo) {
             $symbol = $symbolInfo['symbol'];
@@ -45,6 +45,7 @@ class PortfolioRebalancePDF
             $actualData = [];
 
             $lastValue = ['target' => 0, 'min' => 0, 'max' => 0, 'perc' => 0];
+            $labels = $originalLabels;
 
             foreach ($rebalance as $date => $dayData) {
                 if (isset($dayData[$symbol])) {
@@ -62,6 +63,17 @@ class PortfolioRebalancePDF
                 $actualData[] = $lastValue['perc'];
             }
 
+            // Downsample if too many data points (QuickChart has payload limits)
+            $maxPoints = 100;
+            if (count($labels) > $maxPoints) {
+                $result = $this->downsampleData($labels, [$targetData, $minData, $maxData, $actualData], $maxPoints);
+                $labels = $result['labels'];
+                $targetData = $result['datasets'][0];
+                $minData = $result['datasets'][1];
+                $maxData = $result['datasets'][2];
+                $actualData = $result['datasets'][3];
+            }
+
             // Only create chart if we have data
             if (!empty($actualData) && array_sum($actualData) > 0) {
                 $this->files[$name] = $file = $tempDir->path($name);
@@ -76,5 +88,38 @@ class PortfolioRebalancePDF
                 $this->createLineChart($file);
             }
         }
+    }
+
+    /**
+     * Downsample data arrays to reduce payload size for QuickChart
+     */
+    protected function downsampleData(array $labels, array $datasets, int $maxPoints): array
+    {
+        $totalPoints = count($labels);
+        $step = ceil($totalPoints / $maxPoints);
+
+        $newLabels = [];
+        $newDatasets = array_fill(0, count($datasets), []);
+
+        for ($i = 0; $i < $totalPoints; $i += $step) {
+            $newLabels[] = $labels[$i];
+            foreach ($datasets as $j => $dataset) {
+                $newDatasets[$j][] = $dataset[$i];
+            }
+        }
+
+        // Always include the last point
+        $lastIndex = $totalPoints - 1;
+        if (($totalPoints - 1) % $step !== 0) {
+            $newLabels[] = $labels[$lastIndex];
+            foreach ($datasets as $j => $dataset) {
+                $newDatasets[$j][] = $dataset[$lastIndex];
+            }
+        }
+
+        return [
+            'labels' => $newLabels,
+            'datasets' => $newDatasets,
+        ];
     }
 }

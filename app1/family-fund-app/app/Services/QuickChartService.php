@@ -239,6 +239,8 @@ class QuickChartService
 
         $options = $this->getBaseOptions($titles[0] ?? '');
         $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text && item.text.trim() !== ''; }";
+        // Format Y-axis as percentages
+        $options['scales']['y']['ticks']['callback'] = "function(v) { return (v * 100).toFixed(1) + '%'; }";
 
         $config = [
             'type' => 'line',

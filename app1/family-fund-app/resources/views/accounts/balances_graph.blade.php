@@ -1,52 +1,87 @@
 @push('scripts')
     <script type="text/javascript">
-        var api = {!! json_encode($api) !!};
-        var all_labels   = api.transactions.map(function(e){return e.timestamp.substr(0,10);});
-        var all_balances = api.transactions.map(function(e){return e.balance.shares;});
+        (function() {
+            const api = {!! json_encode($api) !!};
+            const transactions = api.transactions || [];
 
-        var balances_labels = [...new Set(all_labels)].sort();
-        // sum all balances for each label
-        var balances = {};
-        var last_key = '';
-        for (let i=0; i<all_labels.length; i++) {
-            balances[all_labels[i]] = Math.max(balances[all_labels[i]] || 0, all_balances[i]);
-            last_key = all_labels[i];
-        }
-        balances[api.as_of] = balances[last_key];
+            // Build balance history from transactions
+            const allLabels = transactions.map(t => t.timestamp.substr(0, 10));
+            const allBalances = transactions.map(t => t.balance?.shares || 0);
 
-        function createGraphConfig(d, l, c) {
-            const _data = {
-                datasets: [{
-                    label: l,
-                    data: d,
-                    fill: false,
-                    borderColor: c,
-                    stepped: true,
-                    tension: 0.1
-                }]
-            };
+            // Get unique sorted dates and max balance for each date
+            const uniqueDates = [...new Set(allLabels)].sort();
+            const balances = {};
+            let lastKey = '';
+            for (let i = 0; i < allLabels.length; i++) {
+                balances[allLabels[i]] = Math.max(balances[allLabels[i]] || 0, allBalances[i]);
+                lastKey = allLabels[i];
+            }
+            // Extend to current date
+            if (api.as_of && lastKey) {
+                balances[api.as_of] = balances[lastKey];
+            }
 
-            let _config = {
+            const sortedDates = Object.keys(balances).sort();
+            const balanceValues = sortedDates.map(d => balances[d]);
+            const sparseLabels = createSparseLabels(sortedDates, 24);
+
+            const config = {
                 type: 'line',
-                data: _data,
+                data: {
+                    labels: sparseLabels,
+                    datasets: [{
+                        label: 'Share Balance',
+                        data: balanceValues,
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderColor: chartTheme.primary,
+                        borderWidth: 2,
+                        stepped: true,
+                        pointRadius: sortedDates.length > 50 ? 0 : 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: chartTheme.primary,
+                    }]
+                },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(items) {
+                                    return sortedDates[items[0].dataIndex];
+                                },
+                                label: function(context) {
+                                    return 'Shares: ' + formatNumber(context.raw, 2);
+                                }
+                            }
+                        },
+                        datalabels: { display: false }
+                    },
                     scales: {
                         x: {
-                            type: 'time',
-                            time: {unit: 'month'}
+                            type: 'category',
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                            }
                         },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatNumber(value, 2);
+                                }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
                         }
                     }
                 }
             };
-            return _config;
-        }
 
-        var myChart = new Chart(
-            document.getElementById('balancesGraph'),
-            createGraphConfig(balances, 'Shares Balance', 'green')
-        );
+            new Chart(document.getElementById('balancesGraph'), config);
+        })();
     </script>
 @endpush

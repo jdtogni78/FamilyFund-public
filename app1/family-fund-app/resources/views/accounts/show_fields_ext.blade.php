@@ -1,48 +1,77 @@
 @php
-    $field_props = ['class' => 'form-control', 'readonly']
+    $balance = $account->balances['OWN'] ?? null;
+    $shares = $balance->shares ?? 0;
+    $marketValue = $balance->market_value ?? 0;
+    $sharePrice = $shares > 0 ? $marketValue / $shares : 0;
+    $matchingAvailable = $api['matching_available'] ?? 0;
 @endphp
-<div class="row">
-<div class="form-group col-sm-6">
-<label for="nickname">Nickname:</label>
-<input type="text" name="nickname" value="{{ $account->nickname }}" >
-</div>
-<div class="form-group col-sm-6">
-<label for="fund">Fund:</label>
-    <div class="input-group">
-<input type="text" name="fund" value="{{ $account->fund->name }}" >
-        <a href="{{ route('funds.show', [$account->fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+
+<div class="row g-4">
+    {{-- Account Info Card --}}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h4 class="card-title mb-3" style="color: #2563eb;">
+                    <i class="fa fa-user-circle me-2"></i>{{ $account->nickname }}
+                </h4>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Fund:</span>
+                    <a href="{{ route('funds.show', [$account->fund->id]) }}" class="badge bg-primary fs-6 text-decoration-none">
+                        {{ $account->fund->name }}
+                    </a>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">User:</span>
+                    <span class="fw-bold">{{ $account->user->name }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Email:</span>
+                    <span class="text-truncate" style="max-width: 200px;">{{ $account->email_cc }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">As of:</span>
+                    <span class="badge bg-secondary fs-6">{{ $api['as_of'] }}</span>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-<div class="form-group col-sm-6">
-<label for="user">User:</label>
-<input type="text" name="user" value="{{ $account->user->name }}" >
-</div>
-<div class="form-group col-sm-6">
-<label for="email_cc">Email CC:</label>
-<input type="text" name="email_cc" value="{{ $account->email_cc }}" >
-</div>
-<div class="form-group col-sm-6">
-<label for="shares">Shares:</label>
-    <div class="input-group">
-<input type="number" name="shares" value="{{ $account->balances['OWN']->shares }}" >
+
+    {{-- Market Value Card --}}
+    <div class="col-md-6">
+        <div class="card h-100" style="border-left: 4px solid #2563eb;">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Market Value</h6>
+                <h2 class="mb-3" style="color: #2563eb;">${{ number_format($marketValue, 2) }}</h2>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <small class="text-muted d-block">Shares</small>
+                        <strong>{{ number_format($shares, 2) }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Share Price</small>
+                        <strong>${{ number_format($sharePrice, 2) }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-<div class="form-group col-sm-6">
-<label for="market_value">Market Value:</label>
-    <div class="input-group">
-        <div class="input-group-text">$</div>
-<input type="number" name="market_value" value="{{ $account->balances['OWN']->market_value }}" >
+
+    {{-- Matching Available Card --}}
+    @if($matchingAvailable > 0)
+    <div class="col-12">
+        <div class="card" style="border-left: 4px solid #16a34a;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Matching Available</h6>
+                        <h3 class="mb-0" style="color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</h3>
+                    </div>
+                    <div>
+                        <i class="fa fa-hand-holding-usd fa-3x" style="color: #16a34a; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-<div class="form-group col-sm-6">
-<label for="matching_available">Matching Available:</label>
-    <div class="input-group">
-        <div class="input-group-text">$</div>
-<input type="number" name="matching_available" value="{{ $api['matching_available'] }}" >
-    </div>
-</div>
-<div class="form-group col-sm-6">
-<label for="as_of">As Of:</label>
-<input type="text" name="as_of" value="{{ $api['as_of'] }}" >
-</div>
+    @endif
 </div>

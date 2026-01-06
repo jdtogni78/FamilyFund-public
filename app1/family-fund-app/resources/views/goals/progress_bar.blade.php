@@ -1,25 +1,41 @@
-<div class="progress-group">
-    <div class="progress-group-header">
-        <i class="cil-user progress-group-icon fa-solid fa-chart-line"></i>
-        <div>Expected Value:&nbsp;</div>
-        <div class="ms-auto font-weight-bold">{{ number_format($goal->progress['expected']['completed_pct'], 1) }}%</div>
+@php
+    $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
+    $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+    $isOnTrack = $currentPct >= $expectedPct;
+@endphp
+
+<div class="mb-3">
+    {{-- Expected Progress --}}
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="text-muted">
+            <i class="fa fa-clock me-1"></i> Expected Progress
+        </span>
+        <span class="badge" style="background-color: #d97706;">{{ number_format($expectedPct, 1) }}%</span>
     </div>
-    <div class="progress-group-bars">
-        <div class="progress progress-thin">
-            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $goal->progress['expected']['completed_pct'] }}%" 
-            aria-valuenow="{{ $goal->progress['expected']['completed_pct'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="progress mb-3" style="height: 20px;">
+        <div class="progress-bar" role="progressbar"
+             style="width: {{ min(100, $expectedPct) }}%; background-color: #d97706;"
+             aria-valuenow="{{ $expectedPct }}" aria-valuemin="0" aria-valuemax="100">
+            @if($expectedPct > 15)
+                <span class="fw-bold">{{ number_format($expectedPct, 1) }}%</span>
+            @endif
         </div>
     </div>
 
-    <div class="progress-group-header">
-        <i class="cil-user progress-group-icon fa-solid fa-chart-line"></i>
-        <div>Current Value:&nbsp;</div>
-        <div class="ms-auto font-weight-bold">{{ number_format($goal->progress['current']['completed_pct'], 1) }}%</div>
+    {{-- Current Progress --}}
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="text-muted">
+            <i class="fa fa-chart-line me-1"></i> Current Progress
+        </span>
+        <span class="badge" style="background-color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }};">{{ number_format($currentPct, 1) }}%</span>
     </div>
-    <div class="progress-group-bars">
-        <div class="progress progress-thin">
-            <div class="progress-bar bg-success" role="progressbar" style="width: {{ $goal->progress['current']['completed_pct'] }}%" 
-            aria-valuenow="{{ $goal->progress['current']['completed_pct'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="progress" style="height: 20px;">
+        <div class="progress-bar" role="progressbar"
+             style="width: {{ min(100, $currentPct) }}%; background-color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }};"
+             aria-valuenow="{{ $currentPct }}" aria-valuemin="0" aria-valuemax="100">
+            @if($currentPct > 15)
+                <span class="fw-bold">{{ number_format($currentPct, 1) }}%</span>
+            @endif
         </div>
     </div>
 </div>

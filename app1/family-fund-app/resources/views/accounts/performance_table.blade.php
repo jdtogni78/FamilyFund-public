@@ -1,22 +1,45 @@
+@php
+    $data = $api[$performance_key] ?? [];
+    $periods = array_keys($data);
+    $lastPeriod = end($periods);
+@endphp
+
 <div class="table-responsive-sm">
-    <table class="table table-striped" id="funds-table">
-        <thead>
+    <table class="table table-hover" id="performance-table-{{ $performance_key }}">
+        <thead class="table-light">
             <tr>
                 <th>Period</th>
-                <th>Performance</th>
-                <th>Shares</th>
-                <th>Total Value</th>
-                <th>Share Price</th>
+                <th class="text-end">Performance</th>
+                <th class="text-end">Shares</th>
+                <th class="text-end">Total Value</th>
+                <th class="text-end">Share Price</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($api[$performance_key] as $period => $perf)
-            <tr>
-                <td>{{ $period }}</td>
-                <td>{{ $perf['performance'] }} %</td>
-                <td>{{ $perf['shares'] }}</td>
-                <td>$ {{ $perf['value'] }}</td>
-                <td>$ {{ $perf['share_value'] }}</td>
+        @foreach($data as $period => $perf)
+            @php
+                $perfValue = floatval($perf['performance'] ?? 0);
+                $perfColor = $perfValue >= 0 ? '#16a34a' : '#dc2626';
+                $isLast = $period === $lastPeriod;
+            @endphp
+            <tr class="{{ $isLast ? 'table-primary' : '' }}">
+                <td>
+                    @if($isLast)
+                        <strong>{{ $period }}</strong>
+                    @else
+                        {{ $period }}
+                    @endif
+                </td>
+                <td class="text-end">
+                    <span style="color: {{ $perfColor }}; font-weight: {{ $isLast ? 'bold' : 'normal' }};">
+                        @if($perfValue >= 0)+@endif{{ number_format($perfValue, 2) }}%
+                    </span>
+                </td>
+                <td class="text-end">{{ number_format($perf['shares'], 2) }}</td>
+                <td class="text-end">
+                    <strong>${{ number_format($perf['value'], 2) }}</strong>
+                </td>
+                <td class="text-end">${{ number_format($perf['share_value'], 2) }}</td>
             </tr>
         @endforeach
         </tbody>

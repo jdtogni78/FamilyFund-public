@@ -60,7 +60,7 @@
                     <img src="{{ $files['goals_progress_' . $goal->id . '.png'] }}" alt="{{ $goal->name }} Progress"/>
                 </div>
                 <div class="mt-3">
-                    @include('goals.progress_details')
+                    @include('goals.progress_details_pdf')
                 </div>
             </div>
         @endforeach
@@ -124,7 +124,7 @@
         </div>
         <div class="card-body">
             @php ($performance_key = 'yearly_performance')
-            @include('accounts.performance_table')
+            @include('accounts.performance_table_pdf')
         </div>
     </div>
 
@@ -135,7 +135,7 @@
         </div>
         <div class="card-body">
             @php ($performance_key = 'monthly_performance')
-            @include('accounts.performance_table')
+            @include('accounts.performance_table_pdf')
         </div>
     </div>
 
@@ -146,7 +146,7 @@
             <h4 class="card-header-title">Transaction History</h4>
         </div>
         <div class="card-body">
-            @include('accounts.transactions_table')
+            @include('accounts.transactions_table_pdf')
         </div>
     </div>
 
@@ -159,7 +159,7 @@
                 <span class="badge badge-success">${{ number_format($api['matching_available'], 2) }} Available</span>
             </div>
             <div class="card-body">
-                @include('accounts.matching_rules_table')
+                @include('accounts.matching_rules_table_pdf')
             </div>
         </div>
     @endif

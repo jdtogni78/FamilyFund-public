@@ -292,15 +292,23 @@ $(document).ready(function() {
     // Initial check
     updateNavVisibility();
 
-    // Smooth scroll for stock navigation
+    // Smooth scroll for stock navigation (toggle on second click)
     $('.stock-nav-btn').click(function(e) {
         e.preventDefault();
         const target = $(this).attr('href');
         const $target = $(target);
+        const collapseId = '#chartCollapse' + $(this).data('symbol');
+        const $collapse = $(collapseId);
+        const isActive = $(this).hasClass('btn-primary');
+
+        // If already active (selected), toggle collapse
+        if (isActive) {
+            $collapse.collapse('toggle');
+            return;
+        }
 
         // Expand the chart if collapsed
-        const collapseId = '#chartCollapse' + $(this).data('symbol');
-        $(collapseId).collapse('show');
+        $collapse.collapse('show');
 
         // Scroll to chart with offset for sticky nav and main navbar
         const offset = 120; // navbar + sticky nav height

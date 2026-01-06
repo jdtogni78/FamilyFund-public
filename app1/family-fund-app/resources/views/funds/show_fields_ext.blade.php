@@ -57,14 +57,14 @@
                     <div class="progress-bar" role="progressbar"
                          style="width: {{ $allocatedPercent }}%; background-color: #16a34a;"
                          aria-valuenow="{{ $allocatedPercent }}" aria-valuemin="0" aria-valuemax="100">
-                        @if($allocatedPercent > 15)
+                        @if($allocatedPercent > 8)
                             <span class="fw-bold small">{{ number_format($allocatedPercent, 1) }}%</span>
                         @endif
                     </div>
                     <div class="progress-bar" role="progressbar"
                          style="width: {{ $unallocatedPercent }}%; background-color: #d97706;"
                          aria-valuenow="{{ $unallocatedPercent }}" aria-valuemin="0" aria-valuemax="100">
-                        @if($unallocatedPercent > 15)
+                        @if($unallocatedPercent > 8)
                             <span class="fw-bold small">{{ number_format($unallocatedPercent, 1) }}%</span>
                         @endif
                     </div>

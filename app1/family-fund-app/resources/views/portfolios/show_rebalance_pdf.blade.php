@@ -74,7 +74,7 @@
                                     @endphp
                                     <td style="padding: 5px 4px; text-align: center; border-right: 1px solid #e2e8f0;">
                                         @if($item)
-                                            <strong>{{ number_format($item->target_share * 100, 0) }}</strong><span style="color: #64748b;">±{{ number_format($item->deviation_trigger * 100, 0) }}</span>
+                                            <strong>{{ number_format($item->target_share * 100, 0) }}%</strong><span style="color: #64748b;">±{{ number_format($item->deviation_trigger * 100, 0) }}%</span>
                                         @else
                                             <span style="color: #cbd5e1;">-</span>
                                         @endif

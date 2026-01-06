@@ -248,8 +248,8 @@ class FundPDF
     public function createPortfolioComparisonGraph(array $api, TemporaryDirectory $tempDir)
     {
         $arr = $api['tradePortfolios'];
-        if (count($arr) < 2) {
-            return; // Need at least 2 portfolios to compare
+        if (count($arr) < 1) {
+            return; // Need at least 1 portfolio
         }
 
         $name = 'portfolio_comparison.png';
@@ -274,8 +274,24 @@ class FundPDF
             ];
         }
 
+        // Format current assets for comparison
+        $currentAssets = null;
+        if (isset($api['portfolio']['assets'])) {
+            $totalValue = floatval(str_replace(['$', ','], '', $api['portfolio']['total_value'] ?? '0'));
+            if ($totalValue > 0) {
+                $currentAssets = [];
+                foreach ($api['portfolio']['assets'] as $asset) {
+                    $value = floatval(str_replace(['$', ','], '', $asset['value'] ?? '0'));
+                    $currentAssets[] = [
+                        'symbol' => $asset['name'],
+                        'percent' => ($value / $totalValue) * 100,
+                    ];
+                }
+            }
+        }
+
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->getQuickChartService()->generatePortfolioComparisonChart($portfolios, $file);
+        $this->getQuickChartService()->generatePortfolioComparisonChart($portfolios, $file, null, null, $currentAssets);
     }
 
 }

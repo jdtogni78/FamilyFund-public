@@ -659,12 +659,14 @@ class QuickChartService
     /**
      * Generate a vertical stacked bar chart for comparing trade portfolios
      * Each bar represents a portfolio, segments represent asset allocations
+     * Optionally includes current assets as the last bar
      */
     public function generatePortfolioComparisonChart(
         array $portfolios,
         string $filePath,
         ?int $width = null,
-        ?int $height = null
+        ?int $height = null,
+        ?array $currentAssets = null
     ): string {
         // Get all unique symbols across all portfolios
         $allSymbols = [];
@@ -675,12 +677,21 @@ class QuickChartService
                 }
             }
         }
+        // Also get symbols from current assets if provided
+        if ($currentAssets) {
+            foreach ($currentAssets as $asset) {
+                if (!in_array($asset['symbol'], $allSymbols)) {
+                    $allSymbols[] = $asset['symbol'];
+                }
+            }
+        }
         $allSymbols[] = 'Cash';
 
         // Create datasets - one per symbol
         $datasets = [];
         foreach ($allSymbols as $i => $symbol) {
             $data = [];
+            // Add data for each trade portfolio
             foreach ($portfolios as $portfolio) {
                 if ($symbol === 'Cash') {
                     $data[] = ($portfolio['cash_target'] ?? 0) * 100;
@@ -689,6 +700,36 @@ class QuickChartService
                     foreach ($portfolio['items'] as $item) {
                         if ($item['symbol'] === $symbol) {
                             $data[] = $item['target_share'] * 100;
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $data[] = 0;
+                    }
+                }
+            }
+
+            // Add data for current assets if provided
+            if ($currentAssets) {
+                if ($symbol === 'Cash') {
+                    // Find cash in current assets
+                    $found = false;
+                    foreach ($currentAssets as $asset) {
+                        if (strtoupper($asset['symbol']) === 'CASH') {
+                            $data[] = $asset['percent'];
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $data[] = 0;
+                    }
+                } else {
+                    $found = false;
+                    foreach ($currentAssets as $asset) {
+                        if ($asset['symbol'] === $symbol) {
+                            $data[] = $asset['percent'];
                             $found = true;
                             break;
                         }
@@ -713,6 +754,11 @@ class QuickChartService
         $labels = array_map(function($p) {
             return '#' . $p['id'] . ': ' . $p['start_dt'] . ' to ' . $p['end_dt'];
         }, $portfolios);
+
+        // Add "Current" label if current assets provided
+        if ($currentAssets) {
+            $labels[] = 'Current';
+        }
 
         // QuickChart uses Chart.js v2, which requires xAxes/yAxes array syntax for stacking
         $config = [
@@ -752,7 +798,7 @@ class QuickChartService
                             'size' => 9,
                             'weight' => 'bold',
                         ],
-                        'formatter' => "function(value, context) { if (value < 8) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
+                        'formatter' => "function(value, context) { if (value < 2) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
                         'textShadowColor' => 'rgba(0,0,0,0.5)',
                         'textShadowBlur' => 3,
                     ],

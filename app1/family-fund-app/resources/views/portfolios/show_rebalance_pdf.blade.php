@@ -163,13 +163,13 @@
                         <h4 class="card-header-title">{{ $symbol }}</h4>
                         <span class="badge badge-primary" style="float: right;">{{ $symbolInfo['type'] }}</span>
                     </div>
-                    <div class="card-body" style="padding: 8px 12px;">
+                    <div class="card-body">
                         @php
                             $currentData = $lastData && isset($lastData[$symbol]) ? $lastData[$symbol] : null;
                         @endphp
                         @if($currentData)
                             @php $diff = ($currentData['perc'] - $currentData['target']) * 100; @endphp
-                            <div style="margin-bottom: 4px; font-size: 10px;">
+                            <div style="margin-bottom: 6px; font-size: 11px;">
                                 <strong>Target:</strong> {{ number_format($currentData['target'] * 100, 1) }}% |
                                 <span style="color: {{ ($currentData['perc'] >= $currentData['min'] && $currentData['perc'] <= $currentData['max']) ? '#16a34a' : '#dc2626' }}; font-weight: 700;">
                                     Current: {{ number_format($currentData['perc'] * 100, 2) }}%
@@ -180,8 +180,8 @@
                                 </span>
                             </div>
                         @endif
-                        <div class="chart-container" style="max-height: 180px;">
-                            <img src="{{ $files[$chartFile] }}" alt="{{ $symbol }} Rebalance Chart" style="max-height: 170px; width: 100%;"/>
+                        <div class="chart-container">
+                            <img src="{{ $files[$chartFile] }}" alt="{{ $symbol }} Rebalance Chart"/>
                         </div>
                     </div>
                 </div>

@@ -27,6 +27,16 @@
     // Color classes based on track status
     $trackColor = $isOnTrack ? '#16a34a' : '#dc2626';
     $trackBg = $isOnTrack ? 'background: #dcfce7; border: 1px solid #16a34a;' : 'background: #fef2f2; border: 1px solid #dc2626;';
+
+    // Calculate time ahead/behind
+    $pctDiff = abs($currentPct - $expectedPct);
+    $timeAheadYears = ($pctDiff / 100) * $totalYears;
+    if ($timeAheadYears >= 1) {
+        $timeAheadStr = number_format($timeAheadYears, 1) . ' year' . ($timeAheadYears >= 1.5 ? 's' : '');
+    } else {
+        $timeAheadMonths = $timeAheadYears * 12;
+        $timeAheadStr = number_format($timeAheadMonths, 0) . ' month' . ($timeAheadMonths != 1 ? 's' : '');
+    }
 @endphp
 
 <div style="background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 12px;">
@@ -100,13 +110,13 @@
             <span style="color: #16a34a; font-weight: 700; font-size: 14px;">ON TRACK</span>
             <span style="color: #16a34a; margin-left: 10px;">
                 Ahead by <strong>${{ number_format($diff, 0) }}</strong>
-                ({{ number_format($currentPct - $expectedPct, 1) }}% ahead of schedule)
+                ({{ $timeAheadStr }} ahead of schedule)
             </span>
         @else
             <span style="color: #dc2626; font-weight: 700; font-size: 14px;">BEHIND</span>
             <span style="color: #dc2626; margin-left: 10px;">
                 Behind by <strong>${{ number_format(abs($diff), 0) }}</strong>
-                ({{ number_format($expectedPct - $currentPct, 1) }}% behind schedule)
+                ({{ $timeAheadStr }} behind schedule)
             </span>
         @endif
     </div>

@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
         ->name('tradePortfolios.announce');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
         ->name('tradePortfolios.showRebalance');
+    Route::get('portfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\PortfolioControllerExt@showRebalance')
+        ->name('portfolios.showRebalance');
     Route::get('tradePortfoliosItems/createWithParams', 'App\Http\Controllers\WebV1\TradePortfolioItemControllerExt@createWithParams')
         ->name('tradePortfoliosItems.createWithParams');
     Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')

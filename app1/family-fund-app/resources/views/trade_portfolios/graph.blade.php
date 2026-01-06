@@ -14,7 +14,11 @@
             data.push({{ $tradePortfolio->cash_target * 100.0 }});
 
             createDoughnutChart('tradePortfolioGraph{{ $tradePortfolio->id }}', labels, data, {
-                legendPosition: 'top'
+                legendPosition: 'top',
+                tooltipFormatter: function(context) {
+                    const value = context.raw;
+                    return context.label + ': ' + value.toFixed(1) + '%';
+                }
             });
         } catch (e) {
             console.error('Error creating trade portfolio chart:', e);

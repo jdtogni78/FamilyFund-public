@@ -31,7 +31,11 @@
             var data = Object.values(groupData);
 
             createDoughnutChart('tradePortfolioGroupGraph{{ $tradePortfolio->id }}', labels, data, {
-                legendPosition: 'top'
+                legendPosition: 'top',
+                tooltipFormatter: function(context) {
+                    const value = context.raw;
+                    return context.label + ': ' + value.toFixed(1) + '%';
+                }
             });
         } catch (e) {
             console.error('Error creating trade portfolio group chart:', e);

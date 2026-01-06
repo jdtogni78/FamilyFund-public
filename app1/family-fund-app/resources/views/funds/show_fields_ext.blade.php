@@ -11,7 +11,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <h4 class="card-title mb-3" style="color: #2563eb;">
-                    <i class="fa fa-landmark me-2"></i>{{ $api['name'] }}
+                    <i class="fa fa-landmark mr-2"></i>{{ $api['name'] }}
                 </h4>
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted">As of:</span>

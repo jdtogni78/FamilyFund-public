@@ -22,7 +22,7 @@
                             </div>
                             <div>
                                 <a href="/funds/{{ $api['id'] }}/trade_bands"
-                                   class="btn btn-outline-primary btn-sm me-2" title="View Trading Bands">
+                                   class="btn btn-outline-primary btn-sm mr-2" title="View Trading Bands">
                                     <i class="fa fa-chart-bar me-1"></i> Trade Bands
                                 </a>
                                 <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}"
@@ -98,7 +98,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-bar me-2"></i>Yearly Value</strong>
+                            <strong><i class="fa fa-chart-bar mr-2"></i>Yearly Value</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.performance_graph')
@@ -112,7 +112,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-area me-2"></i>Linear Regression</strong>
+                            <strong><i class="fa fa-chart-area mr-2"></i>Linear Regression</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.performance_line_graph_linreg')
@@ -122,7 +122,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-table me-2"></i>Projection Table</strong>
+                            <strong><i class="fa fa-table mr-2"></i>Projection Table</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.linreg_table')
@@ -136,7 +136,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-briefcase me-2"></i>Current Assets</strong>
+                            <strong><i class="fa fa-briefcase mr-2"></i>Current Assets</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.assets_graph')
@@ -161,7 +161,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header" style="background-color: #fff3cd;">
-                            <strong><i class="fa fa-chart-pie me-2"></i>Fund Allocation (ADMIN)</strong>
+                            <strong><i class="fa fa-chart-pie mr-2"></i>Fund Allocation (ADMIN)</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.allocation_graph')
@@ -171,7 +171,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header" style="background-color: #fff3cd;">
-                            <strong><i class="fa fa-users me-2"></i>Accounts Allocation (ADMIN)</strong>
+                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation (ADMIN)</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.accounts_graph')
@@ -186,7 +186,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-table me-2"></i>Yearly Performance</strong>
+                            <strong><i class="fa fa-table mr-2"></i>Yearly Performance</strong>
                         </div>
                         <div class="card-body">
                             @php ($performance_key = 'yearly_performance')
@@ -197,7 +197,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-table me-2"></i>Monthly Performance</strong>
+                            <strong><i class="fa fa-table mr-2"></i>Monthly Performance</strong>
                         </div>
                         <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                             @php ($performance_key = 'monthly_performance')
@@ -221,7 +221,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <strong><i class="fa fa-coins me-2"></i>Assets</strong>
+                            <strong><i class="fa fa-coins mr-2"></i>Assets</strong>
                             <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAT"
                                role="button" aria-expanded="false" aria-controls="collapseAT">
                                 <i class="fa fa-chevron-down"></i>
@@ -241,7 +241,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <strong><i class="fa fa-exchange-alt me-2"></i>Transactions</strong>
+                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transactions</strong>
                             <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseATrans"
                                role="button" aria-expanded="false" aria-controls="collapseATrans">
                                 <i class="fa fa-chevron-down"></i>
@@ -262,7 +262,7 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <strong><i class="fa fa-layer-group me-2"></i>Group {{ $group }} Performance</strong>
+                                <strong><i class="fa fa-layer-group mr-2"></i>Group {{ $group }} Performance</strong>
                                 <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapse{{$group}}"
                                    role="button" aria-expanded="false" aria-controls="collapse{{$group}}">
                                     <i class="fa fa-chevron-down"></i>
@@ -284,7 +284,7 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #fff3cd;">
-                                <strong><i class="fa fa-user-friends me-2"></i>Accounts (ADMIN)</strong>
+                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts (ADMIN)</strong>
                                 <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAccounts"
                                    role="button" aria-expanded="false" aria-controls="collapseAccounts">
                                     <i class="fa fa-chevron-down"></i>

@@ -215,27 +215,7 @@
     <!-- Trade Portfolio Details -->
     @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
         <div class="page-break"></div>
-        <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #1e40af; margin-bottom: 16px;">
-            <tr>
-                <td style="padding: 12px; background-color: #1e40af;">
-                    <h3 style="margin: 0; color: #ffffff; font-size: 18px;">Trade Portfolio #{{ $tradePortfolio->id }}: {{ $tradePortfolio->name ?? 'Portfolio' }}</h3>
-                    <div style="color: #bfdbfe; font-size: 12px; margin-top: 4px;">
-                        {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="padding: 16px; background-color: #f8fafc;">
-                    <h4 style="margin: 0 0 12px 0; color: #1e40af; font-size: 14px;">Portfolio Details</h4>
-                    @include('trade_portfolios.show_fields_pdf')
-
-                    <h4 style="margin: 20px 0 12px 0; color: #1e40af; font-size: 14px;">Holdings - Portfolio #{{ $tradePortfolio->id }}</h4>
-                    @if($tradePortfolioItems = $tradePortfolio->items)
-                        @include('trade_portfolio_items.table_pdf')
-                    @endif
-                </td>
-            </tr>
-        </table>
+        @include('trade_portfolios.inner_show_pdf')
     @endforeach
 
     <!-- Assets Table -->

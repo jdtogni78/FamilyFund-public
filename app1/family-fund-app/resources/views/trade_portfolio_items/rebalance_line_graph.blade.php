@@ -35,6 +35,15 @@
     const maxData = extractData('max');
     const actualData = extractData('perc');
 
+    // Calculate Y-axis bounds with padding for whitespace
+    const allValues = [...targetData, ...minData, ...maxData, ...actualData].filter(v => v !== null && v !== undefined);
+    const dataMin = Math.min(...allValues);
+    const dataMax = Math.max(...allValues);
+    const range = dataMax - dataMin;
+    const padding = Math.max(range * 0.15, 0.02); // At least 15% padding or 2% absolute
+    const yMin = Math.max(0, dataMin - padding);
+    const yMax = dataMax + padding;
+
     // Plugin to shade the area between min and max
     const shadedBand = {
         id: 'shadedBand' + itemId,
@@ -133,6 +142,8 @@
                 scales: {
                     y: {
                         beginAtZero: false,
+                        suggestedMin: yMin,
+                        suggestedMax: yMax,
                         ticks: {
                             callback: function(value) {
                                 return (value * 100).toFixed(1) + '%';

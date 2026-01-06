@@ -9,15 +9,16 @@ $(document).ready(function() {
         var api = {!! json_encode($api) !!};
 
         // Calculate total shares for percentage calculation
-        const totalShares = api.summary.total_shares;
-        const unallocatedShares = api.summary.unallocated_shares;
+        const totalShares = parseFloat(api.summary.total_shares) || 0;
+        const unallocatedShares = parseFloat(api.summary.unallocated_shares) || 0;
 
         // Prepare data with percentages
         let accountData = api.balances.map(function(e) {
+            const shares = parseFloat(e.shares) || 0;
             return {
                 label: e.nickname,
-                shares: e.shares,
-                percent: (e.shares / totalShares) * 100
+                shares: shares,
+                percent: totalShares > 0 ? (shares / totalShares) * 100 : 0
             };
         });
 
@@ -44,7 +45,7 @@ $(document).ready(function() {
             filteredData.push({
                 label: 'Others (' + othersCount + ' accounts)',
                 shares: othersShares,
-                percent: (othersShares / totalShares) * 100
+                percent: totalShares > 0 ? (othersShares / totalShares) * 100 : 0
             });
         }
 
@@ -53,7 +54,7 @@ $(document).ready(function() {
             filteredData.push({
                 label: 'Unallocated',
                 shares: unallocatedShares,
-                percent: (unallocatedShares / totalShares) * 100
+                percent: totalShares > 0 ? (unallocatedShares / totalShares) * 100 : 0
             });
         }
 
@@ -61,10 +62,14 @@ $(document).ready(function() {
         const data = filteredData.map(function(e) { return e.shares; });
         const percents = filteredData.map(function(e) { return e.percent; });
 
+        console.log('Accounts chart data:', { totalShares, labels, data, percents, filteredData });
+
         createDoughnutChart('accountGraph', labels, data, {
             tooltipFormatter: function(context) {
                 const percent = percents[context.dataIndex];
-                return context.label + ': ' + formatNumber(context.raw, 2) + ' shares (' + percent.toFixed(1) + '%)';
+                console.log('Tooltip:', { dataIndex: context.dataIndex, percent, raw: context.raw, label: context.label });
+                const percentStr = (percent && !isNaN(percent)) ? percent.toFixed(1) + '%' : '0%';
+                return context.label + ': ' + formatNumber(context.raw, 2) + ' shares (' + percentStr + ')';
             }
         });
     } catch (e) {

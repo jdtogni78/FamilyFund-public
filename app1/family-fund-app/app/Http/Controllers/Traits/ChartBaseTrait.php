@@ -158,7 +158,7 @@ trait ChartBaseTrait
         $this->hasZone = true;
     }
 
-    public function createLineChart(string $file, $colorIndex = 0, $label1 = null)
+    public function createLineChart(string $file, $colorIndex = 0, $label1 = null, ?int $width = null, ?int $height = null)
     {
         if ($this->hasZone) {
             $this->getQuickChartService()->generateLineChartWithZone(
@@ -167,14 +167,18 @@ trait ChartBaseTrait
                 $this->pendingValues,
                 $this->zoneBoundary1,
                 $this->zoneBoundary2,
-                $file
+                $file,
+                $width,
+                $height
             );
         } else {
             $this->getQuickChartService()->generateLineChart(
                 $this->pendingLabels,
                 $this->pendingTitles,
                 $this->pendingValues,
-                $file
+                $file,
+                $width,
+                $height
             );
         }
 

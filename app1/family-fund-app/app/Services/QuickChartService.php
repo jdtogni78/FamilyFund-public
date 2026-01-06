@@ -204,18 +204,37 @@ class QuickChartService
 
         // Add main data series
         foreach ($datasets as $i => $data) {
-            $color = $this->datasetColors[$i % count($this->datasetColors)];
-            $chartDatasets[] = [
-                'label' => $titles[$i] ?? "Series $i",
-                'data' => $data,
-                'borderColor' => $color,
-                'backgroundColor' => 'transparent',
-                'fill' => false,
-                'tension' => 0.1,
-                'borderWidth' => 2,
-                'pointRadius' => 3,
-                'pointBackgroundColor' => $color,
-            ];
+            $label = $titles[$i] ?? "Series $i";
+            $isTarget = stripos($label, 'target') !== false;
+
+            if ($isTarget) {
+                // Target line: gray, dashed, no dots
+                $chartDatasets[] = [
+                    'label' => $label,
+                    'data' => $data,
+                    'borderColor' => $this->hexToRgba($this->colors['gray'], 0.7),
+                    'backgroundColor' => 'transparent',
+                    'fill' => false,
+                    'tension' => 0,
+                    'borderWidth' => 2,
+                    'borderDash' => [5, 5],
+                    'pointRadius' => 0,
+                ];
+            } else {
+                // Other lines: colored with dots
+                $color = $this->datasetColors[$i % count($this->datasetColors)];
+                $chartDatasets[] = [
+                    'label' => $label,
+                    'data' => $data,
+                    'borderColor' => $color,
+                    'backgroundColor' => 'transparent',
+                    'fill' => false,
+                    'tension' => 0.1,
+                    'borderWidth' => 2,
+                    'pointRadius' => 2,
+                    'pointBackgroundColor' => $color,
+                ];
+            }
         }
 
         $options = $this->getBaseOptions($titles[0] ?? '');

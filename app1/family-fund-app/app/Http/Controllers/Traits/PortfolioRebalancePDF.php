@@ -85,7 +85,7 @@ class PortfolioRebalancePDF
                     [$targetData, $actualData]
                 );
                 $this->addZone('Min', 'Max', $minData, $maxData);
-                $this->createLineChart($file);
+                $this->createLineChart($file, 0, null, 800, 250);
             }
         }
     }

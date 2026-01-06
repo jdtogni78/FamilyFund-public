@@ -150,7 +150,8 @@
             </div>
         </div>
 
-        <!-- Individual Asset Charts -->
+        <!-- Individual Asset Charts (2 per page) -->
+        @php $chartIndex = 0; @endphp
         @foreach($api['symbols'] as $symbolInfo)
             @php
                 $symbol = $symbolInfo['symbol'];
@@ -158,8 +159,11 @@
                 $chartFile = "rebalance_{$slug}.png";
             @endphp
             @if(isset($files[$chartFile]))
-                <div class="page-break"></div>
-                <div class="card mb-4 avoid-break">
+                @if($chartIndex % 2 === 0)
+                    <div class="page-break"></div>
+                @endif
+                @php $chartIndex++; @endphp
+                <div class="card mb-3">
                     <div class="card-header">
                         <h4 class="card-header-title">{{ $symbol }}</h4>
                         <span class="badge badge-primary" style="float: right;">{{ $symbolInfo['type'] }}</span>
@@ -169,42 +173,20 @@
                             $currentData = $lastData && isset($lastData[$symbol]) ? $lastData[$symbol] : null;
                         @endphp
                         @if($currentData)
-                            <table width="100%" style="margin-bottom: 12px; font-size: 12px;">
-                                <tr>
-                                    <td width="25%" style="padding: 8px; background: #f8fafc; border-radius: 4px; text-align: center;">
-                                        <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Target</div>
-                                        <div style="font-weight: 700; color: #1e40af;">{{ number_format($currentData['target'] * 100, 1) }}%</div>
-                                    </td>
-                                    <td width="25%" style="padding: 8px; background: #f8fafc; border-radius: 4px; text-align: center;">
-                                        <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Current</div>
-                                        <div style="font-weight: 700; color: {{ ($currentData['perc'] >= $currentData['min'] && $currentData['perc'] <= $currentData['max']) ? '#16a34a' : '#dc2626' }};">
-                                            {{ number_format($currentData['perc'] * 100, 2) }}%
-                                        </div>
-                                    </td>
-                                    <td width="25%" style="padding: 8px; background: #f8fafc; border-radius: 4px; text-align: center;">
-                                        <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Range</div>
-                                        <div style="font-weight: 500;">{{ number_format($currentData['min'] * 100, 1) }}% - {{ number_format($currentData['max'] * 100, 1) }}%</div>
-                                    </td>
-                                    <td width="25%" style="padding: 8px; background: #f8fafc; border-radius: 4px; text-align: center;">
-                                        <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Deviation</div>
-                                        @php
-                                            $diff = ($currentData['perc'] - $currentData['target']) * 100;
-                                        @endphp
-                                        <div style="font-weight: 700; color: {{ abs($diff) < ($currentData['max'] - $currentData['target']) * 100 ? '#16a34a' : '#dc2626' }};">
-                                            {{ $diff >= 0 ? '+' : '' }}{{ number_format($diff, 2) }}%
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
+                            @php $diff = ($currentData['perc'] - $currentData['target']) * 100; @endphp
+                            <div style="margin-bottom: 6px; font-size: 11px;">
+                                <span style="margin-right: 12px;"><strong>Target:</strong> {{ number_format($currentData['target'] * 100, 1) }}%</span>
+                                <span style="margin-right: 12px; color: {{ ($currentData['perc'] >= $currentData['min'] && $currentData['perc'] <= $currentData['max']) ? '#16a34a' : '#dc2626' }}; font-weight: 700;">
+                                    <strong>Current:</strong> {{ number_format($currentData['perc'] * 100, 2) }}%
+                                </span>
+                                <span style="margin-right: 12px;"><strong>Range:</strong> {{ number_format($currentData['min'] * 100, 1) }}% - {{ number_format($currentData['max'] * 100, 1) }}%</span>
+                                <span style="color: {{ abs($diff) < ($currentData['max'] - $currentData['target']) * 100 ? '#16a34a' : '#dc2626' }};">
+                                    <strong>Dev:</strong> {{ $diff >= 0 ? '+' : '' }}{{ number_format($diff, 2) }}%
+                                </span>
+                            </div>
                         @endif
-                        <div class="chart-container">
-                            <img src="{{ $files[$chartFile] }}" alt="{{ $symbol }} Rebalance Chart"/>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 10px; color: #64748b;">
-                            <strong>Legend:</strong>
-                            <span style="color: #2563eb;">Target allocation</span> |
-                            <span style="color: #dc2626;">Actual allocation</span> |
-                            <span style="color: #94a3b8;">Shaded area = acceptable range</span>
+                        <div class="chart-container" style="max-height: 280px;">
+                            <img src="{{ $files[$chartFile] }}" alt="{{ $symbol }} Rebalance Chart" style="max-height: 260px;"/>
                         </div>
                     </div>
                 </div>

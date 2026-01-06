@@ -21,7 +21,7 @@ $(document).ready(function() {
             $items = $tp->tradePortfolioItems ?? $tp->items ?? collect();
             return [
                 'id' => $tp->id,
-                'name' => $tp->start_dt->format('Y-m-d') . ' to ' . $tp->end_dt->format('Y-m-d'),
+                'name' => '#' . $tp->id . ': ' . $tp->start_dt->format('Y-m-d') . ' to ' . $tp->end_dt->format('Y-m-d'),
                 'items' => $items->map(function($item) {
                     return [
                         'symbol' => $item->symbol,

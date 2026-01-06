@@ -35,9 +35,11 @@ trait ChartBaseTrait
         $title = 'Yearly Value';
         // Use array_values to convert associative array to indexed array for Chart.js
         $values = array_values($this->getGraphData($arr));
+        // Get performance values for color coding
+        $performances = array_values(array_map(fn($v) => floatval($v['performance'] ?? 0), $arr));
 
         $this->files[$name] = $file = $tempDir->path($name);
-        $this->createBarChart($values, $title, $labels, $file);
+        $this->createBarChart($values, $title, $labels, $file, $performances);
     }
 
     public function createMonthlyPerformanceGraph(array $api, TemporaryDirectory $tempDir)
@@ -217,9 +219,9 @@ trait ChartBaseTrait
         $this->getQuickChartService()->generateStepChart($labels, $values, $title, $file);
     }
 
-    public function createBarChart(array $values, $title, array $labels, string $file)
+    public function createBarChart(array $values, $title, array $labels, string $file, ?array $performances = null)
     {
-        $this->getQuickChartService()->generateBarChart($labels, $values, $title, $file);
+        $this->getQuickChartService()->generateBarChart($labels, $values, $title, $file, null, null, $performances);
     }
 
     protected function createDoughnutChart(array $values, array $labels, string $file): void

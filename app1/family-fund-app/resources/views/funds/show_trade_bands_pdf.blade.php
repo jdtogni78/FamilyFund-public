@@ -100,7 +100,7 @@
                                 <img src="{{ $files['trade_bands_' . $symbol . '.png'] }}" alt="{{ $symbol }} Trading Bands"/>
                             </div>
                             <div class="text-xs text-muted mt-2">
-                                Shows actual value vs target range (target +/- deviation trigger)
+                                Shows actual value vs target range (target ± deviation trigger)
                             </div>
                         </div>
 

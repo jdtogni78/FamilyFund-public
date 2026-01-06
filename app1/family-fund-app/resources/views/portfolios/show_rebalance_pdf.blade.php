@@ -76,7 +76,7 @@
                                     <td class="text-center" style="font-size: 11px;">
                                         @if($item)
                                             {{ number_format($item->target_share * 100, 1) }}%
-                                            <span style="color: #64748b;">(+/- {{ number_format($item->deviation_trigger * 100, 1) }})</span>
+                                            <span style="color: #64748b;">(± {{ number_format($item->deviation_trigger * 100, 1) }})</span>
                                         @else
                                             <span style="color: #94a3b8;">-</span>
                                         @endif
@@ -127,7 +127,7 @@
                                     <td><strong>{{ $symbol }}</strong></td>
                                     <td>{{ $symbolInfo['type'] }}</td>
                                     <td class="col-number">{{ number_format($targetPerc, 1) }}%</td>
-                                    <td class="col-number">+/- {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
+                                    <td class="col-number">± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
                                     <td class="col-number" style="color: #64748b;">{{ number_format($minPerc, 1) }}%</td>
                                     <td class="col-number" style="color: #64748b;">{{ number_format($maxPerc, 1) }}%</td>
                                     <td class="col-number" style="color: {{ $isWithinBounds ? '#16a34a' : '#dc2626' }}; font-weight: 700;">

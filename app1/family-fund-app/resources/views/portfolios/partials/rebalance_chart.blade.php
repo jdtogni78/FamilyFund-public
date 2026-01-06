@@ -5,7 +5,7 @@
     <ul class="small text-muted">
         <li><b>Target</b>: Target allocation percentage (changes when trade portfolio changes)</li>
         <li><b>Actual</b>: Current allocation percentage based on portfolio value</li>
-        <li><b>Shaded area</b>: Acceptable deviation range (target +/- trigger)</li>
+        <li><b>Shaded area</b>: Acceptable deviation range (target ± trigger)</li>
     </ul>
 </div>
 

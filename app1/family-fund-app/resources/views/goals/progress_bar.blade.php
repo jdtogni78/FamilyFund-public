@@ -17,7 +17,7 @@
              style="width: {{ min(100, $expectedPct) }}%; background-color: #d97706;"
              aria-valuenow="{{ $expectedPct }}" aria-valuemin="0" aria-valuemax="100">
             @if($expectedPct > 15)
-                <span style="font-weight: bold;">{{ number_format($expectedPct, 1) }}%</span>
+                <span style="font-weight: bold; color: #ffffff;">{{ number_format($expectedPct, 1) }}%</span>
             @endif
         </div>
     </div>
@@ -34,7 +34,7 @@
              style="width: {{ min(100, $currentPct) }}%; background-color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }};"
              aria-valuenow="{{ $currentPct }}" aria-valuemin="0" aria-valuemax="100">
             @if($currentPct > 15)
-                <span style="font-weight: bold;">{{ number_format($currentPct, 1) }}%</span>
+                <span style="font-weight: bold; color: #ffffff;">{{ number_format($currentPct, 1) }}%</span>
             @endif
         </div>
     </div>

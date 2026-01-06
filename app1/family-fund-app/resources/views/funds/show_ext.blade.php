@@ -192,9 +192,7 @@
             @foreach($api['tradePortfolios'] as $tradePortfolio)
                 @php($extraTitle = '' . $tradePortfolio->id)
                 @php($tradePortfolioItems = $tradePortfolio->items)
-                <div class="row mb-4">
-                    @include('trade_portfolios.inner_show')
-                </div>
+                @include('trade_portfolios.inner_show')
             @endforeach
 
             {{-- Assets Table - Collapsible --}}

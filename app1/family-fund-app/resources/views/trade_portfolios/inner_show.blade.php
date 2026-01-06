@@ -22,7 +22,7 @@
     $colClass = $groupCount <= 2 ? 'col-md-6' : ($groupCount == 3 ? 'col-lg-4 col-md-6' : 'col-lg-3 col-md-6');
 @endphp
 
-{{-- Compact Header Card --}}
+{{-- Combined Trade Portfolio Card --}}
 <div class="row mb-4">
 <div class="col">
 <div class="card">
@@ -34,8 +34,8 @@
             <span class="badge ml-2" style="background: rgba(255,255,255,0.2);">{{ $api['portfolio']['source'] ?? 'N/A' }}</span>
         </div>
         <div>
-            <a href="{{ route('tradePortfolios.index') }}" class="btn btn-sm btn-light mr-1">Back</a>
             @if(!$editable)
+                <a href="{{ route('tradePortfoliosItems.createWithParams', ['tradePortfolioId' => $tradePortfolio->id]) }}" class="btn btn-sm btn-light mr-1" title="Add Item"><i class="fa fa-plus"></i></a>
                 <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-light" title="Edit"><i class="fa fa-edit"></i></a>
                 <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-light" title="Compare"><i class="fa fa-random"></i></a>
                 <a href="{{ route('funds.show_trade_bands', [$tradePortfolio->portfolio->fund()->first()->id, $tradePortfolio->id, $asOf]) }}" class="btn btn-sm btn-outline-light" title="Trade Bands"><i class="fa fa-wave-square"></i></a>
@@ -43,7 +43,8 @@
         </div>
     </div>
     <div class="card-body py-2">
-        <div class="d-flex flex-wrap justify-content-between text-center" style="gap: 0.5rem;">
+        {{-- Summary Stats --}}
+        <div class="d-flex flex-wrap justify-content-between text-center mb-3 pb-2" style="gap: 0.5rem; border-bottom: 1px solid #e2e8f0;">
             <div class="px-3 border-right">
                 <div class="text-muted small">Period</div>
                 <div class="font-weight-bold small">{{ \Carbon\Carbon::parse($tradePortfolio->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tradePortfolio->end_dt)->format('M j, Y') }}</div>
@@ -81,22 +82,8 @@
                 @endif
             </div>
         </div>
-    </div>
-</div>
-</div>
-</div>
 
-{{-- Groups Side by Side --}}
-<div class="row mb-4">
-<div class="col">
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <strong><i class="fa fa-layer-group mr-2"></i>Portfolio Allocation</strong>
-        @if(!$editable)
-            <a href="{{ route('tradePortfoliosItems.createWithParams', ['tradePortfolioId' => $tradePortfolio->id]) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-plus mr-1"></i>Add</a>
-        @endif
-    </div>
-    <div class="card-body py-2">
+        {{-- Portfolio Allocation Groups --}}
         <div class="row">
             @foreach($tradePortfolio->groups as $group => $targetPct)
                 @php

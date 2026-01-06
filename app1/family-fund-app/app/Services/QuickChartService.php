@@ -691,6 +691,7 @@ class QuickChartService
                             'size' => $this->fontSize,
                             'weight' => '500',
                         ],
+                        'callback' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return r }",
                     ],
                     'grid' => [
                         'color' => 'rgba(0,0,0,0.1)',

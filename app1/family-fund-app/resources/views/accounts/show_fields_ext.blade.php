@@ -39,15 +39,17 @@
     {{-- Market Value Card --}}
     <div class="col-md-6">
         <div class="card h-100" style="border-left: 4px solid #2563eb;">
-            <div class="card-body">
-                <h6 class="text-muted mb-2">Market Value</h6>
-                <h2 class="mb-3" style="color: #2563eb;">${{ number_format($marketValue, 2) }}</h2>
-                <div class="row text-center">
-                    <div class="col-6">
+            <div class="card-body d-flex align-items-center">
+                <div class="row w-100 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Market Value</small>
+                        <h4 class="mb-0" style="color: #2563eb;">${{ number_format($marketValue, 2) }}</h4>
+                    </div>
+                    <div class="col-4">
                         <small class="text-muted d-block">Shares</small>
                         <strong>{{ number_format($shares, 2) }}</strong>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <small class="text-muted d-block">Share Price</small>
                         <strong>${{ number_format($sharePrice, 2) }}</strong>
                     </div>

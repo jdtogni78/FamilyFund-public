@@ -283,12 +283,9 @@ class QuickChartService
             $chartDatasets[] = [
                 'label' => $seriesNames[$i] ?? "Series $i",
                 'data' => $data,
+                'backgroundColor' => $this->hexToRgba($color, 0.8),
                 'borderColor' => $color,
-                'backgroundColor' => $this->hexToRgba($color, 0.6),
-                'fill' => true,
-                'tension' => 0.1,
-                'borderWidth' => 1,
-                'pointRadius' => 0,
+                'borderWidth' => 0,
             ];
         }
 
@@ -299,9 +296,12 @@ class QuickChartService
         $options['scales']['y']['ticks']['callback'] = "function(v) { return (v * 100).toFixed(0) + '%'; }";
         $options['scales']['y']['max'] = 1.0;
         $options['scales']['y']['min'] = 0;
+        // Remove gaps between bars for area-like appearance
+        $options['barPercentage'] = 1.0;
+        $options['categoryPercentage'] = 1.0;
 
         $config = [
-            'type' => 'line',
+            'type' => 'bar',
             'data' => [
                 'labels' => $labels,
                 'datasets' => $chartDatasets,

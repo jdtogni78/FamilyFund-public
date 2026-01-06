@@ -86,3 +86,17 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#transactions-table').DataTable({
+            order: [[1, 'desc']], // Sort by date descending
+            pageLength: 25,
+            language: {
+                search: "Filter:"
+            }
+        });
+    });
+</script>
+@endpush

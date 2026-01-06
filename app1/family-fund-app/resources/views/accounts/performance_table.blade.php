@@ -45,3 +45,14 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#performance-table-{{ $performance_key }}').DataTable({
+            order: [[0, 'desc']], // Sort by period descending
+            paging: false,
+            searching: false,
+            info: false
+        });
+    });
+</script>

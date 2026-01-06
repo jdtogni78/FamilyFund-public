@@ -45,47 +45,53 @@
             <strong style="color: #d97706;">No trade portfolios found for the specified date range.</strong>
         </div>
     @else
-        <!-- Trade Portfolio Timeline -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h4 class="card-header-title">Trade Portfolio Timeline</h4>
-            </div>
-            <div class="card-body" style="padding: 0;">
-                <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 10px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #1e40af; color: white;">
-                            <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">ID</th>
-                            <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">Period</th>
-                            @foreach($api['symbols'] as $symbolInfo)
-                                <th style="padding: 6px 4px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);">{{ $symbolInfo['symbol'] }}</th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($api['tradePortfolios'] as $idx => $tp)
-                            <tr style="background: {{ $idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}; border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; font-weight: 600;">#{{ $tp->id }}</td>
-                                <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; white-space: nowrap;">
-                                    {{ \Carbon\Carbon::parse($tp->start_dt)->format('m/d/y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('m/d/y') }}
-                                </td>
-                                @foreach($api['symbols'] as $symbolInfo)
-                                    @php
-                                        $item = $tp->tradePortfolioItems->firstWhere('symbol', $symbolInfo['symbol']);
-                                    @endphp
-                                    <td style="padding: 5px 4px; text-align: center; border-right: 1px solid #e2e8f0;">
-                                        @if($item)
-                                            <strong>{{ number_format($item->target_share * 100, 0) }}%</strong><span style="color: #64748b;">±{{ number_format($item->deviation_trigger * 100, 0) }}%</span>
-                                        @else
-                                            <span style="color: #cbd5e1;">-</span>
-                                        @endif
-                                    </td>
+        <!-- Trade Portfolio Timeline (split into chunks if many symbols) -->
+        @php
+            $maxSymbolsPerTable = 6;
+            $symbolChunks = array_chunk($api['symbols']->toArray(), $maxSymbolsPerTable);
+        @endphp
+        @foreach($symbolChunks as $chunkIdx => $symbolChunk)
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="card-header-title">Trade Portfolio Timeline @if(count($symbolChunks) > 1)<span style="font-weight: normal; font-size: 12px; color: #64748b;">({{ $chunkIdx + 1 }}/{{ count($symbolChunks) }})</span>@endif</h4>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 10px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #1e40af; color: white;">
+                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">ID</th>
+                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">Period</th>
+                                @foreach($symbolChunk as $symbolInfo)
+                                    <th style="padding: 6px 4px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);">{{ $symbolInfo['symbol'] }}</th>
                                 @endforeach
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($api['tradePortfolios'] as $idx => $tp)
+                                <tr style="background: {{ $idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}; border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; font-weight: 600;">#{{ $tp->id }}</td>
+                                    <td style="padding: 5px 8px; border-right: 1px solid #e2e8f0; white-space: nowrap;">
+                                        {{ \Carbon\Carbon::parse($tp->start_dt)->format('m/d/y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('m/d/y') }}
+                                    </td>
+                                    @foreach($symbolChunk as $symbolInfo)
+                                        @php
+                                            $item = $tp->tradePortfolioItems->firstWhere('symbol', $symbolInfo['symbol']);
+                                        @endphp
+                                        <td style="padding: 5px 4px; text-align: center; border-right: 1px solid #e2e8f0;">
+                                            @if($item)
+                                                <strong>{{ number_format($item->target_share * 100, 0) }}%</strong><span style="color: #64748b;">±{{ number_format($item->deviation_trigger * 100, 0) }}%</span>
+                                            @else
+                                                <span style="color: #cbd5e1;">-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        @endforeach
 
         <!-- Current Allocation Status -->
         <div class="card mb-4">

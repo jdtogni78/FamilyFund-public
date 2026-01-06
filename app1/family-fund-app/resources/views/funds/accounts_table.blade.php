@@ -41,21 +41,21 @@
             $unallocatedValue = $api['summary']['unallocated_value'] ?? 0;
             $unallocatedPercent = $totalShares > 0 ? ($unallocatedShares / $totalShares) * 100 : 0;
         @endphp
-        @if($unallocatedShares > 0)
+        </tbody>
+        <tfoot>
+            @if($unallocatedShares > 0)
             <tr style="background-color: #fef3c7;">
                 <th scope="row">
                     <i class="fa fa-exclamation-triangle text-warning"></i>
                     Unallocated
                 </th>
                 <td>-</td>
-                <td data-order="{{ $unallocatedShares }}">{{ number_format($unallocatedShares, 2) }}</td>
-                <td data-order="{{ $unallocatedPercent }}">{{ number_format($unallocatedPercent, 2) }}%</td>
-                <td data-order="{{ $unallocatedValue }}">${{ number_format($unallocatedValue, 2) }}</td>
+                <td>{{ number_format($unallocatedShares, 2) }}</td>
+                <td>{{ number_format($unallocatedPercent, 2) }}%</td>
+                <td>${{ number_format($unallocatedValue, 2) }}</td>
                 <td>-</td>
             </tr>
-        @endif
-        </tbody>
-        <tfoot>
+            @endif
             <tr style="background-color: #1e40af; color: #ffffff; font-weight: bold;">
                 <th scope="row">Total</th>
                 <td></td>

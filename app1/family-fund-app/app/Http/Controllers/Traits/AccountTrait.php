@@ -107,7 +107,7 @@ trait AccountTrait
         $portfolio = $account->fund->portfolios;
         $arr['tradePortfolios'] = $portfolio ? $portfolio->tradePortfolios()->with('tradePortfolioItems')->orderBy('start_dt')->get() : collect();
 
-        $arr['asOf'] = $asOf;
+        $arr['as_of'] = $asOf;
         return $arr;
     }
 

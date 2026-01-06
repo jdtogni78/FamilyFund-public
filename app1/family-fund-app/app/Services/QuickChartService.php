@@ -565,16 +565,27 @@ class QuickChartService
         string $title,
         string $filePath,
         ?int $width = null,
-        ?int $height = null
+        ?int $height = null,
+        ?float $yearsElapsed = null,
+        ?float $totalYears = null,
+        ?float $timePct = null
     ): string {
         // Determine colors based on whether on track
         $isOnTrack = $currentPct >= $expectedPct;
         $currentColor = $isOnTrack ? $this->colors['success'] : $this->colors['danger'];
 
+        // Build labels with time info if available
+        $expectedLabel = 'Expected';
+        $currentLabel = 'Current';
+        if ($yearsElapsed !== null && $totalYears !== null) {
+            $expectedLabel = sprintf('Expected (%.1f of %.1f years)', $yearsElapsed, $totalYears);
+            $currentLabel = sprintf('Current (%.0f%% of time elapsed)', $timePct ?? 0);
+        }
+
         $config = [
             'type' => 'horizontalBar',
             'data' => [
-                'labels' => ['Expected Value', 'Current Value'],
+                'labels' => [$expectedLabel, $currentLabel],
                 'datasets' => [
                     [
                         'label' => 'Progress',

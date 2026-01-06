@@ -142,11 +142,22 @@ trait ChartBaseTrait
             $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
             $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
 
+            // Get time period info
+            $period = $goal->progress['period'] ?? [0, 1, 0];
+            $yearsElapsed = $period[0] / 365;
+            $totalYears = $period[1] / 365;
+            $timePct = $period[2];
+
             $this->getQuickChartService()->generateProgressChart(
                 $expectedPct,
                 $currentPct,
                 $goal->name,
-                $file
+                $file,
+                null,
+                null,
+                $yearsElapsed,
+                $totalYears,
+                $timePct
             );
         }
     }

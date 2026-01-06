@@ -714,6 +714,7 @@ class QuickChartService
             return '#' . $p['id'] . ': ' . $p['start_dt'] . ' to ' . $p['end_dt'];
         }, $portfolios);
 
+        // QuickChart uses Chart.js v2, which requires xAxes/yAxes array syntax for stacking
         $config = [
             'type' => 'bar',
             'data' => [
@@ -723,40 +724,27 @@ class QuickChartService
             'options' => [
                 'responsive' => false,
                 'scales' => [
-                    'x' => [
+                    'xAxes' => [[
                         'stacked' => true,
-                        'grid' => ['display' => false],
+                        'gridLines' => ['display' => false],
                         'ticks' => [
-                            'color' => $this->fontColor,
-                            'font' => [
-                                'family' => $this->fontFamily,
-                                'size' => 10,
-                            ],
+                            'fontColor' => $this->fontColor,
+                            'fontFamily' => $this->fontFamily,
+                            'fontSize' => 10,
                         ],
-                    ],
-                    'y' => [
+                    ]],
+                    'yAxes' => [[
                         'stacked' => true,
-                        'max' => 100,
                         'ticks' => [
-                            'color' => $this->fontColor,
+                            'max' => 100,
+                            'min' => 0,
+                            'fontColor' => $this->fontColor,
                             'callback' => "function(v) { return v + '%'; }",
                         ],
-                        'grid' => ['color' => 'rgba(0,0,0,0.05)'],
-                    ],
+                        'gridLines' => ['color' => 'rgba(0,0,0,0.05)'],
+                    ]],
                 ],
                 'plugins' => [
-                    'legend' => [
-                        'position' => 'top',
-                        'labels' => [
-                            'color' => '#000000',
-                            'font' => [
-                                'family' => $this->fontFamily,
-                                'size' => 11,
-                                'weight' => 'bold',
-                            ],
-                            'padding' => 8,
-                        ],
-                    ],
                     'datalabels' => [
                         'display' => true,
                         'color' => '#ffffff',
@@ -767,6 +755,16 @@ class QuickChartService
                         'formatter' => "function(value, context) { if (value < 8) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
                         'textShadowColor' => 'rgba(0,0,0,0.5)',
                         'textShadowBlur' => 3,
+                    ],
+                ],
+                'legend' => [
+                    'position' => 'top',
+                    'labels' => [
+                        'fontColor' => '#000000',
+                        'fontFamily' => $this->fontFamily,
+                        'fontSize' => 11,
+                        'fontStyle' => 'bold',
+                        'padding' => 8,
                     ],
                 ],
             ],

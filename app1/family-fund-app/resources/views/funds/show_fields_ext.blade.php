@@ -2,6 +2,7 @@
     $summary = $api['summary'];
     $allocatedPercent = $summary['allocated_shares_percent'] ?? 0;
     $unallocatedPercent = $summary['unallocated_shares_percent'] ?? 0;
+    $allocatedValue = $summary['value'] - ($summary['unallocated_value'] ?? 0);
 @endphp
 
 <div class="row g-4">
@@ -46,55 +47,69 @@
         </div>
     </div>
 
-    {{-- Allocated Shares --}}
-    <div class="col-md-6">
-        <div class="card h-100" style="border-left: 4px solid #16a34a;">
+    {{-- Allocation Breakdown --}}
+    <div class="col-12">
+        <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="text-muted mb-0">Allocated</h6>
-                    <span class="badge fs-6" style="background-color: #16a34a;">{{ number_format($allocatedPercent, 2) }}%</span>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <small class="text-muted d-block">Shares</small>
-                        <strong style="color: #16a34a;">{{ number_format($summary['allocated_shares'], 2) }}</strong>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Value</small>
-                        <strong style="color: #16a34a;">${{ number_format($summary['value'] - ($summary['unallocated_value'] ?? 0), 2) }}</strong>
-                    </div>
-                </div>
-                {{-- Progress bar --}}
-                <div class="progress mt-3" style="height: 8px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ $allocatedPercent }}%; background-color: #16a34a;"
-                         aria-valuenow="{{ $allocatedPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+                <h6 class="text-muted mb-3">Share Allocation</h6>
 
-    {{-- Unallocated Shares --}}
-    <div class="col-md-6">
-        <div class="card h-100" style="border-left: 4px solid #d97706;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="text-muted mb-0">Unallocated</h6>
-                    <span class="badge fs-6" style="background-color: #d97706;">{{ number_format($unallocatedPercent, 2) }}%</span>
+                {{-- Stacked progress bar --}}
+                <div class="progress mb-3" style="height: 24px;">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ $allocatedPercent }}%; background-color: #16a34a;"
+                         aria-valuenow="{{ $allocatedPercent }}" aria-valuemin="0" aria-valuemax="100">
+                        @if($allocatedPercent > 10)
+                            <span class="fw-bold">{{ number_format($allocatedPercent, 1) }}%</span>
+                        @endif
+                    </div>
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ $unallocatedPercent }}%; background-color: #d97706;"
+                         aria-valuenow="{{ $unallocatedPercent }}" aria-valuemin="0" aria-valuemax="100">
+                        @if($unallocatedPercent > 10)
+                            <span class="fw-bold">{{ number_format($unallocatedPercent, 1) }}%</span>
+                        @endif
+                    </div>
                 </div>
+
+                {{-- Legend and details --}}
                 <div class="row">
-                    <div class="col-6">
-                        <small class="text-muted d-block">Shares</small>
-                        <strong style="color: #d97706;">{{ number_format($summary['unallocated_shares'], 2) }}</strong>
+                    {{-- Allocated --}}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <span style="width: 12px; height: 12px; background-color: #16a34a; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
+                            <strong>Allocated</strong>
+                            <span class="badge ms-2" style="background-color: #16a34a;">{{ number_format($allocatedPercent, 2) }}%</span>
+                        </div>
+                        <div class="row ps-4">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Shares</small>
+                                <strong style="color: #16a34a;">{{ number_format($summary['allocated_shares'], 2) }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Value</small>
+                                <strong style="color: #16a34a;">${{ number_format($allocatedValue, 2) }}</strong>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Value</small>
-                        <strong style="color: #d97706;">${{ number_format($summary['unallocated_value'] ?? 0, 2) }}</strong>
+
+                    {{-- Unallocated --}}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <span style="width: 12px; height: 12px; background-color: #d97706; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
+                            <strong>Unallocated</strong>
+                            <span class="badge ms-2" style="background-color: #d97706;">{{ number_format($unallocatedPercent, 2) }}%</span>
+                        </div>
+                        <div class="row ps-4">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Shares</small>
+                                <strong style="color: #d97706;">{{ number_format($summary['unallocated_shares'], 2) }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Value</small>
+                                <strong style="color: #d97706;">${{ number_format($summary['unallocated_value'] ?? 0, 2) }}</strong>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                {{-- Progress bar --}}
-                <div class="progress mt-3" style="height: 8px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ $unallocatedPercent }}%; background-color: #d97706;"
-                         aria-valuenow="{{ $unallocatedPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
             </div>
         </div>

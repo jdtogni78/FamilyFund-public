@@ -4,6 +4,7 @@
     $totalUsed = 0;
     $totalGranted = 0;
     $totalAvailable = 0;
+    $totalMissed = 0;
 @endphp
 <div class="table-responsive-sm">
     <table class="table table-hover" id="matching-rules-table">
@@ -14,6 +15,7 @@
             <th class="text-end">Match %</th>
             <th class="text-end">Available</th>
             <th class="text-end">Used</th>
+            <th class="text-end">Missed</th>
             <th class="text-end">Granted</th>
         </tr>
         </thead>
@@ -29,6 +31,14 @@
                 $available = $match['dollar_range_end'] ?? 0;
                 $used = $match['used'] ?? 0;
                 $granted = $match['granted'] ?? 0;
+                $matchPercent = $match['match_percent'] ?? 0;
+
+                // Calculate missed: for expired rules, what wasn't used
+                $missed = 0;
+                if ($isExpired) {
+                    $missedUsage = $available - $used;
+                    $missed = $missedUsage * ($matchPercent / 100);
+                }
 
                 // Determine status and styling
                 if ($isActive) {
@@ -64,6 +74,7 @@
 
                 $totalUsed += $used;
                 $totalGranted += $granted;
+                $totalMissed += $missed;
             @endphp
             <tr style="background: {{ $rowBg }};">
                 <td>
@@ -72,9 +83,16 @@
                     </span>
                 </td>
                 <td style="color: {{ $textColor }}; font-weight: {{ $isActive ? '700' : '400' }};">{{ $periodDisplay }}</td>
-                <td class="text-end" style="color: {{ $textColor }};">{{ number_format($match['match_percent'] ?? 0, 0) }}% up to ${{ number_format($available, 0) }}</td>
+                <td class="text-end" style="color: {{ $textColor }};">{{ number_format($matchPercent, 0) }}% up to ${{ number_format($available, 0) }}</td>
                 <td class="text-end" style="color: {{ $textColor }};">${{ number_format($available, 0) }}</td>
                 <td class="text-end" style="color: {{ $textColor }};">${{ number_format($used, 2) }}</td>
+                <td class="text-end">
+                    @if($missed > 0)
+                        <span style="color: #d97706; font-weight: 500;">${{ number_format($missed, 2) }}</span>
+                    @else
+                        <span style="color: {{ $textColor }};">-</span>
+                    @endif
+                </td>
                 <td class="text-end">
                     <strong style="color: {{ $granted > 0 ? '#16a34a' : $textColor }};">${{ number_format($granted, 2) }}</strong>
                 </td>
@@ -84,13 +102,20 @@
         <tfoot>
             <tr style="background: #1e40af; color: #ffffff; font-weight: 600;">
                 <td colspan="3" style="padding: 10px;">
-                    Total Matching Received
+                    Totals
                     @if($totalAvailable > 0)
                         <span class="badge ms-2" style="background: #16a34a; color: white;">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
                     @endif
                 </td>
                 <td class="text-end" style="padding: 10px;"></td>
                 <td class="text-end" style="padding: 10px;">${{ number_format($totalUsed, 2) }}</td>
+                <td class="text-end" style="padding: 10px;">
+                    @if($totalMissed > 0)
+                        <span style="color: #fbbf24;">${{ number_format($totalMissed, 2) }}</span>
+                    @else
+                        -
+                    @endif
+                </td>
                 <td class="text-end" style="padding: 10px;">${{ number_format($totalGranted, 2) }}</td>
             </tr>
         </tfoot>

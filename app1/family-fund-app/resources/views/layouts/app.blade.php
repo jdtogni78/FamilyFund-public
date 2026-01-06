@@ -83,12 +83,13 @@
             const labelThreshold = options.labelThreshold || 5;
             const labelFormatter = options.labelFormatter || function(value, context) {
                 const percent = percents[context.dataIndex];
-                if (percent < labelThreshold) return '';
+                if (!percent || isNaN(percent) || percent < labelThreshold) return '';
                 return percent.toFixed(1) + '%';
             };
             const tooltipFormatter = options.tooltipFormatter || function(context) {
                 const percent = percents[context.dataIndex];
-                return context.label + ': ' + percent.toFixed(1) + '%';
+                const percentStr = (percent && !isNaN(percent)) ? percent.toFixed(1) + '%' : '-';
+                return context.label + ': ' + percentStr;
             };
 
             return {
@@ -121,15 +122,17 @@
 
         // Create a doughnut chart with standard styling
         function createDoughnutChart(canvasId, labels, data, options = {}) {
-            const total = data.reduce((a, b) => a + b, 0);
-            const percents = data.map(v => (v / total) * 100);
+            // Clean data - convert NaN/null/undefined to 0
+            const cleanData = data.map(v => (v && !isNaN(v)) ? parseFloat(v) : 0);
+            const total = cleanData.reduce((a, b) => a + b, 0);
+            const percents = total > 0 ? cleanData.map(v => (v / total) * 100) : cleanData.map(() => 0);
 
             return new Chart(document.getElementById(canvasId), {
                 type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
-                        data: data,
+                        data: cleanData,
                         backgroundColor: graphColors.slice(0, labels.length),
                         borderColor: '#ffffff',
                         borderWidth: 2,

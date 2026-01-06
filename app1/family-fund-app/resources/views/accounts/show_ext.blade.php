@@ -13,9 +13,17 @@
             <div class="row">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">
-                            <strong>Details</strong>
-                            <a href="{{ route('accounts.index') }}" class="btn btn-light">Back</a>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Details</strong>
+                                <a href="{{ route('accounts.index') }}" class="btn btn-light btn-sm ml-2">Back</a>
+                            </div>
+                            <div>
+                                <a href="/accounts/{{ $account->id }}/pdf_as_of/{{ $api['asOf'] ?? now()->format('Y-m-d') }}"
+                                   class="btn btn-outline-danger btn-sm" target="_blank" title="Download PDF Report">
+                                    <i class="fa fa-file-pdf mr-1"></i> PDF Report
+                                </a>
+                            </div>
                         </div>
                         <div class="card-body">
                             <form action="{{ route('accounts.update', 1) }}" method="PUT">

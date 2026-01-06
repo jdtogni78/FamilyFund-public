@@ -86,7 +86,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-line me-2"></i>Monthly Value</strong>
+                            <strong><i class="fa fa-chart-line mr-2"></i>Monthly Value</strong>
                         </div>
                         <div class="card-body">
                             @php($addSP500 = true)

@@ -51,7 +51,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong><i class="fa fa-money-bill-wave me-2"></i>Disbursement Eligibility</strong>
+                            <strong><i class="fa fa-money-bill-wave" style="margin-right: 8px;"></i>Disbursement Eligibility</strong>
                         </div>
                         <div class="card-body">
                             @include('accounts.disbursement')
@@ -64,7 +64,7 @@
             @if($account->goals->count() > 0)
             <div class="row mb-4" id="section-goals">
                 <div class="col">
-                    <h5 class="mb-3"><i class="fa fa-bullseye me-2"></i>Goals</h5>
+                    <h5 class="mb-3"><i class="fa fa-bullseye" style="margin-right: 8px;"></i>Goals</h5>
                     @foreach($account->goals as $goal)
                         <div class="card mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f8f9fa;">
@@ -86,7 +86,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-line me-2"></i>Monthly Value</strong>
+                            <strong><i class="fa fa-chart-line" style="margin-right: 8px;"></i>Monthly Value</strong>
                         </div>
                         <div class="card-body">
                             @php($addSP500 = true)
@@ -98,7 +98,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-bar me-2"></i>Yearly Value</strong>
+                            <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Yearly Value</strong>
                         </div>
                         <div class="card-body">
                             @include('accounts.performance_graph')
@@ -112,7 +112,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-area me-2"></i>Shares History</strong>
+                            <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Shares History</strong>
                         </div>
                         <div class="card-body">
                             <div>
@@ -129,7 +129,7 @@
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-table me-2"></i>Yearly Performance</strong>
+                            <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Yearly Performance</strong>
                         </div>
                         <div class="card-body">
                             @php ($performance_key = 'yearly_performance')
@@ -140,7 +140,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-table me-2"></i>Monthly Performance</strong>
+                            <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Monthly Performance</strong>
                         </div>
                         <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                             @php ($performance_key = 'monthly_performance')
@@ -155,7 +155,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong><i class="fa fa-exchange-alt me-2"></i>Transactions</strong>
+                            <strong><i class="fa fa-exchange-alt" style="margin-right: 8px;"></i>Transactions</strong>
                         </div>
                         <div class="card-body">
                             @include('accounts.transactions_table')
@@ -170,7 +170,7 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header">
-                                <strong><i class="fa fa-hand-holding-usd me-2"></i>Matching Rules</strong>
+                                <strong><i class="fa fa-hand-holding-usd" style="margin-right: 8px;"></i>Matching Rules</strong>
                             </div>
                             <div class="card-body">
                                 @include('accounts.matching_rules_table')

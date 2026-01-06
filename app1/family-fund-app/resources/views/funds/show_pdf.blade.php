@@ -109,7 +109,7 @@
     <div class="page-break"></div>
     <h3 class="section-title">Portfolio Allocation</h3>
 
-    @if(isset($files['portfolio_comparison.png']) && $api['tradePortfolios']->count() > 1)
+    @if(isset($files['portfolio_comparison.png']))
         <div class="card mb-4">
             <div class="card-header">
                 <h4 class="card-header-title">Portfolio Allocations Comparison</h4>

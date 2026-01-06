@@ -1,9 +1,24 @@
 @php
     // Support both $tradePortfolios (index page) and $api['tradePortfolios'] (fund page)
     $portfolioCollection = $tradePortfolios ?? ($api['tradePortfolios'] ?? collect());
+
+    // Get current assets if available (fund page)
+    $currentAssets = [];
+    if (isset($api['portfolio']['assets']) && isset($api['portfolio']['total_value'])) {
+        $totalValue = floatval(str_replace(['$', ','], '', $api['portfolio']['total_value']));
+        if ($totalValue > 0) {
+            foreach ($api['portfolio']['assets'] as $asset) {
+                $value = floatval(str_replace(['$', ','], '', $asset['value'] ?? '0'));
+                $currentAssets[] = [
+                    'symbol' => $asset['name'],
+                    'percent' => ($value / $totalValue) * 100,
+                ];
+            }
+        }
+    }
 @endphp
 
-@if($portfolioCollection->count() > 1)
+@if($portfolioCollection->count() >= 1)
 <div class="card mb-4">
     <div class="card-header">
         <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations Comparison</strong>
@@ -33,6 +48,8 @@ $(document).ready(function() {
             ];
         })) !!};
 
+        const currentAssets = {!! json_encode($currentAssets) !!};
+
         if (portfolios.length === 0) {
             console.log('No portfolios to display');
             return;
@@ -47,29 +64,54 @@ $(document).ready(function() {
                 }
             });
         });
+        // Also add symbols from current assets
+        currentAssets.forEach(a => {
+            if (!allSymbols.includes(a.symbol)) {
+                allSymbols.push(a.symbol);
+            }
+        });
         allSymbols.push('Cash');
 
         // Build lookup for deviation triggers: deviationTriggers[symbol][portfolioIndex]
         const deviationTriggers = {};
         allSymbols.forEach(symbol => {
-            deviationTriggers[symbol] = portfolios.map(p => {
+            const triggers = portfolios.map(p => {
                 if (symbol === 'Cash') return 0;
                 const item = p.items.find(i => i.symbol === symbol);
                 return item ? (item.deviation_trigger * 100) : 0;
             });
+            // Current assets don't have deviation triggers
+            if (currentAssets.length > 0) {
+                triggers.push(0);
+            }
+            deviationTriggers[symbol] = triggers;
         });
 
         // Create datasets - one per symbol
         const datasets = allSymbols.map((symbol, index) => {
+            // Data for each trade portfolio
+            const data = portfolios.map(p => {
+                if (symbol === 'Cash') {
+                    return p.cash_target * 100;
+                }
+                const item = p.items.find(i => i.symbol === symbol);
+                return item ? item.target_share * 100 : 0;
+            });
+
+            // Add current assets data if available
+            if (currentAssets.length > 0) {
+                if (symbol === 'Cash') {
+                    const cashAsset = currentAssets.find(a => a.symbol.toUpperCase() === 'CASH');
+                    data.push(cashAsset ? cashAsset.percent : 0);
+                } else {
+                    const asset = currentAssets.find(a => a.symbol === symbol);
+                    data.push(asset ? asset.percent : 0);
+                }
+            }
+
             return {
                 label: symbol,
-                data: portfolios.map(p => {
-                    if (symbol === 'Cash') {
-                        return p.cash_target * 100;
-                    }
-                    const item = p.items.find(i => i.symbol === symbol);
-                    return item ? item.target_share * 100 : 0;
-                }),
+                data: data,
                 backgroundColor: graphColors[index % graphColors.length],
                 borderColor: '#ffffff',
                 borderWidth: 1,
@@ -78,6 +120,9 @@ $(document).ready(function() {
 
         // Portfolio names as labels
         const labels = portfolios.map(p => p.name);
+        if (currentAssets.length > 0) {
+            labels.push('Current');
+        }
 
         const config = {
             type: 'bar',

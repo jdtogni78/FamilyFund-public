@@ -40,7 +40,7 @@
                 ['id' => 'section-disbursement', 'icon' => 'fa-money-bill-wave', 'label' => 'Disbursement'],
                 ['id' => 'section-goals', 'icon' => 'fa-bullseye', 'label' => 'Goals', 'condition' => $account->goals->count() > 0],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
-                ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() > 1],
+                ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1],
                 ['id' => 'section-shares', 'icon' => 'fa-chart-area', 'label' => 'Shares'],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transactions'],
@@ -109,7 +109,7 @@
             </div>
 
             {{-- Trade Portfolios Comparison --}}
-            @if(isset($api['tradePortfolios']) && $api['tradePortfolios']->count() > 1)
+            @if(isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1)
             <div class="row mb-4" id="section-portfolios">
                 <div class="col">
                     @include('trade_portfolios.stacked_bar_graph')

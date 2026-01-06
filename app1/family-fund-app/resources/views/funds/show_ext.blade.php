@@ -52,8 +52,8 @@
                         <a href="#section-regression" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
                             <i class="fa fa-chart-area me-1"></i>Regression
                         </a>
-                        <a href="#section-assets" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-briefcase me-1"></i>Assets
+                        <a href="#section-portfolios" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
+                            <i class="fa fa-chart-bar me-1"></i>Portfolios
                         </a>
                         @isset($api['admin'])
                         <a href="#section-allocation" class="btn btn-sm btn-outline-warning mr-2 mb-1 jump-nav-btn">
@@ -131,22 +131,10 @@
                 </div>
             </div>
 
-            {{-- Current Assets --}}
-            <div class="row mb-4" id="section-assets">
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <strong><i class="fa fa-briefcase mr-2"></i>Current Assets</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('funds.assets_graph')
-                        </div>
-                    </div>
-                </div>
+            {{-- Trade Portfolios Comparison (includes Current Assets) --}}
+            <div id="section-portfolios">
+                @include('trade_portfolios.stacked_bar_graph')
             </div>
-
-            {{-- Trade Portfolios Comparison --}}
-            @include('trade_portfolios.stacked_bar_graph')
 
             {{-- Admin Allocation Charts --}}
             @isset($api['balances'])@isset($api['admin'])

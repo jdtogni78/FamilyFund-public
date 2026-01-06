@@ -18,6 +18,8 @@
 @endphp
 
 {{-- Compact Header Card --}}
+<div class="row">
+<div class="col-12">
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #1e40af; color: white;">
         <div>
@@ -76,8 +78,12 @@
         </div>
     </div>
 </div>
+</div>
+</div>
 
 {{-- Groups Side by Side --}}
+<div class="row">
+<div class="col-12">
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <strong><i class="fa fa-layer-group mr-2"></i>Portfolio Allocation</strong>
@@ -182,4 +188,6 @@
             @endforeach
         </div>
     </div>
+</div>
+</div>
 </div>

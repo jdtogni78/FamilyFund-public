@@ -98,15 +98,11 @@ $(document).ready(function() {
                 return item ? item.target_share * 100 : 0;
             });
 
-            // Add current assets data if available
+            // Add current assets data if available (case-insensitive match)
             if (currentAssets.length > 0) {
-                if (symbol === 'Cash') {
-                    const cashAsset = currentAssets.find(a => a.symbol.toUpperCase() === 'CASH');
-                    data.push(cashAsset ? cashAsset.percent : 0);
-                } else {
-                    const asset = currentAssets.find(a => a.symbol === symbol);
-                    data.push(asset ? asset.percent : 0);
-                }
+                const symbolUpper = symbol.toUpperCase();
+                const asset = currentAssets.find(a => a.symbol.toUpperCase() === symbolUpper);
+                data.push(asset ? asset.percent : 0);
             }
 
             return {
@@ -183,7 +179,7 @@ $(document).ready(function() {
                             if (value < 8) return '';
                             const symbol = context.dataset.label;
                             const portfolioIndex = context.dataIndex;
-                            let label = symbol + ' ' + value.toFixed(0) + '%';
+                            let label = symbol + ' ' + value.toFixed(1) + '%';
 
                             // Add deviation trigger
                             const devTrigger = deviationTriggers[symbol]?.[portfolioIndex];

@@ -1,5 +1,5 @@
 <div class="table-responsive-sm">
-    <table class="table table-striped" id="balances-table">
+    <table class="table table-striped" id="fund-accounts-table">
         <thead>
             <tr>
                 <th scope="col">Account</th>
@@ -30,9 +30,9 @@
                     {{ $bals['nickname'] }}</a>
                 </th>
                 <td>{{ $bals['user']['name'] }}</td>
-                <td>{{ number_format($shares, 2) }}</td>
-                <td>{{ number_format($percent, 2) }}%</td>
-                <td>${{ number_format($value, 2) }}</td>
+                <td data-order="{{ $shares }}">{{ number_format($shares, 2) }}</td>
+                <td data-order="{{ $percent }}">{{ number_format($percent, 2) }}%</td>
+                <td data-order="{{ $value }}">${{ number_format($value, 2) }}</td>
                 <td>{{ $bals['type'] }}</td>
             </tr>
         @endforeach
@@ -48,9 +48,9 @@
                     Unallocated
                 </th>
                 <td>-</td>
-                <td>{{ number_format($unallocatedShares, 2) }}</td>
-                <td>{{ number_format($unallocatedPercent, 2) }}%</td>
-                <td>${{ number_format($unallocatedValue, 2) }}</td>
+                <td data-order="{{ $unallocatedShares }}">{{ number_format($unallocatedShares, 2) }}</td>
+                <td data-order="{{ $unallocatedPercent }}">{{ number_format($unallocatedPercent, 2) }}%</td>
+                <td data-order="{{ $unallocatedValue }}">${{ number_format($unallocatedValue, 2) }}</td>
                 <td>-</td>
             </tr>
         @endif
@@ -67,3 +67,17 @@
         </tfoot>
     </table>
 </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('#fund-accounts-table').DataTable({
+        order: [[4, 'desc']], // Sort by Value descending
+        pageLength: 25,
+        paging: false,
+        searching: false,
+        info: false
+    });
+});
+</script>
+@endpush

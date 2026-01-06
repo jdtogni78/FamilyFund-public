@@ -133,8 +133,8 @@
 
             {{-- Current Assets --}}
             <div class="row mb-4" id="section-assets">
-                <div class="col">
-                    <div class="card">
+                <div class="col-lg-6">
+                    <div class="card h-100">
                         <div class="card-header">
                             <strong><i class="fa fa-briefcase me-2"></i>Current Assets</strong>
                         </div>

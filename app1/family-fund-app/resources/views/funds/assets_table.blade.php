@@ -1,5 +1,5 @@
 <div class="table-responsive-sm">
-    <table class="table table-striped" id="assets-table">
+    <table class="table table-striped" id="fund-assets-table">
         <thead>
             <tr>
                 <th scope="col">Asset</th>
@@ -17,18 +17,18 @@
                     {{ $asset['name'] }}
                 </th>
                 <td>{{ $asset['type'] }}</td>
-                <td>{{ number_format($asset['position'], 6) }}</td>
-                <td>@isset($asset['price'])
+                <td data-order="{{ $asset['position'] }}">{{ number_format($asset['position'], 6) }}</td>
+                <td data-order="{{ $asset['price'] ?? 0 }}">@isset($asset['price'])
                         ${{ number_format($asset['price'], 2) }}
                     @else
                         <span class="text-danger">N/A</span>
                     @endisset</td>
-                <td>@isset($asset['value'])
+                <td data-order="{{ $asset['value'] ?? 0 }}">@isset($asset['value'])
                         ${{ number_format($asset['value'], 2) }}
                     @else
                         <span class="text-danger">N/A</span>
                     @endisset</td>
-                <td>@isset($asset['value'])
+                <td data-order="{{ isset($asset['value']) ? ($asset['value'] / $api['summary']['value']) * 100.0 : 0 }}">@isset($asset['value'])
                         {{ number_format(($asset['value'] / $api['summary']['value']) * 100.0, 2) }}%
                     @else
                         <span class="text-danger">N/A</span>
@@ -38,3 +38,17 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('#fund-assets-table').DataTable({
+        order: [[4, 'desc']], // Sort by Market Value descending
+        pageLength: 25,
+        paging: false,
+        searching: false,
+        info: false
+    });
+});
+</script>
+@endpush

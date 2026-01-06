@@ -26,8 +26,8 @@ class AccountPDF
 
     public function createPortfolioComparisonGraph(array $arr, TemporaryDirectory $tempDir)
     {
-        if (!isset($arr['tradePortfolios']) || count($arr['tradePortfolios']) < 2) {
-            return; // Need at least 2 portfolios to compare
+        if (!isset($arr['tradePortfolios']) || count($arr['tradePortfolios']) < 1) {
+            return; // Need at least 1 portfolio
         }
 
         $name = 'portfolio_comparison.png';
@@ -36,7 +36,8 @@ class AccountPDF
         $portfolios = [];
         foreach ($arr['tradePortfolios'] as $tradePortfolio) {
             $items = [];
-            foreach ($tradePortfolio->items as $item) {
+            $portfolioItems = $tradePortfolio->tradePortfolioItems ?? $tradePortfolio->items ?? collect();
+            foreach ($portfolioItems as $item) {
                 $items[] = [
                     'symbol' => $item->symbol,
                     'target_share' => $item->target_share,

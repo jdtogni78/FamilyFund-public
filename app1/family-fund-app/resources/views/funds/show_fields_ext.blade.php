@@ -65,28 +65,28 @@
                 <div class="row">
                     {{-- Allocated --}}
                     <div class="col-md-6">
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background-color: rgba(22, 163, 74, 0.1); border-left: 4px solid #16a34a;">
+                        <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background-color: #16a34a;">
                             <div class="d-flex align-items-center">
-                                <strong style="color: #16a34a;">Allocated</strong>
-                                <span class="badge ml-2" style="background-color: #16a34a;">{{ number_format($allocatedPercent, 1) }}%</span>
+                                <strong style="color: #ffffff;">Allocated</strong>
+                                <span class="badge ml-2" style="background-color: #ffffff; color: #16a34a;">{{ number_format($allocatedPercent, 1) }}%</span>
                             </div>
                             <div class="text-end">
-                                <span class="d-block small text-muted">{{ number_format($summary['allocated_shares'], 2) }} shares</span>
-                                <strong style="color: #16a34a;">${{ number_format($allocatedValue, 2) }}</strong>
+                                <span class="d-block small" style="color: rgba(255,255,255,0.8);">{{ number_format($summary['allocated_shares'], 2) }} shares</span>
+                                <strong style="color: #ffffff;">${{ number_format($allocatedValue, 2) }}</strong>
                             </div>
                         </div>
                     </div>
 
                     {{-- Unallocated --}}
                     <div class="col-md-6">
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background-color: rgba(217, 119, 6, 0.1); border-left: 4px solid #d97706;">
+                        <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background-color: #d97706;">
                             <div class="d-flex align-items-center">
-                                <strong style="color: #d97706;">Unallocated</strong>
-                                <span class="badge ml-2" style="background-color: #d97706;">{{ number_format($unallocatedPercent, 1) }}%</span>
+                                <strong style="color: #ffffff;">Unallocated</strong>
+                                <span class="badge ml-2" style="background-color: #ffffff; color: #d97706;">{{ number_format($unallocatedPercent, 1) }}%</span>
                             </div>
                             <div class="text-end">
-                                <span class="d-block small text-muted">{{ number_format($summary['unallocated_shares'], 2) }} shares</span>
-                                <strong style="color: #d97706;">${{ number_format($summary['unallocated_value'] ?? 0, 2) }}</strong>
+                                <span class="d-block small" style="color: rgba(255,255,255,0.8);">{{ number_format($summary['unallocated_shares'], 2) }} shares</span>
+                                <strong style="color: #ffffff;">${{ number_format($summary['unallocated_value'] ?? 0, 2) }}</strong>
                             </div>
                         </div>
                     </div>

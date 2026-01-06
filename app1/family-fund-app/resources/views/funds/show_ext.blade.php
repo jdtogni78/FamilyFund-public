@@ -145,6 +145,9 @@
                 </div>
             </div>
 
+            {{-- Trade Portfolios Comparison --}}
+            @include('trade_portfolios.stacked_bar_graph')
+
             {{-- Trade Portfolios Graphs --}}
             @foreach($api['tradePortfolios'] as $tradePortfolio)
                 @php($extraTitle = '' . $tradePortfolio->id . ' [' .

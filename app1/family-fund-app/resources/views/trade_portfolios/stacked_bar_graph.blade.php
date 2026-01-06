@@ -1,3 +1,9 @@
+@php
+    // Support both $tradePortfolios (index page) and $api['tradePortfolios'] (fund page)
+    $portfolioCollection = $tradePortfolios ?? ($api['tradePortfolios'] ?? collect());
+@endphp
+
+@if($portfolioCollection->count() > 1)
 <div class="card mb-4">
     <div class="card-header">
         <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations Comparison</strong>
@@ -11,11 +17,12 @@
 <script type="text/javascript">
 $(document).ready(function() {
     try {
-        const portfolios = {!! json_encode($tradePortfolios->map(function($tp) {
+        const portfolios = {!! json_encode($portfolioCollection->map(function($tp) {
+            $items = $tp->tradePortfolioItems ?? $tp->items ?? collect();
             return [
                 'id' => $tp->id,
-                'name' => $tp->account_name . ' [' . $tp->start_dt->format('Y-m-d') . ']',
-                'items' => $tp->tradePortfolioItems->map(function($item) {
+                'name' => ($tp->account_name ?? 'Portfolio') . ' [' . $tp->start_dt->format('Y-m-d') . ']',
+                'items' => $items->map(function($item) {
                     return [
                         'symbol' => $item->symbol,
                         'target_share' => $item->target_share
@@ -128,3 +135,4 @@ $(document).ready(function() {
 });
 </script>
 @endpush
+@endif

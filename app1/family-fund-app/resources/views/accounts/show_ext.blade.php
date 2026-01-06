@@ -117,6 +117,10 @@
                         <div class="card-body">
                             <div>
                                 <canvas id="balancesGraph"></canvas>
+                                <div id="balancesGraphNoData" class="text-center text-muted py-5" style="display: none;">
+                                    <i class="fa fa-chart-area fa-3x mb-3" style="color: #cbd5e1;"></i>
+                                    <p>No shares history data available</p>
+                                </div>
                             </div>
                             @include('accounts.balances_graph')
                         </div>

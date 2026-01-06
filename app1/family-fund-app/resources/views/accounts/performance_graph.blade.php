@@ -1,5 +1,9 @@
 <div>
     <canvas id="perfGraph"></canvas>
+    <div id="perfGraphNoData" class="text-center text-muted py-5" style="display: none;">
+        <i class="fa fa-chart-bar fa-3x mb-3" style="color: #cbd5e1;"></i>
+        <p>No yearly performance data available</p>
+    </div>
 </div>
 
 @push('scripts')
@@ -12,6 +16,8 @@
 
                 if (labels.length === 0) {
                     console.log('No yearly performance data');
+                    $('#perfGraph').hide();
+                    $('#perfGraphNoData').show();
                     return;
                 }
 

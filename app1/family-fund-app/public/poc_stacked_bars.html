@@ -137,9 +137,12 @@
                     datalabels: {
                         color: '#ffffff',
                         font: { size: 10, weight: 'bold' },
-                        formatter: function(value) {
-                            if (value < 8) return '';
-                            return value.toFixed(0) + '%';
+                        textShadowColor: 'rgba(0,0,0,0.5)',
+                        textShadowBlur: 3,
+                        formatter: function(value, context) {
+                            if (value < 10) return '';
+                            const symbol = context.dataset.label;
+                            return symbol + '\n' + value.toFixed(0) + '%';
                         },
                         anchor: 'center',
                         align: 'center'
@@ -268,10 +271,13 @@
                     datalabels: {
                         color: '#ffffff',
                         font: { size: 9, weight: 'bold' },
+                        textShadowColor: 'rgba(0,0,0,0.5)',
+                        textShadowBlur: 3,
                         formatter: function(value, context) {
                             if (context.dataset.type === 'line') return '';
                             if (value < 10) return '';
-                            return value.toFixed(0) + '%';
+                            const symbol = context.dataset.label;
+                            return symbol + '\n' + value.toFixed(0) + '%';
                         },
                         anchor: 'center',
                         align: 'center'

@@ -7,6 +7,8 @@
 
                 if (transactions.length === 0) {
                     console.log('No transactions data');
+                    $('#balancesGraph').hide();
+                    $('#balancesGraphNoData').show();
                     return;
                 }
 

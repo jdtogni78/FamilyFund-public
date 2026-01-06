@@ -3,6 +3,7 @@
     $now = \Carbon\Carbon::now();
     $totalUsed = 0;
     $totalGranted = 0;
+    $totalMissed = 0;
 @endphp
 <table style="width: 100%; font-size: 11px;">
     <thead>
@@ -12,6 +13,7 @@
             <th class="col-number">Match %</th>
             <th class="col-number">Available</th>
             <th class="col-number">Used</th>
+            <th class="col-number">Missed</th>
             <th class="col-number">Granted</th>
         </tr>
     </thead>
@@ -27,7 +29,14 @@
             $available = $match['dollar_range_end'] ?? 0;
             $used = $match['used'] ?? 0;
             $granted = $match['granted'] ?? 0;
-            $utilization = $available > 0 ? ($used / $available) * 100 : 0;
+            $matchPercent = $match['match_percent'] ?? 0;
+
+            // Calculate missed: for expired rules, what wasn't used
+            $missed = 0;
+            if ($isExpired) {
+                $missedUsage = $available - $used;
+                $missed = $missedUsage * ($matchPercent / 100);
+            }
 
             // Determine status and styling
             if ($isActive) {
@@ -61,6 +70,7 @@
 
             $totalUsed += $used;
             $totalGranted += $granted;
+            $totalMissed += $missed;
         @endphp
         <tr style="background: {{ $rowBg }}; color: {{ $textColor }};">
             <td style="padding: 8px;">
@@ -73,6 +83,13 @@
             <td class="col-number" style="padding: 8px;">${{ number_format($available, 0) }}</td>
             <td class="col-number" style="padding: 8px;">${{ number_format($used, 2) }}</td>
             <td class="col-number" style="padding: 8px;">
+                @if($missed > 0)
+                    <span style="color: #d97706;">${{ number_format($missed, 2) }}</span>
+                @else
+                    -
+                @endif
+            </td>
+            <td class="col-number" style="padding: 8px;">
                 <strong style="color: {{ $granted > 0 ? '#16a34a' : $textColor }};">${{ number_format($granted, 2) }}</strong>
             </td>
         </tr>
@@ -82,6 +99,13 @@
         <tr style="background: #1e40af; color: #ffffff; font-weight: 600;">
             <td colspan="4" style="padding: 10px;">Total Matching Received</td>
             <td class="col-number" style="padding: 10px;">${{ number_format($totalUsed, 2) }}</td>
+            <td class="col-number" style="padding: 10px;">
+                @if($totalMissed > 0)
+                    <span style="color: #fbbf24;">${{ number_format($totalMissed, 2) }}</span>
+                @else
+                    -
+                @endif
+            </td>
             <td class="col-number" style="padding: 10px;">${{ number_format($totalGranted, 2) }}</td>
         </tr>
     </tfoot>

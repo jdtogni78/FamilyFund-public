@@ -1,13 +1,17 @@
 <div>
     <canvas id="perfGraphMonthly"></canvas>
+    <div id="perfGraphMonthlyNoData" class="text-center text-muted py-5" style="display: none;">
+        <i class="fa fa-chart-line fa-3x mb-3" style="color: #cbd5e1;"></i>
+        <p>No monthly performance data available</p>
+    </div>
 </div>
-<div class="mt-3">
+<div class="mt-3" id="perfGraphMonthlyLegend">
     <small class="text-muted">
-        <span class="me-3"><i class="fa fa-circle me-1" style="color: #2563eb;"></i>Account Value</span>
+        <span class="mr-3"><i class="fa fa-circle mr-1" style="color: #2563eb;"></i>Account Value</span>
         @if($addSP500)
-        <span class="me-3"><i class="fa fa-circle me-1" style="color: #dc2626;"></i>S&P 500 (if invested same amounts)</span>
+        <span class="mr-3"><i class="fa fa-circle mr-1" style="color: #dc2626;"></i>S&P 500 (if invested same amounts)</span>
         @endif
-        <span><i class="fa fa-circle me-1" style="color: #16a34a;"></i>Cash (no growth)</span>
+        <span><i class="fa fa-circle mr-1" style="color: #16a34a;"></i>Cash (no growth)</span>
     </small>
 </div>
 
@@ -21,6 +25,9 @@
 
                 if (allLabels.length === 0) {
                     console.log('No monthly performance data');
+                    $('#perfGraphMonthly').hide();
+                    $('#perfGraphMonthlyLegend').hide();
+                    $('#perfGraphMonthlyNoData').show();
                     return;
                 }
 

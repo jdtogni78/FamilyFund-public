@@ -6,15 +6,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
-        .chart-container { max-width: 800px; margin: 20px auto; }
+        .chart-container { max-width: 900px; margin: 20px auto; }
         h2 { text-align: center; }
     </style>
 </head>
 <body>
-    <h2>Trade Portfolio Stacked Bars POC</h2>
+    <h2>Trade Portfolio Vertical Stacked Bars POC</h2>
 
     <div class="chart-container">
         <canvas id="stackedBarChart"></canvas>
+    </div>
+
+    <h2>With Connecting Lines (Mixed Chart)</h2>
+    <div class="chart-container">
+        <canvas id="stackedBarWithLines"></canvas>
     </div>
 
     <script>
@@ -30,7 +35,7 @@
         // Mock data - simulating multiple trade portfolios
         const portfolios = [
             {
-                name: 'Portfolio 1 (Growth)',
+                name: 'P1 Growth\n2023-01',
                 items: [
                     { symbol: 'SPXL', target_share: 0.30 },
                     { symbol: 'SOXL', target_share: 0.25 },
@@ -41,36 +46,37 @@
                 cash_target: 0.05
             },
             {
-                name: 'Portfolio 2 (Balanced)',
+                name: 'P2 Balanced\n2023-06',
                 items: [
-                    { symbol: 'SPY', target_share: 0.40 },
-                    { symbol: 'QQQ', target_share: 0.25 },
+                    { symbol: 'SPXL', target_share: 0.25 },
+                    { symbol: 'SOXL', target_share: 0.20 },
+                    { symbol: 'TECL', target_share: 0.15 },
                     { symbol: 'IAU', target_share: 0.15 },
-                    { symbol: 'BND', target_share: 0.10 },
+                    { symbol: 'BTC', target_share: 0.10 },
                 ],
-                cash_target: 0.10
+                cash_target: 0.15
             },
             {
-                name: 'Portfolio 3 (Conservative)',
+                name: 'P3 Conservative\n2024-01',
                 items: [
-                    { symbol: 'SPY', target_share: 0.30 },
-                    { symbol: 'BND', target_share: 0.35 },
-                    { symbol: 'IAU', target_share: 0.15 },
+                    { symbol: 'SPXL', target_share: 0.20 },
+                    { symbol: 'SOXL', target_share: 0.15 },
+                    { symbol: 'TECL', target_share: 0.10 },
+                    { symbol: 'IAU', target_share: 0.20 },
+                    { symbol: 'BTC', target_share: 0.15 },
                 ],
                 cash_target: 0.20
             }
         ];
 
-        // Get all unique symbols across all portfolios
-        const allSymbols = new Set();
-        portfolios.forEach(p => {
-            p.items.forEach(item => allSymbols.add(item.symbol));
-        });
-        allSymbols.add('Cash');
-        const symbolList = Array.from(allSymbols);
+        // Get all unique symbols across all portfolios (in consistent order)
+        const symbolOrder = ['SPXL', 'SOXL', 'TECL', 'IAU', 'BTC', 'Cash'];
 
-        // Create datasets - one per symbol
-        const datasets = symbolList.map((symbol, index) => {
+        // Portfolio names as labels
+        const labels = portfolios.map(p => p.name);
+
+        // ============ CHART 1: Simple Vertical Stacked Bars ============
+        const datasets1 = symbolOrder.map((symbol, index) => {
             return {
                 label: symbol,
                 data: portfolios.map(p => {
@@ -86,21 +92,21 @@
             };
         });
 
-        // Portfolio names as labels
-        const labels = portfolios.map(p => p.name);
-
-        const config = {
+        new Chart(document.getElementById('stackedBarChart'), {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: datasets
+                datasets: datasets1
             },
             options: {
-                indexAxis: 'y', // Horizontal bars
                 responsive: true,
                 maintainAspectRatio: true,
                 scales: {
                     x: {
+                        stacked: true,
+                        grid: { display: false }
+                    },
+                    y: {
                         stacked: true,
                         max: 100,
                         ticks: {
@@ -108,11 +114,7 @@
                                 return value + '%';
                             }
                         },
-                        grid: { display: false }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: { display: false }
+                        grid: { color: 'rgba(0,0,0,0.05)' }
                     }
                 },
                 plugins: {
@@ -127,7 +129,7 @@
                         callbacks: {
                             label: function(context) {
                                 const value = context.raw;
-                                if (value === 0) return null; // Hide zero values
+                                if (value === 0) return null;
                                 return context.dataset.label + ': ' + value.toFixed(1) + '%';
                             }
                         }
@@ -136,7 +138,7 @@
                         color: '#ffffff',
                         font: { size: 10, weight: 'bold' },
                         formatter: function(value) {
-                            if (value < 5) return ''; // Hide small values
+                            if (value < 8) return '';
                             return value.toFixed(0) + '%';
                         },
                         anchor: 'center',
@@ -144,9 +146,139 @@
                     }
                 }
             }
-        };
+        });
 
-        new Chart(document.getElementById('stackedBarChart'), config);
+        // ============ CHART 2: Stacked Bars with Connecting Lines ============
+        // For connecting lines, we need to track cumulative positions
+        // We'll use a line chart overlay showing where each symbol's midpoint is
+
+        const datasets2 = [];
+
+        // Add bar datasets
+        symbolOrder.forEach((symbol, index) => {
+            datasets2.push({
+                type: 'bar',
+                label: symbol,
+                data: portfolios.map(p => {
+                    if (symbol === 'Cash') {
+                        return p.cash_target * 100;
+                    }
+                    const item = p.items.find(i => i.symbol === symbol);
+                    return item ? item.target_share * 100 : 0;
+                }),
+                backgroundColor: graphColors[index % graphColors.length],
+                borderColor: '#ffffff',
+                borderWidth: 1,
+                stack: 'stack1',
+                order: 2
+            });
+        });
+
+        // Calculate cumulative midpoints for connecting lines
+        symbolOrder.forEach((symbol, index) => {
+            const midpoints = portfolios.map((p, pIdx) => {
+                // Calculate where this symbol's segment starts and ends
+                let cumulative = 0;
+                for (let i = 0; i < index; i++) {
+                    const sym = symbolOrder[i];
+                    if (sym === 'Cash') {
+                        cumulative += p.cash_target * 100;
+                    } else {
+                        const item = p.items.find(it => it.symbol === sym);
+                        cumulative += item ? item.target_share * 100 : 0;
+                    }
+                }
+                // Current symbol value
+                let value = 0;
+                if (symbol === 'Cash') {
+                    value = p.cash_target * 100;
+                } else {
+                    const item = p.items.find(it => it.symbol === symbol);
+                    value = item ? item.target_share * 100 : 0;
+                }
+                // Midpoint
+                return cumulative + value / 2;
+            });
+
+            datasets2.push({
+                type: 'line',
+                label: symbol + ' (line)',
+                data: midpoints,
+                borderColor: graphColors[index % graphColors.length],
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.1,
+                pointRadius: 4,
+                pointBackgroundColor: graphColors[index % graphColors.length],
+                order: 1,
+                datalabels: { display: false }
+            });
+        });
+
+        new Chart(document.getElementById('stackedBarWithLines'), {
+            data: {
+                labels: labels,
+                datasets: datasets2
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { display: false }
+                    },
+                    y: {
+                        stacked: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { size: 10, weight: 'bold' },
+                            padding: 8,
+                            filter: function(item) {
+                                // Hide line legends
+                                return !item.text.includes('(line)');
+                            }
+                        }
+                    },
+                    tooltip: {
+                        filter: function(item) {
+                            // Hide line tooltips
+                            return item.dataset.type !== 'line';
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                if (value === 0) return null;
+                                return context.dataset.label + ': ' + value.toFixed(1) + '%';
+                            }
+                        }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { size: 9, weight: 'bold' },
+                        formatter: function(value, context) {
+                            if (context.dataset.type === 'line') return '';
+                            if (value < 10) return '';
+                            return value.toFixed(0) + '%';
+                        },
+                        anchor: 'center',
+                        align: 'center'
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

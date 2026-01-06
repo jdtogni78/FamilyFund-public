@@ -133,6 +133,9 @@
                 new Chart(document.getElementById('perfGraphMonthly'), config);
             } catch (e) {
                 console.error('Error creating monthly chart:', e);
+                $('#perfGraphMonthly').hide();
+                $('#perfGraphMonthlyLegend').hide();
+                $('#perfGraphMonthlyNoData').show();
             }
         });
     </script>

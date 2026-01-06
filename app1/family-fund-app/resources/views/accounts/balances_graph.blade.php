@@ -31,6 +31,8 @@
                 const sortedDates = Object.keys(balances).sort();
                 if (sortedDates.length === 0) {
                     console.log('No balance data');
+                    $('#balancesGraph').hide();
+                    $('#balancesGraphNoData').show();
                     return;
                 }
 
@@ -96,6 +98,8 @@
                 new Chart(document.getElementById('balancesGraph'), config);
             } catch (e) {
                 console.error('Error creating balances chart:', e);
+                $('#balancesGraph').hide();
+                $('#balancesGraphNoData').show();
             }
         });
     </script>

@@ -94,6 +94,8 @@
                 new Chart(document.getElementById('perfGraph'), config);
             } catch (e) {
                 console.error('Error creating yearly chart:', e);
+                $('#perfGraph').hide();
+                $('#perfGraphNoData').show();
             }
         });
     </script>

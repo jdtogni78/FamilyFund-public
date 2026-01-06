@@ -225,18 +225,6 @@ class QuickChartService
                             ],
                         ],
                     ],
-                    'datalabels' => [
-                        'display' => true,
-                        'formatter' => "function(value, context) {
-                            var total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            var percentage = ((value / total) * 100).toFixed(1);
-                            return percentage > 5 ? percentage + '%' : '';
-                        }",
-                        'color' => '#ffffff',
-                        'font' => [
-                            'weight' => 'bold',
-                        ],
-                    ],
                 ],
             ],
         ];

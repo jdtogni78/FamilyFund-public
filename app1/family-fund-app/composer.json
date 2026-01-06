@@ -20,6 +20,7 @@
         "livewire/livewire": "^3.4",
         "livewire/volt": "^1.0",
         "php-ai/php-ml": "^0.10.0",
+        "spatie/temporary-directory": "^2.3",
         "szymach/c-pchart": "^3.0"
     },
     "require-dev": {

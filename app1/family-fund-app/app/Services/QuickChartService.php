@@ -58,7 +58,7 @@ class QuickChartService
                 'size' => 16,
                 'family' => 'Arial Black, sans-serif',
             ],
-            'formatter' => "function(value) { return '$' + value.toLocaleString('en-US', {maximumFractionDigits: 0}); }",
+            'formatter' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return '$'+r }",
         ];
 
         $config = [
@@ -563,6 +563,8 @@ class QuickChartService
         // Convert config to JSON, handling JS functions
         $chartJson = $this->configToJson($config);
 
+        Log::debug("QuickChart JSON: " . substr($chartJson, 0, 1500));
+
         $url = $this->baseUrl . '/chart';
 
         try {
@@ -603,9 +605,9 @@ class QuickChartService
         $json = json_encode($config, JSON_UNESCAPED_SLASHES);
 
         // Replace quoted function strings with actual functions
-        // Pattern: "function(...) { ... }"
+        // Pattern: "function(...) { ... }" - handles nested braces
         $json = preg_replace_callback(
-            '/"(function\s*\([^)]*\)\s*\{[^}]+\})"/s',
+            '/"(function\s*\([^)]*\)\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})"/s',
             function ($matches) {
                 return $matches[1];
             },

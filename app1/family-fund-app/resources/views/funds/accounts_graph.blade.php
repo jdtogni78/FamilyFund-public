@@ -36,7 +36,10 @@ $(document).ready(function() {
             }
         });
 
-        // Add "Others" if there are small accounts
+        // Sort by percentage descending (largest first)
+        filteredData.sort((a, b) => b.percent - a.percent);
+
+        // Add "Others" at the end if there are small accounts
         if (othersCount > 0) {
             filteredData.push({
                 label: 'Others (' + othersCount + ' accounts)',
@@ -45,7 +48,7 @@ $(document).ready(function() {
             });
         }
 
-        // Add unallocated shares
+        // Add unallocated shares at the very bottom
         if (unallocatedShares > 0) {
             filteredData.push({
                 label: 'Unallocated',

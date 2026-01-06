@@ -186,21 +186,41 @@
                 </div>
 
                 <!-- Individual Asset Charts -->
+                <div class="row mb-3">
+                    <div class="col-lg-12">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllCharts">
+                                <i class="fa fa-expand mr-1"></i> Expand All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts">
+                                <i class="fa fa-compress mr-1"></i> Collapse All
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 @foreach($api['symbols'] as $symbolInfo)
                     @php $symbol = $symbolInfo['symbol']; @endphp
                     <div class="row mb-4">
                         <div class="col-lg-12">
                             <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
+                                <div class="card-header d-flex justify-content-between align-items-center"
+                                     style="cursor: pointer;"
+                                     data-toggle="collapse"
+                                     data-target="#chartCollapse{{ Str::slug($symbol) }}"
+                                     aria-expanded="true"
+                                     aria-controls="chartCollapse{{ Str::slug($symbol) }}">
                                     <div>
+                                        <i class="fa fa-chevron-down mr-2 collapse-icon"></i>
                                         <i class="fa fa-chart-area mr-2"></i>
                                         <strong>{{ $symbol }}</strong>
                                         <span class="text-muted ml-2">(targets vary by trade portfolio period)</span>
                                     </div>
                                     <span class="badge badge-info">{{ $symbolInfo['type'] }}</span>
                                 </div>
-                                <div class="card-body">
-                                    @include("portfolios.partials.rebalance_chart", ['symbol' => $symbol, 'symbolInfo' => $symbolInfo])
+                                <div class="collapse show chart-collapse" id="chartCollapse{{ Str::slug($symbol) }}">
+                                    <div class="card-body">
+                                        @include("portfolios.partials.rebalance_chart", ['symbol' => $symbol, 'symbolInfo' => $symbolInfo])
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -230,4 +250,31 @@
             @endif
         </div>
     </div>
+
+@push('scripts')
+<script type="text/javascript">
+$(document).ready(function() {
+    // Expand all charts
+    $('#expandAllCharts').click(function() {
+        $('.chart-collapse').collapse('show');
+    });
+
+    // Collapse all charts
+    $('#collapseAllCharts').click(function() {
+        $('.chart-collapse').collapse('hide');
+    });
+
+    // Rotate chevron icon on collapse/expand
+    $('.chart-collapse').on('show.bs.collapse', function() {
+        $(this).prev('.card-header').find('.collapse-icon')
+            .removeClass('fa-chevron-right').addClass('fa-chevron-down');
+    });
+
+    $('.chart-collapse').on('hide.bs.collapse', function() {
+        $(this).prev('.card-header').find('.collapse-icon')
+            .removeClass('fa-chevron-down').addClass('fa-chevron-right');
+    });
+});
+</script>
+@endpush
 </x-app-layout>

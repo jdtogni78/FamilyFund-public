@@ -180,12 +180,16 @@ Updated to handle nested braces in JS functions:
 
 ---
 
-## 11. TODO: Apply to Account Reports
+## 11. DONE: Applied to Account Reports
 
-Apply same patterns to:
-- [ ] `app/Http/Controllers/Traits/AccountPDF.php`
-- [ ] `resources/views/accounts/show_pdf.blade.php`
-- [ ] Account-specific chart methods
+Completed:
+- [x] `resources/views/accounts/show_pdf.blade.php` - Updated to use PDF-specific templates
+- [x] `resources/views/accounts/performance_table_pdf.blade.php` - Number formatting, color-coded performance
+- [x] `resources/views/accounts/transactions_table_pdf.blade.php` - Proper formatting, type badges
+- [x] `resources/views/accounts/matching_rules_table_pdf.blade.php` - Condensed layout with totals
+- [x] `resources/views/goals/progress_details_pdf.blade.php` - Cleaner goal progress display
+
+Note: AccountPDF.php uses ChartBaseTrait which was already updated with improvements.
 
 ## 12. TODO: Apply to Web Version
 

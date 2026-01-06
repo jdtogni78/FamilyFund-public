@@ -181,10 +181,10 @@ class QuickChartService
 
         $chartDatasets = [];
 
-        // Add zone as a filled area between boundaries
+        // Add zone as a filled area between boundaries (no legend labels)
         $zoneColor = $this->hexToRgba($this->colors['gray'], 0.2);
         $chartDatasets[] = [
-            'label' => 'Target Zone',
+            'label' => '',
             'data' => $zoneBoundary1,
             'borderColor' => $this->hexToRgba($this->colors['gray'], 0.5),
             'backgroundColor' => $zoneColor,
@@ -193,14 +193,13 @@ class QuickChartService
             'pointRadius' => 0,
         ];
         $chartDatasets[] = [
-            'label' => ' ',
+            'label' => '',
             'data' => $zoneBoundary2,
             'borderColor' => $this->hexToRgba($this->colors['gray'], 0.5),
             'backgroundColor' => 'transparent',
             'fill' => false,
             'borderWidth' => 1,
             'pointRadius' => 0,
-            'hidden' => false,
         ];
 
         // Add main data series
@@ -239,7 +238,7 @@ class QuickChartService
         }
 
         $options = $this->getBaseOptions($titles[0] ?? '');
-        $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text && item.text.trim() !== '' && item.text !== 'Target Zone'; }";
+        $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text && item.text.trim() !== ''; }";
 
         $config = [
             'type' => 'line',

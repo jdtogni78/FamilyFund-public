@@ -165,7 +165,14 @@
                     </div>
                     <div class="card-body">
                         @php
-                            $currentData = $lastData && isset($lastData[$symbol]) ? $lastData[$symbol] : null;
+                            // Find the last available data for this symbol
+                            $currentData = null;
+                            foreach (array_reverse($rebalance, true) as $date => $dayData) {
+                                if (isset($dayData[$symbol])) {
+                                    $currentData = $dayData[$symbol];
+                                    break;
+                                }
+                            }
                         @endphp
                         @if($currentData)
                             @php $diff = ($currentData['perc'] - $currentData['target']) * 100; @endphp

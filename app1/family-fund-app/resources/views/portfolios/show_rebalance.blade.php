@@ -185,22 +185,38 @@
                     </div>
                 </div>
 
-                <!-- Individual Asset Charts -->
+                <!-- Stock Navigation -->
                 <div class="row mb-3">
                     <div class="col-lg-12">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllCharts">
-                                <i class="fa fa-expand mr-1"></i> Expand All
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts">
-                                <i class="fa fa-compress mr-1"></i> Collapse All
-                            </button>
+                        <div class="card" id="stockNav" style="position: sticky; top: 0; z-index: 100;">
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap align-items-center">
+                                    <span class="mr-3 text-muted small">Jump to:</span>
+                                    @foreach($api['symbols'] as $idx => $symbolInfo)
+                                        <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
+                                           class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
+                                           data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
+                                            {{ $symbolInfo['symbol'] }}
+                                        </a>
+                                    @endforeach
+                                    <span class="ml-auto">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
+                                            <i class="fa fa-expand"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
+                                            <i class="fa fa-compress"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Individual Asset Charts -->
                 @foreach($api['symbols'] as $symbolInfo)
                     @php $symbol = $symbolInfo['symbol']; @endphp
-                    <div class="row mb-4">
+                    <div class="row mb-4" id="chart-{{ Str::slug($symbol) }}">
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center"
@@ -254,6 +270,27 @@
 @push('scripts')
 <script type="text/javascript">
 $(document).ready(function() {
+    // Smooth scroll for stock navigation
+    $('.stock-nav-btn').click(function(e) {
+        e.preventDefault();
+        const target = $(this).attr('href');
+        const $target = $(target);
+
+        // Expand the chart if collapsed
+        const collapseId = '#chartCollapse' + $(this).data('symbol');
+        $(collapseId).collapse('show');
+
+        // Scroll to chart with offset for sticky nav
+        const navHeight = $('#stockNav').outerHeight() + 20;
+        $('html, body').animate({
+            scrollTop: $target.offset().top - navHeight
+        }, 300);
+
+        // Highlight active button
+        $('.stock-nav-btn').removeClass('btn-primary').addClass('btn-outline-primary');
+        $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+    });
+
     // Expand all charts
     $('#expandAllCharts').click(function() {
         $('.chart-collapse').collapse('show');
@@ -273,6 +310,25 @@ $(document).ready(function() {
     $('.chart-collapse').on('hide.bs.collapse', function() {
         $(this).prev('.card-header').find('.collapse-icon')
             .removeClass('fa-chevron-down').addClass('fa-chevron-right');
+    });
+
+    // Update active nav button on scroll
+    $(window).scroll(function() {
+        const navHeight = $('#stockNav').outerHeight() + 50;
+        let currentSection = null;
+
+        $('[id^="chart-"]').each(function() {
+            const sectionTop = $(this).offset().top - navHeight;
+            if ($(window).scrollTop() >= sectionTop) {
+                currentSection = $(this).attr('id');
+            }
+        });
+
+        if (currentSection) {
+            $('.stock-nav-btn').removeClass('btn-primary').addClass('btn-outline-primary');
+            $('.stock-nav-btn[href="#' + currentSection + '"]')
+                .removeClass('btn-outline-primary').addClass('btn-primary');
+        }
     });
 });
 </script>

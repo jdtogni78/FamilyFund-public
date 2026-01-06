@@ -5,6 +5,11 @@
     // Group items by their group field
     $groupedItems = collect($tradePortfolioItems)->groupBy('group');
 
+    // Get cash asset's group for proper display
+    $cashAsset = \App\Models\AssetExt::getCashAsset();
+    $cashGroup = $cashAsset->display_group ?? 'Stability';
+    $cashPct = $tradePortfolio->cash_target * 100;
+
     // Group colors
     $groupColors = [
         'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
@@ -18,9 +23,9 @@
 @endphp
 
 {{-- Compact Header Card --}}
-<div class="row">
-<div class="col-12">
-<div class="card mb-3">
+<div class="row mb-4">
+<div class="col">
+<div class="card">
     <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #1e40af; color: white;">
         <div>
             <strong>
@@ -82,9 +87,9 @@
 </div>
 
 {{-- Groups Side by Side --}}
-<div class="row">
-<div class="col-12">
-<div class="card mb-3">
+<div class="row mb-4">
+<div class="col">
+<div class="card">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <strong><i class="fa fa-layer-group mr-2"></i>Portfolio Allocation</strong>
         @if(!$editable)
@@ -98,6 +103,11 @@
                     $colors = $groupColors[$group] ?? $groupColors['default'];
                     $items = $groupedItems->get($group, collect());
                     $actualPct = $items->sum('target_share') * 100;
+                    // Add cash to the group it belongs to
+                    $groupHasCash = ($group === $cashGroup && $cashPct > 0);
+                    if ($groupHasCash) {
+                        $actualPct += $cashPct;
+                    }
                     $isMatch = abs($actualPct - $targetPct) < 0.01;
                 @endphp
 
@@ -139,10 +149,20 @@
                                     </td>
                                 </tr>
                             @empty
+                                @if(!$groupHasCash)
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-2">No items</td>
                                 </tr>
+                                @endif
                             @endforelse
+                            @if($groupHasCash)
+                                <tr style="background: #f0f9ff;">
+                                    <td><strong><i class="fa fa-coins mr-1" style="color: #2563eb;"></i>CASH</strong></td>
+                                    <td class="text-right">{{ $cashPct }}%</td>
+                                    <td class="text-right text-muted">-</td>
+                                    <td class="text-right"></td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>

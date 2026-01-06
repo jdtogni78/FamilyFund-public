@@ -193,13 +193,14 @@ class QuickChartService
             'pointRadius' => 0,
         ];
         $chartDatasets[] = [
-            'label' => '_hidden',
+            'label' => ' ',
             'data' => $zoneBoundary2,
             'borderColor' => $this->hexToRgba($this->colors['gray'], 0.5),
             'backgroundColor' => 'transparent',
             'fill' => false,
             'borderWidth' => 1,
             'pointRadius' => 0,
+            'hidden' => false,
         ];
 
         // Add main data series
@@ -238,7 +239,7 @@ class QuickChartService
         }
 
         $options = $this->getBaseOptions($titles[0] ?? '');
-        $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text !== '_hidden'; }";
+        $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text && item.text.trim() !== '' && item.text !== 'Target Zone'; }";
 
         $config = [
             'type' => 'line',

@@ -152,23 +152,6 @@
             </div>
         </div>
 
-        <!-- Stacked Overview Chart -->
-        @if(isset($files['rebalance_stacked.png']))
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h4 class="card-header-title">Portfolio Allocation Overview (Stacked)</h4>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <img src="{{ $files['rebalance_stacked.png'] }}" alt="Stacked Allocation Chart" style="width: 100%;"/>
-                    </div>
-                    <div style="margin-top: 6px; font-size: 10px; color: #64748b;">
-                        Shows all asset allocations stacked together over time. Total should sum to ~100%.
-                    </div>
-                </div>
-            </div>
-        @endif
-
         <!-- Individual Asset Charts (3 per page) -->
         @php $chartIndex = 0; @endphp
         @foreach($api['symbols'] as $symbolInfo)

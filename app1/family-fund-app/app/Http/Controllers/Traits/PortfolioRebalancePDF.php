@@ -13,9 +13,6 @@ class PortfolioRebalancePDF
         $this->constructPDF();
         $tempDir = $this->tempDir;
 
-        // Create stacked overview chart
-        $this->createStackedOverviewChart($arr, $tempDir);
-
         // Create charts for each symbol
         $this->createRebalanceCharts($arr, $tempDir);
 

@@ -107,19 +107,41 @@ $(document).ready(function() {
                             label: function(context) {
                                 const value = context.raw;
                                 if (value === 0) return null;
-                                return context.dataset.label + ': ' + value.toFixed(1) + '%';
+                                let label = context.dataset.label + ': ' + value.toFixed(1) + '%';
+                                // Add deviation from previous portfolio
+                                if (context.dataIndex > 0) {
+                                    const prevValue = context.dataset.data[context.dataIndex - 1];
+                                    const diff = value - prevValue;
+                                    if (diff !== 0) {
+                                        const sign = diff > 0 ? '+' : '';
+                                        label += ' (' + sign + diff.toFixed(1) + '%)';
+                                    }
+                                }
+                                return label;
                             }
                         }
                     },
                     datalabels: {
                         color: '#ffffff',
-                        font: { size: 11, weight: 'bold' },
+                        font: { size: 10, weight: 'bold' },
                         textShadowColor: 'rgba(0,0,0,0.5)',
                         textShadowBlur: 3,
                         formatter: function(value, context) {
                             if (value < 8) return '';
                             const symbol = context.dataset.label;
-                            return symbol + ' ' + value.toFixed(0) + '%';
+                            const portfolioIndex = context.dataIndex;
+                            let label = symbol + ' ' + value.toFixed(0) + '%';
+
+                            // Add deviation from previous portfolio
+                            if (portfolioIndex > 0) {
+                                const prevValue = context.dataset.data[portfolioIndex - 1];
+                                const diff = value - prevValue;
+                                if (diff !== 0) {
+                                    const sign = diff > 0 ? '+' : '';
+                                    label += ' (' + sign + diff.toFixed(0) + ')';
+                                }
+                            }
+                            return label;
                         },
                         anchor: 'center',
                         align: 'center'

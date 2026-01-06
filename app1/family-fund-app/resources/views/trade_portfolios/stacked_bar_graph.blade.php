@@ -64,9 +64,13 @@ $(document).ready(function() {
                 }
             });
         });
-        // Also add symbols from current assets
+        // Also add symbols from current assets (case-insensitive check)
         currentAssets.forEach(a => {
-            if (!allSymbols.includes(a.symbol)) {
+            // Skip Cash variants - we'll add it at the end
+            if (a.symbol.toUpperCase() === 'CASH') return;
+            // Check if symbol already exists (case-insensitive)
+            const exists = allSymbols.some(s => s.toUpperCase() === a.symbol.toUpperCase());
+            if (!exists) {
                 allSymbols.push(a.symbol);
             }
         });

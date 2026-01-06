@@ -21,11 +21,12 @@ $(document).ready(function() {
             $items = $tp->tradePortfolioItems ?? $tp->items ?? collect();
             return [
                 'id' => $tp->id,
-                'name' => ($tp->account_name ?? 'Portfolio') . ' [' . $tp->start_dt->format('Y-m-d') . ']',
+                'name' => $tp->start_dt->format('Y-m-d') . ' to ' . $tp->end_dt->format('Y-m-d'),
                 'items' => $items->map(function($item) {
                     return [
                         'symbol' => $item->symbol,
-                        'target_share' => $item->target_share
+                        'target_share' => $item->target_share,
+                        'deviation_trigger' => $item->deviation_trigger ?? 0
                     ];
                 }),
                 'cash_target' => $tp->cash_target
@@ -47,6 +48,16 @@ $(document).ready(function() {
             });
         });
         allSymbols.push('Cash');
+
+        // Build lookup for deviation triggers: deviationTriggers[symbol][portfolioIndex]
+        const deviationTriggers = {};
+        allSymbols.forEach(symbol => {
+            deviationTriggers[symbol] = portfolios.map(p => {
+                if (symbol === 'Cash') return 0;
+                const item = p.items.find(i => i.symbol === symbol);
+                return item ? (item.deviation_trigger * 100) : 0;
+            });
+        });
 
         // Create datasets - one per symbol
         const datasets = allSymbols.map((symbol, index) => {
@@ -107,15 +118,12 @@ $(document).ready(function() {
                             label: function(context) {
                                 const value = context.raw;
                                 if (value === 0) return null;
-                                let label = context.dataset.label + ': ' + value.toFixed(1) + '%';
-                                // Add deviation from previous portfolio
-                                if (context.dataIndex > 0) {
-                                    const prevValue = context.dataset.data[context.dataIndex - 1];
-                                    const diff = value - prevValue;
-                                    if (diff !== 0) {
-                                        const sign = diff > 0 ? '+' : '';
-                                        label += ' (' + sign + diff.toFixed(1) + '%)';
-                                    }
+                                const symbol = context.dataset.label;
+                                let label = symbol + ': ' + value.toFixed(1) + '%';
+                                // Add deviation trigger
+                                const devTrigger = deviationTriggers[symbol]?.[context.dataIndex];
+                                if (devTrigger && devTrigger > 0) {
+                                    label += ' (±' + devTrigger.toFixed(1) + '%)';
                                 }
                                 return label;
                             }
@@ -132,14 +140,10 @@ $(document).ready(function() {
                             const portfolioIndex = context.dataIndex;
                             let label = symbol + ' ' + value.toFixed(0) + '%';
 
-                            // Add deviation from previous portfolio
-                            if (portfolioIndex > 0) {
-                                const prevValue = context.dataset.data[portfolioIndex - 1];
-                                const diff = value - prevValue;
-                                if (diff !== 0) {
-                                    const sign = diff > 0 ? '+' : '';
-                                    label += ' (' + sign + diff.toFixed(0) + ')';
-                                }
+                            // Add deviation trigger
+                            const devTrigger = deviationTriggers[symbol]?.[portfolioIndex];
+                            if (devTrigger && devTrigger > 0) {
+                                label += ' ±' + devTrigger.toFixed(0) + '%';
                             }
                             return label;
                         },

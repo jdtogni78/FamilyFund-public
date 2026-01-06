@@ -35,20 +35,12 @@
                 <div class="d-flex align-items-center justify-content-between p-2 rounded mb-3" style="background-color: rgba(37, 99, 235, 0.1);">
                     <div class="d-flex align-items-center">
                         <span style="width: 10px; height: 10px; background-color: #2563eb; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
-                        <strong style="color: #2563eb;">Total Value</strong>
+                        <strong style="color: #2563eb;">Total</strong>
+                        <span class="badge ml-2" style="background-color: #2563eb;">${{ number_format($summary['share_value'], 2) }}/share</span>
                     </div>
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="text-center px-3">
-                            <span class="d-block small text-muted">Shares</span>
-                            <strong>{{ number_format($summary['shares'], 2) }}</strong>
-                        </div>
-                        <div class="text-center px-3 border-start border-end">
-                            <span class="d-block small text-muted">Share Price</span>
-                            <strong>${{ number_format($summary['share_value'], 2) }}</strong>
-                        </div>
-                        <div class="text-end">
-                            <h4 class="mb-0" style="color: #2563eb;">${{ number_format($summary['value'], 2) }}</h4>
-                        </div>
+                    <div class="text-end">
+                        <span class="d-block small text-muted">{{ number_format($summary['shares'], 2) }} shares</span>
+                        <strong style="color: #2563eb;">${{ number_format($summary['value'], 2) }}</strong>
                     </div>
                 </div>
 
@@ -78,7 +70,7 @@
                             <div class="d-flex align-items-center">
                                 <span style="width: 10px; height: 10px; background-color: #16a34a; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
                                 <strong style="color: #16a34a;">Allocated</strong>
-                                <span class="badge ms-2" style="background-color: #16a34a;">{{ number_format($allocatedPercent, 1) }}%</span>
+                                <span class="badge ml-2" style="background-color: #16a34a;">{{ number_format($allocatedPercent, 1) }}%</span>
                             </div>
                             <div class="text-end">
                                 <span class="d-block small text-muted">{{ number_format($summary['allocated_shares'], 2) }} shares</span>
@@ -93,7 +85,7 @@
                             <div class="d-flex align-items-center">
                                 <span style="width: 10px; height: 10px; background-color: #d97706; border-radius: 2px; display: inline-block; margin-right: 8px;"></span>
                                 <strong style="color: #d97706;">Unallocated</strong>
-                                <span class="badge ms-2" style="background-color: #d97706;">{{ number_format($unallocatedPercent, 1) }}%</span>
+                                <span class="badge ml-2" style="background-color: #d97706;">{{ number_format($unallocatedPercent, 1) }}%</span>
                             </div>
                             <div class="text-end">
                                 <span class="d-block small text-muted">{{ number_format($summary['unallocated_shares'], 2) }} shares</span>

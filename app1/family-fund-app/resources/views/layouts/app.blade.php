@@ -32,13 +32,48 @@
 
         <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@2.1.16/dist/js/coreui.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@^3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
         <script type="text/javascript">
+        // Register datalabels plugin globally
+        Chart.register(ChartDataLabels);
+
+        // Color palette matching PDF reports
         let graphColors = [
-            'blue', 'red', 'limegreen', 'gold', 'darkblue', 'maroon', 'darkgreen', 'goldenrod', 'aqua', 'deeppink', 'palegreen', 'yellow', 'teal', 'silver',
+            '#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#db2777', '#64748b',
+            '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#14b8a6', '#f97316', '#4f46e5', '#059669',
+            '#b91c1c', '#7c3aed', '#0369a1', '#c026d3', '#ca8a04', '#0d9488', '#e11d48', '#0284c7',
+            '#15803d', '#7e22ce', '#be123c', '#1d4ed8', '#047857', '#a21caf',
         ];
+
+        // Theme colors
+        const chartTheme = {
+            primary: '#2563eb',
+            secondary: '#64748b',
+            success: '#16a34a',
+            warning: '#d97706',
+            danger: '#dc2626',
+            fontColor: '#1e293b',
+        };
+
+        // Format number with thousand separators
+        function formatNumber(num, decimals = 0) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        // Format as currency
+        function formatCurrency(num, decimals = 0) {
+            return '$' + formatNumber(num, decimals);
+        }
+
+        // Create sparse labels array for line charts (max 24 labels)
+        function createSparseLabels(labels, maxLabels = 24) {
+            if (labels.length <= maxLabels) return labels;
+            const step = Math.ceil(labels.length / maxLabels);
+            return labels.map((label, i) => (i % step === 0) ? label : '');
+        }
         </script>
 
         <!-- Scripts -->

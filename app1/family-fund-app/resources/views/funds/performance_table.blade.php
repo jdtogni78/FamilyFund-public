@@ -11,12 +11,18 @@
         </thead>
         <tbody>
         @foreach($api[$performance_key] as $period => $perf)
+            @php
+                $perfValue = floatval($perf['performance']);
+                $perfClass = $perfValue >= 0 ? 'text-success' : 'text-danger';
+            @endphp
             <tr>
                 <td>{{ $period }}</td>
-                <td>{{ $perf['performance'] }}%</td>
-                <td>{{ $perf['shares'] }}</td>
-                <td>{{ $perf['value'] }}</td>
-                <td>{{ $perf['share_value'] }}</td>
+                <td class="{{ $perfClass }}" style="font-weight: 600;">
+                    {{ $perfValue >= 0 ? '+' : '' }}{{ number_format($perfValue, 2) }}%
+                </td>
+                <td>{{ number_format($perf['shares'], 2) }}</td>
+                <td>${{ number_format($perf['value'], 2) }}</td>
+                <td>${{ number_format($perf['share_value'], 2) }}</td>
             </tr>
         @endforeach
         </tbody>

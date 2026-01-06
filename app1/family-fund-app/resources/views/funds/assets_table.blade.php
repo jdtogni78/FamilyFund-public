@@ -17,27 +17,21 @@
                     {{ $asset['name'] }}
                 </th>
                 <td>{{ $asset['type'] }}</td>
-                <td>{{ $asset['position'] }}</td>
+                <td>{{ number_format($asset['position'], 6) }}</td>
                 <td>@isset($asset['price'])
-                        $ {{ $asset['price'] }}
+                        ${{ number_format($asset['price'], 2) }}
                     @else
-                        <div class="alert alert-danger" role="alert">
-                            N/A
-                        </div>
+                        <span class="text-danger">N/A</span>
                     @endisset</td>
                 <td>@isset($asset['value'])
-                        $ {{ $asset['value'] }}
+                        ${{ number_format($asset['value'], 2) }}
                     @else
-                        <div class="alert alert-danger" role="alert">
-                            N/A
-                        </div>
+                        <span class="text-danger">N/A</span>
                     @endisset</td>
                 <td>@isset($asset['value'])
-                        {{ round(($asset['value'] / $api['summary']['value']) * 100.0, 2) }}%
+                        {{ number_format(($asset['value'] / $api['summary']['value']) * 100.0, 2) }}%
                     @else
-                        <div class="alert alert-danger" role="alert">
-                            N/A
-                        </div>
+                        <span class="text-danger">N/A</span>
                     @endisset</td>
             </tr>
         @endforeach

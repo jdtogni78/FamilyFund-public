@@ -255,6 +255,64 @@ class QuickChartService
     }
 
     /**
+     * Generate a stacked area chart (for showing all allocations together)
+     */
+    public function generateStackedAreaChart(
+        array $labels,
+        array $seriesNames,
+        array $datasets,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null,
+        int $maxLabels = 24
+    ): string {
+        // Reduce labels to show only maxLabels while keeping all data points
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? $label : '';
+            }
+            $labels = $sparseLabels;
+        }
+
+        $chartDatasets = [];
+        foreach ($datasets as $i => $data) {
+            $color = $this->datasetColors[$i % count($this->datasetColors)];
+            $chartDatasets[] = [
+                'label' => $seriesNames[$i] ?? "Series $i",
+                'data' => $data,
+                'borderColor' => $color,
+                'backgroundColor' => $this->hexToRgba($color, 0.6),
+                'fill' => true,
+                'tension' => 0.1,
+                'borderWidth' => 1,
+                'pointRadius' => 0,
+            ];
+        }
+
+        $options = $this->getBaseOptions('');
+        $options['scales']['y']['stacked'] = true;
+        $options['scales']['x']['stacked'] = true;
+        // Format Y-axis as percentages
+        $options['scales']['y']['ticks']['callback'] = "function(v) { return (v * 100).toFixed(0) + '%'; }";
+        $options['scales']['y']['max'] = 1.0;
+        $options['scales']['y']['min'] = 0;
+
+        $config = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => $chartDatasets,
+            ],
+            'options' => $options,
+        ];
+
+        return $this->generateChart($config, $filePath, $width, $height);
+    }
+
+    /**
      * Generate a doughnut chart
      */
     public function generateDoughnutChart(

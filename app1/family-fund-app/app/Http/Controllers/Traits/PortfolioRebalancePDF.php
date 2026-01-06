@@ -13,6 +13,9 @@ class PortfolioRebalancePDF
         $this->constructPDF();
         $tempDir = $this->tempDir;
 
+        // Create stacked overview chart
+        $this->createStackedOverviewChart($arr, $tempDir);
+
         // Create charts for each symbol
         $this->createRebalanceCharts($arr, $tempDir);
 
@@ -88,6 +91,59 @@ class PortfolioRebalancePDF
                 $this->createLineChart($file, 0, null, 800, 250);
             }
         }
+    }
+
+    /**
+     * Create a stacked area chart showing all symbols together
+     */
+    protected function createStackedOverviewChart(array $api, TemporaryDirectory $tempDir): void
+    {
+        $rebalance = $api['rebalance'];
+        $symbols = $api['symbols'];
+
+        if (empty($rebalance)) {
+            return;
+        }
+
+        $labels = array_keys($rebalance);
+        $seriesNames = [];
+        $datasets = [];
+
+        foreach ($symbols as $symbolInfo) {
+            $symbol = $symbolInfo['symbol'];
+            $seriesNames[] = $symbol;
+            $actualData = [];
+            $lastValue = 0;
+
+            foreach ($rebalance as $date => $dayData) {
+                if (isset($dayData[$symbol])) {
+                    $lastValue = $dayData[$symbol]['perc'];
+                }
+                $actualData[] = $lastValue;
+            }
+
+            $datasets[] = $actualData;
+        }
+
+        // Downsample if too many data points
+        $maxPoints = 100;
+        if (count($labels) > $maxPoints) {
+            $result = $this->downsampleData($labels, $datasets, $maxPoints);
+            $labels = $result['labels'];
+            $datasets = $result['datasets'];
+        }
+
+        $name = 'rebalance_stacked.png';
+        $this->files[$name] = $file = $tempDir->path($name);
+
+        $this->getQuickChartService()->generateStackedAreaChart(
+            $labels,
+            $seriesNames,
+            $datasets,
+            $file,
+            900,
+            300
+        );
     }
 
     /**

@@ -124,11 +124,12 @@ trait ChartBaseTrait
                 $v->balance->shares * $v->share_price
             );
         }
-        asort($data);
+        // Sort by date (key) not by value
+        ksort($data);
 
         $this->files[$name] = $file = $tempDir->path($name);
         $labels = array_keys($data);
-        $this->createStepChart(array_values($data), $labels, $file, "Shares");
+        $this->createStepChart(array_values($data), $labels, $file, "Shares Holdings");
     }
 
     public function createGoalsProgressGraph(array $api, TemporaryDirectory $tempDir)
@@ -137,9 +138,13 @@ trait ChartBaseTrait
             $name = 'goals_progress_' . $goal->id . '.png';
             $this->files[$name] = $file = $tempDir->path($name);
 
+            // Get completed_pct from nested structure
+            $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
+            $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+
             $this->getQuickChartService()->generateProgressChart(
-                $goal->progress['expected_pct'] ?? 0,
-                $goal->progress['current_pct'] ?? 0,
+                $expectedPct,
+                $currentPct,
                 $goal->name,
                 $file
             );

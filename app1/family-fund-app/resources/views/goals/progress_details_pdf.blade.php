@@ -1,52 +1,113 @@
-<div style="background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 12px;">
-    <div style="margin-bottom: 8px;">
-        <strong>Goal:</strong>
-        @if($goal->target_type == \App\Models\GoalExt::TARGET_TYPE_TOTAL)
-            Reach <strong class="text-primary">${{ number_format($goal->target_amount, 0) }}</strong> account value
-            (yields ${{ number_format($goal->target_amount * $goal->target_pct, 0) }}/year)
+@php
+    $progress = $goal->progress;
+    $current = $progress['current'] ?? [];
+    $expected = $progress['expected'] ?? [];
+    $period = $progress['period'] ?? [0, 1, 0];
+
+    $currentValue = $current['value'] ?? 0;
+    $expectedValue = $expected['value'] ?? 0;
+    $finalValue = $current['final_value'] ?? $goal->target_amount;
+
+    $currentYield = $current['value_4pct'] ?? 0;
+    $expectedYield = $expected['value_4pct'] ?? 0;
+    $finalYield = $current['final_value_4pct'] ?? ($goal->target_amount * $goal->target_pct);
+
+    $diff = $currentValue - $expectedValue;
+    $isOnTrack = $diff >= 0;
+
+    $currentPct = $current['completed_pct'] ?? 0;
+    $expectedPct = $expected['completed_pct'] ?? 0;
+
+    $yearsElapsed = $period[0] / 365;
+    $totalYears = $period[1] / 365;
+    $timePct = $period[2];
+
+    $isTargetTotal = $goal->target_type == \App\Models\GoalExt::TARGET_TYPE_TOTAL;
+
+    // Color classes based on track status
+    $trackColor = $isOnTrack ? '#16a34a' : '#dc2626';
+    $trackBg = $isOnTrack ? 'background: #dcfce7; border: 1px solid #16a34a;' : 'background: #fef2f2; border: 1px solid #dc2626;';
+@endphp
+
+<div style="background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 12px;">
+    <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+        <strong style="font-size: 13px;">Target:</strong>
+        @if($isTargetTotal)
+            Reach <strong style="color: #1e40af;">${{ number_format($finalValue, 0) }}</strong> account value
+            <span style="color: #64748b;">(generating ${{ number_format($finalYield, 0) }}/year at {{ $goal->target_pct * 100 }}% yield)</span>
         @else
-            Reach <strong class="text-primary">${{ number_format($goal->target_amount, 0) }}/year</strong> yield
-            (requires ${{ number_format($goal->target_amount / $goal->target_pct, 0) }} account value)
+            Generate <strong style="color: #1e40af;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
+            <span style="color: #64748b;">(requires ${{ number_format($finalValue, 0) }} at {{ $goal->target_pct * 100 }}% yield)</span>
         @endif
-        by <strong>{{ $goal->end_dt->format('M j, Y') }}</strong>
+        by <strong>{{ $goal->end_dt->format('M Y') }}</strong>
     </div>
 
-    <table style="width: 100%; font-size: 11px;">
-        <tr>
-            <td style="width: 25%;">
-                <strong>Time Progress:</strong><br>
-                {{ number_format($goal->progress['period'][0]/365, 1) }} of {{ number_format($goal->progress['period'][1]/365, 1) }} years
-                <span class="text-muted">({{ number_format($goal->progress['period'][2], 0) }}%)</span>
-            </td>
-            <td style="width: 25%;">
-                <strong>Yield Rate:</strong><br>
-                {{ $goal->target_pct * 100 }}%
-            </td>
-            <td style="width: 25%;">
-                <strong>Expected:</strong><br>
-                ${{ number_format($goal->progress['expected']['value'] ?? 0, 0) }}
-            </td>
-            <td style="width: 25%;">
-                <strong>Current:</strong><br>
-                @php
-                    $currentValue = $goal->progress['current']['value'] ?? 0;
-                    $expectedValue = $goal->progress['expected']['value'] ?? 0;
-                    $diff = $currentValue - $expectedValue;
-                @endphp
-                <span class="{{ $diff >= 0 ? 'text-success' : 'text-danger' }}">
+    <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #e2e8f0;">
+                <th style="padding: 8px; text-align: left; width: 25%;"></th>
+                <th style="padding: 8px; text-align: right; width: 25%;">Current</th>
+                <th style="padding: 8px; text-align: right; width: 25%;">Expected Now</th>
+                <th style="padding: 8px; text-align: right; width: 25%;">Final Goal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 6px 8px;"><strong>Account Value</strong></td>
+                <td style="padding: 6px 8px; text-align: right; color: {{ $trackColor }}; font-weight: 600;">
                     ${{ number_format($currentValue, 0) }}
-                </span>
-            </td>
-        </tr>
+                </td>
+                <td style="padding: 6px 8px; text-align: right; color: #64748b;">
+                    ${{ number_format($expectedValue, 0) }}
+                </td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 600;">
+                    ${{ number_format($finalValue, 0) }}
+                </td>
+            </tr>
+            <tr style="background: #f1f5f9;">
+                <td style="padding: 6px 8px;"><strong>Annual Yield ({{ $goal->target_pct * 100 }}%)</strong></td>
+                <td style="padding: 6px 8px; text-align: right; color: {{ $trackColor }}; font-weight: 600;">
+                    ${{ number_format($currentYield, 0) }}/yr
+                </td>
+                <td style="padding: 6px 8px; text-align: right; color: #64748b;">
+                    ${{ number_format($expectedYield, 0) }}/yr
+                </td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 600;">
+                    ${{ number_format($finalYield, 0) }}/yr
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px 8px;"><strong>Progress</strong></td>
+                <td style="padding: 6px 8px; text-align: right; color: {{ $trackColor }}; font-weight: 600;">
+                    {{ number_format($currentPct, 1) }}%
+                </td>
+                <td style="padding: 6px 8px; text-align: right; color: #64748b;">
+                    {{ number_format($expectedPct, 1) }}%
+                </td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 600;">
+                    100%
+                </td>
+            </tr>
+        </tbody>
     </table>
 
-    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
-        @if($diff >= 0)
-            <span class="badge badge-success">✓ On Track</span>
-            <span class="text-success">Ahead by ${{ number_format($diff, 0) }}</span>
+    <div style="margin-bottom: 12px; color: #64748b;">
+        <strong>Time:</strong> {{ number_format($yearsElapsed, 1) }} of {{ number_format($totalYears, 1) }} years elapsed ({{ number_format($timePct, 0) }}%)
+    </div>
+
+    <div style="padding: 10px; border-radius: 6px; {{ $trackBg }}">
+        @if($isOnTrack)
+            <span style="color: #16a34a; font-weight: 700; font-size: 14px;">ON TRACK</span>
+            <span style="color: #16a34a; margin-left: 10px;">
+                Ahead by <strong>${{ number_format($diff, 0) }}</strong>
+                ({{ number_format($currentPct - $expectedPct, 1) }}% ahead of schedule)
+            </span>
         @else
-            <span class="badge badge-danger">⚠ Behind</span>
-            <span class="text-danger">Behind by ${{ number_format(abs($diff), 0) }}</span>
+            <span style="color: #dc2626; font-weight: 700; font-size: 14px;">BEHIND</span>
+            <span style="color: #dc2626; margin-left: 10px;">
+                Behind by <strong>${{ number_format(abs($diff), 0) }}</strong>
+                ({{ number_format($expectedPct - $currentPct, 1) }}% behind schedule)
+            </span>
         @endif
     </div>
 </div>

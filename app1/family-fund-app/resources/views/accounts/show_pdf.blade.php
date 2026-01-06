@@ -3,34 +3,92 @@
 @section('report-type', 'Account Quarterly Report')
 
 @section('content')
-    @php ($account = $api['account'])
+    @php
+        $account = $api['account'];
+    @endphp
 
-    <!-- Account Summary Section -->
-    <div class="summary-box">
-        <h2>{{ $account->nickname }}</h2>
-        <div class="stat-grid">
-            @isset($api['balances'][0])
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                    <div class="stat-value">${{ number_format($account->balances['OWN']->market_value ?? 0, 2) }}</div>
-                    <div class="stat-label">Market Value</div>
-                </div>
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                    <div class="stat-value">{{ number_format($account->balances['OWN']->shares ?? 0, 2) }}</div>
-                    <div class="stat-label">Shares</div>
-                </div>
-            @endisset
-            @if($api['matching_available'] > 0)
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                    <div class="stat-value">${{ number_format($api['matching_available'], 2) }}</div>
-                    <div class="stat-label">Matching Available</div>
-                </div>
-            @endif
-            <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                <div class="stat-value">{{ count($account->goals) }}</div>
-                <div class="stat-label">Active Goals</div>
-            </div>
-        </div>
-    </div>
+    <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #1e40af; margin-bottom: 16px;">
+        <tr>
+            <td style="padding: 12px; background-color: #1e40af;">
+                <h2 style="margin: 0; color: #ffffff; font-size: 20px;">{{ $account->nickname }}</h2>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 12px; background-color: #f8fafc;">
+                <table width="100%" cellspacing="0" cellpadding="8">
+                    <tr>
+                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($account->balances['OWN']->market_value ?? 0, 2) }}</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Market Value</div>
+                        </td>
+                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ number_format($account->balances['OWN']->shares ?? 0, 2) }}</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Shares</div>
+                        </td>
+                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
+                            @if($api['matching_available'] > 0)
+                                <div style="font-size: 20px; font-weight: 700; color: #16a34a;">${{ number_format($api['matching_available'], 2) }}</div>
+                                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Matching Available</div>
+                            @else
+                                <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ $account->fund->name }}</div>
+                                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Fund</div>
+                            @endif
+                        </td>
+                        <td width="25%" align="center">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ count($account->goals) }}</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Active Goals</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        @if(count($account->goals) > 0)
+        <tr>
+            <td style="padding: 12px; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; font-weight: 600;">Goals Summary</div>
+                <table width="100%" cellspacing="0" cellpadding="4">
+                    @foreach($account->goals as $goal)
+                        @php
+                            $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+                            $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
+                            $currentValue = $goal->progress['current']['value'] ?? 0;
+                            $expectedValue = $goal->progress['expected']['value'] ?? 0;
+                            $diff = $currentValue - $expectedValue;
+                            $isOnTrack = $diff >= 0;
+
+                            // Calculate status text
+                            if ($isOnTrack) {
+                                $statusText = '$' . number_format(abs($diff), 0) . ' ahead';
+                                $statusColor = '#16a34a';
+                                $statusBg = '#dcfce7';
+                            } else {
+                                $statusText = '$' . number_format(abs($diff), 0) . ' behind';
+                                $statusColor = '#dc2626';
+                                $statusBg = '#fef2f2';
+                            }
+                        @endphp
+                        <tr>
+                            <td style="width: 40%; padding: 6px 8px;">
+                                <strong style="color: #1e40af;">{{ $goal->name }}</strong>
+                            </td>
+                            <td style="width: 30%; padding: 6px 8px; text-align: center;">
+                                <span style="font-size: 14px; font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">
+                                    {{ number_format($currentPct, 1) }}%
+                                </span>
+                                <span style="color: #64748b; font-size: 11px;"> complete</span>
+                            </td>
+                            <td style="width: 30%; padding: 6px 8px; text-align: right;">
+                                <span style="background: {{ $statusBg }}; color: {{ $statusColor }}; padding: 3px 10px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                                    {{ $statusText }}
+                                </span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </td>
+        </tr>
+        @endif
+    </table>
 
     <!-- Account Details Card -->
     <div class="card mb-5">
@@ -50,9 +108,13 @@
             <div class="goal-item avoid-break mb-4">
                 <div class="goal-header">
                     <span class="goal-name">{{ $goal->name }}</span>
-                    @if(isset($goal->progress))
-                        <span class="badge {{ ($goal->progress['current_pct'] ?? 0) >= ($goal->progress['expected_pct'] ?? 0) ? 'badge-success' : 'badge-warning' }}">
-                            {{ number_format($goal->progress['current_pct'] ?? 0, 1) }}% Complete
+                    @if(isset($goal->progress['current']['completed_pct']))
+                        @php
+                            $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+                            $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
+                        @endphp
+                        <span class="badge {{ $currentPct >= $expectedPct ? 'badge-success' : 'badge-warning' }}">
+                            {{ number_format($currentPct, 1) }}% Complete
                         </span>
                     @endif
                 </div>
@@ -98,18 +160,18 @@
         </div>
     </div>
 
-    <!-- Shares Chart -->
+    <!-- Shares Holdings Chart -->
     <div class="page-break"></div>
     <div class="card mb-4">
         <div class="card-header">
-            <h4 class="card-header-title">Share Value Over Time</h4>
+            <h4 class="card-header-title">Shares Holdings Over Time</h4>
         </div>
         <div class="card-body">
             <div class="chart-container">
-                <img src="{{ $files['shares.png'] }}" alt="Shares"/>
+                <img src="{{ $files['shares.png'] }}" alt="Shares Holdings"/>
             </div>
             <div class="mt-2 text-sm text-muted">
-                Historical view of your share value in the fund
+                Historical view of your shares holdings in the fund
             </div>
         </div>
     </div>

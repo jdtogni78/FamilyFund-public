@@ -112,11 +112,11 @@ class QuickChartService
                 'borderColor' => $color,
                 'backgroundColor' => $this->hexToRgba($color, 0.1),
                 'fill' => false,
-                'tension' => 0.1,
+                'lineTension' => $stepped ? 0 : 0.1,
                 'borderWidth' => 2,
                 'pointRadius' => 2,
                 'pointBackgroundColor' => $color,
-                'stepped' => $stepped,
+                'steppedLine' => $stepped ? 'before' : false,
             ];
         }
 
@@ -303,6 +303,7 @@ class QuickChartService
 
     /**
      * Generate a horizontal bar chart (good for many categories)
+     * Uses Chart.js v2 'horizontalBar' type
      */
     public function generateHorizontalBarChart(
         array $labels,
@@ -315,7 +316,7 @@ class QuickChartService
         $colors = array_slice($this->datasetColors, 0, count($values));
 
         $config = [
-            'type' => 'bar',
+            'type' => 'horizontalBar',
             'data' => [
                 'labels' => $labels,
                 'datasets' => [[
@@ -325,7 +326,6 @@ class QuickChartService
                 ]],
             ],
             'options' => [
-                'indexAxis' => 'y',
                 'responsive' => false,
                 'plugins' => [
                     'title' => [
@@ -384,6 +384,7 @@ class QuickChartService
 
     /**
      * Generate a stacked horizontal bar chart (for accounts allocation)
+     * Uses Chart.js v2 'horizontalBar' type
      */
     public function generateStackedBarChart(
         array $labels,
@@ -412,13 +413,12 @@ class QuickChartService
         }
 
         $config = [
-            'type' => 'bar',
+            'type' => 'horizontalBar',
             'data' => [
                 'labels' => [''],
                 'datasets' => $datasets,
             ],
             'options' => [
-                'indexAxis' => 'y',
                 'responsive' => false,
                 'plugins' => [
                     'title' => [
@@ -476,7 +476,9 @@ class QuickChartService
     }
 
     /**
-     * Generate a progress bar chart (horizontal bar showing expected vs current)
+     * Generate a progress bar chart (horizontal bars showing expected vs current)
+     * Style: Two separate progress bars, each 0-100% scale like the old CpChart version
+     * Uses Chart.js v2 'horizontalBar' type
      */
     public function generateProgressChart(
         float $expectedPct,
@@ -486,56 +488,66 @@ class QuickChartService
         ?int $width = null,
         ?int $height = null
     ): string {
+        // Determine colors based on whether on track
+        $isOnTrack = $currentPct >= $expectedPct;
+        $currentColor = $isOnTrack ? $this->colors['success'] : $this->colors['danger'];
+
         $config = [
-            'type' => 'bar',
+            'type' => 'horizontalBar',
             'data' => [
-                'labels' => ['Progress'],
+                'labels' => ['Expected Value', 'Current Value'],
                 'datasets' => [
                     [
-                        'label' => 'Expected',
-                        'data' => [$expectedPct],
-                        'backgroundColor' => $this->hexToRgba($this->colors['secondary'], 0.5),
-                        'borderColor' => $this->colors['secondary'],
+                        'label' => 'Progress',
+                        'data' => [$expectedPct, $currentPct],
+                        'backgroundColor' => [$this->colors['primary'], $currentColor],
+                        'borderColor' => ['#000000', '#000000'],
                         'borderWidth' => 1,
-                    ],
-                    [
-                        'label' => 'Current',
-                        'data' => [$currentPct],
-                        'backgroundColor' => $currentPct >= $expectedPct
-                            ? $this->colors['success']
-                            : $this->colors['warning'],
-                        'borderColor' => $currentPct >= $expectedPct
-                            ? $this->colors['success']
-                            : $this->colors['warning'],
-                        'borderWidth' => 1,
+                        'barPercentage' => 0.6,
                     ],
                 ],
             ],
             'options' => [
-                'indexAxis' => 'y',
                 'responsive' => false,
                 'plugins' => [
-                    'title' => [
+                    'legend' => [
+                        'display' => false,
+                    ],
+                    'datalabels' => [
                         'display' => true,
-                        'text' => $title,
+                        'color' => '#000000',
                         'font' => [
-                            'family' => $this->fontFamily,
-                            'size' => $this->titleFontSize,
+                            'size' => 14,
                             'weight' => 'bold',
                         ],
-                    ],
-                    'legend' => [
-                        'position' => 'bottom',
+                        'formatter' => "function(value) { return value.toFixed(1) + '%'; }",
+                        'anchor' => 'end',
+                        'align' => 'right',
                     ],
                 ],
                 'scales' => [
-                    'x' => [
-                        'min' => 0,
-                        'max' => 100,
+                    'xAxes' => [[
                         'ticks' => [
+                            'min' => 0,
+                            'max' => 100,
+                            'stepSize' => 20,
                             'callback' => "function(value) { return value + '%'; }",
                         ],
-                    ],
+                        'gridLines' => [
+                            'color' => 'rgba(0,0,0,0.1)',
+                            'drawBorder' => true,
+                        ],
+                    ]],
+                    'yAxes' => [[
+                        'gridLines' => [
+                            'display' => false,
+                        ],
+                        'ticks' => [
+                            'fontColor' => '#000000',
+                            'fontStyle' => 'bold',
+                            'fontSize' => 14,
+                        ],
+                    ]],
                 ],
             ],
         ];
@@ -544,7 +556,7 @@ class QuickChartService
             $config,
             $filePath,
             $width ?? $this->width,
-            $height ?? config('quickchart.progress_height')
+            $height ?? config('quickchart.progress_height', 200)
         );
     }
 

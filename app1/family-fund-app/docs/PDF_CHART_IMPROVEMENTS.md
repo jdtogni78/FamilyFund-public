@@ -185,11 +185,34 @@ Updated to handle nested braces in JS functions:
 Completed:
 - [x] `resources/views/accounts/show_pdf.blade.php` - Updated to use PDF-specific templates
 - [x] `resources/views/accounts/performance_table_pdf.blade.php` - Number formatting, color-coded performance
-- [x] `resources/views/accounts/transactions_table_pdf.blade.php` - Proper formatting, type badges
-- [x] `resources/views/accounts/matching_rules_table_pdf.blade.php` - Condensed layout with totals
-- [x] `resources/views/goals/progress_details_pdf.blade.php` - Cleaner goal progress display
+- [x] `resources/views/accounts/transactions_table_pdf.blade.php` - Color-coded type/status badges
+- [x] `resources/views/accounts/matching_rules_table_pdf.blade.php` - Status indicators, row styling
+- [x] `resources/views/goals/progress_details_pdf.blade.php` - Cleaner goal progress display with 4% rule
 
 Note: AccountPDF.php uses ChartBaseTrait which was already updated with improvements.
+
+### Account PDF Highlights Table
+Added Goals Summary section showing:
+- Goal name
+- Completion percentage
+- Ahead/behind status badge ($X ahead/behind)
+
+### Transaction History Table
+Color-coded badges for:
+- **Type**: Purchase (green), Withdrawal (red), Transfer In (sky), Transfer Out (orange), Matching (purple)
+- **Status**: Cleared (green), Pending (amber), Cancelled (red)
+
+### Matching Rules Table
+- **Status column**: Active (green), Upcoming (blue), Expired (gray), Missed (amber warning)
+- **Row styling**: Background colors per status, grayed text for expired
+- **Simplified period**: Shows just year (e.g., "2024")
+- **Combined Match %**: "100% up to $250"
+- **Bold footer**: Total Matching Received with blue background
+
+### Progress Charts (QuickChartService)
+- Uses Chart.js v2 `horizontalBar` type (not v3 `indexAxis: 'y'`)
+- Uses `steppedLine: 'before'` for step charts (not v3 `stepped`)
+- Uses `xAxes`/`yAxes` array syntax for scales (v2 format)
 
 ## 12. TODO: Apply to Web Version
 

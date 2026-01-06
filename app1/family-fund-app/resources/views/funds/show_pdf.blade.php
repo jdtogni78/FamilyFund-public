@@ -159,18 +159,6 @@
         @endforeach
     @endif
 
-    <!-- Current Assets Allocation -->
-    <div class="card mb-3">
-        <div class="card-header">
-            <h4 class="card-header-title">Current Assets Allocation</h4>
-        </div>
-        <div class="card-body">
-            <div class="chart-container">
-                <img src="{{ $files['assets_allocation.png'] }}" alt="Assets Allocation"/>
-            </div>
-        </div>
-    </div>
-
     <!-- Admin Only: Fund Allocation -->
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">

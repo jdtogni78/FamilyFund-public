@@ -7,6 +7,10 @@
     <div class="container-fluid">
         <div class="animated fadeIn">
              @include('layouts.flash-messages')
+
+             {{-- Stacked Bar Comparison Chart --}}
+             @include('trade_portfolios.stacked_bar_graph')
+
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
@@ -18,7 +22,7 @@
                          <div class="card-body">
                              @include('trade_portfolios.table')
                               <div class="pull-right mr-3">
-                                     
+
                               </div>
                          </div>
                      </div>

@@ -132,6 +132,7 @@ class FundPDF
         $this->createYearlyPerformanceGraph($arr, $tempDir);
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createGroupMonthlyPerformanceGraphs($arr, $tempDir);
+        $this->createPortfolioComparisonGraph($arr, $tempDir);
         $this->createTradePortfoliosGraph($arr, $tempDir);
         $this->createTradePortfoliosGroupGraph($arr, $tempDir);
 
@@ -242,6 +243,39 @@ class FundPDF
             $this->files[$name] = $file = $tempDir->path($name);
             $this->createDoughnutChart($values, $labels, $file);
         }
+    }
+
+    public function createPortfolioComparisonGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        $arr = $api['tradePortfolios'];
+        if (count($arr) < 2) {
+            return; // Need at least 2 portfolios to compare
+        }
+
+        $name = 'portfolio_comparison.png';
+
+        // Format portfolios for the chart service
+        $portfolios = [];
+        foreach ($arr as $tradePortfolio) {
+            $items = [];
+            foreach ($tradePortfolio->items as $item) {
+                $items[] = [
+                    'symbol' => $item->symbol,
+                    'target_share' => $item->target_share,
+                    'deviation_trigger' => $item->deviation_trigger ?? 0,
+                ];
+            }
+            $portfolios[] = [
+                'id' => $tradePortfolio->id,
+                'start_dt' => $tradePortfolio->start_dt->format('Y-m-d'),
+                'end_dt' => $tradePortfolio->end_dt->format('Y-m-d'),
+                'items' => $items,
+                'cash_target' => $tradePortfolio->cash_target,
+            ];
+        }
+
+        $this->files[$name] = $file = $tempDir->path($name);
+        $this->getQuickChartService()->generatePortfolioComparisonChart($portfolios, $file);
     }
 
 }

@@ -103,7 +103,11 @@ trait AccountTrait
         $arr['sp500_monthly_performance'] = $api->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
         $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
-        $arr['as_of'] = $asOf;
+        // Add trade portfolios from the fund's portfolio
+        $portfolio = $account->fund->portfolios;
+        $arr['tradePortfolios'] = $portfolio ? $portfolio->tradePortfolios()->with('tradePortfolioItems')->orderBy('start_dt')->get() : collect();
+
+        $arr['asOf'] = $asOf;
         return $arr;
     }
 

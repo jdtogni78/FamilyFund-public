@@ -176,6 +176,20 @@
         </div>
     </div>
 
+    <!-- Portfolio Allocations Comparison -->
+    @if(isset($files['portfolio_comparison.png']))
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-header-title">Portfolio Allocations Comparison</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <img src="{{ $files['portfolio_comparison.png'] }}" alt="Portfolio Comparison" style="width: 100%;"/>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Performance Tables -->
     <div class="page-break"></div>
     <h3 class="section-title">Performance Data</h3>

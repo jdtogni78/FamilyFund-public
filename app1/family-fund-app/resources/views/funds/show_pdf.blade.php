@@ -109,42 +109,55 @@
     <div class="page-break"></div>
     <h3 class="section-title">Portfolio Allocation</h3>
 
-    @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
-        <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 16px;">
-            <tr>
-                <td width="50%" valign="top">
-                    <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header">
-                            <h4 class="card-header-title">Target Allocation</h4>
-                            <div class="text-sm text-muted">
-                                {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
+    @if(isset($files['portfolio_comparison.png']) && $api['tradePortfolios']->count() > 1)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-header-title">Portfolio Allocations Comparison</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <img src="{{ $files['portfolio_comparison.png'] }}" alt="Portfolio Comparison" style="width: 100%;"/>
+                </div>
+            </div>
+        </div>
+    @else
+        @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
+            <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 16px;">
+                <tr>
+                    <td width="50%" valign="top">
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h4 class="card-header-title">Target Allocation</h4>
+                                <div class="text-sm text-muted">
+                                    {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="margin: 8px 0;">
+                                    <img src="{{ $files['trade_portfolios_' . $tradePortfolio->id . '.png'] }}" alt="Target Allocation"/>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="chart-container" style="margin: 8px 0;">
-                                <img src="{{ $files['trade_portfolios_' . $tradePortfolio->id . '.png'] }}" alt="Target Allocation"/>
+                    </td>
+                    <td width="50%" valign="top">
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h4 class="card-header-title">Group Allocation</h4>
+                                <div class="text-sm text-muted">
+                                    {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="margin: 8px 0;">
+                                    <img src="{{ $files['trade_portfolios_group' . $tradePortfolio->id . '.png'] }}" alt="Group Allocation"/>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </td>
-                <td width="50%" valign="top">
-                    <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header">
-                            <h4 class="card-header-title">Group Allocation</h4>
-                            <div class="text-sm text-muted">
-                                {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container" style="margin: 8px 0;">
-                                <img src="{{ $files['trade_portfolios_group' . $tradePortfolio->id . '.png'] }}" alt="Group Allocation"/>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    @endforeach
+                    </td>
+                </tr>
+            </table>
+        @endforeach
+    @endif
 
     <!-- Current Assets Allocation -->
     <div class="card mb-3">

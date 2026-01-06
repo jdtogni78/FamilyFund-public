@@ -657,6 +657,130 @@ class QuickChartService
     }
 
     /**
+     * Generate a vertical stacked bar chart for comparing trade portfolios
+     * Each bar represents a portfolio, segments represent asset allocations
+     */
+    public function generatePortfolioComparisonChart(
+        array $portfolios,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null
+    ): string {
+        // Get all unique symbols across all portfolios
+        $allSymbols = [];
+        foreach ($portfolios as $portfolio) {
+            foreach ($portfolio['items'] as $item) {
+                if (!in_array($item['symbol'], $allSymbols)) {
+                    $allSymbols[] = $item['symbol'];
+                }
+            }
+        }
+        $allSymbols[] = 'Cash';
+
+        // Create datasets - one per symbol
+        $datasets = [];
+        foreach ($allSymbols as $i => $symbol) {
+            $data = [];
+            foreach ($portfolios as $portfolio) {
+                if ($symbol === 'Cash') {
+                    $data[] = ($portfolio['cash_target'] ?? 0) * 100;
+                } else {
+                    $found = false;
+                    foreach ($portfolio['items'] as $item) {
+                        if ($item['symbol'] === $symbol) {
+                            $data[] = $item['target_share'] * 100;
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $data[] = 0;
+                    }
+                }
+            }
+
+            $color = $this->datasetColors[$i % count($this->datasetColors)];
+            $datasets[] = [
+                'label' => $symbol,
+                'data' => $data,
+                'backgroundColor' => $color,
+                'borderColor' => '#ffffff',
+                'borderWidth' => 1,
+            ];
+        }
+
+        // Portfolio labels (dates)
+        $labels = array_map(function($p) {
+            return '#' . $p['id'] . ': ' . $p['start_dt'] . ' to ' . $p['end_dt'];
+        }, $portfolios);
+
+        $config = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => $datasets,
+            ],
+            'options' => [
+                'responsive' => false,
+                'scales' => [
+                    'x' => [
+                        'stacked' => true,
+                        'grid' => ['display' => false],
+                        'ticks' => [
+                            'color' => $this->fontColor,
+                            'font' => [
+                                'family' => $this->fontFamily,
+                                'size' => 10,
+                            ],
+                        ],
+                    ],
+                    'y' => [
+                        'stacked' => true,
+                        'max' => 100,
+                        'ticks' => [
+                            'color' => $this->fontColor,
+                            'callback' => "function(v) { return v + '%'; }",
+                        ],
+                        'grid' => ['color' => 'rgba(0,0,0,0.05)'],
+                    ],
+                ],
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'top',
+                        'labels' => [
+                            'color' => '#000000',
+                            'font' => [
+                                'family' => $this->fontFamily,
+                                'size' => 11,
+                                'weight' => 'bold',
+                            ],
+                            'padding' => 8,
+                        ],
+                    ],
+                    'datalabels' => [
+                        'display' => true,
+                        'color' => '#ffffff',
+                        'font' => [
+                            'size' => 9,
+                            'weight' => 'bold',
+                        ],
+                        'formatter' => "function(value, context) { if (value < 8) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
+                        'textShadowColor' => 'rgba(0,0,0,0.5)',
+                        'textShadowBlur' => 3,
+                    ],
+                ],
+            ],
+        ];
+
+        return $this->generateChart(
+            $config,
+            $filePath,
+            $width ?? 800,
+            $height ?? 400
+        );
+    }
+
+    /**
      * Generate chart from config and save to file
      */
     protected function generateChart(

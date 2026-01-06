@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Traits;
 
+use Spatie\TemporaryDirectory\TemporaryDirectory;
+
 class AccountPDF
 {
     use BasePDFTrait;
@@ -15,10 +17,43 @@ class AccountPDF
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createSharesLineChart($arr, $tempDir);
         $this->createGoalsProgressGraph($arr, $tempDir);
+        $this->createPortfolioComparisonGraph($arr, $tempDir);
         $view = 'accounts.show_pdf';
         $pdfFile = 'account.pdf';
         $this->debugHTML($debugHtml, $view, $arr, $tempDir);
         $this->createAndSavePDF($view, $arr, $tempDir, $pdfFile);
+    }
+
+    public function createPortfolioComparisonGraph(array $arr, TemporaryDirectory $tempDir)
+    {
+        if (!isset($arr['tradePortfolios']) || count($arr['tradePortfolios']) < 2) {
+            return; // Need at least 2 portfolios to compare
+        }
+
+        $name = 'portfolio_comparison.png';
+
+        // Format portfolios for the chart service
+        $portfolios = [];
+        foreach ($arr['tradePortfolios'] as $tradePortfolio) {
+            $items = [];
+            foreach ($tradePortfolio->items as $item) {
+                $items[] = [
+                    'symbol' => $item->symbol,
+                    'target_share' => $item->target_share,
+                    'deviation_trigger' => $item->deviation_trigger ?? 0,
+                ];
+            }
+            $portfolios[] = [
+                'id' => $tradePortfolio->id,
+                'start_dt' => $tradePortfolio->start_dt->format('Y-m-d'),
+                'end_dt' => $tradePortfolio->end_dt->format('Y-m-d'),
+                'items' => $items,
+                'cash_target' => $tradePortfolio->cash_target,
+            ];
+        }
+
+        $this->files[$name] = $file = $tempDir->path($name);
+        $this->getQuickChartService()->generatePortfolioComparisonChart($portfolios, $file);
     }
 
 }

@@ -9,16 +9,15 @@ $(document).ready(function() {
         var api = {!! json_encode($api) !!};
 
         // Calculate total shares for percentage calculation
-        const totalShares = parseFloat(api.summary.total_shares) || 0;
-        const unallocatedShares = parseFloat(api.summary.unallocated_shares) || 0;
+        const totalShares = api.summary.total_shares;
+        const unallocatedShares = api.summary.unallocated_shares;
 
         // Prepare data with percentages
         let accountData = api.balances.map(function(e) {
-            const shares = parseFloat(e.shares) || 0;
             return {
                 label: e.nickname,
-                shares: shares,
-                percent: totalShares > 0 ? (shares / totalShares) * 100 : 0
+                shares: e.shares,
+                percent: (e.shares / totalShares) * 100
             };
         });
 
@@ -37,24 +36,21 @@ $(document).ready(function() {
             }
         });
 
-        // Sort by percentage descending (largest first)
-        filteredData.sort((a, b) => b.percent - a.percent);
-
-        // Add "Others" at the end if there are small accounts
+        // Add "Others" if there are small accounts
         if (othersCount > 0) {
             filteredData.push({
                 label: 'Others (' + othersCount + ' accounts)',
                 shares: othersShares,
-                percent: totalShares > 0 ? (othersShares / totalShares) * 100 : 0
+                percent: (othersShares / totalShares) * 100
             });
         }
 
-        // Add unallocated shares at the very bottom
+        // Add unallocated shares
         if (unallocatedShares > 0) {
             filteredData.push({
                 label: 'Unallocated',
                 shares: unallocatedShares,
-                percent: totalShares > 0 ? (unallocatedShares / totalShares) * 100 : 0
+                percent: (unallocatedShares / totalShares) * 100
             });
         }
 
@@ -62,14 +58,10 @@ $(document).ready(function() {
         const data = filteredData.map(function(e) { return e.shares; });
         const percents = filteredData.map(function(e) { return e.percent; });
 
-        console.log('Accounts chart data:', { totalShares, labels, data, percents, filteredData });
-
         createDoughnutChart('accountGraph', labels, data, {
             tooltipFormatter: function(context) {
                 const percent = percents[context.dataIndex];
-                console.log('Tooltip:', { dataIndex: context.dataIndex, percent, raw: context.raw, label: context.label });
-                const percentStr = (percent && !isNaN(percent)) ? percent.toFixed(1) + '%' : '0%';
-                return context.label + ': ' + formatNumber(context.raw, 2) + ' shares (' + percentStr + ')';
+                return context.label + ': ' + formatNumber(context.raw, 2) + ' shares (' + percent.toFixed(1) + '%)';
             }
         });
     } catch (e) {

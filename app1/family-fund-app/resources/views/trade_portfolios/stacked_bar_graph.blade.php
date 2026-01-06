@@ -14,7 +14,7 @@ $(document).ready(function() {
         const portfolios = {!! json_encode($tradePortfolios->map(function($tp) {
             return [
                 'id' => $tp->id,
-                'name' => $tp->account_name . ' [' . $tp->start_dt->format('Y-m-d') . ' to ' . $tp->end_dt->format('Y-m-d') . ']',
+                'name' => $tp->account_name . ' [' . $tp->start_dt->format('Y-m-d') . ']',
                 'items' => $tp->tradePortfolioItems->map(function($item) {
                     return [
                         'symbol' => $item->symbol,
@@ -30,16 +30,19 @@ $(document).ready(function() {
             return;
         }
 
-        // Get all unique symbols across all portfolios
-        const allSymbols = new Set();
+        // Get all unique symbols across all portfolios (maintain order)
+        const allSymbols = [];
         portfolios.forEach(p => {
-            p.items.forEach(item => allSymbols.add(item.symbol));
+            p.items.forEach(item => {
+                if (!allSymbols.includes(item.symbol)) {
+                    allSymbols.push(item.symbol);
+                }
+            });
         });
-        allSymbols.add('Cash');
-        const symbolList = Array.from(allSymbols);
+        allSymbols.push('Cash');
 
         // Create datasets - one per symbol
-        const datasets = symbolList.map((symbol, index) => {
+        const datasets = allSymbols.map((symbol, index) => {
             return {
                 label: symbol,
                 data: portfolios.map(p => {
@@ -65,12 +68,14 @@ $(document).ready(function() {
                 datasets: datasets
             },
             options: {
-                indexAxis: 'y', // Horizontal bars
                 responsive: true,
                 maintainAspectRatio: true,
-                aspectRatio: Math.max(2, portfolios.length * 0.5), // Adjust height based on number of portfolios
                 scales: {
                     x: {
+                        stacked: true,
+                        grid: { display: false }
+                    },
+                    y: {
                         stacked: true,
                         max: 100,
                         ticks: {
@@ -78,11 +83,7 @@ $(document).ready(function() {
                                 return value + '%';
                             }
                         },
-                        grid: { display: false }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: { display: false }
+                        grid: { color: 'rgba(0,0,0,0.05)' }
                     }
                 },
                 plugins: {
@@ -105,12 +106,13 @@ $(document).ready(function() {
                     },
                     datalabels: {
                         color: '#ffffff',
-                        font: { size: 10, weight: 'bold' },
-                        textShadowColor: 'rgba(0,0,0,0.3)',
-                        textShadowBlur: 2,
-                        formatter: function(value) {
+                        font: { size: 11, weight: 'bold' },
+                        textShadowColor: 'rgba(0,0,0,0.5)',
+                        textShadowBlur: 3,
+                        formatter: function(value, context) {
                             if (value < 8) return '';
-                            return value.toFixed(0) + '%';
+                            const symbol = context.dataset.label;
+                            return symbol + ' ' + value.toFixed(0) + '%';
                         },
                         anchor: 'center',
                         align: 'center'

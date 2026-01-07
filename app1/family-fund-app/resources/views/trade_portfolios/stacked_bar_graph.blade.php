@@ -176,16 +176,27 @@ $(document).ready(function() {
                     },
                     datalabels: {
                         color: '#ffffff',
-                        font: { size: 10, weight: 'bold' },
+                        font: function(context) {
+                            const value = context.dataset.data[context.dataIndex];
+                            // Smaller font for small segments
+                            return { size: value < 8 ? 9 : 10, weight: 'bold' };
+                        },
                         textShadowColor: 'rgba(0,0,0,0.5)',
                         textShadowBlur: 3,
                         formatter: function(value, context) {
-                            if (value < 8) return '';
+                            // Hide if too small to display
+                            if (value < 3) return '';
+
                             const symbol = context.dataset.label;
                             const portfolioIndex = context.dataIndex;
-                            let label = symbol + ' ' + value.toFixed(1) + '%';
 
-                            // Add deviation trigger
+                            // For small segments (3-8%), show just symbol
+                            if (value < 8) {
+                                return symbol;
+                            }
+
+                            // For larger segments, show full details
+                            let label = symbol + ' ' + value.toFixed(1) + '%';
                             const devTrigger = deviationTriggers[symbol]?.[portfolioIndex];
                             if (devTrigger && devTrigger > 0) {
                                 label += ' ±' + devTrigger.toFixed(0) + '%';

@@ -109,23 +109,31 @@ trait AccountTrait
         $arr['tradePortfolios'] = $portfolio ? $portfolio->tradePortfolios()->with('tradePortfolioItems')->orderBy('start_dt')->get() : collect();
 
         // Create a linear regression projection for the next 10 years
-        $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf);
+        $currentValue = $account->balances['OWN']->market_value ?? 0;
+        $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf, $currentValue);
 
         $arr['as_of'] = $asOf;
         $arr['asOf'] = $asOf;
         return $arr;
     }
 
-    public function createLinearRegressionResponse($monthly_performance, $asOf) {
+    public function createLinearRegressionResponse($monthly_performance, $asOf, $currentValue = null) {
         $samples = [];
         $targets = [];
+        $firstDate = null;
+        $firstValue = null;
+
         foreach ($monthly_performance as $month => $perf) {
             $samples[] = [strtotime($month)];
             $targets[] = $perf['value'];
+            if ($firstDate === null) {
+                $firstDate = $month;
+                $firstValue = $perf['value'];
+            }
         }
 
         if (count($samples) < 2) {
-            return ['m' => 0, 'intercept' => 0, 'predictions' => []];
+            return ['m' => 0, 'intercept' => 0, 'predictions' => [], 'comparison' => null];
         }
 
         $regression = new LeastSquares();
@@ -135,6 +143,7 @@ trait AccountTrait
         $linReg['m'] = $regression->getCoefficients()[0];
         $linReg['intercept'] = $regression->getIntercept();
 
+        // Future predictions (next 10 years)
         $year = substr($asOf, 0, 4);
         $predictions = [];
         for ($i = 0; $i < 10; $i++) {
@@ -143,6 +152,34 @@ trait AccountTrait
             $predictions[$when] = Utils::currency($regression->predict([strtotime($when)]));
         }
         $linReg['predictions'] = $predictions;
+
+        // Value Comparison: Starting vs Expected vs Current
+        if ($currentValue !== null && $firstValue !== null) {
+            $expectedValue = $regression->predict([strtotime($asOf)]);
+            $diff = $currentValue - $expectedValue;
+            $yearsElapsed = max(1, (strtotime($asOf) - strtotime($firstDate)) / (365.25 * 24 * 60 * 60));
+
+            $linReg['comparison'] = [
+                'starting' => [
+                    'date' => $firstDate,
+                    'value' => $firstValue,
+                    'yield_per_year' => $firstValue * 0.04, // 4% yield
+                ],
+                'expected' => [
+                    'date' => $asOf,
+                    'value' => $expectedValue,
+                    'yield_per_year' => $expectedValue * 0.04,
+                ],
+                'current' => [
+                    'date' => $asOf,
+                    'value' => $currentValue,
+                    'yield_per_year' => $currentValue * 0.04,
+                ],
+                'diff' => $diff,
+                'is_ahead' => $diff >= 0,
+            ];
+        }
+
         return $linReg;
     }
 

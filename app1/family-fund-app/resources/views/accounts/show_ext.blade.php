@@ -202,23 +202,63 @@
             {{-- Forecast (Linear Regression) --}}
             @if(!empty($api['linear_regression']['predictions']))
             <div class="row mb-4" id="section-forecast">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="card h-100">
+                <div class="col-12">
+                    <div class="card">
                         <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Forecast (Linear Regression)</strong>
                         </div>
                         <div class="card-body">
-                            @include('accounts.performance_line_graph_linreg')
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
-                            <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Projection Table</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('accounts.linreg_table')
+                            {{-- Value Comparison Boxes --}}
+                            @if(!empty($api['linear_regression']['comparison']))
+                                @php
+                                    $comp = $api['linear_regression']['comparison'];
+                                    $isAhead = $comp['is_ahead'];
+                                @endphp
+                                <div class="mb-4">
+                                    <h6 class="text-muted mb-3"><i class="fa fa-balance-scale me-2"></i>Value Comparison</h6>
+                                    <div class="row">
+                                        {{-- Starting Box --}}
+                                        <div class="col-md-4 mb-3 mb-md-0">
+                                            <div class="p-3 text-center" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                                <div class="text-muted small text-uppercase">Starting ({{ $comp['starting']['date'] }})</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">${{ number_format($comp['starting']['value'], 0) }}</div>
+                                                <div class="text-muted small">${{ number_format($comp['starting']['yield_per_year'], 0) }}/yr yield</div>
+                                            </div>
+                                        </div>
+                                        {{-- Expected Box --}}
+                                        <div class="col-md-4 mb-3 mb-md-0">
+                                            <div class="p-3 text-center" style="background: #fef9c3; border: 1px solid #fcd34d; border-radius: 8px;">
+                                                <div class="text-muted small text-uppercase">Expected ({{ $comp['expected']['date'] }})</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">${{ number_format($comp['expected']['value'], 0) }}</div>
+                                                <div class="text-muted small">${{ number_format($comp['expected']['yield_per_year'], 0) }}/yr yield</div>
+                                            </div>
+                                        </div>
+                                        {{-- Current Box --}}
+                                        <div class="col-md-4">
+                                            <div class="p-3 text-center" style="background: {{ $isAhead ? '#dcfce7' : '#fef2f2' }}; border: 1px solid {{ $isAhead ? '#16a34a' : '#dc2626' }}; border-radius: 8px;">
+                                                <div class="text-muted small text-uppercase">Current ({{ $comp['current']['date'] }})</div>
+                                                <div style="font-size: 1.5rem; font-weight: 700; color: {{ $isAhead ? '#16a34a' : '#dc2626' }};">${{ number_format($comp['current']['value'], 0) }}</div>
+                                                <div class="text-muted small">${{ number_format($comp['current']['yield_per_year'], 0) }}/yr yield</div>
+                                                <div class="mt-2">
+                                                    <span class="px-2 py-1 rounded small" style="background: {{ $isAhead ? '#16a34a' : '#dc2626' }}; color: white; font-weight: 600;">
+                                                        ${{ number_format(abs($comp['diff']), 0) }} {{ $isAhead ? 'ahead' : 'behind' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Chart and Table Row --}}
+                            <div class="row">
+                                <div class="col-lg-7 mb-4 mb-lg-0">
+                                    @include('accounts.performance_line_graph_linreg')
+                                </div>
+                                <div class="col-lg-5">
+                                    @include('accounts.linreg_table')
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -328,7 +328,6 @@
 
     <!-- Trade Portfolio Details -->
     @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
-        <div class="page-break"></div>
         @include('trade_portfolios.inner_show_pdf')
     @endforeach
 

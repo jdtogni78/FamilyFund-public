@@ -69,6 +69,16 @@
             return '$' + formatNumber(num, decimals);
         }
 
+        // Format as short currency ($10K, $1.5M, etc.)
+        function formatCurrencyShort(num) {
+            if (num >= 1000000) {
+                return '$' + (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            } else if (num >= 1000) {
+                return '$' + (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            }
+            return '$' + Math.round(num);
+        }
+
         // Create sparse labels array for line charts (max 24 labels)
         function createSparseLabels(labels, maxLabels = 24) {
             if (labels.length <= maxLabels) return labels;

@@ -80,7 +80,7 @@ $(document).ready(function() {
                             beginAtZero: false,
                             ticks: {
                                 callback: function(value) {
-                                    return formatCurrency(value);
+                                    return formatCurrencyShort(value);
                                 },
                                 color: chartTheme.fontColor,
                                 font: {

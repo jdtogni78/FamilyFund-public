@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\GoalExt;
+use Phpml\Regression\LeastSquares;
 trait AccountTrait
 {
     use PerformanceTrait, VerboseTrait, MailTrait;
@@ -107,8 +108,42 @@ trait AccountTrait
         $portfolio = $account->fund->portfolios;
         $arr['tradePortfolios'] = $portfolio ? $portfolio->tradePortfolios()->with('tradePortfolioItems')->orderBy('start_dt')->get() : collect();
 
+        // Create a linear regression projection for the next 10 years
+        $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf);
+
         $arr['as_of'] = $asOf;
+        $arr['asOf'] = $asOf;
         return $arr;
+    }
+
+    public function createLinearRegressionResponse($monthly_performance, $asOf) {
+        $samples = [];
+        $targets = [];
+        foreach ($monthly_performance as $month => $perf) {
+            $samples[] = [strtotime($month)];
+            $targets[] = $perf['value'];
+        }
+
+        if (count($samples) < 2) {
+            return ['m' => 0, 'intercept' => 0, 'predictions' => []];
+        }
+
+        $regression = new LeastSquares();
+        $regression->train($samples, $targets);
+
+        $linReg = [];
+        $linReg['m'] = $regression->getCoefficients()[0];
+        $linReg['intercept'] = $regression->getIntercept();
+
+        $year = substr($asOf, 0, 4);
+        $predictions = [];
+        for ($i = 0; $i < 10; $i++) {
+            $year++;
+            $when = $year . '-01-01';
+            $predictions[$when] = Utils::currency($regression->predict([strtotime($when)]));
+        }
+        $linReg['predictions'] = $predictions;
+        return $linReg;
     }
 
     protected function getGoalPct($value, $start, $target, $pct)

@@ -160,7 +160,7 @@
     @endif
 
     {{-- Performance Overview (Mini Charts Side by Side) --}}
-    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 0;">
+    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 16px;">
         <tr>
             <td width="50%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                 <div style="background: #1e293b; padding: 10px 16px;">
@@ -180,6 +180,53 @@
             </td>
         </tr>
     </table>
+
+    {{-- Linear Regression Forecast --}}
+    @if(!empty($api['linear_regression']['predictions']))
+    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 0;">
+        <tr>
+            <td width="60%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                <div style="background: #1e40af; padding: 10px 16px;">
+                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">10-YEAR FORECAST (LINEAR REGRESSION)</span>
+                </div>
+                <div style="padding: 12px;">
+                    @if(isset($files['linear_regression.png']))
+                        <img src="{{ $files['linear_regression.png'] }}" alt="Linear Regression Forecast" style="width: 100%;"/>
+                    @else
+                        <div style="padding: 20px; text-align: center; color: #64748b;">Chart not available</div>
+                    @endif
+                </div>
+            </td>
+            <td width="40%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                <div style="background: #1e40af; padding: 10px 16px;">
+                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">PROJECTION TABLE</span>
+                </div>
+                <div style="padding: 12px;">
+                    <table width="100%" cellspacing="0" cellpadding="4" style="font-size: 10px;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="text-align: left; border-bottom: 1px solid #e2e8f0; padding: 6px;">Year</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Conservative</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Predicted</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Aggressive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($api['linear_regression']['predictions'] as $year => $value)
+                            <tr style="background: {{ $loop->even ? '#f8fafc' : '#ffffff' }};">
+                                <td style="padding: 4px 6px;">{{ substr($year, 0, 4) }}</td>
+                                <td style="text-align: right; padding: 4px 6px;">${{ number_format($value * 0.8, 0) }}</td>
+                                <td style="text-align: right; padding: 4px 6px; font-weight: 600;">${{ number_format($value, 0) }}</td>
+                                <td style="text-align: right; padding: 4px 6px;">${{ number_format($value * 1.2, 0) }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+    @endif
 
     {{-- ============================================== --}}
     {{-- DETAILED GOALS - Page 2 --}}

@@ -101,6 +101,7 @@
                 ['id' => 'section-disbursement', 'icon' => 'fa-money-bill-wave', 'label' => 'Disbursement'],
                 ['id' => 'section-goals', 'icon' => 'fa-bullseye', 'label' => 'Goals', 'condition' => $account->goals->count() > 0],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
+                ['id' => 'section-forecast', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => !empty($api['linear_regression']['predictions'])],
                 ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1],
                 ['id' => 'section-shares', 'icon' => 'fa-chart-area', 'label' => 'Shares'],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
@@ -197,6 +198,32 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Forecast (Linear Regression) --}}
+            @if(!empty($api['linear_regression']['predictions']))
+            <div class="row mb-4" id="section-forecast">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="card h-100">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
+                            <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Forecast (Linear Regression)</strong>
+                        </div>
+                        <div class="card-body">
+                            @include('accounts.performance_line_graph_linreg')
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
+                            <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Projection Table</strong>
+                        </div>
+                        <div class="card-body">
+                            @include('accounts.linreg_table')
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             {{-- Trade Portfolios Comparison --}}
             @if(isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1)

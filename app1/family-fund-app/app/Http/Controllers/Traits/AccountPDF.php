@@ -18,6 +18,7 @@ class AccountPDF
         $this->createSharesLineChart($arr, $tempDir);
         $this->createGoalsProgressGraph($arr, $tempDir);
         $this->createPortfolioComparisonGraph($arr, $tempDir);
+        $this->createLinearRegressionGraph($arr, $tempDir);
         $view = 'accounts.show_pdf';
         $pdfFile = 'account.pdf';
         $this->debugHTML($debugHtml, $view, $arr, $tempDir);

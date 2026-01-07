@@ -256,4 +256,34 @@ trait ChartBaseTrait
             return $v['value'];
         }, $arr);
     }
+
+    public function createLinearRegressionGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        $name = 'linear_regression.png';
+
+        if (empty($api['linear_regression']['predictions'])) {
+            Log::debug("createLinearRegressionGraph: No predictions available");
+            return;
+        }
+
+        $predictions = $api['linear_regression']['predictions'];
+        $labels = array_keys($predictions);
+        $predictedValues = array_values($predictions);
+        $conservativeValues = array_map(fn($v) => $v * 0.8, $predictedValues);
+        $aggressiveValues = array_map(fn($v) => $v * 1.2, $predictedValues);
+
+        $this->files[$name] = $file = $tempDir->path($name);
+
+        try {
+            $this->getQuickChartService()->generateLineChart(
+                $labels,
+                ["Conservative (80%)", "Predicted", "Aggressive (120%)"],
+                [$conservativeValues, $predictedValues, $aggressiveValues],
+                $file
+            );
+            Log::debug("createLinearRegressionGraph: Chart saved to $file");
+        } catch (\Exception $e) {
+            Log::error("createLinearRegressionGraph failed: " . $e->getMessage());
+        }
+    }
 }

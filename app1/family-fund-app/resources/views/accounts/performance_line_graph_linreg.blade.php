@@ -1,4 +1,3 @@
-@if(!empty($api['linear_regression']['predictions']))
 <div>
     <canvas id="accountPerfGraphLinReg"></canvas>
 </div>
@@ -142,9 +141,3 @@ $(document).ready(function() {
 });
 </script>
 @endpush
-@else
-<div class="text-center text-muted py-4">
-    <i class="fa fa-chart-line fa-2x mb-2" style="color: #cbd5e1;"></i>
-    <p>Not enough data for forecast</p>
-</div>
-@endif

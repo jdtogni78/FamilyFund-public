@@ -6,6 +6,7 @@ use App\Models\AssetExt;
 use App\Models\Utils;
 use Illuminate\Support\Facades\Log;
 use Laracasts\Flash\Flash;
+use Phpml\Regression\LeastSquares;
 
 /**
  */
@@ -233,6 +234,71 @@ trait PerformanceTrait
             }
         }
         return $ret;
+    }
+
+    public function createLinearRegressionResponse($monthly_performance, $asOf, $currentValue = null) {
+        $samples = [];
+        $targets = [];
+        $firstDate = null;
+        $firstValue = null;
+
+        foreach ($monthly_performance as $month => $perf) {
+            $samples[] = [strtotime($month)];
+            $targets[] = $perf['value'];
+            if ($firstDate === null) {
+                $firstDate = $month;
+                $firstValue = $perf['value'];
+            }
+        }
+
+        if (count($samples) < 2) {
+            return ['m' => 0, 'intercept' => 0, 'predictions' => [], 'comparison' => null];
+        }
+
+        $regression = new LeastSquares();
+        $regression->train($samples, $targets);
+
+        $linReg = [];
+        $linReg['m'] = $regression->getCoefficients()[0];
+        $linReg['intercept'] = $regression->getIntercept();
+
+        // Future predictions (next 10 years)
+        $year = substr($asOf, 0, 4);
+        $predictions = [];
+        for ($i = 0; $i < 10; $i++) {
+            $year++;
+            $when = $year . '-01-01';
+            $predictions[$when] = Utils::currency($regression->predict([strtotime($when)]));
+        }
+        $linReg['predictions'] = $predictions;
+
+        // Value Comparison: Starting vs Expected vs Current
+        if ($currentValue !== null && $firstValue !== null) {
+            $expectedValue = $regression->predict([strtotime($asOf)]);
+            $diff = $currentValue - $expectedValue;
+
+            $linReg['comparison'] = [
+                'starting' => [
+                    'date' => $firstDate,
+                    'value' => $firstValue,
+                    'yield_per_year' => $firstValue * 0.04,
+                ],
+                'expected' => [
+                    'date' => $asOf,
+                    'value' => $expectedValue,
+                    'yield_per_year' => $expectedValue * 0.04,
+                ],
+                'current' => [
+                    'date' => $asOf,
+                    'value' => $currentValue,
+                    'yield_per_year' => $currentValue * 0.04,
+                ],
+                'diff' => $diff,
+                'is_ahead' => $diff >= 0,
+            ];
+        }
+
+        return $linReg;
     }
 
 }

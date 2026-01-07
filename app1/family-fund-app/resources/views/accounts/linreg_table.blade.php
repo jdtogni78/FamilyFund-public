@@ -1,4 +1,3 @@
-@if(!empty($api['linear_regression']['predictions']))
 <div class="table-responsive-sm">
     <table class="table table-striped table-sm" id="accounts-linreg-table">
         <thead>
@@ -21,9 +20,3 @@
         </tbody>
     </table>
 </div>
-@else
-<div class="text-center text-muted py-4">
-    <i class="fa fa-table fa-2x mb-2" style="color: #cbd5e1;"></i>
-    <p>Not enough data for projection</p>
-</div>
-@endif

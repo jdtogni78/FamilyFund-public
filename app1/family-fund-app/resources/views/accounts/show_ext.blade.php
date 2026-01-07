@@ -108,11 +108,40 @@
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
             ]])
 
+            {{-- Account Details (Collapsible) --}}
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                            <strong><i class="fa fa-user-circle" style="margin-right: 8px;"></i>Account Details</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccountDetails"
+                               role="button" aria-expanded="false" aria-controls="collapseAccountDetails">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse" id="collapseAccountDetails">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Fund:</strong> <a href="{{ route('funds.show', [$account->fund->id]) }}">{{ $account->fund->name }}</a></p>
+                                        <p><strong>User:</strong> {{ $account->user->name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Email:</strong> {{ $account->email_cc }}</p>
+                                        <p><strong>As of:</strong> {{ $api['as_of'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Disbursement Eligibility --}}
             <div class="row mb-4" id="section-disbursement">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-money-bill-wave" style="margin-right: 8px;"></i>Disbursement Eligibility</strong>
                         </div>
                         <div class="card-body">
@@ -147,7 +176,7 @@
             <div class="row mb-4" id="section-charts">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-chart-line" style="margin-right: 8px;"></i>Monthly Value</strong>
                         </div>
                         <div class="card-body">
@@ -159,7 +188,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Yearly Value</strong>
                         </div>
                         <div class="card-body">
@@ -182,7 +211,7 @@
             <div class="row mb-4" id="section-shares">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Shares History</strong>
                         </div>
                         <div class="card-body">
@@ -203,7 +232,7 @@
             <div class="row mb-4" id="section-performance">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Yearly Performance</strong>
                         </div>
                         <div class="card-body">
@@ -214,7 +243,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Monthly Performance</strong>
                         </div>
                         <div class="card-body" style="max-height: 400px; overflow-y: auto;">
@@ -229,7 +258,7 @@
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="background: #1e293b; color: #ffffff;">
                             <strong><i class="fa fa-exchange-alt" style="margin-right: 8px;"></i>Transactions</strong>
                         </div>
                         <div class="card-body">
@@ -244,7 +273,7 @@
                 <div class="row mb-4" id="section-matching">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header" style="background: #1e293b; color: #ffffff;">
                                 <strong><i class="fa fa-hand-holding-usd" style="margin-right: 8px;"></i>Matching Rules</strong>
                             </div>
                             <div class="card-body">

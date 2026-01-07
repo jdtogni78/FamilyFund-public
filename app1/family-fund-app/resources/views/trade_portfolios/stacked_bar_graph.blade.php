@@ -20,7 +20,7 @@
 
 @if($portfolioCollection->count() >= 1)
 <div class="card mb-4">
-    <div class="card-header">
+    <div class="card-header" style="background: #1e293b; color: #ffffff;">
         <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations Comparison</strong>
     </div>
     <div class="card-body">

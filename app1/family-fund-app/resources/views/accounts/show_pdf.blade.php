@@ -35,16 +35,16 @@
     {{-- Hero Header --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
         <tr>
-            <td style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 24px 20px; border-radius: 8px;">
+            <td style="background-color: #1e40af; padding: 28px 24px; border-radius: 8px;">
                 <table width="100%" cellspacing="0" cellpadding="0">
                     <tr>
-                        <td width="70%">
-                            <div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 4px;">{{ $account->nickname }}</div>
-                            <div style="font-size: 13px; color: #bfdbfe;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
+                        <td width="65%">
+                            <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">{{ $account->nickname }}</div>
+                            <div style="font-size: 16px; color: #bfdbfe;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
                         </td>
-                        <td width="30%" align="right">
-                            <div style="font-size: 32px; font-weight: 800; color: #ffffff;">${{ number_format($marketValue, 0) }}</div>
-                            <div style="font-size: 12px; color: #bfdbfe; text-transform: uppercase;">Total Value</div>
+                        <td width="35%" align="right">
+                            <div style="font-size: 42px; font-weight: 800; color: #ffffff;">${{ number_format($marketValue, 0) }}</div>
+                            <div style="font-size: 14px; color: #bfdbfe; text-transform: uppercase;">Total Value</div>
                         </td>
                     </tr>
                 </table>

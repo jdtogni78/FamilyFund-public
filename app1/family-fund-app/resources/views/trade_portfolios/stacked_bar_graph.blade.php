@@ -9,8 +9,10 @@
         if ($totalValue > 0) {
             foreach ($api['portfolio']['assets'] as $asset) {
                 $value = floatval(str_replace(['$', ','], '', $asset['value'] ?? '0'));
+                // Normalize CASH to Cash for consistent matching
+                $symbol = strtoupper($asset['name']) === 'CASH' ? 'Cash' : $asset['name'];
                 $currentAssets[] = [
-                    'symbol' => $asset['name'],
+                    'symbol' => $symbol,
                     'percent' => ($value / $totalValue) * 100,
                 ];
             }

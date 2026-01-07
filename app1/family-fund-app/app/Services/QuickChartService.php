@@ -782,9 +782,13 @@ class QuickChartService
                 }
             }
         }
-        // Also get symbols from current assets if provided
+        // Also get symbols from current assets if provided (skip Cash - added at end)
         if ($currentAssets) {
             foreach ($currentAssets as $asset) {
+                // Skip Cash variants - we'll add it at the end
+                if (strtoupper($asset['symbol']) === 'CASH') {
+                    continue;
+                }
                 if (!in_array($asset['symbol'], $allSymbols)) {
                     $allSymbols[] = $asset['symbol'];
                 }

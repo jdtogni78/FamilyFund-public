@@ -16,6 +16,7 @@
                 $balance = $account->balances['OWN'] ?? null;
                 $shares = $balance->shares ?? 0;
                 $marketValue = $balance->market_value ?? 0;
+                $sharePrice = $shares > 0 ? $marketValue / $shares : 0;
                 $matchingAvailable = $api['matching_available'] ?? 0;
                 $goalsCount = $account->goals->count();
             @endphp
@@ -37,24 +38,25 @@
                         {{-- Stats Row --}}
                         <div class="card-body py-3" style="background: #f8fafc;">
                             <div class="row text-center">
-                                <div class="col-md-3 col-6 mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Market Value</div>
                                 </div>
-                                <div class="col-md-3 col-6 mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Shares</div>
                                 </div>
-                                <div class="col-md-3 col-6" style="border-right: 1px solid #e2e8f0;">
-                                    @if($matchingAvailable > 0)
-                                        <div style="font-size: 1.75rem; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
-                                        <div class="text-muted text-uppercase small">Matching Available</div>
-                                    @else
-                                        <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $account->fund->name }}</div>
-                                        <div class="text-muted text-uppercase small">Fund</div>
-                                    @endif
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
-                                <div class="col-md-3 col-6">
+                                @if($matchingAvailable > 0)
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">Matching Available</div>
+                                </div>
+                                @endif
+                                <div class="col">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $goalsCount }}</div>
                                     <div class="text-muted text-uppercase small">Active Goals</div>
                                 </div>
@@ -89,26 +91,6 @@
                             @endforeach
                         </div>
                         @endif
-                    </div>
-                </div>
-            </div>
-
-            {{-- Account Details (Collapsible) --}}
-            <div class="row mb-4">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <strong><i class="fa fa-user-circle me-2"></i>Account Details</strong>
-                            <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAccountDetails"
-                               role="button" aria-expanded="false" aria-controls="collapseAccountDetails">
-                                <i class="fa fa-chevron-down"></i>
-                            </a>
-                        </div>
-                        <div class="collapse" id="collapseAccountDetails">
-                            <div class="card-body">
-                                @include('accounts.show_fields_ext')
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

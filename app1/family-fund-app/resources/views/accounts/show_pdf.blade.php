@@ -5,6 +5,10 @@
 @section('content')
     @php
         $account = $api['account'];
+        $shares = $account->balances['OWN']->shares ?? 0;
+        $marketValue = $account->balances['OWN']->market_value ?? 0;
+        $sharePrice = $shares > 0 ? $marketValue / $shares : 0;
+        $matchingAvailable = $api['matching_available'] ?? 0;
     @endphp
 
     <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #1e40af; margin-bottom: 16px;">
@@ -17,24 +21,25 @@
             <td style="padding: 12px; background-color: #f8fafc;">
                 <table width="100%" cellspacing="0" cellpadding="8">
                     <tr>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($account->balances['OWN']->market_value ?? 0, 2) }}</div>
+                        <td width="{{ $matchingAvailable > 0 ? '20%' : '25%' }}" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 2) }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Market Value</div>
                         </td>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ number_format($account->balances['OWN']->shares ?? 0, 2) }}</div>
+                        <td width="{{ $matchingAvailable > 0 ? '20%' : '25%' }}" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Shares</div>
                         </td>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            @if($api['matching_available'] > 0)
-                                <div style="font-size: 20px; font-weight: 700; color: #16a34a;">${{ number_format($api['matching_available'], 2) }}</div>
-                                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Matching Available</div>
-                            @else
-                                <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ $account->fund->name }}</div>
-                                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Fund</div>
-                            @endif
+                        <td width="{{ $matchingAvailable > 0 ? '20%' : '25%' }}" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Share Price</div>
                         </td>
-                        <td width="25%" align="center">
+                        @if($matchingAvailable > 0)
+                        <td width="20%" align="center" style="border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 20px; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Matching Available</div>
+                        </td>
+                        @endif
+                        <td width="{{ $matchingAvailable > 0 ? '20%' : '25%' }}" align="center">
                             <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ count($account->goals) }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Active Goals</div>
                         </td>

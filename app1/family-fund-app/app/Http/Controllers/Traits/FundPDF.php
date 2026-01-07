@@ -132,6 +132,7 @@ class FundPDF
         $this->createYearlyPerformanceGraph($arr, $tempDir);
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createGroupMonthlyPerformanceGraphs($arr, $tempDir);
+        $this->createForecastGraph($arr, $tempDir);
         $this->createPortfolioComparisonGraph($arr, $tempDir);
         $this->createTradePortfoliosGraph($arr, $tempDir);
         $this->createTradePortfoliosGroupGraph($arr, $tempDir);
@@ -210,6 +211,25 @@ class FundPDF
         $this->files[$name] = $file = $tempDir->path($name);
         // Use doughnut chart for accounts allocation
         $this->createDoughnutChart($values, $labels, $file);
+    }
+
+    public function createForecastGraph(array $api, TemporaryDirectory $tempDir): void
+    {
+        if (!isset($api['linear_regression']['predictions']) || empty($api['linear_regression']['predictions'])) {
+            return;
+        }
+
+        $name = 'forecast.png';
+        $predictions = $api['linear_regression']['predictions'];
+
+        // Convert currency strings to floats
+        $numericPredictions = [];
+        foreach ($predictions as $date => $value) {
+            $numericPredictions[$date] = floatval(str_replace(['$', ','], '', $value));
+        }
+
+        $this->files[$name] = $file = $tempDir->path($name);
+        $this->getQuickChartService()->generateForecastChart($numericPredictions, $file);
     }
 
     public function createTradePortfoliosGraph(array $api, TemporaryDirectory $tempDir)

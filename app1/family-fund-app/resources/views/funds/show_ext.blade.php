@@ -50,7 +50,7 @@
                             <i class="fa fa-chart-line me-1"></i>Charts
                         </a>
                         <a href="#section-regression" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-chart-area me-1"></i>Regression
+                            <i class="fa fa-chart-area me-1"></i>Forecast
                         </a>
                         <a href="#section-portfolios" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
                             <i class="fa fa-chart-bar me-1"></i>Portfolios
@@ -107,12 +107,12 @@
                 </div>
             </div>
 
-            {{-- Linear Regression --}}
+            {{-- Forecast (Linear Regression) --}}
             <div class="row mb-4" id="section-regression">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
                         <div class="card-header">
-                            <strong><i class="fa fa-chart-area mr-2"></i>Linear Regression</strong>
+                            <strong><i class="fa fa-chart-area mr-2"></i>Forecast (Linear Regression)</strong>
                         </div>
                         <div class="card-body">
                             @include('funds.performance_line_graph_linreg')

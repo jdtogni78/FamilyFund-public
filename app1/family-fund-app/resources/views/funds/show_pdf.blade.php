@@ -90,6 +90,59 @@
         </div>
     </div>
 
+    <!-- Forecast (Linear Regression) -->
+    @if(isset($api['linear_regression']['predictions']) && count($api['linear_regression']['predictions']) > 0)
+    <div class="page-break"></div>
+    <h3 class="section-title">Forecast (Linear Regression)</h3>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-header-title">10-Year Projection</h4>
+        </div>
+        <div class="card-body">
+            @if(isset($files['forecast.png']) && file_exists($files['forecast.png']))
+                <div class="chart-container">
+                    <img src="{{ $files['forecast.png'] }}" alt="Forecast"/>
+                </div>
+                <p class="text-sm text-muted" style="margin-top: 8px;">
+                    <strong>Legend:</strong> Predicted Value based on linear regression | Conservative (80%) | Aggressive (120%)
+                </p>
+            @endif
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-header-title">Projection Table</h4>
+        </div>
+        <div class="card-body">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th style="text-align: right;">Conservative (80%)</th>
+                        <th style="text-align: right;">Predicted Value</th>
+                        <th style="text-align: right;">Aggressive (120%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($api['linear_regression']['predictions'] as $year => $value)
+                        @php
+                            $numValue = floatval(str_replace(['$', ','], '', $value));
+                        @endphp
+                        <tr>
+                            <td>{{ substr($year, 0, 4) }}</td>
+                            <td style="text-align: right;">${{ number_format($numValue * 0.8, 2) }}</td>
+                            <td style="text-align: right; font-weight: bold;">${{ number_format($numValue, 2) }}</td>
+                            <td style="text-align: right;">${{ number_format($numValue * 1.2, 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
     <!-- Asset Group Performance -->
     @foreach($api['asset_monthly_performance'] as $group => $perf)
         <div class="card mb-3 avoid-break">

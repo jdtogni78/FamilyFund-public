@@ -261,6 +261,111 @@ class QuickChartService
     }
 
     /**
+     * Generate a forecast chart with prediction lines (conservative, predicted, aggressive)
+     * Uses Chart.js v2 syntax for QuickChart compatibility
+     */
+    public function generateForecastChart(
+        array $predictions,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null,
+        int $maxLabels = 12
+    ): string {
+        $labels = array_keys($predictions);
+        $predictedData = array_values($predictions);
+        $conservativeData = array_map(fn($v) => $v * 0.8, $predictedData);
+        $aggressiveData = array_map(fn($v) => $v * 1.2, $predictedData);
+
+        // Reduce labels to show only maxLabels while keeping all data points
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? substr($label, 0, 4) : '';
+            }
+            $labels = $sparseLabels;
+        } else {
+            // Just show year for cleaner display
+            $labels = array_map(fn($l) => substr($l, 0, 4), $labels);
+        }
+
+        $chartDatasets = [
+            [
+                'label' => 'Conservative (80%)',
+                'data' => $conservativeData,
+                'borderColor' => $this->datasetColors[2],
+                'backgroundColor' => 'transparent',
+                'fill' => false,
+                'borderWidth' => 2,
+                'pointRadius' => 3,
+                'pointBackgroundColor' => $this->datasetColors[2],
+                'borderDash' => [5, 5],
+            ],
+            [
+                'label' => 'Predicted Value',
+                'data' => $predictedData,
+                'borderColor' => $this->datasetColors[0],
+                'backgroundColor' => 'transparent',
+                'fill' => false,
+                'borderWidth' => 3,
+                'pointRadius' => 4,
+                'pointBackgroundColor' => $this->datasetColors[0],
+            ],
+            [
+                'label' => 'Aggressive (120%)',
+                'data' => $aggressiveData,
+                'borderColor' => $this->datasetColors[1],
+                'backgroundColor' => 'transparent',
+                'fill' => false,
+                'borderWidth' => 2,
+                'pointRadius' => 3,
+                'pointBackgroundColor' => $this->datasetColors[1],
+                'borderDash' => [5, 5],
+            ],
+        ];
+
+        // Use Chart.js v2 syntax for QuickChart
+        $config = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => $chartDatasets,
+            ],
+            'options' => [
+                'responsive' => false,
+                'scales' => [
+                    'yAxes' => [[
+                        'ticks' => [
+                            'fontColor' => $this->fontColor,
+                            'callback' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return '$'+r }",
+                        ],
+                        'gridLines' => ['color' => 'rgba(0,0,0,0.1)'],
+                    ]],
+                    'xAxes' => [[
+                        'ticks' => [
+                            'fontColor' => $this->fontColor,
+                        ],
+                        'gridLines' => ['display' => false],
+                    ]],
+                ],
+                'legend' => [
+                    'position' => 'top',
+                    'labels' => [
+                        'fontColor' => '#000000',
+                        'fontFamily' => $this->fontFamily,
+                        'fontSize' => 12,
+                        'fontStyle' => 'bold',
+                        'padding' => 15,
+                    ],
+                ],
+            ],
+        ];
+
+        return $this->generateChart($config, $filePath, $width ?? 800, $height ?? 400);
+    }
+
+    /**
      * Generate a stacked area chart (for showing all allocations together)
      */
     public function generateStackedAreaChart(

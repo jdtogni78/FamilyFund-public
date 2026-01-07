@@ -11,24 +11,103 @@
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')
 
-            {{-- Account Details --}}
+            {{-- Account Highlights Card --}}
+            @php
+                $balance = $account->balances['OWN'] ?? null;
+                $shares = $balance->shares ?? 0;
+                $marketValue = $balance->market_value ?? 0;
+                $matchingAvailable = $api['matching_available'] ?? 0;
+                $goalsCount = $account->goals->count();
+            @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card" style="border: 2px solid #1e40af; overflow: hidden;">
+                        {{-- Blue Header --}}
+                        <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: #1e40af; border: none;">
+                            <h4 class="mb-0" style="color: #ffffff; font-weight: 700;">{{ $account->nickname }}</h4>
                             <div>
-                                <strong>Account Details</strong>
-                                <a href="{{ route('accounts.index') }}" class="btn btn-light btn-sm ms-2">Back</a>
-                            </div>
-                            <div>
+                                <a href="{{ route('accounts.index') }}" class="btn btn-light btn-sm me-2">Back</a>
                                 <a href="/accounts/{{ $account->id }}/pdf_as_of/{{ $api['asOf'] ?? now()->format('Y-m-d') }}"
-                                   class="btn btn-outline-danger btn-sm" target="_blank" title="Download PDF Report">
-                                    <i class="fa fa-file-pdf me-1"></i> PDF Report
+                                   class="btn btn-outline-light btn-sm" target="_blank" title="Download PDF Report">
+                                    <i class="fa fa-file-pdf me-1"></i> PDF
                                 </a>
                             </div>
                         </div>
-                        <div class="card-body">
-                            @include('accounts.show_fields_ext')
+
+                        {{-- Stats Row --}}
+                        <div class="card-body py-3" style="background: #f8fafc;">
+                            <div class="row text-center">
+                                <div class="col-md-3 col-6 mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">Market Value</div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3 mb-md-0" style="border-right: 1px solid #e2e8f0;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">Shares</div>
+                                </div>
+                                <div class="col-md-3 col-6" style="border-right: 1px solid #e2e8f0;">
+                                    @if($matchingAvailable > 0)
+                                        <div style="font-size: 1.75rem; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
+                                        <div class="text-muted text-uppercase small">Matching Available</div>
+                                    @else
+                                        <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $account->fund->name }}</div>
+                                        <div class="text-muted text-uppercase small">Fund</div>
+                                    @endif
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $goalsCount }}</div>
+                                    <div class="text-muted text-uppercase small">Active Goals</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Goals Summary --}}
+                        @if($goalsCount > 0)
+                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #e2e8f0;">
+                            <div class="text-muted text-uppercase small mb-2 mt-2" style="font-weight: 600;">Goals Summary</div>
+                            @foreach($account->goals as $goal)
+                                @php
+                                    $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+                                    $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
+                                    $currentValue = $goal->progress['current']['value'] ?? 0;
+                                    $expectedValue = $goal->progress['expected']['value'] ?? 0;
+                                    $diff = $currentValue - $expectedValue;
+                                    $isOnTrack = $diff >= 0;
+                                @endphp
+                                <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    <div style="color: #1e40af; font-weight: 600;">{{ $goal->name }}</div>
+                                    <div class="d-flex align-items-center">
+                                        <span style="font-size: 1rem; font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">
+                                            {{ number_format($currentPct, 1) }}%
+                                        </span>
+                                        <span class="text-muted ms-1 small">complete</span>
+                                        <span class="ms-3 px-2 py-1 rounded small" style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; font-weight: 600;">
+                                            ${{ number_format(abs($diff), 0) }} {{ $isOnTrack ? 'ahead' : 'behind' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Account Details (Collapsible) --}}
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong><i class="fa fa-user-circle me-2"></i>Account Details</strong>
+                            <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAccountDetails"
+                               role="button" aria-expanded="false" aria-controls="collapseAccountDetails">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse" id="collapseAccountDetails">
+                            <div class="card-body">
+                                @include('accounts.show_fields_ext')
+                            </div>
                         </div>
                     </div>
                 </div>

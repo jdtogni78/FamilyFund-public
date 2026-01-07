@@ -159,24 +159,30 @@
     </table>
     @endif
 
-    {{-- Performance Overview (Mini Charts Side by Side) --}}
-    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 16px;">
+    {{-- Monthly Performance Chart --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td width="50%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                <div style="background: #1e293b; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE</span>
-                </div>
-                <div style="padding: 12px;">
-                    <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Performance" style="width: 100%;"/>
-                </div>
+            <td style="background: #1e293b; padding: 10px 16px;">
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE</span>
             </td>
-            <td width="50%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                <div style="background: #1e293b; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
-                </div>
-                <div style="padding: 12px;">
-                    <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Performance" style="width: 100%;"/>
-                </div>
+        </tr>
+        <tr>
+            <td style="padding: 12px;">
+                <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Performance" style="width: 100%;"/>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Yearly Performance Chart --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <tr>
+            <td style="background: #1e293b; padding: 10px 16px;">
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 12px;">
+                <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Performance" style="width: 100%;"/>
             </td>
         </tr>
     </table>
@@ -225,47 +231,53 @@
             </table>
         @endif
 
-        {{-- Chart and Table --}}
-        <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 0;">
+        {{-- Forecast Chart --}}
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td width="60%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #1e40af; padding: 10px 16px;">
-                        <span style="color: #ffffff; font-weight: 700; font-size: 12px;">10-YEAR FORECAST (LINEAR REGRESSION)</span>
-                    </div>
-                    <div style="padding: 12px;">
-                        @if(isset($files['linear_regression.png']))
-                            <img src="{{ $files['linear_regression.png'] }}" alt="Linear Regression Forecast" style="width: 100%;"/>
-                        @else
-                            <div style="padding: 20px; text-align: center; color: #64748b;">Chart not available</div>
-                        @endif
-                    </div>
+                <td style="background: #1e40af; padding: 10px 16px;">
+                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">10-YEAR FORECAST (LINEAR REGRESSION)</span>
                 </td>
-                <td width="40%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #1e40af; padding: 10px 16px;">
-                        <span style="color: #ffffff; font-weight: 700; font-size: 12px;">PROJECTION TABLE</span>
-                    </div>
-                    <div style="padding: 12px;">
-                        <table width="100%" cellspacing="0" cellpadding="4" style="font-size: 10px;">
-                            <thead>
-                                <tr style="background: #f8fafc;">
-                                    <th style="text-align: left; border-bottom: 1px solid #e2e8f0; padding: 6px;">Year</th>
-                                    <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Conservative</th>
-                                    <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Predicted</th>
-                                    <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 6px;">Aggressive</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @foreach($api['linear_regression']['predictions'] as $year => $value)
-                                <tr style="background: {{ $loop->even ? '#f8fafc' : '#ffffff' }};">
-                                    <td style="padding: 4px 6px;">{{ substr($year, 0, 4) }}</td>
-                                    <td style="text-align: right; padding: 4px 6px;">${{ number_format($value * 0.8, 0) }}</td>
-                                    <td style="text-align: right; padding: 4px 6px; font-weight: 600;">${{ number_format($value, 0) }}</td>
-                                    <td style="text-align: right; padding: 4px 6px;">${{ number_format($value * 1.2, 0) }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+            </tr>
+            <tr>
+                <td style="padding: 12px;">
+                    @if(isset($files['linear_regression.png']))
+                        <img src="{{ $files['linear_regression.png'] }}" alt="Linear Regression Forecast" style="width: 100%;"/>
+                    @else
+                        <div style="padding: 20px; text-align: center; color: #64748b;">Chart not available</div>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+        {{-- Projection Table --}}
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <tr>
+                <td style="background: #1e40af; padding: 10px 16px;">
+                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">PROJECTION TABLE</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 12px;">
+                    <table width="100%" cellspacing="0" cellpadding="4" style="font-size: 11px;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="text-align: left; border-bottom: 1px solid #e2e8f0; padding: 8px;">Year</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 8px;">Conservative</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 8px;">Predicted</th>
+                                <th style="text-align: right; border-bottom: 1px solid #e2e8f0; padding: 8px;">Aggressive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($api['linear_regression']['predictions'] as $year => $value)
+                            <tr style="background: {{ $loop->even ? '#f8fafc' : '#ffffff' }};">
+                                <td style="padding: 6px 8px;">{{ substr($year, 0, 4) }}</td>
+                                <td style="text-align: right; padding: 6px 8px;">${{ number_format($value * 0.8, 0) }}</td>
+                                <td style="text-align: right; padding: 6px 8px; font-weight: 600;">${{ number_format($value, 0) }}</td>
+                                <td style="text-align: right; padding: 6px 8px;">${{ number_format($value * 1.2, 0) }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
                 </td>
             </tr>
         </table>
@@ -338,25 +350,32 @@
     <div class="page-break"></div>
     <h3 class="section-title">Performance Data</h3>
 
-    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 16px;">
+    {{-- Yearly Performance Table --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td width="50%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                <div style="background: #1e293b; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
-                </div>
-                <div style="padding: 12px;">
-                    @php ($performance_key = 'yearly_performance')
-                    @include('accounts.performance_table_pdf')
-                </div>
+            <td style="background: #1e293b; padding: 10px 16px;">
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
             </td>
-            <td width="50%" valign="top" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                <div style="background: #1e293b; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE (Recent)</span>
-                </div>
-                <div style="padding: 12px;">
-                    @php ($performance_key = 'monthly_performance')
-                    @include('accounts.performance_table_pdf')
-                </div>
+        </tr>
+        <tr>
+            <td style="padding: 12px;">
+                @php ($performance_key = 'yearly_performance')
+                @include('accounts.performance_table_pdf')
+            </td>
+        </tr>
+    </table>
+
+    {{-- Monthly Performance Table --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <tr>
+            <td style="background: #1e293b; padding: 10px 16px;">
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE (Recent)</span>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 12px;">
+                @php ($performance_key = 'monthly_performance')
+                @include('accounts.performance_table_pdf')
             </td>
         </tr>
     </table>

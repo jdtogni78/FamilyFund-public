@@ -3,32 +3,93 @@
 @section('report-type', isset($api['admin']) ? 'Admin Fund Report' : 'Fund Report')
 
 @section('content')
-    <!-- Fund Summary Section -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #1e40af; margin-bottom: 16px;">
+    @php
+        $totalShares = $api['summary']['shares'];
+        $shareValue = $api['summary']['share_value'];
+        $totalValue = $api['summary']['value'];
+        $allocatedPct = $api['summary']['allocated_shares_percent'];
+        $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? (100 - $allocatedPct);
+        $allocatedShares = $totalShares * $allocatedPct / 100;
+        $unallocatedShares = $totalShares - $allocatedShares;
+        $allocatedValue = $allocatedShares * $shareValue;
+        $unallocatedValue = $unallocatedShares * $shareValue;
+    @endphp
+
+    <!-- Fund Name Header -->
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
         <tr>
-            <td style="padding: 12px; background-color: #1e40af;">
+            <td style="padding: 12px; background-color: #1e40af; border-radius: 6px;">
                 <h2 style="margin: 0; color: #ffffff; font-size: 20px;">{{ $api['name'] }}</h2>
             </td>
         </tr>
+    </table>
+
+    <!-- Fund Summary Visual -->
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px;">
         <tr>
-            <td style="padding: 12px; background-color: #f8fafc;">
-                <table width="100%" cellspacing="0" cellpadding="8">
+            <td style="padding: 16px;">
+                <!-- Total Bar -->
+                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
                     <tr>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($api['summary']['value'], 2) }}</div>
-                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Total Value</div>
+                        <td style="background-color: #2563eb; padding: 12px 16px; border-radius: 6px;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="color: #ffffff;">
+                                        <span style="font-size: 16px; font-weight: 700;">Total</span>
+                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">${{ number_format($shareValue, 2) }}/share</span>
+                                    </td>
+                                    <td style="text-align: right; color: #ffffff;">
+                                        <span style="font-size: 12px; opacity: 0.9;">{{ number_format($totalShares, 2) }} shares</span><br>
+                                        <span style="font-size: 20px; font-weight: 700;">${{ number_format($totalValue, 2) }}</span>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">${{ number_format($api['summary']['share_value'], 4) }}</div>
-                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Share Price</div>
+                    </tr>
+                </table>
+
+                <!-- Progress Bar -->
+                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
+                    <tr>
+                        <td width="{{ $allocatedPct }}%" style="background-color: #22c55e; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px; {{ $allocatedPct > 0 ? 'border-radius: 6px 0 0 6px;' : '' }}">
+                            {{ number_format($allocatedPct, 1) }}%
                         </td>
-                        <td width="25%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ number_format($api['summary']['shares'], 2) }}</div>
-                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Total Shares</div>
+                        <td width="{{ $unallocatedPct }}%" style="background-color: #d97706; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px; {{ $unallocatedPct > 0 ? 'border-radius: 0 6px 6px 0;' : '' }}">
+                            {{ number_format($unallocatedPct, 1) }}%
                         </td>
-                        <td width="25%" align="center">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ number_format($api['summary']['allocated_shares_percent'], 2) }}%</div>
-                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Allocated</div>
+                    </tr>
+                </table>
+
+                <!-- Allocated / Unallocated Boxes -->
+                <table width="100%" cellspacing="8" cellpadding="0">
+                    <tr>
+                        <td width="50%" style="background-color: #22c55e; padding: 12px 16px; border-radius: 6px; vertical-align: top;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="color: #ffffff;">
+                                        <span style="font-size: 14px; font-weight: 700;">Allocated</span>
+                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($allocatedPct, 1) }}%</span>
+                                    </td>
+                                    <td style="text-align: right; color: #ffffff;">
+                                        <span style="font-size: 11px; opacity: 0.9;">{{ number_format($allocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 18px; font-weight: 700;">${{ number_format($allocatedValue, 2) }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td width="50%" style="background-color: #d97706; padding: 12px 16px; border-radius: 6px; vertical-align: top;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="color: #ffffff;">
+                                        <span style="font-size: 14px; font-weight: 700;">Unallocated</span>
+                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($unallocatedPct, 1) }}%</span>
+                                    </td>
+                                    <td style="text-align: right; color: #ffffff;">
+                                        <span style="font-size: 11px; opacity: 0.9;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 18px; font-weight: 700;">${{ number_format($unallocatedValue, 2) }}</span>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>

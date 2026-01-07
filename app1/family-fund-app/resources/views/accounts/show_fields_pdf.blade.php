@@ -25,12 +25,6 @@
             <td><strong class="text-primary">${{ number_format($account->balances['OWN']->market_value ?? 0, 2) }}</strong></td>
         </tr>
     @endisset
-    @if($api['matching_available'] > 0)
-        <tr>
-            <td>Matching Available</td>
-            <td><span class="text-success">${{ number_format($api['matching_available'], 2) }}</span></td>
-        </tr>
-    @endif
     <tr>
         <td>Report Date</td>
         <td>{{ $api['as_of'] }}</td>

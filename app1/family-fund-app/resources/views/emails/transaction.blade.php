@@ -47,6 +47,7 @@
         </div>
 
         <!-- Share Balance Card -->
+        @if($balance)
         <div class="card mb-3">
             <div class="card-header" style="background-color: #f8f9fa; padding: 12px 16px;">
                 <strong>Balance Change</strong>
@@ -90,6 +91,25 @@
                 </div>
             </div>
         </div>
+        @else
+        <!-- Pending Transaction Notice -->
+        <div class="card mb-3">
+            <div class="card-header" style="background-color: #fef3c7; padding: 12px 16px; border: 1px solid #f59e0b;">
+                <strong style="color: #92400e;">Pending Transaction</strong>
+            </div>
+            <div class="card-body" style="padding: 16px; background-color: #fffbeb;">
+                <p style="color: #92400e; margin: 0;">
+                    This transaction is scheduled and will be processed on the execution date.
+                    Balance changes will be reflected once the transaction is cleared.
+                </p>
+                <div style="margin-top: 12px; text-align: center;">
+                    <span style="background-color: {{ $transaction->value >= 0 ? '#28a745' : '#dc3545' }}; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px;">
+                        {{ $transaction->value >= 0 ? '+' : '' }}${{ number_format($transaction->value, 2) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Current Account Value Card -->
         @isset($api['shares_today'])

@@ -4,15 +4,23 @@
 <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
 
     <!-- Header Card -->
-    <div style="background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); border-radius: 8px; padding: 24px; margin-bottom: 20px; color: white;">
-        <div style="display: flex; align-items: center; margin-bottom: 12px;">
-            <span style="font-size: 32px; margin-right: 12px;">&#127873;</span>
-            <div>
-                <h2 style="margin: 0; font-size: 24px; font-weight: bold;">Matching Rule Added</h2>
-                <p style="margin: 4px 0 0 0; opacity: 0.9;">Good news about your account!</p>
-            </div>
-        </div>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: #9333ea; border-radius: 8px; margin-bottom: 20px;">
+        <tr>
+            <td style="padding: 24px;">
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="vertical-align: middle; padding-right: 12px;">
+                            <span style="font-size: 32px; color: white;">&#127873;</span>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <h2 style="margin: 0; font-size: 24px; font-weight: bold; color: white;">Matching Rule Added</h2>
+                            <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.9);">Good news about your account!</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
     <!-- Greeting -->
     <div style="padding: 0 4px; margin-bottom: 20px;">

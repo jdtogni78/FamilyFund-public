@@ -17,7 +17,9 @@ use App\Models\DepositRequestExt;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Traits\CashDepositTrait;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\MessageBag;
+use App\Mail\CashDepositMail;
 
 class CashDepositControllerExt extends CashDepositController
 {
@@ -82,6 +84,29 @@ class CashDepositControllerExt extends CashDepositController
         }
         
         return redirect()->route('cashDeposits.index');
+    }
+
+    public function resendEmail($id)
+    {
+        $cashDeposit = CashDepositExt::find($id);
+
+        if (empty($cashDeposit)) {
+            Flash::error('Cash deposit not found');
+            return redirect(route('cashDeposits.index'));
+        }
+
+        $emailTo = $cashDeposit->account->email_cc;
+        if (empty($emailTo)) {
+            Flash::error('No email address configured for this account.');
+            return redirect(route('cashDeposits.show', $id));
+        }
+
+        $data = ['cash_deposit' => $cashDeposit];
+        $mail = new CashDepositMail($data);
+        Mail::to($emailTo)->send($mail);
+
+        Flash::success('Cash deposit email sent to ' . $emailTo);
+        return redirect(route('cashDeposits.show', $id));
     }
 }
 

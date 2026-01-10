@@ -86,6 +86,8 @@ Route::middleware('auth')->group(function () {
         ->name('cashDeposits.assign');
     Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
             ->name('cashDeposits.do_assign');
+    Route::get('cashDeposits/{id}/resend-email', 'App\Http\Controllers\WebV1\CashDepositControllerExt@resendEmail')
+        ->name('cashDeposits.resend-email');
     Route::get('tradePortfolios/{id}/preview_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@previewCashDeposits')
         ->name('tradePortfolios.preview_deposits');
     Route::post('tradePortfolios/{id}/do_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doCashDeposits')

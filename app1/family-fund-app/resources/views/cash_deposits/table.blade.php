@@ -38,7 +38,8 @@
                     <div class='btn-group'>
                         <a href="{{ route('cashDeposits.show', [$cashDeposit->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('cashDeposits.edit', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        @if($cashDeposit->status != \App\Models\CashDepositExt::STATUS_COMPLETED && 
+                        <a href="{{ route('cashDeposits.resend-email', [$cashDeposit->id]) }}" class='btn btn-ghost-secondary' title="Resend Email"><i class="fa fa-envelope"></i></a>
+                        @if($cashDeposit->status != \App\Models\CashDepositExt::STATUS_COMPLETED &&
                         $cashDeposit->status != \App\Models\CashDepositExt::STATUS_CANCELLED)
                         <a href="{{ route('cashDeposits.assign', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-link"></i></a>
                         @endif

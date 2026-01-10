@@ -1,28 +1,197 @@
+/* Navigation Styles */
 
-.children {
-    background: #FFF;
-    z-index: 9999;
+/* Override CoreUI background images and styles */
+html, body {
+    background-image: none !important;
+    background: #f9fafb !important;
 }
 
-.children a,
-.children .separator {
-    display: block;
-    margin: 5px 0px;
-    padding: 5px 10px;
+html.dark, html.dark body {
+    background: #111827 !important;
 }
 
-.children .separator {
-    border-top-width: 2px;
+.app, .app-body, .main, .c-wrapper, .c-body {
+    background-image: none !important;
+    background: transparent !important;
 }
 
-.children a:hover {
-    color: #818cf8;
+/* Ensure proper stacking context for navbar */
+nav {
+    position: relative;
+    z-index: 1000;
 }
 
-@media (min-width: 768px) {
-    .children {
-        position: absolute;
-        width: 155px;
-        top: 70px;
+/* Dropdown menu animations */
+.nav-dropdown-enter {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+.nav-dropdown-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+.nav-dropdown-leave {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.nav-dropdown-leave-active {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 150ms ease-in, transform 150ms ease-in;
+}
+
+/* Smooth icon rotation */
+.nav-chevron {
+    transition: transform 200ms ease-in-out;
+}
+
+.nav-chevron.open {
+    transform: rotate(180deg);
+}
+
+/* Menu item hover effects */
+.nav-menu-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-menu-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    transform: scaleY(0);
+    transition: transform 200ms ease-out;
+}
+
+.nav-menu-item:hover::before {
+    transform: scaleY(1);
+}
+
+/* Mobile menu collapse animation */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Dark mode transitions */
+.dark-mode-transition {
+    transition: background-color 200ms ease-in-out, color 200ms ease-in-out, border-color 200ms ease-in-out;
+}
+
+/* Sticky navbar shadow on scroll */
+.navbar-scrolled {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Environment badge pulse animation for non-production */
+@keyframes env-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.env-badge-dev {
+    animation: env-pulse 2s ease-in-out infinite;
+}
+
+/* Avatar hover effect */
+.avatar-ring {
+    transition: box-shadow 200ms ease-in-out;
+}
+
+.avatar-ring:hover {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* Login page animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-animate {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Input focus ring */
+.input-focus-ring:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Button loading state */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border-radius: inherit;
+}
+
+/* Gradient text (for special headings) */
+.gradient-text {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Dark mode icon transitions */
+.dark-mode-icon {
+    transition: transform 200ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+/* Mega menu grid layout for larger screens */
+@media (min-width: 1280px) {
+    .mega-menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.25rem;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+    .nav-menu-mobile {
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+}
+
+/* Focus visible styles for accessibility */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

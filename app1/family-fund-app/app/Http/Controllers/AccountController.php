@@ -106,7 +106,14 @@ class AccountController extends AppBaseController
             return redirect(route('accounts.index'));
         }
 
-        return view('accounts.edit')->with('account', $account);
+        $api = [
+            'userMap' => UserExt::userMap(),
+            'fundMap' => FundExt::fundMap(),
+        ];
+
+        return view('accounts.edit')
+            ->with('account', $account)
+            ->with('api', $api);
     }
 
     /**

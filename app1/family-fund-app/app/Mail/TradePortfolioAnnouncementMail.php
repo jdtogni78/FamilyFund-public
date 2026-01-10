@@ -30,7 +30,8 @@ class TradePortfolioAnnouncementMail extends Mailable
      */
     public function build()
     {
-        $api['to'] = $this->api['new']->portfolio()->email;
+        $api = $this->api;
+        $api['to'] = env('MAIL_ADMIN_ADDRESS', 'admin@example.com');
         $api['report_name'] = 'Trade Portfolio Changes';
 
         return $this->view('emails.trade_portfolio_announcement')

@@ -253,14 +253,6 @@ class MailableTest extends TestCase
     {
         $this->factory->createTradePortfolio('2022-01-01');
 
-        // Create a mock object with portfolio() method that returns an object with email property
-        $mockTradePortfolio = new \stdClass();
-        $mockTradePortfolio->portfolio = function() {
-            $p = new \stdClass();
-            $p->email = 'test@example.com';
-            return $p;
-        };
-
         $api = [
             'new' => $this->factory->tradePortfolio,
             'old' => null,
@@ -272,8 +264,39 @@ class MailableTest extends TestCase
         $this->assertEquals($api, $email->api);
     }
 
-    // Note: TradePortfolioAnnouncementMail::build() requires portfolio->email which doesn't exist in schema
-    // The build() and send() tests are skipped as they require schema changes
+    public function test_trade_portfolio_announcement_mail_build()
+    {
+        $this->factory->createTradePortfolio('2022-01-01');
+
+        $api = [
+            'new' => $this->factory->tradePortfolio,
+            'old' => null,
+            'changes' => ['item1', 'item2'],
+        ];
+
+        $email = new TradePortfolioAnnouncementMail($api);
+        $builtEmail = $email->build();
+
+        $this->assertEquals('Trade Portfolio Changes', $builtEmail->subject);
+    }
+
+    public function test_trade_portfolio_announcement_mail_can_be_sent()
+    {
+        Mail::fake();
+
+        $this->factory->createTradePortfolio('2022-01-01');
+
+        $api = [
+            'new' => $this->factory->tradePortfolio,
+            'old' => null,
+            'changes' => ['item1', 'item2'],
+        ];
+
+        $email = new TradePortfolioAnnouncementMail($api);
+        Mail::to('test@example.com')->send($email);
+
+        Mail::assertSent(TradePortfolioAnnouncementMail::class);
+    }
 
     // ==================== PortfolioReportEmail ====================
 

@@ -67,16 +67,16 @@
     {{-- Hero Header --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
         <tr>
-            <td style="background-color: #1e40af; padding: 28px 24px; border-radius: 8px;">
+            <td style="background-color: #0d9488; padding: 28px 24px; border-radius: 8px;">
                 <table width="100%" cellspacing="0" cellpadding="0">
                     <tr>
                         <td width="65%">
                             <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">{{ $account->nickname }}</div>
-                            <div style="font-size: 16px; color: #bfdbfe;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
+                            <div style="font-size: 16px; color: #99f6e4;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
                         </td>
                         <td width="35%" align="right">
                             <div style="font-size: 42px; font-weight: 800; color: #ffffff;">${{ number_format($marketValue, 0) }}</div>
-                            <div style="font-size: 14px; color: #bfdbfe; text-transform: uppercase;">Total Value</div>
+                            <div style="font-size: 14px; color: #99f6e4; text-transform: uppercase;">Total Value</div>
                         </td>
                     </tr>
                 </table>
@@ -85,40 +85,40 @@
     </table>
 
     {{-- Key Metrics Row (7 columns like web) --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 0; background: #eff6ff; border-radius: 8px 8px 0 0; padding: 12px;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 0; background: #f0fdfa; border-radius: 8px 8px 0 0; padding: 12px;">
         <tr>
-            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 0) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
+                <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Market Value</div>
             </td>
-            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
+                <div style="font-size: 18px; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Shares</div>
             </td>
-            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
+                <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Share Price</div>
             </td>
             @if($account->disbursement_cap !== 0.0)
-            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #059669;">${{ number_format($disbValue, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Eligible Disbursement</div>
             </td>
             @endif
             @if($matchingAvailable > 0)
-            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Matching Available</div>
             </td>
             @endif
             @if($hasPrevYear)
-            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $prevYearGrowth >= 0 ? '+' : '' }}{{ number_format($prevYearGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $prevYear }} Growth</div>
             </td>
             @endif
             @if($hasCurrentYear)
-            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $currentYearGrowth >= 0 ? '+' : '' }}{{ number_format($currentYearGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $currentYear }} YTD</div>
             </td>
@@ -134,7 +134,7 @@
 
     {{-- Goals Summary (like web header) --}}
     @if($goalsCount > 0)
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #bfdbfe; border-top: none; border-radius: 0 0 8px 8px; padding: 12px;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #99f6e4; border-top: none; border-radius: 0 0 8px 8px; padding: 12px;">
         <tr>
             <td style="padding: 8px 12px;">
                 <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Goals Summary</div>
@@ -165,7 +165,7 @@
                     @endphp
                     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
                         <tr>
-                            <td width="40%" style="color: #1e40af; font-weight: 600; font-size: 12px;">{{ $goal->name }}</td>
+                            <td width="40%" style="color: #0d9488; font-weight: 600; font-size: 12px;">{{ $goal->name }}</td>
                             <td width="20%" align="right" style="font-size: 12px;">
                                 <span style="font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">{{ number_format($currentPct, 1) }}%</span>
                                 <span style="color: #64748b;"> complete</span>
@@ -326,7 +326,7 @@
         {{-- Forecast Chart --}}
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td style="background: #1e40af; padding: 10px 16px;">
+                <td style="background: #0d9488; padding: 10px 16px;">
                     <span style="color: #ffffff; font-weight: 700; font-size: 12px;">10-YEAR FORECAST (LINEAR REGRESSION)</span>
                 </td>
             </tr>
@@ -344,7 +344,7 @@
         {{-- Projection Table --}}
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td style="background: #1e40af; padding: 10px 16px;">
+                <td style="background: #0d9488; padding: 10px 16px;">
                     <span style="color: #ffffff; font-weight: 700; font-size: 12px;">PROJECTION TABLE</span>
                 </td>
             </tr>

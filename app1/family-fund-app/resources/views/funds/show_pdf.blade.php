@@ -59,39 +59,39 @@
     @endphp
 
     <!-- Fund Highlights Card -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #1e40af; border-radius: 6px; overflow: hidden;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #0d9488; border-radius: 6px; overflow: hidden;">
         <!-- Header -->
         <tr>
-            <td colspan="7" style="padding: 12px 16px; background-color: #1e40af;">
+            <td colspan="7" style="padding: 12px 16px; background-color: #0d9488;">
                 <span style="color: #ffffff; font-size: 18px; font-weight: 700;">{{ $api['name'] }}</span>
             </td>
         </tr>
         <!-- Stats Row -->
         <tr>
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($totalValue, 0) }}</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Total Value</div>
+            <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
+                <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($totalValue, 0) }}</div>
+                <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">Total Value</div>
             </td>
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($shareValue, 2) }}</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Share Price</div>
+            <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
+                <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($shareValue, 2) }}</div>
+                <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">Share Price</div>
             </td>
             @if($prevYearKey)
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">{{ $prevYear }} Growth</div>
+                <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">{{ $prevYear }} Growth</div>
             </td>
             @endif
             @if($currentYearKey)
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">{{ $currentYear }} YTD</div>
+                <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">{{ $currentYear }} YTD</div>
             </td>
             @endif
             @if(!empty($yearlyPerf))
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+            <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($allTimeGrowth >= 0)+@endif{{ number_format($allTimeGrowth, 1) }}%</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">All-Time</div>
+                <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">All-Time</div>
             </td>
             @endif
             @isset($api['admin'])
@@ -104,10 +104,10 @@
         <!-- Admin: Share Allocation Section -->
         @isset($api['admin'])
         <tr>
-            <td colspan="7" style="background: #fffbeb; padding: 12px 16px; border-top: 1px solid #bfdbfe;">
+            <td colspan="7" style="background: #fffbeb; padding: 12px 16px; border-top: 1px solid #99f6e4;">
                 <div style="margin-bottom: 8px;">
                     <span style="background: #d97706; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 8px;">ADMIN</span>
-                    <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Share Allocation</span>
+                    <span style="font-size: 12px; color: #0f766e; font-weight: 600;">Share Allocation</span>
                 </div>
                 <!-- Progress Bar -->
                 <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 10px;">
@@ -158,7 +158,7 @@
         @endisset
         <!-- As of / Source Row -->
         <tr>
-            <td colspan="7" style="background: #ffffff; padding: 8px 16px; border-top: 1px solid #bfdbfe;">
+            <td colspan="7" style="background: #ffffff; padding: 8px 16px; border-top: 1px solid #99f6e4;">
                 <table width="100%" cellspacing="0" cellpadding="0">
                     <tr>
                         <td style="font-size: 11px; color: #374151;"><strong>As of:</strong> {{ $asOf }}</td>

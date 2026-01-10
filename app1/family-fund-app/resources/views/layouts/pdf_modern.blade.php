@@ -75,7 +75,7 @@
             display: inline-block;
             width: 44px;
             height: 44px;
-            background: #1e40af;
+            background: #0d9488;
             border-radius: 6px;
             text-align: center;
             line-height: 44px;
@@ -141,10 +141,10 @@
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            color: #1e40af;
+            color: #0d9488;
             margin-bottom: 16px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #3b82f6;
+            border-bottom: 2px solid #14b8a6;
             page-break-after: avoid;
         }
 
@@ -152,7 +152,7 @@
         .text-success { color: #16a34a; }
         .text-warning { color: #d97706; }
         .text-danger { color: #dc2626; }
-        .text-primary { color: #1e40af; }
+        .text-primary { color: #0d9488; }
 
         .text-sm { font-size: 12px; }
         .text-xs { font-size: 10px; }
@@ -323,7 +323,7 @@
         .stat-value {
             font-size: 22px;
             font-weight: 700;
-            color: #1e40af;
+            color: #0d9488;
             line-height: 1.2;
         }
 
@@ -382,7 +382,7 @@
         .progress-bar-success { background: #16a34a; }
         .progress-bar-warning { background: #d97706; }
         .progress-bar-danger { background: #dc2626; }
-        .progress-bar-primary { background: #1e40af; }
+        .progress-bar-primary { background: #0d9488; }
 
         /* ============================================
            Badges & Labels
@@ -414,7 +414,7 @@
 
         .badge-primary {
             background: #dbeafe;
-            color: #1e40af;
+            color: #0d9488;
         }
 
         .badge-secondary {
@@ -493,7 +493,7 @@
            Specific Components for Reports
            ============================================ */
         .summary-box {
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #1e3a8a 100%);
             color: #ffffff;
             padding: 20px;
             border-radius: 8px;

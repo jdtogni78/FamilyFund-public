@@ -22,6 +22,8 @@ class AccountBalanceFactory extends Factory
     public function definition()
     {
         return [
+            'account_id' => AccountFactory::new(),
+            'transaction_id' => TransactionFactory::new(),
             'type' => $this->faker->randomElement(['OWN', 'BOR']),
             'shares' => $this->faker->randomFloat(4, 0.0001, 999999.9999),
             'start_dt' => $this->faker->date('Y-m-d'),

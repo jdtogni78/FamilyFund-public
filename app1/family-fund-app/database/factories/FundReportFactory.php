@@ -22,13 +22,9 @@ class FundReportFactory extends Factory
     public function definition()
     {
         return [
-            'fund_id' => $this->faker->word,
-            'type' => $this->faker->word,
-            'as_of' => $this->faker->word,
-//            'scheduled_job_id' => $this->faker->word,
-            'created_at' => $this->faker->date('Y-m-d H:i:s'),
-            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-//            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'fund_id' => FundFactory::new(),
+            'type' => $this->faker->randomElement(['Q', 'A', 'M']),
+            'as_of' => $this->faker->date('Y-m-d'),
         ];
     }
 }

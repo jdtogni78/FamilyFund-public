@@ -22,6 +22,7 @@ class TransactionFactory extends Factory
     public function definition()
     {
         return [
+            'account_id' => AccountFactory::new(),
             'type' => $this->faker->randomElement([
                 TransactionExt::TYPE_PURCHASE,
                 TransactionExt::TYPE_SALE,

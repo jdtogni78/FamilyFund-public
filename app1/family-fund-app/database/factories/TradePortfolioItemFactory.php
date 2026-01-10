@@ -22,13 +22,11 @@ class TradePortfolioItemFactory extends Factory
     public function definition()
     {
         return [
-            //'trade_portfolio_id' => $this->faker->word,
+            'trade_portfolio_id' => TradePortfolioFactory::new(),
             'symbol' => $this->faker->word,
             'type' => $this->faker->word,
             'target_share' => $this->faker->randomNumber(2)/100,
             'deviation_trigger' => $this->faker->randomNumber(2)/100,
-            //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-            //'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

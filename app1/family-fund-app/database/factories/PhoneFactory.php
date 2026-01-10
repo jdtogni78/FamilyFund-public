@@ -22,12 +22,10 @@ class PhoneFactory extends Factory
     public function definition()
     {
         return [
-            'person_id' => $this->faker->word,
-        'number' => $this->faker->word,
-        'type' => $this->faker->word,
-        'is_primary' => $this->faker->word,
-        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        'updated_at' => $this->faker->date('Y-m-d H:i:s')
+            'person_id' => PersonFactory::new(),
+            'number' => $this->faker->phoneNumber,
+            'type' => $this->faker->randomElement(['mobile', 'home', 'work']),
+            'is_primary' => $this->faker->boolean,
         ];
     }
 }

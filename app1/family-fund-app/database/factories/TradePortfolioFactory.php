@@ -22,8 +22,8 @@ class TradePortfolioFactory extends Factory
     public function definition()
     {
         return [
+            'portfolio_id' => PortfolioFactory::new(),
             'account_name' => $this->faker->word,
-//            'portfolio_id' => $this->faker->word,
             'tws_query_id' => $this->faker->word,
             'tws_token' => $this->faker->word,
             'cash_target' => $this->faker->randomNumber(2)/100,
@@ -34,8 +34,6 @@ class TradePortfolioFactory extends Factory
             'mode' => $this->faker->randomElement(['STD', 'MAX']),
             'start_dt' => $this->faker->date('Y-m-d'),
             'end_dt' => $this->faker->date('Y-m-d'),
-//        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-//        'created_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

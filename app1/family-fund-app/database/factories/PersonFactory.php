@@ -22,13 +22,11 @@ class PersonFactory extends Factory
     public function definition()
     {
         return [
-            'first_name' => $this->faker->word,
-        'last_name' => $this->faker->word,
-        'email' => $this->faker->word,
-        'birthday' => $this->faker->word,
-        'legal_guardian_id' => $this->faker->word,
-        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        'updated_at' => $this->faker->date('Y-m-d H:i:s')
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->unique()->safeEmail,
+            'birthday' => $this->faker->date('Y-m-d'),
+            'legal_guardian_id' => null,
         ];
     }
 }

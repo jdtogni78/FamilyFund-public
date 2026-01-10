@@ -22,14 +22,11 @@ class ScheduledJobFactory extends Factory
     public function definition()
     {
         return [
-            'schedule_id' => $this->faker->word,
-            'entity_descr' => $this->faker->word,
-            'entity_id' => $this->faker->word,
+            'schedule_id' => ScheduleFactory::new(),
+            'entity_descr' => $this->faker->randomElement(['transaction', 'account', 'report']),
+            'entity_id' => $this->faker->randomNumber(4),
             'start_dt' => $this->faker->date('Y-m-d'),
             'end_dt' => $this->faker->date('Y-m-d'),
-//            'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-            'created_at' => $this->faker->date('Y-m-d H:i:s'),
-//            'deleted_at' => $this->faker->date('Y-m-d H:i:s')
         ];
     }
 }

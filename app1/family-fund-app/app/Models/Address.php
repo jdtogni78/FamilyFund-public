@@ -79,11 +79,10 @@ class Address extends Model
     public static $rules = [
         'person_id' => 'required|exists:persons,id',
         'type' => 'required|in:home,work,other',
-        'is_primary' => 'boolean|default:false',
+        'is_primary' => 'nullable|boolean',
         'street' => 'required|string|max:255',
         'number' => 'required|string|max:20',
         'complement' => 'nullable|string|max:255',
-        'county' => 'required|string|max:255',
         'city' => 'required|string|max:255',
         'state' => 'required|string|max:2',
         'zip_code' => 'required|string|max:10',

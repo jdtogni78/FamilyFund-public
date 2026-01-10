@@ -22,13 +22,11 @@ class AssetChangeLogFactory extends Factory
     public function definition()
     {
         return [
+            'asset_id' => AssetFactory::new(),
             'action' => $this->faker->word,
-        //'asset_id' => $this->faker->word,
-        'field' => $this->faker->text,
-        'content' => $this->faker->text,
-        'datetime' => $this->faker->date('Y-m-d H:i:s'),
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s')
+            'field' => $this->faker->text,
+            'content' => $this->faker->text,
+            'datetime' => $this->faker->date('Y-m-d H:i:s'),
         ];
     }
 }

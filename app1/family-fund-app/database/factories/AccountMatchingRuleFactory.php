@@ -22,8 +22,8 @@ class AccountMatchingRuleFactory extends Factory
     public function definition()
     {
         return [
-            'account_id' => \App\Models\Account::factory(),
-            'matching_rule_id' => \App\Models\MatchingRule::factory(),
+            'account_id' => AccountFactory::new(),
+            'matching_rule_id' => MatchingRuleFactory::new(),
         ];
     }
 }

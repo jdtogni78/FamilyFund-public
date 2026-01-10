@@ -22,9 +22,9 @@ class TransactionMatchingFactory extends Factory
     public function definition()
     {
         return [
-            'matching_rule_id' => \App\Models\MatchingRule::factory(),
-            'transaction_id' => \App\Models\Transaction::factory(),
-            'reference_transaction_id' => \App\Models\Transaction::factory(),
+            'matching_rule_id' => MatchingRuleFactory::new(),
+            'transaction_id' => TransactionFactory::new(),
+            'reference_transaction_id' => TransactionFactory::new(),
         ];
     }
 }

@@ -22,8 +22,8 @@ class AccountReportFactory extends Factory
     public function definition()
     {
         return [
-            'account_id' => \App\Models\Account::factory(),
-            'type' => $this->faker->randomElement(['quarterly', 'annual', 'monthly']),
+            'account_id' => AccountFactory::new(),
+            'type' => 'ALL',
             'as_of' => $this->faker->date('Y-m-d'),
         ];
     }

@@ -26,15 +26,18 @@ class UserRepositoryTest extends TestCase
      */
     public function test_create_user()
     {
-        $user = User::factory()->make()->toArray();
+        $user = User::factory()->make();
+        $userData = array_merge($user->toArray(), ['password' => $user->password]);
 
-        $createdUser = $this->userRepo->create($user);
+        $createdUser = $this->userRepo->create($userData);
 
         $createdUser = $createdUser->toArray();
         $this->assertArrayHasKey('id', $createdUser);
         $this->assertNotNull($createdUser['id'], 'Created User must have id specified');
         $this->assertNotNull(User::find($createdUser['id']), 'User with given id must be in DB');
-        $this->assertModelData($user, $createdUser);
+        // Exclude hidden fields (password, remember_token) from comparison
+        $hiddenFields = ['password', 'remember_token'];
+        $this->assertModelData($user->toArray(), $createdUser, $hiddenFields);
     }
 
     /**
@@ -47,7 +50,9 @@ class UserRepositoryTest extends TestCase
         $dbUser = $this->userRepo->find($user->id);
 
         $dbUser = $dbUser->toArray();
-        $this->assertModelData($user->toArray(), $dbUser);
+        // Exclude hidden fields (password, remember_token) from comparison
+        $hiddenFields = ['password', 'remember_token'];
+        $this->assertModelData($user->toArray(), $dbUser, $hiddenFields);
     }
 
     /**
@@ -56,13 +61,16 @@ class UserRepositoryTest extends TestCase
     public function test_update_user()
     {
         $user = User::factory()->create();
-        $fakeUser = User::factory()->make()->toArray();
+        $fakeUserModel = User::factory()->make();
+        $fakeUser = array_merge($fakeUserModel->toArray(), ['password' => $fakeUserModel->password]);
 
         $updatedUser = $this->userRepo->update($fakeUser, $user->id);
 
-        $this->assertModelData($fakeUser, $updatedUser->toArray());
+        // Exclude hidden fields (password, remember_token) from comparison
+        $hiddenFields = ['password', 'remember_token'];
+        $this->assertModelData($fakeUserModel->toArray(), $updatedUser->toArray(), $hiddenFields);
         $dbUser = $this->userRepo->find($user->id);
-        $this->assertModelData($fakeUser, $dbUser->toArray());
+        $this->assertModelData($fakeUserModel->toArray(), $dbUser->toArray(), $hiddenFields);
     }
 
     /**

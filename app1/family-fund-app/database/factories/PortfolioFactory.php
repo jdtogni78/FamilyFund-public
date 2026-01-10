@@ -22,11 +22,8 @@ class PortfolioFactory extends Factory
     public function definition()
     {
         return [
-            //'fund_id' => $this->faker->word,
-        'source' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'fund_id' => FundFactory::new(),
+            'source' => $this->faker->word,
         ];
     }
 }

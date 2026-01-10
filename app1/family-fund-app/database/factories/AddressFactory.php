@@ -22,19 +22,16 @@ class AddressFactory extends Factory
     public function definition()
     {
         return [
-            'person_id' => $this->faker->word,
-        'type' => $this->faker->word,
-        'is_primary' => $this->faker->word,
-        'street' => $this->faker->word,
-        'number' => $this->faker->word,
-        'complement' => $this->faker->word,
-        'county' => $this->faker->word,
-        'city' => $this->faker->word,
-        'state' => $this->faker->word,
-        'zip_code' => $this->faker->word,
-        'country' => $this->faker->word,
-        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        'updated_at' => $this->faker->date('Y-m-d H:i:s')
+            'person_id' => PersonFactory::new(),
+            'type' => $this->faker->randomElement(['home', 'work']),
+            'is_primary' => $this->faker->boolean,
+            'street' => $this->faker->streetName,
+            'number' => $this->faker->buildingNumber,
+            'complement' => $this->faker->optional()->secondaryAddress,
+            'city' => $this->faker->city,
+            'state' => $this->faker->stateAbbr,
+            'zip_code' => $this->faker->postcode,
+            'country' => $this->faker->countryCode,
         ];
     }
 }

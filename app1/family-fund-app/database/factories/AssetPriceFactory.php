@@ -22,12 +22,9 @@ class AssetPriceFactory extends Factory
     public function definition()
     {
         return [
-            //'asset_id' => $this->faker->word,
-        'price' => $this->faker->randomFloat(2),
-        'start_dt' => $this->faker->dateTimeBetween($startDate = '-1 years', $endDate = 'now'),
-//        'end_dt' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s')
+            'asset_id' => AssetFactory::new(),
+            'price' => $this->faker->randomFloat(2),
+            'start_dt' => $this->faker->dateTimeBetween($startDate = '-1 years', $endDate = 'now'),
         ];
     }
 }

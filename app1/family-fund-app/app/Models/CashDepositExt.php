@@ -4,11 +4,11 @@ namespace App\Models;
 
 class CashDepositExt extends CashDeposit
 {
-    const STATUS_PENDING = 'PEN';
-    const STATUS_DEPOSITED = 'DEP';
-    const STATUS_ALLOCATED = 'ALL';
-    const STATUS_COMPLETED = 'COM';
-    const STATUS_CANCELLED = 'CAN';
+    const STATUS_PENDING = 'PENDING';
+    const STATUS_DEPOSITED = 'DEPOSITED';
+    const STATUS_ALLOCATED = 'ALLOCATED';
+    const STATUS_COMPLETED = 'COMPLETED';
+    const STATUS_CANCELLED = 'CANCELLED';
     
     public static function statusMap()
     {

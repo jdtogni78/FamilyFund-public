@@ -139,6 +139,62 @@ class QuickChartService
     }
 
     /**
+     * Generate a line chart with Y-axis formatted as percentages
+     * Values are expected as multipliers (1.0 = 100%, 1.5 = 150%)
+     */
+    public function generateLineChartPercent(
+        array $labels,
+        array $titles,
+        array $datasets,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null
+    ): string {
+        // Reduce labels to show only maxLabels while keeping all data points
+        $maxLabels = 24;
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? $label : '';
+            }
+            $labels = $sparseLabels;
+        }
+
+        $chartDatasets = [];
+        foreach ($datasets as $i => $data) {
+            $color = $this->datasetColors[$i % count($this->datasetColors)];
+            $chartDatasets[] = [
+                'label' => $titles[$i] ?? "Series $i",
+                'data' => $data,
+                'borderColor' => $color,
+                'backgroundColor' => $this->hexToRgba($color, 0.1),
+                'fill' => false,
+                'lineTension' => 0.1,
+                'borderWidth' => 2,
+                'pointRadius' => 2,
+                'pointBackgroundColor' => $color,
+            ];
+        }
+
+        $options = $this->getBaseOptions($titles[0] ?? '');
+        // Override Y-axis to show percentages
+        $options['scales']['yAxes'][0]['ticks']['callback'] = "function(v) { return (v * 100).toFixed(0) + '%'; }";
+
+        $config = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => $chartDatasets,
+            ],
+            'options' => $options,
+        ];
+
+        return $this->generateChart($config, $filePath, $width, $height);
+    }
+
+    /**
      * Generate a step/line chart (for shares over time)
      */
     public function generateStepChart(
@@ -245,8 +301,8 @@ class QuickChartService
 
         $options = $this->getBaseOptions($titles[0] ?? '');
         $options['plugins']['legend']['labels']['filter'] = "function(item) { return item.text && item.text.trim() !== ''; }";
-        // Format Y-axis as percentages
-        $options['scales']['y']['ticks']['callback'] = "function(v) { return (v * 100).toFixed(1) + '%'; }";
+        // Format Y-axis as percentages (v2 syntax)
+        $options['scales']['yAxes'][0]['ticks']['callback'] = "function(v) { return (v * 100).toFixed(1) + '%'; }";
 
         $config = [
             'type' => 'line',
@@ -338,13 +394,18 @@ class QuickChartService
                     'yAxes' => [[
                         'ticks' => [
                             'fontColor' => $this->fontColor,
-                            'callback' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return '$'+r }",
+                            'callback' => "function(v) { if(v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M'; if(v >= 1000) return '$' + (v/1000).toFixed(0) + 'K'; return '$' + v }",
                         ],
                         'gridLines' => ['color' => 'rgba(0,0,0,0.1)'],
                     ]],
                     'xAxes' => [[
                         'ticks' => [
                             'fontColor' => $this->fontColor,
+                            'maxTicksLimit' => 12,
+                            'autoSkip' => true,
+                            'autoSkipPadding' => 20,
+                            'maxRotation' => 45,
+                            'minRotation' => 45,
                         ],
                         'gridLines' => ['display' => false],
                     ]],
@@ -401,12 +462,12 @@ class QuickChartService
         }
 
         $options = $this->getBaseOptions('');
-        $options['scales']['y']['stacked'] = true;
-        $options['scales']['x']['stacked'] = true;
-        // Format Y-axis as percentages
-        $options['scales']['y']['ticks']['callback'] = "function(v) { return (v * 100).toFixed(0) + '%'; }";
-        $options['scales']['y']['max'] = 1.0;
-        $options['scales']['y']['min'] = 0;
+        $options['scales']['yAxes'][0]['stacked'] = true;
+        $options['scales']['xAxes'][0]['stacked'] = true;
+        // Format Y-axis as percentages (v2 syntax)
+        $options['scales']['yAxes'][0]['ticks']['callback'] = "function(v) { return (v * 100).toFixed(0) + '%'; }";
+        $options['scales']['yAxes'][0]['ticks']['max'] = 1.0;
+        $options['scales']['yAxes'][0]['ticks']['min'] = 0;
         // Remove gaps between bars for area-like appearance
         $options['barPercentage'] = 1.0;
         $options['categoryPercentage'] = 1.0;
@@ -1071,38 +1132,32 @@ class QuickChartService
                 ],
             ],
             'scales' => [
-                'x' => [
+                'xAxes' => [[
                     'ticks' => [
-                        'color' => $this->fontColor,
-                        'font' => [
-                            'family' => $this->fontFamily,
-                            'size' => $this->fontSize,
-                            'weight' => '500',
-                        ],
+                        'fontColor' => $this->fontColor,
+                        'fontFamily' => $this->fontFamily,
+                        'fontSize' => $this->fontSize,
                         'maxRotation' => 45,
                         'minRotation' => 45,
                         'autoSkip' => true,
-                        'autoSkipPadding' => 100,
-                        'maxTicksLimit' => 8,
+                        'autoSkipPadding' => 20,
+                        'maxTicksLimit' => 12,
                     ],
-                    'grid' => [
+                    'gridLines' => [
                         'color' => 'rgba(0,0,0,0.1)',
                     ],
-                ],
-                'y' => [
+                ]],
+                'yAxes' => [[
                     'ticks' => [
-                        'color' => $this->fontColor,
-                        'font' => [
-                            'family' => $this->fontFamily,
-                            'size' => $this->fontSize,
-                            'weight' => '500',
-                        ],
-                        'callback' => "function(v) { var n = Math.round(v).toString(); var r = ''; for(var i=0; i<n.length; i++) { if(i>0 && (n.length-i)%3===0) r+=','; r+=n[i]; } return r }",
+                        'fontColor' => $this->fontColor,
+                        'fontFamily' => $this->fontFamily,
+                        'fontSize' => $this->fontSize,
+                        'callback' => "function(v) { if(v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M'; if(v >= 1000) return '$' + (v/1000).toFixed(0) + 'K'; return '$' + v }",
                     ],
-                    'grid' => [
+                    'gridLines' => [
                         'color' => 'rgba(0,0,0,0.1)',
                     ],
-                ],
+                ]],
             ],
         ];
     }

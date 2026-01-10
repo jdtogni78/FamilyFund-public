@@ -13,80 +13,144 @@
         $unallocatedShares = $totalShares - $allocatedShares;
         $allocatedValue = $allocatedShares * $shareValue;
         $unallocatedValue = $unallocatedShares * $shareValue;
+
+        // Growth calculations
+        $yearlyPerf = $api['yearly_performance'] ?? [];
+        $currentYear = date('Y');
+        $prevYear = $currentYear - 1;
+        $years = array_keys($yearlyPerf);
+
+        // Previous year growth
+        $prevYearKey = null;
+        $prevYearGrowth = 0;
+        foreach ($years as $y) {
+            if (substr($y, 0, 4) == $prevYear) {
+                $prevYearKey = $y;
+                $prevYearGrowth = $yearlyPerf[$y]['performance'] ?? 0;
+                break;
+            }
+        }
+
+        // Current year YTD
+        $currentYearKey = null;
+        $currentYearGrowth = 0;
+        foreach ($years as $y) {
+            if (substr($y, 0, 4) == $currentYear) {
+                $currentYearKey = $y;
+                $currentYearGrowth = $yearlyPerf[$y]['performance'] ?? 0;
+                break;
+            }
+        }
+
+        // All-time growth (compound)
+        $allTimeGrowth = 0;
+        if (!empty($yearlyPerf)) {
+            $compound = 1.0;
+            foreach ($yearlyPerf as $y => $data) {
+                $perf = ($data['performance'] ?? 0) / 100;
+                $compound *= (1 + $perf);
+            }
+            $allTimeGrowth = ($compound - 1) * 100;
+        }
+
+        $accountsCount = count($api['balances'] ?? []);
+        $asOf = $api['as_of'] ?? date('Y-m-d');
+        $source = $api['portfolio']['source'] ?? 'N/A';
     @endphp
 
-    <!-- Fund Name Header -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
+    <!-- Fund Highlights Card -->
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #1e40af; border-radius: 6px; overflow: hidden;">
+        <!-- Header -->
         <tr>
-            <td style="padding: 12px; background-color: #1e40af; border-radius: 6px;">
-                <h2 style="margin: 0; color: #ffffff; font-size: 20px;">{{ $api['name'] }}</h2>
+            <td colspan="7" style="padding: 12px 16px; background-color: #1e40af;">
+                <span style="color: #ffffff; font-size: 18px; font-weight: 700;">{{ $api['name'] }}</span>
             </td>
         </tr>
-    </table>
-
-    <!-- Fund Summary Visual -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px;">
+        <!-- Stats Row -->
         <tr>
-            <td style="padding: 16px;">
-                <!-- Total Bar -->
-                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
-                    <tr>
-                        <td style="background-color: #2563eb; padding: 12px 16px; border-radius: 6px;">
-                            <table width="100%" cellspacing="0" cellpadding="0">
-                                <tr>
-                                    <td style="color: #ffffff;">
-                                        <span style="font-size: 16px; font-weight: 700;">Total</span>
-                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">${{ number_format($shareValue, 2) }}/share</span>
-                                    </td>
-                                    <td style="text-align: right; color: #ffffff;">
-                                        <span style="font-size: 12px; opacity: 0.9;">{{ number_format($totalShares, 2) }} shares</span><br>
-                                        <span style="font-size: 20px; font-weight: 700;">${{ number_format($totalValue, 2) }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($totalValue, 0) }}</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Total Value</div>
+            </td>
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($shareValue, 2) }}</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Share Price</div>
+            </td>
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($api['nav'] ?? 0, 2) }}</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">NAV</div>
+            </td>
+            @if($prevYearKey)
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">{{ $prevYear }} Growth</div>
+            </td>
+            @endif
+            @if($currentYearKey)
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">{{ $currentYear }} YTD</div>
+            </td>
+            @endif
+            @if(!empty($yearlyPerf))
+            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($allTimeGrowth >= 0)+@endif{{ number_format($allTimeGrowth, 1) }}%</div>
+                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">All-Time</div>
+            </td>
+            @endif
+            @isset($api['admin'])
+            <td style="background: #fffbeb; padding: 12px 8px; text-align: center; border-radius: 0;">
+                <div style="font-size: 18px; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
+                <div style="font-size: 10px; color: #92400e; text-transform: uppercase;">Accounts <span style="background: #d97706; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; vertical-align: top;">ADMIN</span></div>
+            </td>
+            @endisset
+        </tr>
+        <!-- Admin: Share Allocation Section -->
+        @isset($api['admin'])
+        <tr>
+            <td colspan="7" style="background: #fffbeb; padding: 12px 16px; border-top: 1px solid #bfdbfe;">
+                <div style="margin-bottom: 8px;">
+                    <span style="background: #d97706; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 8px;">ADMIN</span>
+                    <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Share Allocation</span>
+                </div>
                 <!-- Progress Bar -->
-                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 10px;">
                     <tr>
-                        <td width="{{ $allocatedPct }}%" style="background-color: #22c55e; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px; {{ $allocatedPct > 0 ? 'border-radius: 6px 0 0 6px;' : '' }}">
+                        <td width="{{ $allocatedPct }}%" style="background-color: #22c55e; padding: 6px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 12px; {{ $allocatedPct > 0 ? 'border-radius: 4px 0 0 4px;' : '' }}">
                             {{ number_format($allocatedPct, 1) }}%
                         </td>
-                        <td width="{{ $unallocatedPct }}%" style="background-color: #d97706; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px; {{ $unallocatedPct > 0 ? 'border-radius: 0 6px 6px 0;' : '' }}">
+                        <td width="{{ $unallocatedPct }}%" style="background-color: #d97706; padding: 6px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 12px; {{ $unallocatedPct > 0 ? 'border-radius: 0 4px 4px 0;' : '' }}">
                             {{ number_format($unallocatedPct, 1) }}%
                         </td>
                     </tr>
                 </table>
-
                 <!-- Allocated / Unallocated Boxes -->
                 <table width="100%" cellspacing="8" cellpadding="0">
                     <tr>
-                        <td width="50%" style="background-color: #22c55e; padding: 12px 16px; border-radius: 6px; vertical-align: top;">
+                        <td width="50%" style="background-color: #22c55e; padding: 10px 12px; border-radius: 4px; vertical-align: top;">
                             <table width="100%" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="color: #ffffff;">
-                                        <span style="font-size: 14px; font-weight: 700;">Allocated</span>
-                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($allocatedPct, 1) }}%</span>
+                                        <span style="font-size: 12px; font-weight: 700;">Allocated</span>
+                                        <span style="background-color: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 4px;">{{ number_format($allocatedPct, 1) }}%</span>
                                     </td>
                                     <td style="text-align: right; color: #ffffff;">
-                                        <span style="font-size: 11px; opacity: 0.9;">{{ number_format($allocatedShares, 2) }} shares</span><br>
-                                        <span style="font-size: 18px; font-weight: 700;">${{ number_format($allocatedValue, 2) }}</span>
+                                        <span style="font-size: 10px; opacity: 0.9;">{{ number_format($allocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 16px; font-weight: 700;">${{ number_format($allocatedValue, 0) }}</span>
                                     </td>
                                 </tr>
                             </table>
                         </td>
-                        <td width="50%" style="background-color: #d97706; padding: 12px 16px; border-radius: 6px; vertical-align: top;">
+                        <td width="50%" style="background-color: #d97706; padding: 10px 12px; border-radius: 4px; vertical-align: top;">
                             <table width="100%" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="color: #ffffff;">
-                                        <span style="font-size: 14px; font-weight: 700;">Unallocated</span>
-                                        <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($unallocatedPct, 1) }}%</span>
+                                        <span style="font-size: 12px; font-weight: 700;">Unallocated</span>
+                                        <span style="background-color: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 4px;">{{ number_format($unallocatedPct, 1) }}%</span>
                                     </td>
                                     <td style="text-align: right; color: #ffffff;">
-                                        <span style="font-size: 11px; opacity: 0.9;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
-                                        <span style="font-size: 18px; font-weight: 700;">${{ number_format($unallocatedValue, 2) }}</span>
+                                        <span style="font-size: 10px; opacity: 0.9;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 16px; font-weight: 700;">${{ number_format($unallocatedValue, 0) }}</span>
                                     </td>
                                 </tr>
                             </table>
@@ -95,30 +159,32 @@
                 </table>
             </td>
         </tr>
+        @endisset
+        <!-- As of / Source Row -->
+        <tr>
+            <td colspan="7" style="background: #ffffff; padding: 8px 16px; border-top: 1px solid #bfdbfe;">
+                <table width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td style="font-size: 11px; color: #374151;"><strong>As of:</strong> {{ $asOf }}</td>
+                        <td style="font-size: 11px; color: #374151; text-align: center;"><strong>Source:</strong> {{ $source }}</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
     </table>
 
-    <!-- Fund Details Card -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h4 class="card-header-title">Fund Details</h4>
-        </div>
-        <div class="card-body">
-            @include('funds.show_fields_pdf')
-        </div>
-    </div>
-
     <!-- Monthly Performance Chart -->
-    <div class="page-break"></div>
     <h3 class="section-title">Performance Analysis</h3>
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Monthly Performance</h4>
+            <h4 class="card-header-title">Monthly Value</h4>
         </div>
         <div class="card-body">
             @if(isset($files['monthly_performance.png']) && file_exists($files['monthly_performance.png']))
                 <div class="chart-container">
-                    <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Performance"/>
+                    <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Value"/>
                 </div>
                 <p class="text-sm text-muted" style="margin-top: 8px;">
                     <strong>Legend:</strong> Fund vs S&P 500 vs Cash equivalent
@@ -132,15 +198,15 @@
         </div>
     </div>
 
-    <!-- Yearly Performance Chart -->
+    <!-- Yearly Value Chart -->
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Yearly Performance</h4>
+            <h4 class="card-header-title">Yearly Value</h4>
         </div>
         <div class="card-body">
             @if(isset($files['yearly_performance.png']) && file_exists($files['yearly_performance.png']))
                 <div class="chart-container">
-                    <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Performance"/>
+                    <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Value"/>
                 </div>
             @else
                 <div class="text-muted" style="padding: 40px; text-align: center; background: #f8fafc; border-radius: 6px;">
@@ -153,7 +219,6 @@
 
     <!-- Forecast (Linear Regression) -->
     @if(isset($api['linear_regression']['predictions']) && count($api['linear_regression']['predictions']) > 0)
-    <div class="page-break"></div>
     <h3 class="section-title">Forecast (Linear Regression)</h3>
 
     <div class="card mb-3">
@@ -220,7 +285,6 @@
     @endforeach
 
     <!-- Trade Portfolios Section -->
-    <div class="page-break"></div>
     <h3 class="section-title">Portfolio Allocation</h3>
 
     @if(isset($files['portfolio_comparison.png']))
@@ -273,26 +337,26 @@
         @endforeach
     @endif
 
-    <!-- Admin Only: Fund Allocation -->
+    <!-- Trade Portfolios Comparison -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-header-title">Trade Portfolios Comparison</h4>
+        </div>
+        <div class="card-body">
+            @include('trade_portfolios.inner_show_alt_pdf')
+        </div>
+    </div>
+
+    <!-- Trade Portfolio Details -->
+    @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
+        @include('trade_portfolios.inner_show_pdf')
+    @endforeach
+
+    <!-- Admin Only: Accounts Allocation -->
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">
-            <div class="card-header">
-                <h4 class="card-header-title">Fund Allocation</h4>
-                <span class="badge badge-warning">Admin</span>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <img src="{{ $files['shares_allocation.png'] }}" alt="Fund Allocation"/>
-                </div>
-            </div>
-        </div>
-
-        <!-- Accounts Allocation - Full Width -->
-        <div class="page-break"></div>
-        <div class="card mb-3">
-            <div class="card-header">
-                <h4 class="card-header-title">Accounts Allocation</h4>
-                <span class="badge badge-warning">Admin</span>
+            <div class="card-header admin-header">
+                <h4 class="card-header-title">Accounts Allocation <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -303,7 +367,6 @@
     @endisset @endisset
 
     <!-- Performance Tables -->
-    <div class="page-break"></div>
     <h3 class="section-title">Performance Data</h3>
 
     <div class="card mb-3">
@@ -326,13 +389,7 @@
         </div>
     </div>
 
-    <!-- Trade Portfolio Details -->
-    @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
-        @include('trade_portfolios.inner_show_pdf')
-    @endforeach
-
     <!-- Assets Table -->
-    <div class="page-break"></div>
     <div class="card mb-3">
         <div class="card-header">
             <h4 class="card-header-title">Assets</h4>
@@ -345,9 +402,8 @@
     <!-- Admin Only: Accounts Table -->
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">
-            <div class="card-header">
-                <h4 class="card-header-title">Accounts</h4>
-                <span class="badge badge-warning">Admin</span>
+            <div class="card-header admin-header">
+                <h4 class="card-header-title">Accounts <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 @include('funds.accounts_table_pdf')

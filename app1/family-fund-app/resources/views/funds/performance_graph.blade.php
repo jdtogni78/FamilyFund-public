@@ -65,14 +65,15 @@ const perf_config = {
             },
             datalabels: {
                 color: '#ffffff',
-                anchor: 'center',
-                align: 'center',
+                anchor: 'end',
+                align: 'start',
+                offset: 4,
                 font: {
                     weight: 'bold',
-                    size: 14,
+                    size: 11,
                 },
                 formatter: function(value) {
-                    return formatCurrency(value);
+                    return formatCurrencyShort(value);
                 },
                 // Hide label if bar is too small
                 display: function(context) {

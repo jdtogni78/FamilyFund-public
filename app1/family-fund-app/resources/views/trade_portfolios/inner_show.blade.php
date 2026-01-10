@@ -126,8 +126,7 @@
                             @forelse($items as $item)
                                 <tr>
                                     <td><strong>{{ $item->symbol }}</strong></td>
-                                    <td class="text-right">{{ $item->target_share * 100 }}%</td>
-                                    <td class="text-right text-muted">{{ $item->deviation_trigger * 100 }}%</td>
+                                    <td class="text-right">{{ $item->target_share * 100 }}% <span class="text-muted" style="font-size: 0.75rem;">±{{ $item->deviation_trigger * 100 }}%</span></td>
                                     <td class="text-right">
                                         <a href="{{ route('tradePortfolioItems.show', [$item->id]) }}" class="btn btn-sm btn-link p-0" title="View"><i class="fa fa-eye text-success"></i></a>
                                         @if(!$editable)
@@ -179,8 +178,7 @@
                             @foreach($items as $item)
                                 <tr>
                                     <td><strong>{{ $item->symbol }}</strong></td>
-                                    <td class="text-right">{{ $item->target_share * 100 }}%</td>
-                                    <td class="text-right text-muted">{{ $item->deviation_trigger * 100 }}%</td>
+                                    <td class="text-right">{{ $item->target_share * 100 }}% <span class="text-muted" style="font-size: 0.75rem;">±{{ $item->deviation_trigger * 100 }}%</span></td>
                                     <td class="text-right">
                                         <a href="{{ route('tradePortfolioItems.show', [$item->id]) }}" class="btn btn-sm btn-link p-0"><i class="fa fa-eye text-success"></i></a>
                                         @if(!$editable)

@@ -95,24 +95,17 @@
         </tr>
     </table>
 
-    {{-- Time progress --}}
-    <div style="margin-bottom: 12px; color: #64748b;">
-        <strong>Time:</strong> {{ number_format($yearsElapsed, 1) }} of {{ number_format($totalYears, 1) }} years elapsed ({{ number_format($timePct, 0) }}%)
-    </div>
-
     {{-- On Track Badge with time ahead/behind --}}
     <div style="padding: 10px; border-radius: 6px; background: {{ $trackBg }}; border: 1px solid {{ $trackBorder }};">
         @if($isOnTrack)
             <span style="color: #16a34a; font-weight: 700; font-size: 14px;">ON TRACK!</span>
             <span style="color: #16a34a; margin-left: 10px;">
-                Ahead by <strong>${{ number_format($diff, 0) }}</strong>
-                ({{ $timeAheadStr }} ahead of schedule)
+                Ahead by <strong>${{ number_format($diff, 0) }}</strong> or <strong>{{ $timeAheadStr }}</strong>
             </span>
         @else
             <span style="color: #dc2626; font-weight: 700; font-size: 14px;">BEHIND</span>
             <span style="color: #dc2626; margin-left: 10px;">
-                Behind by <strong>${{ number_format(abs($diff), 0) }}</strong>
-                ({{ $timeAheadStr }} behind schedule)
+                Behind by <strong>${{ number_format(abs($diff), 0) }}</strong> or <strong>{{ $timeAheadStr }}</strong>
             </span>
         @endif
     </div>
@@ -139,7 +132,7 @@
         <div class="col-md-6">
             <div class="p-3 rounded h-100" style="background: #fef3c7; border-left: 4px solid #d97706;">
                 <small class="text-muted d-block">Expected ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <h5 class="mb-0" style="color: #d97706;">${{ number_format($expectedValue, 0) }}</h5>
+                <div class="mb-0" style="color: #d97706; font-size: 1.75rem; font-weight: 700;">${{ number_format($expectedValue, 0) }}</div>
                 <small class="text-muted">${{ number_format($expectedYield, 0) }}/yr yield</small>
             </div>
         </div>
@@ -147,24 +140,10 @@
         <div class="col-md-6">
             <div class="p-3 rounded h-100" style="background: {{ $trackBg }}; border-left: 4px solid {{ $trackBorder }};">
                 <small class="text-muted d-block">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <h5 class="mb-0" style="color: {{ $trackColor }};">${{ number_format($currentValue, 0) }}</h5>
+                <div class="mb-0" style="color: {{ $trackColor }}; font-size: 1.75rem; font-weight: 700;">${{ number_format($currentValue, 0) }}</div>
                 <small class="text-muted">${{ number_format($currentYield, 0) }}/yr yield</small>
             </div>
         </div>
-    </div>
-
-    {{-- Time progress --}}
-    <div class="mb-3">
-        <div class="d-flex justify-content-between mb-1">
-            <span><strong>Time Progress:</strong></span>
-            <span>{{ number_format($yearsElapsed, 1) }} / {{ number_format($totalYears, 1) }} years</span>
-        </div>
-        <div class="progress" style="height: 8px;">
-            <div class="progress-bar bg-info" role="progressbar"
-                 style="width: {{ min(100, $timePct) }}%;"
-                 aria-valuenow="{{ $timePct }}" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        <small class="text-muted">{{ number_format($timePct, 1) }}% of time elapsed</small>
     </div>
 
     {{-- On Track Badge with time ahead/behind --}}
@@ -172,11 +151,11 @@
         <i class="fa {{ $isOnTrack ? 'fa-check-circle' : 'fa-exclamation-triangle' }} fa-2x me-3"></i>
         <div>
             @if($isOnTrack)
-                <strong>On Track!</strong> Currently ahead by <span class="badge bg-success">${{ number_format($diff, 0) }}</span>
-                <span class="ms-2 text-muted">({{ $timeAheadStr }} ahead of schedule)</span>
+                <strong>On Track!</strong> Ahead by <span class="badge bg-success">${{ number_format($diff, 0) }}</span>
+                or <span class="badge bg-success">{{ $timeAheadStr }}</span>
             @else
-                <strong>Behind Schedule</strong> Currently behind by <span class="badge bg-danger">${{ number_format(abs($diff), 0) }}</span>
-                <span class="ms-2 text-muted">({{ $timeAheadStr }} behind schedule)</span>
+                <strong>Behind Schedule</strong> Behind by <span class="badge bg-danger">${{ number_format(abs($diff), 0) }}</span>
+                or <span class="badge bg-danger">{{ $timeAheadStr }}</span>
             @endif
         </div>
     </div>

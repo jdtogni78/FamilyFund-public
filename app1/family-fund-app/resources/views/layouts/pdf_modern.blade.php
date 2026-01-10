@@ -144,6 +144,7 @@
             margin-bottom: 16px;
             padding-bottom: 8px;
             border-bottom: 2px solid #3b82f6;
+            page-break-after: avoid;
         }
 
         .text-muted { color: #64748b; }
@@ -176,15 +177,21 @@
 
         .card-header {
             padding: 12px 16px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
+            background: #1e293b;
+            border-bottom: none;
             border-radius: 6px 6px 0 0;
+            page-break-after: avoid;
+        }
+
+        .card-header.admin-header {
+            background: #d97706;
+            border-bottom: 3px solid #b45309;
         }
 
         .card-header-title {
             font-size: 14px;
             font-weight: 600;
-            color: #1e293b;
+            color: #ffffff;
             margin: 0;
             display: inline-block;
         }

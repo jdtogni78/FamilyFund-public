@@ -40,9 +40,18 @@
             $unallocatedShares = $api['summary']['unallocated_shares'] ?? 0;
             $unallocatedValue = $api['summary']['unallocated_value'] ?? 0;
             $unallocatedPercent = $totalShares > 0 ? ($unallocatedShares / $totalShares) * 100 : 0;
+            $allocatedPercent = $totalShares > 0 ? ($allocatedShares / $totalShares) * 100 : 0;
         @endphp
         </tbody>
         <tfoot>
+            <tr style="background-color: #dbeafe; font-weight: 600;">
+                <th scope="row">Total Allocated</th>
+                <td></td>
+                <td>{{ number_format($allocatedShares, 2) }}</td>
+                <td>{{ number_format($allocatedPercent, 2) }}%</td>
+                <td>${{ number_format($allocatedValue, 2) }}</td>
+                <td></td>
+            </tr>
             @if($unallocatedShares > 0)
             <tr style="background-color: #fef3c7;">
                 <th scope="row">

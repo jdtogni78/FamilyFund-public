@@ -16,7 +16,19 @@
                 <th scope="row">
                     {{ $asset['name'] }}
                 </th>
-                <td>{{ $asset['type'] }}</td>
+                <td>
+                    @php
+                        $typeColors = [
+                            'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
+                            'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
+                            'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
+                        ];
+                        $colors = $typeColors[$asset['type']] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $asset['type']];
+                    @endphp
+                    <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
+                        {{ $colors['label'] }}
+                    </span>
+                </td>
                 <td data-order="{{ $asset['position'] }}">{{ number_format($asset['position'], 6) }}</td>
                 <td data-order="{{ $asset['price'] ?? 0 }}">@isset($asset['price'])
                         ${{ number_format($asset['price'], 2) }}

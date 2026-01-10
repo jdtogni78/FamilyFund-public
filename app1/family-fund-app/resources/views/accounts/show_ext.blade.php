@@ -71,10 +71,6 @@
                                     <div class="text-muted text-uppercase small">Matching Available</div>
                                 </div>
                                 @endif
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
-                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $goalsCount }}</div>
-                                    <div class="text-muted text-uppercase small">Active Goals</div>
-                                </div>
                                 @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? []])
                             </div>
                         </div>
@@ -91,16 +87,34 @@
                                     $expectedValue = $goal->progress['expected']['value'] ?? 0;
                                     $diff = $currentValue - $expectedValue;
                                     $isOnTrack = $diff >= 0;
+
+                                    // Calculate time ahead/behind
+                                    $period = $goal->progress['period'] ?? [0, 1, 0];
+                                    $totalDays = $period[1] ?? 1;
+                                    $pctDiff = abs($currentPct - $expectedPct);
+                                    $timeAheadDays = ($pctDiff / 100) * $totalDays;
+                                    if ($timeAheadDays >= 365) {
+                                        $timeAheadYears = $timeAheadDays / 365;
+                                        $timeAheadStr = number_format($timeAheadYears, 1) . ' yr' . ($timeAheadYears >= 1.5 ? 's' : '');
+                                    } elseif ($timeAheadDays >= 30) {
+                                        $timeAheadMonths = round($timeAheadDays / 30);
+                                        $timeAheadStr = $timeAheadMonths . ' mo' . ($timeAheadMonths != 1 ? 's' : '');
+                                    } else {
+                                        $timeAheadWeeks = max(1, round($timeAheadDays / 7));
+                                        $timeAheadStr = $timeAheadWeeks . ' wk' . ($timeAheadWeeks != 1 ? 's' : '');
+                                    }
                                 @endphp
-                                <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
-                                    <div style="color: #1e40af; font-weight: 600;">{{ $goal->name }}</div>
-                                    <div class="d-flex align-items-center">
+                                <div class="d-flex align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    <div style="flex: 1; color: #1e40af; font-weight: 600;">{{ $goal->name }}</div>
+                                    <div style="flex: 1; text-align: center;">
                                         <span style="font-size: 1rem; font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">
                                             {{ number_format($currentPct, 1) }}%
                                         </span>
                                         <span class="text-muted ms-1 small">complete</span>
-                                        <span class="ms-3 px-2 py-1 rounded small" style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; font-weight: 600;">
-                                            ${{ number_format(abs($diff), 0) }} {{ $isOnTrack ? 'ahead' : 'behind' }}
+                                    </div>
+                                    <div style="flex: 1; text-align: right;">
+                                        <span class="px-2 py-1 rounded small" style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; font-weight: 600;">
+                                            ${{ number_format(abs($diff), 0) }} or {{ $timeAheadStr }} {{ $isOnTrack ? 'ahead' : 'behind' }}
                                         </span>
                                     </div>
                                 </div>
@@ -124,35 +138,6 @@
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transactions'],
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
             ]])
-
-            {{-- Account Details (Collapsible, start expanded) --}}
-            <div class="row mb-4">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
-                            <strong><i class="fa fa-user-circle" style="margin-right: 8px;"></i>Account Details</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccountDetails"
-                               role="button" aria-expanded="true" aria-controls="collapseAccountDetails">
-                                <i class="fa fa-chevron-down"></i>
-                            </a>
-                        </div>
-                        <div class="collapse show" id="collapseAccountDetails">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Fund:</strong> <a href="{{ route('funds.show', [$account->fund->id]) }}">{{ $account->fund->name }}</a></p>
-                                        <p><strong>User:</strong> {{ $account->user->name }}</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Email:</strong> {{ $account->email_cc }}</p>
-                                        <p><strong>As of:</strong> {{ $api['as_of'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {{-- Disbursement Eligibility --}}
             <div class="row mb-4" id="section-disbursement">
@@ -182,7 +167,7 @@
                                             <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">ID: {{ $goal->id }}</span>
                                         </div>
                                         <div class="card-body">
-                                            @include('goals.progress_bar')
+                                            @include('goals.progress_summary', ['goal' => $goal, 'format' => 'web'])
                                             @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'web'])
                                         </div>
                                     </div>
@@ -263,35 +248,6 @@
                         <div class="collapse show" id="collapseProjection">
                             <div class="card-body">
                                 @include('accounts.linreg_table')
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            {{-- Trade Portfolios Chart (Collapsible, start expanded) --}}
-            @if(isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1)
-            <div class="row mb-4" id="section-portfolios">
-                <div class="col">
-                    @include('trade_portfolios.stacked_bar_graph')
-                </div>
-            </div>
-
-            {{-- Trade Portfolios Comparison Table (Collapsible, start expanded) --}}
-            <div class="row mb-4" id="section-portfolios-table">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
-                            <strong><i class="fa fa-columns" style="margin-right: 8px;"></i>Trade Portfolios Comparison</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfoliosTable"
-                               role="button" aria-expanded="true" aria-controls="collapseTradePortfoliosTable">
-                                <i class="fa fa-chevron-down"></i>
-                            </a>
-                        </div>
-                        <div class="collapse show" id="collapseTradePortfoliosTable">
-                            <div class="card-body">
-                                @include('trade_portfolios.inner_show_alt')
                             </div>
                         </div>
                     </div>

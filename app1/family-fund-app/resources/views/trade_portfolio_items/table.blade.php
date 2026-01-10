@@ -8,7 +8,6 @@
                 <th>Type</th>
                 <th>Group</th>
                 <th>Target Share</th>
-                <th>Deviation trigger</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -20,8 +19,7 @@
                 <td>{{ $tradePortfolioItem->symbol }}</td>
                 <td>{{ $tradePortfolioItem->type }}</td>
                 <td>{{ $tradePortfolioItem->group }}</td>
-                <td>{{ $tradePortfolioItem->target_share * 100 }}%</td>
-                <td>{{ $tradePortfolioItem->deviation_trigger * 100}}%</td>
+                <td>{{ $tradePortfolioItem->target_share * 100 }}% <span class="text-muted" style="font-size: 0.85rem;">±{{ $tradePortfolioItem->deviation_trigger * 100 }}%</span></td>
                 <td>
                     <div class='btn-group'>
                         <a href="{{ route('tradePortfolioItems.show', [$tradePortfolioItem->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>

@@ -40,6 +40,17 @@
             }
         }
 
+        // All-time performance (compound all years)
+        $allTimeGrowth = 0;
+        if (!empty($yearlyPerf)) {
+            $compound = 1.0;
+            foreach ($yearlyPerf as $y => $data) {
+                $perf = ($data['performance'] ?? 0) / 100;
+                $compound *= (1 + $perf);
+            }
+            $allTimeGrowth = ($compound - 1) * 100;
+        }
+
         // Calculate overall account health
         $onTrackGoals = 0;
         foreach ($account->goals as $goal) {
@@ -99,10 +110,6 @@
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Matching Available</div>
             </td>
             @endif
-            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">{{ $goalsCount }}</div>
-                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Active Goals</div>
-            </td>
             @if($hasPrevYear)
             <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $prevYearGrowth >= 0 ? '+' : '' }}{{ number_format($prevYearGrowth, 1) }}%</div>
@@ -110,9 +117,15 @@
             </td>
             @endif
             @if($hasCurrentYear)
-            <td width="12%" style="padding: 10px 6px; text-align: center;">
+            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $currentYearGrowth >= 0 ? '+' : '' }}{{ number_format($currentYearGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $currentYear }} YTD</div>
+            </td>
+            @endif
+            @if(!empty($yearlyPerf))
+            <td width="12%" style="padding: 10px 6px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $allTimeGrowth >= 0 ? '+' : '' }}{{ number_format($allTimeGrowth, 1) }}%</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">All-Time</div>
             </td>
             @endif
         </tr>
@@ -127,21 +140,38 @@
                 @foreach($account->goals as $goal)
                     @php
                         $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+                        $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
                         $currentValue = $goal->progress['current']['value'] ?? 0;
                         $expectedValue = $goal->progress['expected']['value'] ?? 0;
                         $diff = $currentValue - $expectedValue;
                         $isOnTrack = $diff >= 0;
+
+                        // Calculate time ahead/behind
+                        $period = $goal->progress['period'] ?? [0, 1, 0];
+                        $totalDays = $period[1] ?? 1;
+                        $pctDiff = abs($currentPct - $expectedPct);
+                        $timeAheadDays = ($pctDiff / 100) * $totalDays;
+                        if ($timeAheadDays >= 365) {
+                            $timeAheadYears = $timeAheadDays / 365;
+                            $timeAheadStr = number_format($timeAheadYears, 1) . ' yr' . ($timeAheadYears >= 1.5 ? 's' : '');
+                        } elseif ($timeAheadDays >= 30) {
+                            $timeAheadMonths = round($timeAheadDays / 30);
+                            $timeAheadStr = $timeAheadMonths . ' mo' . ($timeAheadMonths != 1 ? 's' : '');
+                        } else {
+                            $timeAheadWeeks = max(1, round($timeAheadDays / 7));
+                            $timeAheadStr = $timeAheadWeeks . ' wk' . ($timeAheadWeeks != 1 ? 's' : '');
+                        }
                     @endphp
                     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
                         <tr>
-                            <td width="50%" style="color: #1e40af; font-weight: 600; font-size: 12px;">{{ $goal->name }}</td>
-                            <td width="25%" align="right" style="font-size: 12px;">
+                            <td width="40%" style="color: #1e40af; font-weight: 600; font-size: 12px;">{{ $goal->name }}</td>
+                            <td width="20%" align="right" style="font-size: 12px;">
                                 <span style="font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">{{ number_format($currentPct, 1) }}%</span>
                                 <span style="color: #64748b;"> complete</span>
                             </td>
-                            <td width="25%" align="right">
+                            <td width="40%" style="text-align: right;">
                                 <span style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px;">
-                                    ${{ number_format(abs($diff), 0) }} {{ $isOnTrack ? 'ahead' : 'behind' }}
+                                    ${{ number_format(abs($diff), 0) }} or {{ $timeAheadStr }} {{ $isOnTrack ? 'ahead' : 'behind' }}
                                 </span>
                             </td>
                         </tr>
@@ -188,26 +218,26 @@
 
     {{-- Goals Progress Section (with details) --}}
     @if($goalsCount > 0)
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    @foreach($account->goals as $goal)
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; page-break-inside: avoid;">
         <tr>
             <td style="background: #1e293b; padding: 10px 16px;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 13px;">GOALS PROGRESS</span>
+                <span style="color: #ffffff; font-weight: 700; font-size: 13px;">{{ $goal->name }} - PROGRESS</span>
             </td>
         </tr>
         <tr>
             <td style="padding: 16px; background: #ffffff;">
-                @foreach($account->goals as $goal)
-                    {{-- Summary row with progress bar and $ ahead badge --}}
-                    @include('goals.progress_summary', ['goal' => $goal, 'format' => 'pdf'])
+                {{-- Summary row with progress bar and $ ahead badge --}}
+                @include('goals.progress_summary', ['goal' => $goal, 'format' => 'pdf'])
 
-                    {{-- Detailed info: Expected/Current boxes, time progress, On Track badge --}}
-                    <div style="margin-top: 12px; {{ !$loop->last ? 'margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;' : '' }}">
-                        @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'pdf'])
-                    </div>
-                @endforeach
+                {{-- Detailed info: Expected/Current boxes, time progress, On Track badge --}}
+                <div style="margin-top: 12px;">
+                    @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'pdf'])
+                </div>
             </td>
         </tr>
     </table>
+    @endforeach
     @endif
 
     {{-- Monthly Performance Chart --}}
@@ -335,35 +365,6 @@
     @endif
 
     {{-- ============================================== --}}
-    {{-- DETAILED GOALS - Page 2 --}}
-    {{-- ============================================== --}}
-    @if($goalsCount > 0)
-        <div class="page-break"></div>
-        <h3 class="section-title">Detailed Goals Analysis</h3>
-
-        @foreach($account->goals as $goal)
-            <div class="goal-item avoid-break mb-4">
-                <div class="goal-header">
-                    <span class="goal-name">{{ $goal->name }}</span>
-                    @php
-                        $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
-                        $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
-                    @endphp
-                    <span class="badge {{ $currentPct >= $expectedPct ? 'badge-success' : 'badge-warning' }}">
-                        {{ number_format($currentPct, 1) }}% Complete
-                    </span>
-                </div>
-                <div class="chart-container mt-3">
-                    <img src="{{ $files['goals_progress_' . $goal->id . '.png'] }}" alt="{{ $goal->name }} Progress"/>
-                </div>
-                <div class="mt-3">
-                    @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'pdf'])
-                </div>
-            </div>
-        @endforeach
-    @endif
-
-    {{-- ============================================== --}}
     {{-- CHARTS & ANALYSIS - Page 3 --}}
     {{-- ============================================== --}}
     <div class="page-break"></div>
@@ -381,19 +382,6 @@
         </div>
     </div>
 
-    {{-- Portfolio Comparison --}}
-    @if(isset($files['portfolio_comparison.png']))
-        <div class="card mb-4">
-            <div class="card-header">
-                <h4 class="card-header-title">Portfolio Allocations</h4>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <img src="{{ $files['portfolio_comparison.png'] }}" alt="Portfolio Comparison" style="width: 100%;"/>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- ============================================== --}}
     {{-- PERFORMANCE DATA - Page 4 --}}

@@ -78,7 +78,7 @@ trait ChartBaseTrait
     {
         $sp500Variants = ['S&P500', 'SP500', 'SPY', '^GSPC'];
         $hasSp500 = !empty($api['sp500_monthly_performance']);
-        $sp500Data = $hasSp500 ? $this->getGraphData($api['sp500_monthly_performance']) : [];
+        $sp500Data = $hasSp500 ? $this->getNormalizedGraphData($api['sp500_monthly_performance']) : [];
         $arr = $api['asset_monthly_performance'];
         $i = 0;
         foreach ($arr as $group => $perf) {
@@ -101,14 +101,14 @@ trait ChartBaseTrait
                     continue;
                 }
                 $titles[] = $symbol;
-                $graphValues[] = array_values($this->getGraphData($values));
+                $graphValues[] = array_values($this->getNormalizedGraphData($values));
                 if ($labels === null) {
-                    $labels = array_keys($this->getGraphData($values));
+                    $labels = array_keys($this->getNormalizedGraphData($values));
                 }
             }
 
             $this->files[$name] = $file = $tempDir->path($name);
-            $this->getQuickChartService()->generateLineChart($labels, $titles, $graphValues, $file);
+            $this->getQuickChartService()->generateLineChartPercent($labels, $titles, $graphValues, $file);
             $i++;
         }
     }
@@ -254,6 +254,29 @@ trait ChartBaseTrait
     {
         return array_map(function ($v) {
             return $v['value'];
+        }, $arr);
+    }
+
+    /**
+     * Get normalized performance data (relative to first value)
+     * Returns values as multipliers (1.0 = 100%, 1.5 = 150%, etc.)
+     */
+    private function getNormalizedGraphData(mixed $arr): array
+    {
+        $values = array_values($arr);
+        if (empty($values)) {
+            return [];
+        }
+
+        // Get first value for normalization (use 'price' if available, otherwise 'value')
+        $firstValue = $values[0]['price'] ?? $values[0]['value'] ?? 1;
+        if ($firstValue == 0) {
+            $firstValue = 1;
+        }
+
+        return array_map(function ($v) use ($firstValue) {
+            $price = $v['price'] ?? $v['value'] ?? 0;
+            return $price / $firstValue;
         }, $arr);
     }
 

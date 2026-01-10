@@ -121,20 +121,18 @@
                         <tr style="background: #f8fafc;">
                             <th style="text-align: left; font-weight: 600; color: #475569;">Symbol</th>
                             <th style="text-align: right; font-weight: 600; color: #475569;">Target</th>
-                            <th style="text-align: right; font-weight: 600; color: #475569;">Dev.</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($items as $item)
                             <tr>
                                 <td style="font-weight: 600;">{{ $item->symbol }}</td>
-                                <td style="text-align: right;">{{ $item->target_share * 100 }}%</td>
-                                <td style="text-align: right; color: #64748b;">{{ $item->deviation_trigger * 100 }}%</td>
+                                <td style="text-align: right;">{{ $item->target_share * 100 }}% <span style="color: #94a3b8; font-size: 9px;">±{{ $item->deviation_trigger * 100 }}%</span></td>
                             </tr>
                         @empty
                             @if(!$groupHasCash)
                             <tr>
-                                <td colspan="3" style="text-align: center; color: #94a3b8; padding: 8px;">No items</td>
+                                <td colspan="2" style="text-align: center; color: #94a3b8; padding: 8px;">No items</td>
                             </tr>
                             @endif
                         @endforelse
@@ -142,7 +140,6 @@
                             <tr style="background: #f0f9ff;">
                                 <td style="font-weight: 600; color: #2563eb;">CASH</td>
                                 <td style="text-align: right;">{{ $cashPct }}%</td>
-                                <td style="text-align: right; color: #64748b;">-</td>
                             </tr>
                         @endif
                     </tbody>

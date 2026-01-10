@@ -22,11 +22,17 @@
 
 @if($portfolioCollection->count() >= 1)
 <div class="card mb-4">
-    <div class="card-header" style="background: #1e293b; color: #ffffff;">
+    <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
         <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations Comparison</strong>
+        <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapsePortfolioAllocations"
+           role="button" aria-expanded="true" aria-controls="collapsePortfolioAllocations">
+            <i class="fa fa-chevron-down"></i>
+        </a>
     </div>
-    <div class="card-body">
-        <canvas id="portfolioStackedBar"></canvas>
+    <div class="collapse show" id="collapsePortfolioAllocations">
+        <div class="card-body">
+            <canvas id="portfolioStackedBar"></canvas>
+        </div>
     </div>
 </div>
 
@@ -181,7 +187,7 @@ $(document).ready(function() {
                         font: function(context) {
                             const value = context.dataset.data[context.dataIndex];
                             // Smaller font for small segments
-                            return { size: value < 8 ? 9 : 10, weight: 'bold' };
+                            return { size: value < 8 ? 9 : 11, weight: 'bold' };
                         },
                         textShadowColor: 'rgba(0,0,0,0.5)',
                         textShadowBlur: 3,
@@ -192,12 +198,12 @@ $(document).ready(function() {
                             const symbol = context.dataset.label;
                             const portfolioIndex = context.dataIndex;
 
-                            // For small segments (3-8%), show just symbol
+                            // For small segments (3-8%), show symbol + percentage (no deviation)
                             if (value < 8) {
-                                return symbol;
+                                return symbol + ' ' + value.toFixed(1) + '%';
                             }
 
-                            // For larger segments, show full details
+                            // For larger segments, show full details with deviation
                             let label = symbol + ' ' + value.toFixed(1) + '%';
                             const devTrigger = deviationTriggers[symbol]?.[portfolioIndex];
                             if (devTrigger && devTrigger > 0) {

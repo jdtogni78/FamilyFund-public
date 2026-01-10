@@ -1,5 +1,5 @@
 {{--
-    Reusable sticky jump bar navigation
+    Reusable sticky jump bar navigation with collapse toggle
 
     Usage:
     @include('partials.jump_bar', ['sections' => [
@@ -8,19 +8,17 @@
     ]])
 --}}
 
-{{-- Jump Bar Anchor --}}
-<div id="jumpNavAnchor"></div>
-
-{{-- Sticky Jump Bar --}}
-<div id="jumpNav" class="card shadow-sm mb-4" style="position: sticky; top: 56px; z-index: 1020; display: none;">
+{{-- Sticky Jump Bar - Always Visible --}}
+<div id="jumpNav" class="card shadow-sm mb-4" style="position: sticky; top: 56px; z-index: 1020;">
     <div class="card-body py-2">
         <div class="d-flex flex-wrap align-items-center">
-            <span class="me-3 text-muted small">Jump to:</span>
+            <span class="me-3 text-muted small" title="Click to scroll, double-click to collapse"><i class="fa fa-compass me-1"></i>Jump to: <span style="font-size: 0.7rem; opacity: 0.7;">(2× click to collapse)</span></span>
             @foreach($sections as $section)
                 @if(!isset($section['condition']) || $section['condition'])
                     <a href="#{{ $section['id'] }}"
                        class="btn btn-sm btn-outline-primary me-2 mb-1 section-nav-btn"
-                       data-section="{{ $section['id'] }}">
+                       data-section="{{ $section['id'] }}"
+                       title="Click to scroll, double-click to toggle">
                         @if(isset($section['icon']))
                             <i class="fa {{ $section['icon'] }} me-1"></i>
                         @endif
@@ -28,6 +26,9 @@
                     </a>
                 @endif
             @endforeach
+            <button class="btn btn-sm btn-outline-secondary ms-auto mb-1" id="toggleAllSections" title="Expand/Collapse All">
+                <i class="fa fa-compress-arrows-alt"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -35,50 +36,71 @@
 @push('scripts')
 <script type="text/javascript">
 $(document).ready(function() {
-    const $jumpNav = $('#jumpNav');
-    const $jumpNavAnchor = $('#jumpNavAnchor');
+    // Track click timing for single vs double click differentiation
+    let clickTimer = null;
+    let lastClickedTarget = null;
 
-    if ($jumpNavAnchor.length === 0) return;
-
-    // Show/hide nav based on scroll position
-    function updateNavVisibility() {
-        const anchorTop = $jumpNavAnchor.offset().top;
-        const scrollTop = $(window).scrollTop();
-
-        if (scrollTop > anchorTop - 100) {
-            $jumpNav.slideDown(200);
-        } else {
-            $jumpNav.slideUp(200);
-        }
-    }
-
-    // Initial check
-    updateNavVisibility();
-
-    // Smooth scroll for navigation
     $('.section-nav-btn').click(function(e) {
         e.preventDefault();
-        const target = $(this).attr('href');
+        const $btn = $(this);
+        const target = $btn.attr('href');
         const $target = $(target);
 
         if ($target.length === 0) return;
 
-        // Scroll to section with offset for sticky nav
-        const offset = 120;
-        $('html, body').animate({
-            scrollTop: $target.offset().top - offset
-        }, 300);
+        // If same button clicked twice quickly, treat as toggle
+        if (lastClickedTarget === target && clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            lastClickedTarget = null;
 
-        // Highlight active button
-        $('.section-nav-btn').removeClass('btn-primary').addClass('btn-outline-primary');
-        $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+            // Toggle collapse
+            const $collapse = $target.find('.collapse');
+            if ($collapse.length > 0) {
+                $collapse.collapse('toggle');
+            }
+            return;
+        }
+
+        lastClickedTarget = target;
+
+        // Wait briefly to see if it's a double-click
+        clickTimer = setTimeout(function() {
+            clickTimer = null;
+
+            // Single click: scroll to section and expand if collapsed
+            const $collapse = $target.find('.collapse');
+            if ($collapse.length > 0 && !$collapse.hasClass('show')) {
+                $collapse.collapse('show');
+            }
+
+            // Scroll to section with offset for sticky nav
+            const offset = 120;
+            $('html, body').animate({
+                scrollTop: $target.offset().top - offset
+            }, 300);
+
+            // Highlight active button
+            $('.section-nav-btn').removeClass('btn-primary').addClass('btn-outline-primary');
+            $btn.removeClass('btn-outline-primary').addClass('btn-primary');
+        }, 200);
     });
 
-    // Update nav visibility and active button on scroll
-    $(window).scroll(function() {
-        updateNavVisibility();
+    // Toggle all sections
+    let allExpanded = true;
+    $('#toggleAllSections').click(function() {
+        if (allExpanded) {
+            $('.collapse.show').collapse('hide');
+            $(this).find('i').removeClass('fa-compress-arrows-alt').addClass('fa-expand-arrows-alt');
+        } else {
+            $('.collapse:not(.show)').collapse('show');
+            $(this).find('i').removeClass('fa-expand-arrows-alt').addClass('fa-compress-arrows-alt');
+        }
+        allExpanded = !allExpanded;
+    });
 
-        // Update active nav button based on scroll position
+    // Update active nav button based on scroll position
+    $(window).scroll(function() {
         const offset = 150;
         let currentSection = null;
 

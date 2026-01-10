@@ -109,13 +109,31 @@ class PortfolioExt extends Portfolio
         return $totalValue;
     }
 
+    /**
+     * Calculate period performance using share price growth
+     * This excludes the impact of deposits/withdrawals because share price = NAV / total_shares
+     * When deposits come in, new shares are issued, so share price reflects only market performance
+     */
     public function periodPerformance($from, $to)
     {
-        $valueFrom = $this->valueAsOf($from);
-        $valueTo = $this->valueAsOf($to);
-        // var_dump(array($from, $to, $valueFrom, $valueTo));
-        if ($valueFrom == 0) return 0;
-        return $valueTo / $valueFrom - 1;
+        $this->debug("periodPerformance $from $to");
+
+        /** @var FundExt $fund */
+        $fund = $this->fund()->first();
+        if (!$fund) {
+            // Fallback to simple calculation if no fund
+            $valueFrom = $this->valueAsOf($from);
+            $valueTo = $this->valueAsOf($to);
+            if ($valueFrom == 0) return 0;
+            return $valueTo / $valueFrom - 1;
+        }
+
+        // Use share price growth - this naturally excludes deposits/withdrawals
+        $sharePriceFrom = $fund->shareValueAsOf($from);
+        $sharePriceTo = $fund->shareValueAsOf($to);
+
+        if ($sharePriceFrom == 0) return 0;
+        return $sharePriceTo / $sharePriceFrom - 1;
     }
 
     public function yearlyPerformance($year)

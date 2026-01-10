@@ -11,243 +11,255 @@
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')
 
-            {{-- Fund Details --}}
+            {{-- Fund Highlights Card --}}
+            @php
+                $totalValueRaw = $api['portfolio']['total_value'] ?? 0;
+                // Remove $ and commas if it's a string, then format properly
+                if (is_string($totalValueRaw)) {
+                    $totalValueRaw = floatval(str_replace(['$', ','], '', $totalValueRaw));
+                }
+                $totalValue = '$' . number_format($totalValueRaw, 0);
+                $sharePrice = $api['share_price'] ?? 0;
+                $nav = $api['nav'] ?? 0;
+                $accountsCount = count($api['balances'] ?? []);
+            @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card" style="border: 2px solid #1e40af; overflow: hidden;">
+                        {{-- Header --}}
+                        <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none;">
+                            <h4 class="mb-0" style="color: #ffffff; font-weight: 700;">{{ $api['name'] }}</h4>
                             <div>
-                                <strong>Fund Details</strong>
-                                <a href="{{ route('funds.index') }}" class="btn btn-light btn-sm ms-2">Back</a>
-                            </div>
-                            <div>
+                                <a href="{{ route('funds.index') }}" class="btn btn-light btn-sm me-2">Back</a>
                                 <a href="/funds/{{ $api['id'] }}/trade_bands"
-                                   class="btn btn-outline-primary btn-sm mr-2" title="View Trading Bands">
+                                   class="btn btn-outline-light btn-sm me-2" title="View Trading Bands">
                                     <i class="fa fa-chart-bar me-1"></i> Trade Bands
                                 </a>
-                                <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}"
-                                   class="btn btn-outline-danger btn-sm" target="_blank" title="Download PDF Report">
-                                    <i class="fa fa-file-pdf me-1"></i> PDF Report
-                                </a>
+                                @isset($api['admin'])
+                                    <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}?admin=0"
+                                       class="btn btn-outline-light btn-sm me-2" title="View as Non-Admin">
+                                        <i class="fa fa-user me-1"></i> User View
+                                    </a>
+                                    <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}"
+                                       class="btn btn-outline-light btn-sm" target="_blank" title="Download Admin PDF">
+                                        <i class="fa fa-file-pdf me-1"></i> PDF
+                                    </a>
+                                @else
+                                    @if(in_array(Auth::user()->email ?? '', ['admin@dev.familyfund.local', 'claude@test.local']))
+                                        <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}"
+                                           class="btn btn-warning btn-sm me-2" title="View as Admin">
+                                            <i class="fa fa-user-shield me-1"></i> Admin View
+                                        </a>
+                                    @endif
+                                    <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}?admin=0"
+                                       class="btn btn-outline-light btn-sm" target="_blank" title="Download PDF Report">
+                                        <i class="fa fa-file-pdf me-1"></i> PDF
+                                    </a>
+                                @endisset
                             </div>
                         </div>
-                        <div class="card-body">
-                            @include('funds.show_fields_ext')
+
+                        {{-- Stats Row --}}
+                        <div class="card-body py-3" style="background: #eff6ff;">
+                            <div class="row text-center">
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ $totalValue }}</div>
+                                    <div class="text-muted text-uppercase small">Total Value</div>
+                                </div>
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">Share Price</div>
+                                </div>
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($nav, 2) }}</div>
+                                    <div class="text-muted text-uppercase small">NAV</div>
+                                </div>
+                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'showBorder' => isset($api['admin'])])
+                                @isset($api['admin'])
+                                <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
+                                    <div class="text-uppercase small" style="color: #92400e;">
+                                        Accounts <span class="badge" style="background: #d97706; color: #fff; font-size: 0.6rem; vertical-align: top;">ADMIN</span>
+                                    </div>
+                                </div>
+                                @endisset
+                            </div>
+                        </div>
+
+                        {{-- Admin: Allocated/Unallocated Visual --}}
+                        @isset($api['admin'])
+                        @php
+                            $allocatedPct = $api['summary']['allocated_shares_percent'] ?? 0;
+                            $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? (100 - $allocatedPct);
+                            $allocatedShares = ($api['summary']['shares'] ?? 0) * $allocatedPct / 100;
+                            $unallocatedShares = ($api['summary']['shares'] ?? 0) - $allocatedShares;
+                            $allocatedValueCalc = $allocatedShares * ($api['share_price'] ?? 0);
+                            $unallocatedValueCalc = $unallocatedShares * ($api['share_price'] ?? 0);
+                        @endphp
+                        <div class="card-body py-3" style="background: #fffbeb; border-top: 1px solid #bfdbfe;">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge" style="background: #d97706; color: #fff; font-size: 0.7rem; margin-right: 8px;">ADMIN</span>
+                                <strong class="text-muted small">Share Allocation</strong>
+                            </div>
+                            {{-- Progress Bar --}}
+                            <div class="d-flex mb-3" style="border-radius: 6px; overflow: hidden;">
+                                <div style="width: {{ $allocatedPct }}%; background-color: #22c55e; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px;">
+                                    {{ number_format($allocatedPct, 1) }}%
+                                </div>
+                                <div style="width: {{ $unallocatedPct }}%; background-color: #d97706; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px;">
+                                    {{ number_format($unallocatedPct, 1) }}%
+                                </div>
+                            </div>
+                            {{-- Allocated / Unallocated Boxes --}}
+                            <div class="row">
+                                <div class="col-6">
+                                    <div style="background-color: #22c55e; padding: 12px 16px; border-radius: 6px; color: #ffffff;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span style="font-size: 14px; font-weight: 700;">Allocated</span>
+                                                <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($allocatedPct, 1) }}%</span>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <span style="font-size: 11px; opacity: 0.9;">{{ number_format($allocatedShares, 2) }} shares</span><br>
+                                                <span style="font-size: 18px; font-weight: 700;">${{ number_format($allocatedValueCalc, 0) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div style="background-color: #d97706; padding: 12px 16px; border-radius: 6px; color: #ffffff;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span style="font-size: 14px; font-weight: 700;">Unallocated</span>
+                                                <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($unallocatedPct, 1) }}%</span>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <span style="font-size: 11px; opacity: 0.9;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
+                                                <span style="font-size: 18px; font-weight: 700;">${{ number_format($unallocatedValueCalc, 0) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endisset
+
+                        {{-- Fund Details --}}
+                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #bfdbfe;">
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>As of:</strong> {{ $asOf }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Source:</strong> {{ $api['portfolio']['source'] ?? 'N/A' }}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Jump Bar Anchor --}}
-            <div id="jumpBarAnchor"></div>
+            {{-- Reusable Jump Bar --}}
+            @include('partials.jump_bar', ['sections' => [
+                ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
+                ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
+                ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast'],
+                ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios'],
+                ['id' => 'section-allocation', 'icon' => 'fa-users', 'label' => 'Acct Alloc', 'condition' => isset($api['admin'])],
+                ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
+                ['id' => 'section-trade-portfolios', 'icon' => 'fa-briefcase', 'label' => 'Trade Portfolios'],
+                ['id' => 'section-assets-table', 'icon' => 'fa-coins', 'label' => 'Assets'],
+                ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transactions'],
+                ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin'])],
+            ]])
 
-            {{-- Sticky Jump Bar --}}
-            <div id="jumpBar" class="card shadow-sm mb-3" style="position: sticky; top: 56px; z-index: 1020; border-radius: 4px; display: none;">
-                <div class="card-body py-2">
-                    <div class="d-flex flex-wrap align-items-center">
-                        <span class="mr-3 text-muted small"><i class="fa fa-compass me-1"></i>Jump to:</span>
-                        <a href="#section-charts" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-chart-line me-1"></i>Charts
-                        </a>
-                        <a href="#section-regression" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-chart-area me-1"></i>Forecast
-                        </a>
-                        <a href="#section-portfolios" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-chart-bar me-1"></i>Portfolios
-                        </a>
-                        @isset($api['admin'])
-                        <a href="#section-allocation" class="btn btn-sm btn-outline-warning mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-chart-pie me-1"></i>Allocation
-                        </a>
-                        @endisset
-                        <a href="#section-performance" class="btn btn-sm btn-outline-primary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-table me-1"></i>Performance
-                        </a>
-                        <a href="#section-assets-table" class="btn btn-sm btn-outline-secondary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-coins me-1"></i>Assets Table
-                        </a>
-                        <a href="#section-transactions" class="btn btn-sm btn-outline-secondary mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-exchange-alt me-1"></i>Transactions
-                        </a>
-                        @isset($api['admin'])
-                        <a href="#section-accounts" class="btn btn-sm btn-outline-warning mr-2 mb-1 jump-nav-btn">
-                            <i class="fa fa-user-friends me-1"></i>Accounts
-                        </a>
-                        @endisset
-                        <a href="#section-details" class="btn btn-sm btn-outline-dark ml-auto mb-1" title="Back to top">
-                            <i class="fa fa-arrow-up"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Main Charts Row --}}
+            {{-- Main Charts Row (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-charts">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
                             <strong><i class="fa fa-chart-line mr-2"></i>Monthly Value</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyValue"
+                               role="button" aria-expanded="true" aria-controls="collapseMonthlyValue">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @php($addSP500 = true)
-                            @include('funds.performance_line_graph')
-                            @php($addSP500 = false)
+                        <div class="collapse show" id="collapseMonthlyValue">
+                            <div class="card-body">
+                                @php($addSP500 = true)
+                                @include('funds.performance_line_graph')
+                                @php($addSP500 = false)
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
                             <strong><i class="fa fa-chart-bar mr-2"></i>Yearly Value</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyValue"
+                               role="button" aria-expanded="true" aria-controls="collapseYearlyValue">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.performance_graph')
+                        <div class="collapse show" id="collapseYearlyValue">
+                            <div class="card-body">
+                                @include('funds.performance_graph')
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Forecast (Linear Regression) --}}
+            {{-- Forecast (Linear Regression) (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-regression">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
                             <strong><i class="fa fa-chart-area mr-2"></i>Forecast (Linear Regression)</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseForecast"
+                               role="button" aria-expanded="true" aria-controls="collapseForecast">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
                         </div>
-                        <div class="card-body">
-                            @include('funds.performance_line_graph_linreg')
+                        <div class="collapse show" id="collapseForecast">
+                            <div class="card-body">
+                                @include('funds.performance_line_graph_linreg')
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
                             <strong><i class="fa fa-table mr-2"></i>Projection Table</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('funds.linreg_table')
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Trade Portfolios Comparison (includes Current Assets) --}}
-            <div id="section-portfolios">
-                @include('trade_portfolios.stacked_bar_graph')
-            </div>
-
-            {{-- Admin Allocation Charts --}}
-            @isset($api['balances'])@isset($api['admin'])
-            <div class="row mb-4" id="section-allocation">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="card h-100">
-                        <div class="card-header" style="background-color: #fff3cd;">
-                            <strong><i class="fa fa-chart-pie mr-2"></i>Fund Allocation (ADMIN)</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('funds.allocation_graph')
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header" style="background-color: #fff3cd;">
-                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation (ADMIN)</strong>
-                        </div>
-                        <div class="card-body">
-                            @include('funds.accounts_graph')
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endisset @endisset
-
-            {{-- Performance Tables --}}
-            <div class="row mb-4" id="section-performance">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <strong><i class="fa fa-table mr-2"></i>Yearly Performance</strong>
-                        </div>
-                        <div class="card-body">
-                            @php ($performance_key = 'yearly_performance')
-                            @include('funds.performance_table')
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <strong><i class="fa fa-table mr-2"></i>Monthly Performance</strong>
-                        </div>
-                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                            @php ($performance_key = 'monthly_performance')
-                            @include('funds.performance_table')
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Trade Portfolios Details --}}
-            @foreach($api['tradePortfolios'] as $tradePortfolio)
-                @php($extraTitle = '' . $tradePortfolio->id)
-                @php($tradePortfolioItems = $tradePortfolio->items)
-                @include('trade_portfolios.inner_show')
-            @endforeach
-
-            {{-- Assets Table - Collapsible --}}
-            <div class="row mb-4" id="section-assets-table">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <strong><i class="fa fa-coins mr-2"></i>Assets</strong>
-                            <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAT"
-                               role="button" aria-expanded="false" aria-controls="collapseAT">
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseProjection"
+                               role="button" aria-expanded="true" aria-controls="collapseProjection">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
                         </div>
-                        <div class="collapse" id="collapseAT">
+                        <div class="collapse show" id="collapseProjection">
                             <div class="card-body">
-                                @include('funds.assets_table')
+                                @include('funds.linreg_table')
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Transactions Table - Collapsible --}}
-            <div class="row mb-4" id="section-transactions">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transactions</strong>
-                            <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseATrans"
-                               role="button" aria-expanded="false" aria-controls="collapseATrans">
-                                <i class="fa fa-chevron-down"></i>
-                            </a>
-                        </div>
-                        <div class="collapse" id="collapseATrans">
-                            <div class="card-body">
-                                @include('accounts.transactions_table')
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Asset Performance by Group - Collapsible --}}
+            {{-- Asset Performance by Group (Collapsible, start expanded) --}}
             @foreach($api['asset_monthly_performance'] as $group => $perf)
                 <div class="row mb-4" id="section-group-{{ Str::slug($group) }}">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
                                 <strong><i class="fa fa-layer-group mr-2"></i>Group {{ $group }} Performance</strong>
-                                <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapse{{$group}}"
-                                   role="button" aria-expanded="false" aria-controls="collapse{{$group}}">
+                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroup{{$group}}"
+                                   role="button" aria-expanded="true" aria-controls="collapseGroup{{$group}}">
                                     <i class="fa fa-chevron-down"></i>
                                 </a>
                             </div>
-                            <div class="collapse" id="collapse{{$group}}">
+                            <div class="collapse show" id="collapseGroup{{$group}}">
                                 <div class="card-body">
                                     @include('funds.performance_line_graph_assets')
                                 </div>
@@ -257,19 +269,168 @@
                 </div>
             @endforeach
 
-            {{-- Accounts Table - Admin Only, Collapsible --}}
+            {{-- Trade Portfolios Comparison (includes Current Assets) --}}
+            <div id="section-portfolios">
+                @include('trade_portfolios.stacked_bar_graph')
+            </div>
+
+            {{-- Admin Accounts Allocation Chart (Collapsible, start expanded) --}}
+            @isset($api['balances'])@isset($api['admin'])
+            <div class="row mb-4" id="section-allocation">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
+                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 0.7rem;">ADMIN</span></strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAcctAlloc"
+                               role="button" aria-expanded="true" aria-controls="collapseAcctAlloc">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapseAcctAlloc">
+                            <div class="card-body">
+                                @include('funds.accounts_graph')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endisset @endisset
+
+            {{-- Performance Tables (Collapsible, start expanded) --}}
+            <div class="row mb-4" id="section-performance">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                            <strong><i class="fa fa-table mr-2"></i>Yearly Performance</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyPerf"
+                               role="button" aria-expanded="true" aria-controls="collapseYearlyPerf">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapseYearlyPerf">
+                            <div class="card-body">
+                                @php ($performance_key = 'yearly_performance')
+                                @include('funds.performance_table')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                            <strong><i class="fa fa-table mr-2"></i>Monthly Performance</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyPerf"
+                               role="button" aria-expanded="true" aria-controls="collapseMonthlyPerf">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapseMonthlyPerf">
+                            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                @php ($performance_key = 'monthly_performance')
+                                @include('funds.performance_table')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Trade Portfolios Comparison (Collapsible, start expanded) --}}
+            <div class="row mb-4" id="section-portfolios-alt">
+            <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                    <strong><i class="fa fa-columns mr-2"></i>Trade Portfolios Comparison</strong>
+                    <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfoliosAlt"
+                       role="button" aria-expanded="true" aria-controls="collapseTradePortfoliosAlt">
+                        <i class="fa fa-chevron-down"></i>
+                    </a>
+                </div>
+                <div class="collapse show" id="collapseTradePortfoliosAlt">
+                    <div class="card-body">
+                        @include('trade_portfolios.inner_show_alt')
+                    </div>
+                </div>
+            </div>
+            </div>
+            </div>
+
+            {{-- Trade Portfolios Details (Collapsible, start expanded) --}}
+            <div class="row mb-4" id="section-trade-portfolios">
+            <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                    <strong><i class="fa fa-briefcase mr-2"></i>Trade Portfolios</strong>
+                    <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfolios"
+                       role="button" aria-expanded="true" aria-controls="collapseTradePortfolios">
+                        <i class="fa fa-chevron-down"></i>
+                    </a>
+                </div>
+                <div class="collapse show" id="collapseTradePortfolios">
+                    <div class="card-body">
+                        @foreach($api['tradePortfolios'] as $tradePortfolio)
+                            @php($extraTitle = '' . $tradePortfolio->id)
+                            @php($tradePortfolioItems = $tradePortfolio->items)
+                            @include('trade_portfolios.inner_show_compact')
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            </div>
+            </div>
+
+            {{-- Assets Table (Collapsible, start expanded) --}}
+            <div class="row mb-4" id="section-assets-table">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                            <strong><i class="fa fa-coins mr-2"></i>Assets</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAssets"
+                               role="button" aria-expanded="true" aria-controls="collapseAssets">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapseAssets">
+                            <div class="card-body">
+                                @include('funds.assets_table')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Transactions Table (Collapsible, start expanded) --}}
+            <div class="row mb-4" id="section-transactions">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transactions</strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
+                               role="button" aria-expanded="true" aria-controls="collapseTransactions">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapseTransactions">
+                            <div class="card-body">
+                                @include('accounts.transactions_table')
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Accounts Table - Admin Only (Collapsible, start expanded) --}}
             @isset($api['balances']) @isset($api['admin'])
                 <div class="row mb-4" id="section-accounts">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #fff3cd;">
-                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts (ADMIN)</strong>
-                                <a class="btn btn-outline-secondary btn-sm" data-toggle="collapse" href="#collapseAccounts"
-                                   role="button" aria-expanded="false" aria-controls="collapseAccounts">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
+                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 0.7rem;">ADMIN</span></strong>
+                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccounts"
+                                   role="button" aria-expanded="true" aria-controls="collapseAccounts">
                                     <i class="fa fa-chevron-down"></i>
                                 </a>
                             </div>
-                            <div class="collapse" id="collapseAccounts">
+                            <div class="collapse show" id="collapseAccounts">
                                 <div class="card-body">
                                     @include('funds.accounts_table')
                                 </div>
@@ -280,88 +441,4 @@
             @endisset @endisset
         </div>
     </div>
-
-@push('scripts')
-<script type="text/javascript">
-$(document).ready(function() {
-    const $jumpBar = $('#jumpBar');
-    const $jumpBarAnchor = $('#jumpBarAnchor');
-
-    // Show/hide nav based on scroll position
-    function updateNavVisibility() {
-        if ($jumpBarAnchor.length === 0) return;
-
-        const anchorTop = $jumpBarAnchor.offset().top;
-        const scrollTop = $(window).scrollTop();
-
-        if (scrollTop > anchorTop - 100) {
-            $jumpBar.slideDown(200);
-        } else {
-            $jumpBar.slideUp(200);
-        }
-    }
-
-    // Initial check
-    updateNavVisibility();
-
-    // Smooth scroll for navigation
-    $('.jump-nav-btn').click(function(e) {
-        e.preventDefault();
-        const target = $(this).attr('href');
-        const $target = $(target);
-
-        if ($target.length === 0) return;
-
-        // Expand if target has a collapse
-        const $collapse = $target.find('.collapse');
-        if ($collapse.length > 0) {
-            $collapse.collapse('show');
-        }
-
-        // Scroll with offset for sticky nav and main navbar
-        const offset = 120;
-        $('html, body').animate({
-            scrollTop: $target.offset().top - offset
-        }, 300);
-
-        // Highlight active button
-        $('.jump-nav-btn').removeClass('btn-primary btn-warning').addClass(function() {
-            return $(this).hasClass('btn-outline-warning') ? 'btn-outline-warning' : 'btn-outline-primary';
-        });
-        $(this).removeClass('btn-outline-primary btn-outline-warning btn-outline-secondary').addClass('btn-primary');
-    });
-
-    // Update nav visibility and active button on scroll
-    $(window).scroll(function() {
-        updateNavVisibility();
-
-        // Update active nav button
-        const offset = 150;
-        let currentSection = null;
-
-        $('[id^="section-"]').each(function() {
-            const sectionTop = $(this).offset().top - offset;
-            if ($(window).scrollTop() >= sectionTop) {
-                currentSection = $(this).attr('id');
-            }
-        });
-
-        if (currentSection) {
-            $('.jump-nav-btn').removeClass('btn-primary').addClass(function() {
-                if ($(this).hasClass('btn-outline-warning') || $(this).data('admin')) {
-                    return 'btn-outline-warning';
-                }
-                if ($(this).hasClass('btn-outline-secondary') || $(this).data('secondary')) {
-                    return 'btn-outline-secondary';
-                }
-                return 'btn-outline-primary';
-            });
-            $('.jump-nav-btn[href="#' + currentSection + '"]')
-                .removeClass('btn-outline-primary btn-outline-warning btn-outline-secondary')
-                .addClass('btn-primary');
-        }
-    });
-});
-</script>
-@endpush
 </x-app-layout>

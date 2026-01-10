@@ -32,8 +32,8 @@
                             <div class="card-body">
                                 @foreach($account->goals as $goal)
                                     <h3>{{ $goal->name }} ({{ $goal->id }})</h3>
-                                    @include('goals.progress_bar')
-                                    @include('goals.progress_details')
+                                    @include('goals.progress_summary', ['goal' => $goal, 'format' => 'web'])
+                                    @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'web'])
                                 @endforeach
                             </div>
                         </div>

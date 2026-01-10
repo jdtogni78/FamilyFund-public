@@ -153,6 +153,21 @@
         updateSharesCalculation();
     });
 
+    // Transaction type legends
+    var typeLegends = {
+        'PUR': '<span class="text-success"><i class="fa fa-arrow-right"></i> Move Fund shares to Account</span>',
+        'INI': '<span class="text-primary"><i class="fa fa-flag"></i> Set initial account value and shares</span>',
+        'SAL': '<span class="text-danger"><i class="fa fa-arrow-left"></i> Move Account shares to Fund</span>',
+        'MAT': '<span class="text-purple" style="color: #9333ea;"><i class="fa fa-gift"></i> Sponsored: Move Fund shares to Account</span>',
+        'BOR': '<span class="text-warning"><i class="fa fa-hand-holding-usd"></i> Cash from Fund to Account (loan)</span>',
+        'REP': '<span class="text-info"><i class="fa fa-undo"></i> Cash from Account to Fund (repay loan)</span>'
+    };
+
+    function updateTypeLegend() {
+        var type = $('#type').val();
+        $('#type_legend').html(typeLegends[type] || '&nbsp;');
+    }
+
     $("#type").change(function() {
         var value = $(this).val();
         if (value === 'INI') {
@@ -161,6 +176,7 @@
             $('#shares').prop('readonly', true);
         }
         updateSharesCalculation();
+        updateTypeLegend();
     });
 
     $("#shares").on('input change', function() {
@@ -173,6 +189,9 @@
     $(document).ready(function() {
         // Apply initial fund filter
         filterAccountsByFund();
+
+        // Set initial type legend
+        updateTypeLegend();
 
         if ($('#account_id').val() && $('#timestamp').val()) {
             updateAccountInfo();

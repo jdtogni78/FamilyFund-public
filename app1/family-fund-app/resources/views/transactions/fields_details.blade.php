@@ -15,7 +15,9 @@
                 <option value="{{ $value }}" {{ $defaultType == $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <div class="form-text small">&nbsp;</div>
+        <div class="form-text small" id="type_legend">
+            <span class="text-success"><i class="fa fa-arrow-right"></i> Cash to Fund, Shares to Account</span>
+        </div>
     </div>
     <div class="col-md-6 d-flex flex-column">
         <label for="value" class="form-label text-muted small text-uppercase mb-1">Amount</label>

@@ -110,6 +110,19 @@ trait TransactionTrait
         $transaction_data['share_value_today'] = $account->shareValueAsOf($today);
         $transaction_data['transaction'] = $transaction;
 
+        // Fund shares source data (for purchase/sale visualization)
+        $fund = $account->fund;
+        $timestamp = $transaction->timestamp;
+        $fundSharesAfter = $fund->unallocatedShares($timestamp);
+        // Before = After + shares transferred to account (or - shares returned from account)
+        $fundSharesBefore = $fundSharesAfter + $transaction->shares;
+        $transaction_data['fundShares'] = [
+            'fund_name' => $fund->name,
+            'before' => $fundSharesBefore,
+            'after' => $fundSharesAfter,
+            'change' => -$transaction->shares, // Negative for purchase (fund loses), positive for sale
+        ];
+
         return $transaction_data;
     }
 

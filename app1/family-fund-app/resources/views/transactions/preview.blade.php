@@ -125,6 +125,60 @@
                 </div>
             </div>
 
+            <!-- Fund Shares Source Card -->
+            @if(isset($api1['fundShares']))
+            @php($fundShares = $api1['fundShares'])
+            @php($fundChange = $fundShares['change'])
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-{{ $fundChange >= 0 ? 'success' : 'warning' }}">
+                        <div class="card-header bg-{{ $fundChange >= 0 ? 'success' : 'warning' }} text-{{ $fundChange >= 0 ? 'white' : 'dark' }}">
+                            <i class="fa fa-university me-2"></i>
+                            <strong>Fund Shares Source</strong>
+                            <span class="float-end">{{ $fundShares['fund_name'] }}</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Change Badge at Top -->
+                            <div class="text-center mb-3">
+                                <span class="badge bg-{{ $fundChange >= 0 ? 'success' : 'warning' }} text-{{ $fundChange >= 0 ? 'white' : 'dark' }} fs-5 px-4 py-2">
+                                    <i class="fa fa-{{ $fundChange >= 0 ? 'plus' : 'minus' }} me-1"></i>
+                                    {{ number_format(abs($fundChange), 4) }} SHARES
+                                </span>
+                            </div>
+
+                            <!-- Before/After Flow -->
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <div class="text-center px-3">
+                                    <div class="text-muted small text-uppercase">Before</div>
+                                    <div class="fs-3 text-muted">{{ number_format($fundShares['before'], 4) }}</div>
+                                    <div class="small text-muted">unallocated</div>
+                                </div>
+                                <div class="mx-3">
+                                    <i class="fa fa-long-arrow-right fa-2x text-{{ $fundChange >= 0 ? 'success' : 'warning' }}"></i>
+                                </div>
+                                <div class="text-center px-3">
+                                    <div class="text-muted small text-uppercase">After</div>
+                                    <div class="fs-3 fw-bold text-{{ $fundChange >= 0 ? 'success' : 'warning' }}">
+                                        {{ number_format($fundShares['after'], 4) }}
+                                    </div>
+                                    <div class="small fw-bold">unallocated</div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="text-muted small text-center">
+                                @if($fundChange < 0)
+                                    <i class="fa fa-arrow-right me-1 text-success"></i> Shares moving to Account
+                                @else
+                                    <i class="fa fa-arrow-left me-1 text-warning"></i> Shares returning to Fund
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Matching Transactions -->
             @if(null !== $api1['matches'] && count($api1['matches']) > 0)
             <div class="card mb-4 border-purple">

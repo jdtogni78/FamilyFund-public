@@ -244,38 +244,38 @@
     @endforeach
     @endif
 
-    {{-- Monthly Performance Chart --}}
+    {{-- Monthly Value Chart --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
             <td style="background: #1e293b; padding: 10px 16px;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE</span>
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY VALUE</span>
             </td>
         </tr>
         @if(isset($files['monthly_performance.png']) && file_exists($files['monthly_performance.png']))
         <tr>
             <td style="padding: 12px;">
-                <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Performance" style="width: 100%;"/>
+                <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Value" style="width: 100%;"/>
             </td>
         </tr>
         @else
         <tr>
             <td style="padding: 12px; color: #64748b; font-size: 11px;">
-                Monthly performance chart not available
+                Monthly value chart not available
             </td>
         </tr>
         @endif
     </table>
 
-    {{-- Yearly Performance Chart --}}
+    {{-- Yearly Value Chart --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
             <td style="background: #1e293b; padding: 10px 16px;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
+                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY VALUE</span>
             </td>
         </tr>
         <tr>
             <td style="padding: 12px;">
-                <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Performance" style="width: 100%;"/>
+                <img src="{{ $files['yearly_performance.png'] }}" alt="Yearly Value" style="width: 100%;"/>
             </td>
         </tr>
     </table>

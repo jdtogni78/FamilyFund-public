@@ -41,6 +41,12 @@
                                            value="{{ $asOf ?? '' }}" disabled title="Use as_of route for end date">
                                     <button type="submit" class="btn btn-light btn-sm">Apply</button>
                                 </form>
+                                <button class="btn btn-outline-light btn-sm" id="toggleAllFromHeader" title="Collapse/Expand All">
+                                    <i class="fa fa-compress-arrows-alt"></i> All
+                                </button>
+                                <button class="btn btn-outline-light btn-sm" id="toggleAssetsFromHeader" title="Collapse/Expand Assets Only">
+                                    <i class="fa fa-chart-line"></i> Assets
+                                </button>
                                 <a href="/funds/{{ $api['id'] }}/trade_bands_pdf_as_of/{{ $asOf ?? now()->format('Y-m-d') }}{{ $fromDate ? '?from=' . $fromDate : '' }}" class="btn btn-outline-light btn-sm" title="Download PDF">
                                     <i class="fa fa-file-pdf"></i>
                                 </a>
@@ -104,4 +110,54 @@
             @include('funds.performance_line_graph_assets_with_bands', ['portfolioSymbols' => $portfolioSymbols])
         </div>
     </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Asset symbols for filtering
+    const assetSymbols = @json($portfolioSymbols);
+    const assetCollapseIds = assetSymbols.map(s => '#collapse' + s);
+
+    // Add "Assets" button to jump bar (after the existing toggle all button)
+    $('#toggleAllSections').after(
+        '<button class="btn btn-sm btn-outline-secondary ms-1 mb-1" id="toggleAssetSections" title="Collapse/Expand Assets Only">' +
+        '<i class="fa fa-chart-line"></i>' +
+        '</button>'
+    );
+
+    // Toggle ALL sections (header button syncs with jump bar)
+    let allExpanded = true;
+    function toggleAll() {
+        if (allExpanded) {
+            $('.collapse.show').collapse('hide');
+            $('#toggleAllFromHeader i, #toggleAllSections i').removeClass('fa-compress-arrows-alt').addClass('fa-expand-arrows-alt');
+        } else {
+            $('.collapse:not(.show)').collapse('show');
+            $('#toggleAllFromHeader i, #toggleAllSections i').removeClass('fa-expand-arrows-alt').addClass('fa-compress-arrows-alt');
+        }
+        allExpanded = !allExpanded;
+    }
+    $('#toggleAllFromHeader').click(toggleAll);
+
+    // Toggle ASSETS only (header and jump bar)
+    let assetsExpanded = true;
+    function toggleAssets() {
+        assetCollapseIds.forEach(id => {
+            const $el = $(id);
+            if (assetsExpanded) {
+                $el.collapse('hide');
+            } else {
+                $el.collapse('show');
+            }
+        });
+        const icon = assetsExpanded ? 'fa-expand' : 'fa-chart-line';
+        const oldIcon = assetsExpanded ? 'fa-chart-line' : 'fa-expand';
+        $('#toggleAssetsFromHeader i, #toggleAssetSections i').removeClass(oldIcon).addClass(icon);
+        assetsExpanded = !assetsExpanded;
+    }
+    $('#toggleAssetsFromHeader').click(toggleAssets);
+    $('#toggleAssetSections').click(toggleAssets);
+});
+</script>
+@endpush
 </x-app-layout>

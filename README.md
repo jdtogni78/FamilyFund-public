@@ -372,6 +372,79 @@ If backups to NAS fail, check:
 5. **Common error:** `mkdir "/mnt/backup/..." failed: No such file or directory`
    - Means NFS is not mounted. Run `sudo mount /mnt/backup` on spirit.
 
+6. **Fix fstab if missing `_netdev`:**
+   ```bash
+   # Check current fstab
+   grep backup /etc/fstab
+   # If missing _netdev, fix it:
+   sudo sed -i 's|/mnt/backup   nfs    defaults|/mnt/backup   nfs    defaults,_netdev|' /etc/fstab
+   ```
+
+### Docker Image Management
+
+The FamilyFund container uses `bitnami/laravel` base image. Bitnami periodically removes old version tags.
+
+**If docker build fails with "image not found":**
+
+1. Check for saved image backup on melnick:
+   ```bash
+   ls -lh /mnt/backup/dstrader_server/home/jdtogni/dev/backups/docker-dev-familyfund_*.tgz
+   ```
+
+2. Copy and load the image:
+   ```bash
+   cp /mnt/backup/dstrader_server/home/jdtogni/dev/backups/docker-dev-familyfund_*.tgz ~/dev/backups/
+   gunzip -c ~/dev/backups/docker-dev-familyfund_*.tgz | docker load
+   ```
+
+3. Update docker-compose.yml to use pre-built image:
+   ```yaml
+   # Change from:
+   build: ./FamilyFund/app1
+   # To:
+   image: dev-familyfund:latest
+   ```
+
+4. Start containers:
+   ```bash
+   cd ~/dev && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+   ```
+
+### GPG Encryption for Backups
+
+Database backups are encrypted using GPG before being stored. The encryption runs inside the dstrader container.
+
+**Configuration:**
+- GPG key: `docker@example.local`
+- Passphrase file: `dstrader/dstrader.passphrase`
+- Encryption lib: `dstrader/opt/encr_files_lib.sh`
+
+**Requirements:**
+- Host's `~/.gnupg` must be mounted in container (already configured in docker-compose.yml):
+  ```yaml
+  volumes:
+    - /home/jdtogni/.gnupg:/root/.gnupg
+  ```
+
+**If encryption fails with "Unusable public key":**
+
+1. Check if GPG keys are mounted:
+   ```bash
+   docker exec dstrader gpg --list-keys docker@example.local
+   ```
+
+2. If keys missing, verify docker-compose.yml has the gnupg volume mount
+
+3. If keys exist but not trusted, the mount worked but trust was lost. Run:
+   ```bash
+   docker exec -it dstrader bash -c "echo -e '5\ny\n' | gpg --command-fd 0 --edit-key docker@example.local trust"
+   ```
+
+**Test encryption manually:**
+```bash
+docker exec dstrader bash -c "echo test | gpg --batch --yes --trust-model always -e -r docker@example.local > /dev/null && echo OK"
+```
+
 ## VPN Setup
 
 L2TP/IPSec

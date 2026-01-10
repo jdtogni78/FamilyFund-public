@@ -5,6 +5,7 @@
             <tr>
                 <th>Period</th>
                 <th>Performance</th>
+                <th>Value Chg</th>
                 <th>Shares</th>
                 <th>Total Value</th>
                 <th>Share Price</th>
@@ -15,11 +16,16 @@
             @php
                 $perfValue = floatval($perf['performance']);
                 $perfClass = $perfValue >= 0 ? 'text-success' : 'text-danger';
+                $valueChange = floatval($perf['value_change'] ?? 0);
+                $valueChangeClass = $valueChange >= 0 ? 'text-success' : 'text-danger';
             @endphp
             <tr>
                 <td>{{ $period }}</td>
                 <td class="{{ $perfClass }}" style="font-weight: 600;" data-order="{{ $perfValue }}">
                     {{ $perfValue >= 0 ? '+' : '' }}{{ number_format($perfValue, 2) }}%
+                </td>
+                <td class="{{ $valueChangeClass }}" data-order="{{ $valueChange }}">
+                    {{ $valueChange >= 0 ? '+' : '' }}{{ number_format($valueChange, 2) }}%
                 </td>
                 <td data-order="{{ $perf['shares'] }}">{{ number_format($perf['shares'], 2) }}</td>
                 <td data-order="{{ $perf['value'] }}">${{ number_format($perf['value'], 2) }}</td>

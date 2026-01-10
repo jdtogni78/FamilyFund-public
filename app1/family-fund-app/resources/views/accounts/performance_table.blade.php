@@ -10,6 +10,7 @@
             <tr>
                 <th>Period</th>
                 <th class="text-end">Performance</th>
+                <th class="text-end">Value Chg</th>
                 <th class="text-end">Shares</th>
                 <th class="text-end">Total Value</th>
                 <th class="text-end">Share Price</th>
@@ -20,6 +21,8 @@
             @php
                 $perfValue = floatval($perf['performance'] ?? 0);
                 $perfColor = $perfValue >= 0 ? '#16a34a' : '#dc2626';
+                $valueChange = floatval($perf['value_change'] ?? 0);
+                $valueChangeColor = $valueChange >= 0 ? '#16a34a' : '#dc2626';
                 $isLast = $period === $lastPeriod;
             @endphp
             <tr class="{{ $isLast ? 'table-primary' : '' }}">
@@ -33,6 +36,11 @@
                 <td class="text-end">
                     <span style="color: {{ $perfColor }}; font-weight: {{ $isLast ? 'bold' : 'normal' }};">
                         @if($perfValue >= 0)+@endif{{ number_format($perfValue, 2) }}%
+                    </span>
+                </td>
+                <td class="text-end">
+                    <span style="color: {{ $valueChangeColor }};">
+                        @if($valueChange >= 0)+@endif{{ number_format($valueChange, 2) }}%
                     </span>
                 </td>
                 <td class="text-end">{{ number_format($perf['shares'], 2) }}</td>

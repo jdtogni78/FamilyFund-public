@@ -172,6 +172,7 @@ trait PerformanceTrait
         } else {
             $ret = array_reverse($arr, true);;
         }
+        $ret = $this->addValueChangeToArray($ret);
         return $ret;
     }
 
@@ -184,7 +185,7 @@ trait PerformanceTrait
 
         if ($asOf != $yearStart) {
             $yp = $this->createPerformanceArray($yearStart, $asOf);
-            $arr[$asOf] = $yp;
+            $arr[$yearStart . ' to ' . $asOf] = $yp;
         }
 
         $tran = $this->perfObject->findOldestTransaction();
@@ -202,14 +203,15 @@ trait PerformanceTrait
             $yearStart = $year.'-01-01';
             $prevYearStart = ($year-1).'-01-01';
             $yp = $this->createPerformanceArray($prevYearStart, $yearStart);
-            $arr[$yearStart] = $yp;
+            $arr[$prevYearStart . ' to ' . $yearStart] = $yp;
         }
-        $arr[$firstDate] = $this->createPerformanceArray($prevYearStart, $firstDate);
+        $arr[$prevYearStart . ' to ' . $firstDate] = $this->createPerformanceArray($prevYearStart, $firstDate);
 
 
         $ret = $this->removeEmptyStart($arr);
         $ret = array_reverse($ret);
         $ret = $this->removeEmptyStart($ret);
+        $ret = $this->addValueChangeToArray($ret);
         return $ret;
     }
 
@@ -235,6 +237,27 @@ trait PerformanceTrait
             }
         }
         return $ret;
+    }
+
+    /**
+     * Add value_change percentage to each period (compares total value, includes deposits/withdrawals)
+     * This is different from 'performance' which uses share price growth (excludes deposits)
+     */
+    protected function addValueChangeToArray(array $arr): array
+    {
+        $prevValue = null;
+        foreach ($arr as $period => &$data) {
+            if (isset($data['value'])) {
+                $currentValue = floatval(str_replace(['$', ','], '', $data['value']));
+                if ($prevValue !== null && $prevValue != 0) {
+                    $data['value_change'] = Utils::percent(($currentValue - $prevValue) / $prevValue);
+                } else {
+                    $data['value_change'] = 0;
+                }
+                $prevValue = $currentValue;
+            }
+        }
+        return $arr;
     }
 
     public function createLinearRegressionResponse($monthly_performance, $asOf, $currentValue = null) {

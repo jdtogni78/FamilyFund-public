@@ -4,6 +4,7 @@
         <tr>
             <th>Period</th>
             <th class="col-number">Performance</th>
+            <th class="col-number">Value Chg</th>
             <th class="col-number">Shares</th>
             <th class="col-number">Total Value</th>
             <th class="col-number">Share Price</th>
@@ -11,10 +12,16 @@
     </thead>
     <tbody>
     @foreach($api[$performance_key] as $period => $perf)
+        @php
+            $valueChange = $perf['value_change'] ?? 0;
+        @endphp
         <tr>
             <td>{{ $period }}</td>
             <td class="col-number {{ ($perf['performance'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
                 {{ number_format($perf['performance'] ?? 0, 2) }}%
+            </td>
+            <td class="col-number {{ $valueChange >= 0 ? 'text-success' : 'text-danger' }}">
+                {{ number_format($valueChange, 2) }}%
             </td>
             <td class="col-number">{{ number_format($perf['shares'] ?? 0, 2) }}</td>
             <td class="col-number">${{ number_format($perf['value'] ?? 0, 2) }}</td>

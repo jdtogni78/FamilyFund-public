@@ -156,10 +156,9 @@ Register in `.claude-agents` file per global instructions. See `~/.claude/CLAUDE
 
 ## Claude Testing
 
-A dedicated test user exists for automated testing:
+A dedicated test user exists for automated testing (created by `prod_to_dev.sql`):
 - **Email**: claude@test.local
 - **Password**: claude-test-2024
-- **User ID**: 1346
 
 Dev-only auto-login route (local environment only):
 ```

@@ -1,17 +1,23 @@
+@php
+    // Use passed portfolioSymbols or build from trade portfolios
+    $portfolioSymbols = $portfolioSymbols ?? collect($api['tradePortfolios'] ?? [])
+        ->flatMap(fn($tp) => collect($tp->items ?? $tp['items'] ?? [])->pluck('symbol'))
+        ->unique()
+        ->toArray();
+@endphp
 @foreach ($api['asset_monthly_bands'] as $symbol => $data)
-    @if ($symbol != 'SP500' && $symbol != 'CASH') 
-        <!-- && $api['tradePortfolios'].some(p => p.items.some(i => i.symbol == $symbol))) -->
-        <!-- TODO ignore if not in trade portfolio, using php -->
-        <div class="row">
+    @if ($symbol != 'SP500' && $symbol != 'CASH' && in_array($symbol, $portfolioSymbols))
+        <div class="row mb-4" id="section-{{$symbol}}">
             <div class="col">
               <div class="card">
-                <div class="card-header">
-                <a class="btn btn-primary" data-toggle="collapse" href="#collapse{{$symbol}}" 
-                  role="button" aria-expanded="false" aria-controls="collapse{{$symbol}}">
-                  {{$symbol}}
-                </a>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                    <strong><i class="fa fa-chart-line mr-2"></i>{{$symbol}}</strong>
+                    <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapse{{$symbol}}"
+                      role="button" aria-expanded="true" aria-controls="collapse{{$symbol}}">
+                      <i class="fa fa-chevron-down"></i>
+                    </a>
                 </div>
-                <div class="collapse" id="collapse{{$symbol}}">
+                <div class="collapse show" id="collapse{{$symbol}}">
                     <div class="card-body">
                     <table class="table table-sm">
                           <tr>
@@ -69,15 +75,19 @@
 
         symbolData = {};
         symbolShares = {};
-        symbols = []; 
+        symbols = [];
+        labels = [];
         for (let symbol in api.asset_monthly_bands) {
           symbols.push(symbol);
           symbolData[symbol] = api.asset_monthly_bands[symbol];
           symbolShares[symbol] = Object.fromEntries(
             Object.entries(api.asset_monthly_bands[symbol]).map(([key, value]) => [key, value.shares])
           );
+          // Use first symbol's keys as labels if not set yet
+          if (labels.length === 0) {
+            labels = Object.keys(api.asset_monthly_bands[symbol]);
+          }
         }
-        labels = Object.keys(symbolData['CASH']);
         colors = ['red', 'blue', 'green', 'orange', 'cyan', 'magenta', 'brown', 'purple',
           // create darker variations of the colors
           'darkred', 'darkblue', 'darkgreen', 'darkorange', 'darkcyan', 'darkmagenta', 'darkbrown', 'darkpurple',
@@ -87,9 +97,7 @@
         for (let symbol in symbolData) {
           for (let date in symbolData[symbol]) {
             sumData[date] = (sumData[date] || 0) + symbolData[symbol][date].value;
-            console.log(symbol, date, symbolData[symbol][date].value, sumData[date]);
           }
-          console.log(symbol, sumData);
         }
         
         shadingArea = {
@@ -123,7 +131,10 @@
 
         ind = 0;
         for (let symbol of symbols) {
-          if (symbol == 'CASH') continue;
+          if (symbol == 'CASH' || symbol == 'SP500') continue;
+          // skip if canvas element doesn't exist (symbol not in portfolio)
+          let canvasEl = document.getElementById('perfBands' + symbol);
+          if (!canvasEl) continue;
           // skip if no sumData or no symbolData
           if (Object.keys(sumData).length == 0 || Object.keys(symbolData).length == 0) {
             continue;
@@ -131,19 +142,23 @@
 
           datasets = [];
           let data = Object.values(symbolData[symbol]).map(function(e) {return e.value;});
-          // find = undefined 
+          // find = undefined
           upData = {};
           downData = {};
           targetData = {};
           for (let key in sumData) {
             // find trade portfolio item for this symbol & timeframe
-            ports = api.tradePortfolios.filter(p => p.start_dt <= key && key <= p.end_dt);
+            // Normalize dates to YYYY-MM-DD format (strip time portion if present)
+            ports = api.tradePortfolios.filter(p => {
+              let startDt = (p.start_dt || '').substring(0, 10);
+              let endDt = (p.end_dt || '').substring(0, 10);
+              return startDt <= key && key <= endDt;
+            });
+            if (!ports || ports.length == 0) continue;
             port = ports[0];
+            if (!port.items) continue;
             port = port.items.find(i => i.symbol == symbol);
-            if (port == undefined) {
-              console.log("no port found for " + symbol + " at " + key);
-              continue;
-            }
+            if (port == undefined) continue;
             up = parseFloat(port.target_share) + parseFloat(port.deviation_trigger);
             down = parseFloat(port.target_share) - parseFloat(port.deviation_trigger);
             target = parseFloat(port.target_share);
@@ -151,7 +166,6 @@
             downData[key] = sumData[key] * down;
             targetData[key] = sumData[key] * target;
           }
-          console.log(symbol, targetData, sumData);
 
           datasets.push({
               label: symbol,
@@ -188,7 +202,16 @@
                   datasets: datasets
                 },
                 options: {
+                  plugins: {
+                    datalabels: { display: false }
+                  },
                   scales: {
+                    x: {
+                      ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                      }
+                    },
                     y: {
                       beginAtZero: false,
                     }
@@ -213,7 +236,16 @@
                   datasets: datasets
                 },
                 options: {
+                  plugins: {
+                    datalabels: { display: false }
+                  },
                   scales: {
+                    x: {
+                      ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                      }
+                    },
                     y: {
                       beginAtZero: false
                     }

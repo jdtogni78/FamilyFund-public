@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $email_cc
  * @property integer $user_id
  * @property integer $fund_id
+ * @property float|null $disbursement_cap
  */
 class Account extends Model
 {
@@ -43,6 +44,7 @@ class Account extends Model
         'code',
         'nickname',
         'email_cc',
+        'disbursement_cap',
         'user_id',
         'fund_id'
     ];
@@ -57,6 +59,7 @@ class Account extends Model
         'code' => 'string',
         'nickname' => 'string',
         'email_cc' => 'string',
+        'disbursement_cap' => 'float',
         'user_id' => 'integer',
         'fund_id' => 'integer'
     ];
@@ -70,6 +73,7 @@ class Account extends Model
         'code' => 'required|string|max:15',
         'nickname' => 'nullable|string|max:15',
         'email_cc' => 'nullable|string|max:1024',
+        'disbursement_cap' => 'nullable|numeric|min:0|max:1',
         'user_id' => 'nullable',
         'fund_id' => 'required',
         'updated_at' => 'nullable',

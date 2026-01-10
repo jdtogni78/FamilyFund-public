@@ -247,7 +247,9 @@ trait AccountTrait
     }
 
     protected function createDisbursableResponse($arr, $asOf) {
-        $cap = 0.02;
+        $defaultCap = 0.02;
+        $account = $this->perfObject;
+        $cap = $account->disbursement_cap ?? $defaultCap;
         $year = Carbon::parse($asOf)->startOfYear();
         $yearNow = $year->format('Y-m-d');
 

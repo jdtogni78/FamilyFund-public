@@ -140,17 +140,18 @@ Trait FundTrait
         $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
         $arr['tradePortfolios'] = $tradePortfolios;
 
-        $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr);
+        $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate);
         $arr['asset_monthly_bands'] = $assetPerf;
 
         /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
             $items = $tradePortfolio->tradePortfolioItems()->get();
-            $tradePortfolio->items = $items;
+            $tradePortfolio->items = $items->toArray();
             $tradePortfolio->annotateAssetsAndGroups();
             $tradePortfolio->annotateTotalShares();
         }
 
+        $arr['fromDate'] = $fromDate;
         $arr['asOf'] = $asOf;
         return $arr;
     }
@@ -473,8 +474,8 @@ Trait FundTrait
     // create an array of assets and their historical prices
     // this is used to create the asset bands for the line graph
     // asset bands are highlight the max, min, and target values used to trigger trades
-    // this data is the real value of assets (quantity * price) 
-    private function createMonthlyAssetBandsResponse($fund, $asOf, $arr)
+    // this data is the real value of assets (quantity * price)
+    private function createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate = null)
     {
         /** @var PortfolioExt $portfolio */
         $portfolio = $fund->portfolios()->first();
@@ -518,6 +519,11 @@ Trait FundTrait
                 $allShares[] = ['timestamp' => $lastShare['end_dt'], 'shares' => 0];
             }
             $perf = $this->createMonthlyPerformanceResponseFor($asOf, 'createAssetPeformanceArray', false, $allShares, $asset);
+
+            // Filter by fromDate if provided
+            if ($fromDate) {
+                $perf = array_filter($perf, fn($key) => $key >= $fromDate, ARRAY_FILTER_USE_KEY);
+            }
 
             $assetPerf[$asset->name] = $perf;
         }

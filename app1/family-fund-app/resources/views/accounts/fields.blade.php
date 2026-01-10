@@ -16,6 +16,13 @@
 <input type="text" name="email_cc" class="form-control" maxlength="1024">
 </div>
 
+<!-- Disbursement Cap Field -->
+<div class="form-group col-sm-6">
+<label for="disbursement_cap">Disbursement Cap:</label>
+<input type="number" name="disbursement_cap" class="form-control" step="0.01" min="0" max="1" placeholder="0.02 (2%)">
+<small class="form-text text-muted">Enter as decimal (e.g., 0.02 for 2%). Leave empty for default 2%.</small>
+</div>
+
 <!-- User Id Field -->
 <div class="form-group col-sm-6">
 <label for="user_id">User Id:</label>

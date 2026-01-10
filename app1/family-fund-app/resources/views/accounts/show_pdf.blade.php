@@ -100,10 +100,12 @@
                 <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Share Price</div>
             </td>
+            @if($account->disbursement_cap !== 0.0)
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
                 <div style="font-size: 18px; font-weight: 700; color: #059669;">${{ number_format($disbValue, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Eligible Disbursement</div>
             </td>
+            @endif
             @if($matchingAvailable > 0)
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
                 <div style="font-size: 18px; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 0) }}</div>
@@ -185,6 +187,7 @@
     @endif
 
     {{-- Disbursement Eligibility Section --}}
+    @if($account->disbursement_cap !== 0.0)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
             <td style="background: #1e293b; padding: 10px 16px;">
@@ -215,6 +218,7 @@
             </td>
         </tr>
     </table>
+    @endif
 
     {{-- Goals Progress Section (with details) --}}
     @if($goalsCount > 0)
@@ -268,8 +272,8 @@
         </tr>
     </table>
 
-    {{-- Linear Regression Forecast --}}
-    @if(!empty($api['linear_regression']['predictions']))
+    {{-- Linear Regression Forecast (only show if account has goals) --}}
+    @if(!empty($api['linear_regression']['predictions']) && $goalsCount > 0)
         {{-- Value Comparison Boxes --}}
         @if(!empty($api['linear_regression']['comparison']))
             @php

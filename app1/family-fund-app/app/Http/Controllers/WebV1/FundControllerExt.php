@@ -102,11 +102,13 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        $arr = $this->createFundResponseTradeBands($fund, $asOf, $this->isAdmin());
+        $fromDate = request()->get('from');
+        $arr = $this->createFundResponseTradeBands($fund, $asOf, $this->isAdmin(), $fromDate);
 
         return view('funds.show_trade_bands')
             ->with('api', $arr)
-            ->with('asOf', $arr['asOf']);
+            ->with('asOf', $arr['asOf'])
+            ->with('fromDate', $arr['fromDate']);
     }
 
     /**
@@ -125,8 +127,9 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $fromDate = request()->get('from');
         $isAdmin = $this->isAdmin();
-        $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin);
+        $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin, $fromDate);
         $pdf = new FundPDF();
         $pdf->createTradeBandsPDF($arr, $isAdmin, $debug_html);
 

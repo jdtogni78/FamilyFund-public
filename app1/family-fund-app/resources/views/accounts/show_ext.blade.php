@@ -61,10 +61,12 @@
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
+                                @if($account->disbursement_cap !== 0.0)
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #059669;">${{ number_format($disbursableValue, 0) }}</div>
                                     <div class="text-muted text-uppercase small">Eligible Disbursement</div>
                                 </div>
+                                @endif
                                 @if($matchingAvailable > 0)
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
@@ -128,10 +130,10 @@
             {{-- Reusable Jump Bar --}}
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-user-circle', 'label' => 'Details'],
-                ['id' => 'section-disbursement', 'icon' => 'fa-money-bill-wave', 'label' => 'Disbursement'],
+                ['id' => 'section-disbursement', 'icon' => 'fa-money-bill-wave', 'label' => 'Disbursement', 'condition' => $account->disbursement_cap !== 0.0],
                 ['id' => 'section-goals', 'icon' => 'fa-bullseye', 'label' => 'Goals', 'condition' => $account->goals->count() > 0],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
-                ['id' => 'section-forecast', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => !empty($api['linear_regression']['predictions'])],
+                ['id' => 'section-forecast', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => !empty($api['linear_regression']['predictions']) && $goalsCount > 0],
                 ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1],
                 ['id' => 'section-shares', 'icon' => 'fa-chart-area', 'label' => 'Shares'],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
@@ -140,11 +142,13 @@
             ]])
 
             {{-- Disbursement Eligibility --}}
+            @if($account->disbursement_cap !== 0.0)
             <div class="row mb-4" id="section-disbursement">
                 <div class="col">
                     @include('accounts.disbursement')
                 </div>
             </div>
+            @endif
 
             {{-- Goals Section (Collapsible, start expanded) --}}
             @if($account->goals->count() > 0)
@@ -217,8 +221,8 @@
                 </div>
             </div>
 
-            {{-- Forecast (Linear Regression) (Collapsible, start expanded) --}}
-            @if(!empty($api['linear_regression']['predictions']))
+            {{-- Forecast (Linear Regression) (Collapsible, start expanded) - only show if account has goals --}}
+            @if(!empty($api['linear_regression']['predictions']) && $goalsCount > 0)
             <div class="row mb-4" id="section-forecast">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">

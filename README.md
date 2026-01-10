@@ -340,7 +340,17 @@ FFSERVER=REDACTED_LAN_HOST
 The backup script `dstrader/opt/backup.sh` runs via root crontab 3x daily:
 - 3:10 AM, 12:50 PM, 11:10 PM
 
-It rsyncs `/home`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on melnick.
+**What gets backed up (synced to melnick NAS via NFS):**
+1. Rsyncs `/home/jdtogni`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on melnick
+2. Monthly docker image snapshots (`dev-dstrader`, `dev-familyfund`)
+3. **Database backup** - dumps `familyfund_prod`, encrypts with GPG, gzips
+
+**Database backup requirements:**
+- Only needs `db` container running (NOT dstrader)
+- Uses `docker exec db mariadb-dump`
+- Encrypts with GPG key `docker@example.local`
+- Output: `dstrader/prod/backups/db-backup-prod-YYYY-MM-DD.sql.encr.gz`
+- Synced to melnick via rsync of `/home/jdtogni/`
 
 Log file: `/var/log/dstrader/backup.log`
 

@@ -18,7 +18,7 @@
                                 <strong>Create Account Matching Rule</strong>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ route('account-matching-rules.store-bulk') }}" class="form-horizontal">
+                                <form method="POST" action="{{ route('accountMatchingRules.store_bulk') }}" class="form-horizontal">
                                     @csrf
                                     <!-- Matching Rule Id Field -->
                                     <div class="form-group col-sm-6">

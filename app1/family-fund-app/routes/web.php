@@ -66,9 +66,9 @@ Route::middleware('auth')->group(function () {
         ->name('transactions.preview_pending');
     Route::post('transactions/process_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@processPending')
         ->name('transactions.process_pending');
-    Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkCreate')
+    Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkCreate')
         ->name('accountMatchingRules.create_bulk');
-    Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\AccountMatchingRuleController@bulkStore')
+    Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkStore')
         ->name('accountMatchingRules.store_bulk');
     Route::get('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@assign')
         ->name('cashDeposits.assign');

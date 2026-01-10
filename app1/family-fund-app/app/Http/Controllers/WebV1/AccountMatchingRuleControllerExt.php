@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\WebV1;
 
 use App\Http\Requests\CreateAccountMatchingRuleRequest;
 use App\Http\Requests\UpdateAccountMatchingRuleRequest;
 use App\Http\Requests\CreateAccountMatchingRuleRequestBulk;
 use App\Repositories\AccountMatchingRuleRepository;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\AccountMatchingRuleController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;

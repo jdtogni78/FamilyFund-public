@@ -34,11 +34,17 @@ class AccountExt extends Account
 
     public static function accountMap()
     {
-        $accountRepo = \App::make(AccountRepository::class);
-        $recs = $accountRepo->all([], null, null, ['id', 'nickname'])->toArray();
+        $accounts = self::with('user')->orderBy('nickname')->get();
         $out = [null => 'Select an Account'];
-        foreach ($recs as $row) {
-            $out[$row['id']] = $row['nickname'];
+        foreach ($accounts as $account) {
+            $label = $account->nickname;
+            if ($account->code) {
+                $label .= ' (' . $account->code . ')';
+            }
+            if ($account->user) {
+                $label .= ' - ' . $account->user->name;
+            }
+            $out[$account->id] = $label;
         }
         return $out;
     }

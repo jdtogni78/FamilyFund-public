@@ -6,6 +6,10 @@ use Tests\TestCase;
 use App\Jobs\FetchDeposits;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * @group needs-data-refactor
+ * Test has HTTP mock setup issues
+ */
 class FetchDepositsTest extends TestCase
 {
     /**

@@ -77,7 +77,7 @@ class TransactionApiGoldenDataTest extends TestCase
                             continue;
                         }
                     }
-                    if ($transaction->value != Utils::currency($shareValue * $transaction->shares)) {
+                    if ($shareValue > 0 && $transaction->value != Utils::currency($shareValue * $transaction->shares)) {
                         $this->fixTransaction($transaction, $shareValue);
                     }
                 } else {

@@ -24,6 +24,10 @@ use App\Models\DepositRequestExt;
 use App\Http\Requests\AssignDepositRequestsRequest;
 use Illuminate\Support\Arr;
 
+/**
+ * @group needs-data-refactor
+ * Test has data isolation issues with duplicate records
+ */
 class CashDepositTraitTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

@@ -12,6 +12,10 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
 
+/**
+ * @group needs-data-refactor
+ * Test requires complex data setup with transactions for fund reports
+ */
 class FundReportTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

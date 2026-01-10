@@ -352,7 +352,7 @@
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">
             <div class="card-header admin-header">
-                <h4 class="card-header-title">Accounts Allocation <span class="badge" style="background: #fff; color: #b45309; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px; font-weight: 600;">ADMIN</span></h4>
+                <h4 class="card-header-title">Accounts Allocation <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -399,7 +399,7 @@
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">
             <div class="card-header admin-header">
-                <h4 class="card-header-title">Accounts <span class="badge" style="background: #fff; color: #b45309; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px; font-weight: 600;">ADMIN</span></h4>
+                <h4 class="card-header-title">Accounts <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 @include('funds.accounts_table_pdf')

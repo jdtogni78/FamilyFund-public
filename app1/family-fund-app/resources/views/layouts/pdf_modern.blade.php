@@ -177,21 +177,21 @@
 
         .card-header {
             padding: 12px 16px;
-            background: #1e293b;
-            border-bottom: none;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
             border-radius: 6px 6px 0 0;
             page-break-after: avoid;
         }
 
         .card-header.admin-header {
-            background: #d97706;
-            border-bottom: 3px solid #b45309;
+            background: #fef3c7;
+            border-bottom: 2px solid #d97706;
         }
 
         .card-header-title {
             font-size: 14px;
             font-weight: 600;
-            color: #ffffff;
+            color: #1e293b;
             margin: 0;
             display: inline-block;
         }

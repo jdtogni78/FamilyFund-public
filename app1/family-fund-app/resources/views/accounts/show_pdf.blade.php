@@ -189,8 +189,8 @@
     @if($account->disbursement_cap !== 0.0)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 13px;">DISBURSEMENT ELIGIBILITY ({{ $disbYear }})</span>
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
+                <span style="color: #1e293b; font-weight: 700; font-size: 13px;">DISBURSEMENT ELIGIBILITY ({{ $disbYear }})</span>
             </td>
         </tr>
         <tr>
@@ -224,8 +224,8 @@
     @foreach($account->goals as $goal)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; page-break-inside: avoid;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 13px;">{{ $goal->name }} - PROGRESS</span>
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
+                <span style="color: #1e293b; font-weight: 700; font-size: 13px;">{{ $goal->name }} - PROGRESS</span>
             </td>
         </tr>
         <tr>
@@ -246,7 +246,7 @@
     {{-- Monthly Value Chart --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY VALUE</span>
             </td>
         </tr>
@@ -268,7 +268,7 @@
     {{-- Yearly Value Chart --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY VALUE</span>
             </td>
         </tr>
@@ -403,7 +403,7 @@
     {{-- Yearly Performance Table --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
             </td>
         </tr>
@@ -418,7 +418,7 @@
     {{-- Monthly Performance Table --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #1e293b; padding: 10px 16px;">
+            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE (Recent)</span>
             </td>
         </tr>

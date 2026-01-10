@@ -37,46 +37,63 @@
                 </div>
                 <div class="collapse show" id="collapse{{$symbol}}">
                     <div class="card-body">
-                    <table class="table table-sm">
-                          <tr>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Target Share</th>
-                            <th>Deviation Trigger</th>
-                          </tr>
-                        @foreach ($api['tradePortfolios'] as $i => $tp)
-                          @php
-                            $tpi = null;
-                            foreach ($tp['items'] as $i) {
-                              if ($i['symbol'] == $symbol) {
-                                  $tpi = $i;
-                                  break;
-                              }
-                            }
-                            if ($tpi) {
-                              $target_share = $tpi['target_share'];
-                              $deviation_trigger = $tpi['deviation_trigger'];
-                              $value = $api['summary']['value'] * $target_share;
-                            }
-                          @endphp
-                          @if ($tpi)
-                            <tr>
-                              <td>{{ $tp['start_dt'] }}</td>
-                              <td>{{ $tp['end_dt'] }}</td>
-                              <td>{{ $target_share ?? 'N/A' }}</td>
-                              <td>{{ $deviation_trigger ?? 'N/A' }}</td>
-                            </tr>
-                          @endif
-                        @endforeach
-                      </table>
-                      <br>Target Value: {{ $value ?? 'N/A' }}
-                      <br><strong>Trading Bands</strong>
+                      {{-- Collapsible table section --}}
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                          <strong>Portfolio Details</strong>
+                          <a class="btn btn-sm btn-outline-secondary" data-toggle="collapse" href="#collapseTable{{$symbol}}"
+                             role="button" aria-expanded="true" aria-controls="collapseTable{{$symbol}}">
+                              <i class="fa fa-chevron-down"></i>
+                          </a>
+                      </div>
+                      <div class="collapse show" id="collapseTable{{$symbol}}">
+                        <table class="table table-sm">
+                              <tr>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Target Share</th>
+                                <th>Deviation Trigger</th>
+                              </tr>
+                            @foreach ($api['tradePortfolios'] as $i => $tp)
+                              @php
+                                $tpi = null;
+                                foreach ($tp['items'] as $i) {
+                                  if ($i['symbol'] == $symbol) {
+                                      $tpi = $i;
+                                      break;
+                                  }
+                                }
+                                if ($tpi) {
+                                  $target_share = $tpi['target_share'];
+                                  $deviation_trigger = $tpi['deviation_trigger'];
+                                  $value = $api['summary']['value'] * $target_share;
+                                }
+                              @endphp
+                              @if ($tpi)
+                                <tr>
+                                  <td>{{ $tp['start_dt'] }}</td>
+                                  <td>{{ $tp['end_dt'] }}</td>
+                                  <td>{{ $target_share ?? 'N/A' }}</td>
+                                  <td>{{ $deviation_trigger ?? 'N/A' }}</td>
+                                </tr>
+                              @endif
+                            @endforeach
+                          </table>
+                          <p class="mb-0">Target Value: {{ $value ?? 'N/A' }}</p>
+                      </div>
+                      <strong>Trading Bands</strong>
                       <div>
                         <canvas id="perfBands{{$symbol}}"></canvas>
                       </div>
-                      <strong>Assets</strong>
-                      <div>
-                        <canvas id="assetsBands{{$symbol}}"></canvas>
+                      {{-- Separate collapsible section for Asset Changes --}}
+                      <div class="d-flex justify-content-between align-items-center mt-3">
+                          <strong>Asset Changes</strong>
+                          <a class="btn btn-sm btn-outline-secondary" data-toggle="collapse" href="#collapseAsset{{$symbol}}"
+                             role="button" aria-expanded="true" aria-controls="collapseAsset{{$symbol}}">
+                              <i class="fa fa-chevron-down"></i>
+                          </a>
+                      </div>
+                      <div class="collapse show" id="collapseAsset{{$symbol}}">
+                          <canvas id="assetsBands{{$symbol}}"></canvas>
                       </div>
                     </div>
                 </div>

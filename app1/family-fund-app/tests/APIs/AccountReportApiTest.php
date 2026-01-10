@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\AccountReport;
@@ -15,6 +16,9 @@ class AccountReportApiTest extends TestCase
      */
     public function test_create_account_report()
     {
+        // Fake the queue to prevent jobs from running during test
+        Queue::fake();
+
         $accountReport = AccountReport::factory()->make()->toArray();
 
         $this->response = $this->json(

@@ -40,16 +40,15 @@
             }
         }
 
-        // All-time performance (compound all years)
-        $allTimeGrowth = 0;
-        if (!empty($yearlyPerf)) {
-            $compound = 1.0;
-            foreach ($yearlyPerf as $y => $data) {
-                $perf = ($data['performance'] ?? 0) / 100;
-                $compound *= (1 + $perf);
+        // All-time performance - calculate true return: (current value - total invested) / total invested
+        // This is more accurate for accounts than compounding share price returns (which doesn't account for deposits at different times)
+        $totalInvested = 0;
+        foreach ($api['transactions'] ?? [] as $trans) {
+            if ($trans->value > 0) {
+                $totalInvested += $trans->value;
             }
-            $allTimeGrowth = ($compound - 1) * 100;
         }
+        $allTimeGrowth = $totalInvested > 0 ? (($marketValue - $totalInvested) / $totalInvested) * 100 : 0;
 
         // Calculate overall account health
         $onTrackGoals = 0;

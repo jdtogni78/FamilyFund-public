@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AccountReport;
+use App\Models\TransactionExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AccountReportFactory extends Factory
@@ -21,8 +22,15 @@ class AccountReportFactory extends Factory
      */
     public function definition()
     {
+        // Create account with a transaction (required for report generation)
+        $account = AccountFactory::new()->create();
+        TransactionFactory::new()->create([
+            'account_id' => $account->id,
+            'status' => TransactionExt::STATUS_CLEARED,
+        ]);
+
         return [
-            'account_id' => AccountFactory::new(),
+            'account_id' => $account->id,
             'type' => 'ALL',
             'as_of' => $this->faker->date('Y-m-d'),
         ];

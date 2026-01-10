@@ -3,6 +3,10 @@
 
     Usage:
     @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? []])
+
+    For accounts, pass allTimeOverride to show actual return (current value - invested) / invested
+    instead of compounded share price performance:
+    @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'allTimeOverride' => $allTimeReturn])
 --}}
 @php
     $yearlyPerf = $yearlyPerf ?? [];
@@ -35,9 +39,14 @@
         }
     }
 
-    // All-time performance (compound all years)
+    // All-time performance
+    // If allTimeOverride is provided (for accounts), use that instead of compounding share price returns
+    // The override should be (current_value - total_invested) / total_invested * 100
     $allTimeGrowth = 0;
-    if (!empty($yearlyPerf)) {
+    if (isset($allTimeOverride)) {
+        $allTimeGrowth = $allTimeOverride;
+    } elseif (!empty($yearlyPerf)) {
+        // Compound all years (appropriate for funds where no deposits occur)
         $compound = 1.0;
         foreach ($yearlyPerf as $y => $data) {
             $perf = ($data['performance'] ?? 0) / 100;

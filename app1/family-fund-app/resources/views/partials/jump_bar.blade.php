@@ -27,7 +27,7 @@
                 @endif
             @endforeach
             <button class="btn btn-sm btn-outline-secondary ms-auto mb-1" id="toggleAllSections" title="Expand/Collapse All">
-                <i class="fa fa-compress-arrows-alt"></i>
+                <i class="fa fa-compress-arrows-alt"></i> All
             </button>
         </div>
     </div>

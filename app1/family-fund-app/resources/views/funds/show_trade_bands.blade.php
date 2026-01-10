@@ -44,6 +44,9 @@
                                 <button class="btn btn-outline-light btn-sm" id="toggleAllFromHeader" title="Collapse/Expand All">
                                     <i class="fa fa-compress-arrows-alt"></i> All
                                 </button>
+                                <button class="btn btn-outline-light btn-sm" id="toggleTablesFromHeader" title="Collapse/Expand Tables Only">
+                                    <i class="fa fa-table"></i> Tables
+                                </button>
                                 <button class="btn btn-outline-light btn-sm" id="toggleAssetsFromHeader" title="Collapse/Expand Assets Only">
                                     <i class="fa fa-chart-line"></i> Assets
                                 </button>
@@ -116,12 +119,16 @@
 $(document).ready(function() {
     // Asset symbols for filtering
     const assetSymbols = @json($portfolioSymbols);
-    const assetCollapseIds = assetSymbols.map(s => '#collapse' + s);
+    const assetCollapseIds = assetSymbols.map(s => '#collapseAsset' + s);
+    const tableCollapseIds = assetSymbols.map(s => '#collapseTable' + s);
 
-    // Add "Assets" button to jump bar (after the existing toggle all button)
+    // Add "Tables" and "Assets" buttons to jump bar (after the existing toggle all button)
     $('#toggleAllSections').after(
+        '<button class="btn btn-sm btn-outline-secondary ms-1 mb-1" id="toggleTableSections" title="Collapse/Expand Tables Only">' +
+        '<i class="fa fa-table"></i> Tables' +
+        '</button>' +
         '<button class="btn btn-sm btn-outline-secondary ms-1 mb-1" id="toggleAssetSections" title="Collapse/Expand Assets Only">' +
-        '<i class="fa fa-chart-line"></i>' +
+        '<i class="fa fa-chart-line"></i> Assets' +
         '</button>'
     );
 
@@ -139,11 +146,36 @@ $(document).ready(function() {
     }
     $('#toggleAllFromHeader').click(toggleAll);
 
-    // Toggle ASSETS only (header and jump bar)
+    // Toggle TABLES only (Portfolio Details sections)
+    let tablesExpanded = true;
+    function toggleTables(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        tableCollapseIds.forEach(id => {
+            const $el = $(id);
+            if ($el.length === 0) return;
+            if (tablesExpanded) {
+                $el.collapse('hide');
+            } else {
+                $el.collapse('show');
+            }
+        });
+        const icon = tablesExpanded ? 'fa-expand' : 'fa-table';
+        const oldIcon = tablesExpanded ? 'fa-table' : 'fa-expand';
+        $('#toggleTablesFromHeader i, #toggleTableSections i').removeClass(oldIcon).addClass(icon);
+        tablesExpanded = !tablesExpanded;
+    }
+    $('#toggleTablesFromHeader').on('click', toggleTables);
+    $('#toggleTableSections').on('click', toggleTables);
+
+    // Toggle ASSET CHANGES graphs only (not full symbol sections)
     let assetsExpanded = true;
-    function toggleAssets() {
+    function toggleAssets(e) {
+        e.preventDefault();
+        e.stopPropagation();
         assetCollapseIds.forEach(id => {
             const $el = $(id);
+            if ($el.length === 0) return;
             if (assetsExpanded) {
                 $el.collapse('hide');
             } else {
@@ -155,8 +187,8 @@ $(document).ready(function() {
         $('#toggleAssetsFromHeader i, #toggleAssetSections i').removeClass(oldIcon).addClass(icon);
         assetsExpanded = !assetsExpanded;
     }
-    $('#toggleAssetsFromHeader').click(toggleAssets);
-    $('#toggleAssetSections').click(toggleAssets);
+    $('#toggleAssetsFromHeader').on('click', toggleAssets);
+    $('#toggleAssetSections').on('click', toggleAssets);
 });
 </script>
 @endpush

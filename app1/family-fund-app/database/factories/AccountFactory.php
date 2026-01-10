@@ -25,8 +25,18 @@ class AccountFactory extends Factory
             'code' => $this->faker->word,
             'nickname' => $this->faker->word,
             'email_cc' => $this->faker->word . '@dstrader.com',
-            'user_id' => null,
-            'fund_id' => \App\Models\Fund::factory(),
+            'user_id' => UserFactory::new(),
+            'fund_id' => FundFactory::new(),
         ];
+    }
+
+    /**
+     * Create a fund account (no user_id).
+     */
+    public function fundAccount(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_id' => null,
+        ]);
     }
 }

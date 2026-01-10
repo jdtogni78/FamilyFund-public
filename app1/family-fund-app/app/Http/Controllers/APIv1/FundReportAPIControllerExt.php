@@ -5,6 +5,8 @@ namespace App\Http\Controllers\APIv1;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\API\CreateFundReportAPIRequest;
 use App\Http\Resources\FundReportResource;
+use App\Jobs\SendFundReport;
+use App\Models\FundReportExt;
 use App\Models\ScheduledJob;
 use App\Repositories\FundReportRepository;
 use App\Http\Controllers\API\FundReportAPIController;
@@ -31,9 +33,17 @@ class FundReportAPIControllerExt extends FundReportAPIController
     {
         try {
             $input = $request->all();
-            $fundReport = $this->createFundReport($input);
+
+            // Create fund report and validate emails
+            $fundReport = FundReportExt::create($input);
+            $this->validateReportEmails($fundReport);
+            $fundReport->save();
+
+            // Dispatch job to send emails
+            SendFundReport::dispatch($fundReport);
+
             $result = new FundReportResource($fundReport);
-            return $this->sendResponse($result, 'Fund Report saved successfully' . "\n" . implode($this->msgs));
+            return $this->sendResponse($result, 'Fund Report saved successfully. Email queued for sending.');
         } catch (Exception $e) {
             report($e);
             return $this->sendError($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);

@@ -20,6 +20,16 @@
                 $matchingAvailable = $api['matching_available'] ?? 0;
                 $goalsCount = $account->goals->count();
                 $disbursableValue = $api['disbursable']['value'] ?? 0;
+
+                // Calculate true all-time return for account: (current value - total invested) / total invested
+                // This is different from compounding share price returns (which doesn't account for deposits at different times)
+                $totalInvested = 0;
+                foreach ($api['transactions'] ?? [] as $trans) {
+                    if ($trans->value > 0) {
+                        $totalInvested += $trans->value;
+                    }
+                }
+                $allTimeReturn = $totalInvested > 0 ? (($marketValue - $totalInvested) / $totalInvested) * 100 : 0;
             @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
@@ -73,7 +83,7 @@
                                     <div class="text-muted text-uppercase small">Matching Available</div>
                                 </div>
                                 @endif
-                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? []])
+                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'allTimeOverride' => $allTimeReturn])
                             </div>
                         </div>
 

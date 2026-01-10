@@ -29,15 +29,12 @@ class AccountReportAPIControllerExt extends AccountReportAPIController
         $input = $request->all();
 
         $accountReport = AccountReport::create($input);
+
+        // Dispatch job to send emails
         SendAccountReport::dispatch($accountReport);
 
-        if (count($this->err) == 0) {
-            $result = new AccountReportResource($accountReport);
-//            print_r("result: " . json_encode($result->toArray($request)) . "\n");
-            return $this->sendResponse($result, 'Account Report saved successfully'."\n".implode($this->msgs));
-        } else {
-            return $this->sendError(implode(",", $this->err), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        $result = new AccountReportResource($accountReport);
+        return $this->sendResponse($result, 'Account Report saved successfully. Email queued for sending.');
     }
 
 }

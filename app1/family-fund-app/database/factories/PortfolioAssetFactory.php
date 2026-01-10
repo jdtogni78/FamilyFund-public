@@ -26,6 +26,7 @@ class PortfolioAssetFactory extends Factory
             'asset_id' => AssetFactory::new(),
             'position' => $this->faker->randomFloat(4, 0.0001),
             'start_dt' => $this->faker->dateTimeBetween($startDate = '-1 years', $endDate = 'now'),
+            'end_dt' => '9999-12-31',
         ];
     }
 }

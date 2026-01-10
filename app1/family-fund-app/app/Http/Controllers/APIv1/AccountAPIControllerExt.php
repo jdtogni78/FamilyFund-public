@@ -179,6 +179,8 @@ class AccountAPIControllerExt extends AccountAPIController
         $arr = [
             'share_price' => $account->shareValueAsOf($asOf),
             'available_shares' => $account->fund()->first()->unallocatedShares($asOf),
+            'account_shares' => $account->sharesAsOf($asOf),
+            'account_value' => $account->valueAsOf($asOf),
         ];
         return $this->sendResponse($arr, 'Share value retrieved successfully');
     }

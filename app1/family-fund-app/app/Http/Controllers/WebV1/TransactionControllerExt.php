@@ -166,7 +166,7 @@ class TransactionControllerExt extends TransactionController
     }
 
     /**
-     * Clone a transaction with updated timestamp.
+     * Clone a transaction with updated timestamp - opens create form with prefilled data.
      *
      * @param int $id
      * @return Response
@@ -180,32 +180,20 @@ class TransactionControllerExt extends TransactionController
             return redirect(route('transactions.index'));
         }
 
-        // Prepare input for creating a new transaction
-        $input = [
-            'type' => $transaction->type,
-            'status' => TransactionExt::STATUS_PENDING,
-            'value' => $transaction->value,
-            'flags' => $transaction->flags,
-            'timestamp' => Carbon::now()->format('Y-m-d'),
-            'account_id' => $transaction->account_id,
-            'descr' => $transaction->descr,
-        ];
+        // Create a clone with today's date
+        $clonedTransaction = new TransactionExt();
+        $clonedTransaction->type = $transaction->type;
+        $clonedTransaction->status = TransactionExt::STATUS_PENDING;
+        $clonedTransaction->value = $transaction->value;
+        $clonedTransaction->flags = $transaction->flags;
+        $clonedTransaction->timestamp = Carbon::now()->format('Y-m-d');
+        $clonedTransaction->account_id = $transaction->account_id;
+        $clonedTransaction->descr = $transaction->descr;
 
-        Log::info('TransactionControllerExt::clone: cloning transaction ' . $id . ' with input: ' . json_encode($input));
+        Log::info('TransactionControllerExt::clone: cloning transaction ' . $id);
 
-        try {
-            $api1 = $this->createTransaction($input, true);
-        } catch (Exception $e) {
-            Log::error('TransactionControllerExt::clone: error: ' . $e->getMessage());
-            Flash::error($e->getMessage());
-            return redirect(route('transactions.show', $id));
-        }
-
-        $api1['transaction']->id = null;
-        $api1['transaction']->status = TransactionExt::STATUS_PENDING;
-
-        return view('transactions.preview')
-            ->with('api1', $api1)
+        return view('transactions.create')
+            ->with('transaction', $clonedTransaction)
             ->with('api', $this->getApi());
     }
 

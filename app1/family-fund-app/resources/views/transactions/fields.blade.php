@@ -1,9 +1,20 @@
+@php
+    $trans = $transaction ?? null;
+    $defaultType = $trans->type ?? 'PUR';
+    $defaultStatus = $trans->status ?? 'P';
+    $defaultValue = $trans->value ?? '';
+    $defaultFlags = $trans->flags ?? null;
+    $defaultTimestamp = $trans->timestamp ? \Carbon\Carbon::parse($trans->timestamp)->format('Y-m-d') : '';
+    $defaultAccountId = $trans->account_id ?? null;
+    $defaultDescr = $trans->descr ?? '';
+@endphp
+
 <!-- Type Field -->
 <div class="form-group col-sm-6">
 <label for="type">Type:</label>
-<select name="type" class="form-control">
+<select name="type" class="form-control" id="type">
     @foreach($api['typeMap'] as $value => $label)
-        <option value="{{ $value }}" {{ 'PUR' == $value ? 'selected' : '' }}>{{ $label }}</option>
+        <option value="{{ $value }}" {{ $defaultType == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -13,7 +24,7 @@
 <label for="status">Status:</label>
 <select name="status" class="form-control">
     @foreach($api['statusMap'] as $value => $label)
-        <option value="{{ $value }}" {{ 'P' == $value ? 'selected' : '' }}>{{ $label }}</option>
+        <option value="{{ $value }}" {{ $defaultStatus == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -21,7 +32,7 @@
 <!-- Value Field -->
 <div class="form-group col-sm-6">
 <label for="value">Value:</label>
-<input type="number" name="value" class="form-control" step="any">
+<input type="number" name="value" class="form-control" step="any" id="value" value="{{ $defaultValue }}">
 </div>
 
 <!-- Flags Field -->
@@ -29,7 +40,7 @@
 <label for="flags">Flags:</label>
 <select name="flags" class="form-control">
     @foreach($api['flagsMap'] as $value => $label)
-        <option value="{{ $value }}" {{ null == $value ? 'selected' : '' }}>{{ $label }}</option>
+        <option value="{{ $value }}" {{ $defaultFlags == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -37,7 +48,7 @@
 <!-- Timestamp Field -->
 <div class="form-group col-sm-6">
 <label for="timestamp">Timestamp:</label>
-<input type="date" name="timestamp" value="" class="form-control" id="timestamp">
+<input type="date" name="timestamp" value="{{ $defaultTimestamp }}" class="form-control" id="timestamp">
 </div>
 
 @push('scripts')
@@ -65,9 +76,13 @@
                data:'_token = <?php echo csrf_token() ?>',
                success:function(data) {
                    share_price = data['data']['share_price'];
+                   account_shares = parseFloat(data['data']['account_shares']) || 0;
+                   account_value = parseFloat(data['data']['account_value']) || 0;
                    console.log(share_price);
 
                    $('#__share_price').val(share_price);
+                   $('#__account_balance').val('$' + account_value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                   $('#__account_shares_display').text(account_shares.toFixed(4) + ' shares');
                    updateSharePrice();
                }
            });
@@ -75,6 +90,11 @@
 
        $("#account_id").change(function() {
            updateShareValue();
+           // Clear balance when account changes until date is selected
+           if (!$('#timestamp').val()) {
+               $('#__account_balance').val('');
+               $('#__account_shares_display').text('');
+           }
        })
 
        function updateSharePrice() {
@@ -130,6 +150,18 @@
            }
        });
 
+       // Also handle regular change event for HTML5 date input
+       $('#timestamp').on('change', function() {
+           updateShareValue();
+       });
+
+       // On page load, if account and timestamp are prefilled, fetch balance
+       $(document).ready(function() {
+           if ($('#account_id').val() && $('#timestamp').val()) {
+               updateShareValue();
+           }
+       });
+
        </script>
 @endpush
 
@@ -137,11 +169,20 @@
 <!-- Account Id Field -->
 <div class="form-group col-sm-6">
 <label for="account_id">Account:</label>
-<select name="account_id" class="form-control">
+<select name="account_id" class="form-control" id="account_id">
     @foreach($api['accountMap'] as $value => $label)
-        <option value="{{ $value }}" {{ null == $value ? 'selected' : '' }}>{{ $label }}</option>
+        <option value="{{ $value }}" {{ $defaultAccountId == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
+</div>
+
+<!-- Account Balance (read-only info) -->
+<div class="form-group col-sm-6">
+<label>Account Balance:</label>
+<div class="input-group">
+    <input type="text" id="__account_balance" class="form-control" readonly style="background-color: #e9ecef;">
+    <span class="input-group-text" id="__account_shares_display"></span>
+</div>
 </div>
 
 <!-- CALC Shares -->
@@ -159,7 +200,7 @@
 <!-- Descr Field -->
 <div class="form-group col-sm-6">
 <label for="descr">Descr:</label>
-<input type="text" name="descr" class="form-control" maxlength="255">
+<input type="text" name="descr" class="form-control" maxlength="255" value="{{ $defaultDescr }}">
 </div>
 
 <!-- Submit Field -->

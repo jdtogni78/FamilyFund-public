@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
         ->name('portfolios.showRebalancePDF');
     Route::get('tradePortfoliosItems/createWithParams', 'App\Http\Controllers\WebV1\TradePortfolioItemControllerExt@createWithParams')
         ->name('tradePortfoliosItems.createWithParams');
-    Route::get('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
+    Route::post('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
     Route::get('transactions/preview_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@previewPending')
         ->name('transactions.preview_pending');

@@ -1,3 +1,27 @@
+@php
+    // Get current trade portfolio (the one that includes today's date)
+    $currentTP = null;
+    $tpTargets = [];
+    if (isset($api['tradePortfolios'])) {
+        $today = now()->format('Y-m-d');
+        foreach ($api['tradePortfolios'] as $tp) {
+            if ($tp->start_dt <= $today && ($tp->end_dt >= $today || $tp->end_dt === null)) {
+                $currentTP = $tp;
+                break;
+            }
+        }
+        // Build lookup map: symbol => [target_share, deviation_trigger]
+        if ($currentTP && isset($currentTP->items)) {
+            foreach ($currentTP->items as $item) {
+                $symbol = is_array($item) ? $item['symbol'] : $item->symbol;
+                $tpTargets[$symbol] = [
+                    'target' => is_array($item) ? $item['target_share'] : $item->target_share,
+                    'deviation' => is_array($item) ? $item['deviation_trigger'] : $item->deviation_trigger,
+                ];
+            }
+        }
+    }
+@endphp
 <div class="table-responsive-sm">
     <table class="table table-striped" id="fund-assets-table">
         <thead>
@@ -8,6 +32,8 @@
                 <th scope="col">Price</th>
                 <th scope="col">Market Value</th>
                 <th scope="col">%</th>
+                <th scope="col">Target</th>
+                <th scope="col">Band</th>
             </tr>
         </thead>
         <tbody>
@@ -45,6 +71,28 @@
                     @else
                         <span class="text-danger">N/A</span>
                     @endisset</td>
+                @php
+                    $symbol = $asset['name'];
+                    $targetInfo = $tpTargets[$symbol] ?? null;
+                @endphp
+                <td data-order="{{ $targetInfo ? $targetInfo['target'] * 100 : 0 }}">
+                    @if($targetInfo)
+                        {{ number_format($targetInfo['target'] * 100, 1) }}%
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
+                <td>
+                    @if($targetInfo)
+                        @php
+                            $lower = ($targetInfo['target'] - $targetInfo['deviation']) * 100;
+                            $upper = ($targetInfo['target'] + $targetInfo['deviation']) * 100;
+                        @endphp
+                        <span class="text-muted small">{{ number_format($lower, 1) }}% - {{ number_format($upper, 1) }}%</span>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
             </tr>
         @endforeach
         </tbody>

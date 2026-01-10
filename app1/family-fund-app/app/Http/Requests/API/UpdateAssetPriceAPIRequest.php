@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\AssetPrice;
-use InfyOm\Generator\Request\APIRequest;
 
 class UpdateAssetPriceAPIRequest extends BaseAPIRequest
 {

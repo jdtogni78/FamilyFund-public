@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\FundReport;
-use InfyOm\Generator\Request\APIRequest;
 
-class UpdateFundReportAPIRequest extends APIRequest
+class UpdateFundReportAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

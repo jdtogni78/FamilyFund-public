@@ -153,9 +153,126 @@ Trait FundTrait
 
         $arr['fromDate'] = $fromDate;
         $arr['asOf'] = $asOf;
+
+        // Add allocation status for current positions vs targets
+        $arr['allocation_status'] = $this->createAllocationStatusArray(
+            $assetPerf,
+            $tradePortfolios,
+            $asOf
+        );
+
         return $arr;
     }
 
+    /**
+     * Create allocation status array from asset data and trade portfolios
+     *
+     * Calculates current allocation percentages vs targets and determines
+     * if each symbol is within bounds (ok), under-allocated (under), or over-allocated (over).
+     *
+     * @param array $assetMonthlyBands The asset_monthly_bands data
+     * @param mixed $tradePortfolios Active trade portfolios (Collection or array)
+     * @param string $asOf The as-of date
+     * @return array Allocation status with symbols and their band status
+     */
+    protected function createAllocationStatusArray(array $assetMonthlyBands, $tradePortfolios, string $asOf): array
+    {
+        // Convert to array if Collection
+        $tpArray = is_array($tradePortfolios) ? $tradePortfolios : $tradePortfolios->toArray();
+
+        // Get portfolio symbols from trade portfolios
+        $portfolioSymbols = collect($tpArray)
+            ->flatMap(fn($tp) => collect($tp['items'] ?? [])->pluck('symbol'))
+            ->unique()
+            ->toArray();
+
+        // Calculate total portfolio value at as_of date
+        $totalValue = 0;
+        $symbolValues = [];
+        foreach ($assetMonthlyBands as $symbol => $data) {
+            if ($symbol === 'SP500') continue;
+
+            // Find the closest date <= asOf
+            $dates = array_keys($data);
+            rsort($dates);
+            foreach ($dates as $date) {
+                if ($date <= $asOf) {
+                    $value = $data[$date]['value'] ?? 0;
+                    $totalValue += $value;
+                    $symbolValues[$symbol] = $value;
+                    break;
+                }
+            }
+        }
+
+        if ($totalValue <= 0) {
+            return ['as_of_date' => $asOf, 'total_value' => 0, 'symbols' => []];
+        }
+
+        // Find active trade portfolio for asOf date
+        $activeTP = null;
+        foreach ($tpArray as $tp) {
+            $startDt = substr($tp['start_dt'] ?? '', 0, 10);
+            $endDt = substr($tp['end_dt'] ?? '', 0, 10);
+            if ($startDt <= $asOf && $endDt >= $asOf) {
+                $activeTP = $tp;
+                break;
+            }
+        }
+
+        if (!$activeTP) {
+            return ['as_of_date' => $asOf, 'total_value' => $totalValue, 'symbols' => []];
+        }
+
+        $symbols = [];
+        foreach ($activeTP['items'] ?? [] as $item) {
+            $symbol = $item['symbol'];
+            if (!in_array($symbol, $portfolioSymbols)) continue;
+            if ($symbol === 'SP500') continue;
+
+            // Get current value for this symbol
+            $currentValue = $symbolValues[$symbol] ?? 0;
+
+            $targetShare = (float) $item['target_share'];
+            $deviation = (float) $item['deviation_trigger'];
+            $currentPct = ($currentValue / $totalValue) * 100;
+            $targetPct = $targetShare * 100;
+            $minPct = ($targetShare - $deviation) * 100;
+            $maxPct = ($targetShare + $deviation) * 100;
+
+            // Determine status
+            if ($currentPct >= $minPct && $currentPct <= $maxPct) {
+                $status = 'ok';
+            } elseif ($currentPct < $minPct) {
+                $status = 'under';
+            } else {
+                $status = 'over';
+            }
+
+            // Get asset type from Asset model
+            $asset = AssetExt::where('name', $symbol)->first();
+            $type = $asset ? $asset->type : 'ETF';
+
+            $symbols[] = [
+                'symbol' => $symbol,
+                'type' => $type,
+                'target_pct' => $targetPct,
+                'deviation_pct' => $deviation * 100,
+                'min_pct' => $minPct,
+                'max_pct' => $maxPct,
+                'current_pct' => $currentPct,
+                'current_value' => $currentValue,
+                'status' => $status,
+                'trade_portfolio_id' => $activeTP['id'] ?? null,
+            ];
+        }
+
+        return [
+            'as_of_date' => $asOf,
+            'total_value' => $totalValue,
+            'symbols' => $symbols,
+        ];
+    }
 
     public function createFullFundResponse($fund, $asOf, $isAdmin = false) {
         if ($asOf == null) $asOf = date('Y-m-d');

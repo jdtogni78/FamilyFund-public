@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\Asset;
-use InfyOm\Generator\Request\APIRequest;
 
-class CreateAssetAPIRequest extends APIRequest
+class CreateAssetAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

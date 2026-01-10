@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\TradePortfolioItem;
-use InfyOm\Generator\Request\APIRequest;
 
-class CreateTradePortfolioItemAPIRequest extends APIRequest
+class CreateTradePortfolioItemAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

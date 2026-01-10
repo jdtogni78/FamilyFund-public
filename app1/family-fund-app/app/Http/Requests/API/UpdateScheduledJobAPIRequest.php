@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\ScheduledJob;
-use InfyOm\Generator\Request\APIRequest;
 
-class UpdateScheduledJobAPIRequest extends APIRequest
+class UpdateScheduledJobAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

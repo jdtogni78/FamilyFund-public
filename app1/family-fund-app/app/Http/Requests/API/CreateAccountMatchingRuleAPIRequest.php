@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\AccountMatchingRule;
-use InfyOm\Generator\Request\APIRequest;
 
 class CreateAccountMatchingRuleAPIRequest extends BaseAPIRequest
 {

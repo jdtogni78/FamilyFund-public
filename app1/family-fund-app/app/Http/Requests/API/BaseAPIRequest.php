@@ -3,9 +3,9 @@
 namespace App\Http\Requests\API;
 
 use App\Traits\FailedValidationErrorTrait;
-use InfyOm\Generator\Request\APIRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
-class BaseAPIRequest extends APIRequest
+class BaseAPIRequest extends FormRequest
 {
     use FailedValidationErrorTrait;
     /**

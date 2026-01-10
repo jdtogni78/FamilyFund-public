@@ -58,13 +58,27 @@
             @php
                 $jumpSections = [
                     ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
-                    ['id' => 'section-comparison', 'icon' => 'fa-columns', 'label' => 'Comparison'],
                 ];
+                if (!empty($api['allocation_status']['symbols'])) {
+                    $jumpSections[] = ['id' => 'section-status', 'icon' => 'fa-tasks', 'label' => 'Status'];
+                }
+                $jumpSections[] = ['id' => 'section-comparison', 'icon' => 'fa-columns', 'label' => 'Comparison'];
                 foreach ($portfolioSymbols as $symbol) {
                     $jumpSections[] = ['id' => 'section-' . $symbol, 'icon' => 'fa-chart-line', 'label' => $symbol];
                 }
             @endphp
             @include('partials.jump_bar', ['sections' => $jumpSections])
+
+            {{-- Current Allocation Status --}}
+            @if(!empty($api['allocation_status']['symbols']))
+                <div class="row mb-4" id="section-status">
+                    <div class="col">
+                        @include('partials.allocation_status_table', [
+                            'allocationStatus' => $api['allocation_status']
+                        ])
+                    </div>
+                </div>
+            @endif
 
             {{-- Trade Portfolios Comparison --}}
             <div class="row mb-4" id="section-comparison">

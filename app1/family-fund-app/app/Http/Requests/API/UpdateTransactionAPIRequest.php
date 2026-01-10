@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\Transaction;
-use InfyOm\Generator\Request\APIRequest;
 
 class UpdateTransactionAPIRequest extends BaseAPIRequest
 {

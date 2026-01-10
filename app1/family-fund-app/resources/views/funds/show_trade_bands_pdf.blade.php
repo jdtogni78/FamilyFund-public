@@ -21,6 +21,60 @@
         </div>
     </div>
 
+    <!-- Current Allocation Status -->
+    @if(!empty($api['allocation_status']['symbols']))
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1e293b; color: white; padding: 10px 15px;">
+                <h4 class="card-header-title" style="margin: 0; font-size: 14px;">
+                    Current Allocation Status
+                    <span style="font-weight: normal; font-size: 11px; opacity: 0.8; margin-left: 10px;">
+                        (as of {{ $api['allocation_status']['as_of_date'] ?? 'N/A' }})
+                    </span>
+                </h4>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 11px; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 8px 10px; text-align: left; border-bottom: 1px solid #e2e8f0;">Symbol</th>
+                            <th style="padding: 8px 10px; text-align: left; border-bottom: 1px solid #e2e8f0;">Type</th>
+                            <th style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">Target</th>
+                            <th style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">Range</th>
+                            <th style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">Current</th>
+                            <th style="padding: 8px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; width: 60px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php $rowIdx = 0; @endphp
+                        @foreach($api['allocation_status']['symbols'] as $item)
+                            <tr style="background: {{ $rowIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}; border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 6px 10px; font-weight: 600;">{{ $item['symbol'] }}</td>
+                                <td style="padding: 6px 10px; color: #64748b;">{{ $item['type'] }}</td>
+                                <td style="padding: 6px 10px; text-align: right;">{{ number_format($item['target_pct'], 1) }}%</td>
+                                <td style="padding: 6px 10px; text-align: right; color: #64748b;">
+                                    {{ number_format($item['min_pct'], 1) }} - {{ number_format($item['max_pct'], 1) }}%
+                                </td>
+                                <td style="padding: 6px 10px; text-align: right; font-weight: 700; color: {{ $item['status'] === 'ok' ? '#16a34a' : '#dc2626' }};">
+                                    {{ number_format($item['current_pct'], 2) }}%
+                                </td>
+                                <td style="padding: 6px 10px; text-align: center;">
+                                    @if($item['status'] === 'ok')
+                                        <span style="background: #16a34a; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">OK</span>
+                                    @elseif($item['status'] === 'under')
+                                        <span style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">UNDER</span>
+                                    @else
+                                        <span style="background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 600;">OVER</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @php $rowIdx++; @endphp
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <!-- Trading Bands by Symbol -->
     <h3 class="section-title">Trading Bands Analysis</h3>
 

@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\AccountReport;
-use InfyOm\Generator\Request\APIRequest;
 
-class UpdateAccountReportAPIRequest extends APIRequest
+class UpdateAccountReportAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

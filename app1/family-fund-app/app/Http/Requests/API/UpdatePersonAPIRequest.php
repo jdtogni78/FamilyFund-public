@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\Person;
-use InfyOm\Generator\Request\APIRequest;
 
-class UpdatePersonAPIRequest extends APIRequest
+class UpdatePersonAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

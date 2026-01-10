@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\TransactionMatching;
-use InfyOm\Generator\Request\APIRequest;
 
 class CreateTransactionMatchingAPIRequest extends BaseAPIRequest
 {

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\Portfolio;
-use InfyOm\Generator\Request\APIRequest;
 
 class CreatePortfolioAPIRequest extends BaseAPIRequest
 {

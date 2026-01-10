@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\AssetChangeLog;
-use InfyOm\Generator\Request\APIRequest;
 
 class UpdateAssetChangeLogAPIRequest extends BaseAPIRequest
 {

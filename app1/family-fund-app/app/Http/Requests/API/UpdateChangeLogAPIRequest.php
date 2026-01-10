@@ -3,9 +3,8 @@
 namespace App\Http\Requests\API;
 
 use App\Models\ChangeLog;
-use InfyOm\Generator\Request\APIRequest;
 
-class UpdateChangeLogAPIRequest extends APIRequest
+class UpdateChangeLogAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -251,11 +251,19 @@
                 <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE</span>
             </td>
         </tr>
+        @if(isset($files['monthly_performance.png']) && file_exists($files['monthly_performance.png']))
         <tr>
             <td style="padding: 12px;">
                 <img src="{{ $files['monthly_performance.png'] }}" alt="Monthly Performance" style="width: 100%;"/>
             </td>
         </tr>
+        @else
+        <tr>
+            <td style="padding: 12px; color: #64748b; font-size: 11px;">
+                Monthly performance chart not available
+            </td>
+        </tr>
+        @endif
     </table>
 
     {{-- Yearly Performance Chart --}}

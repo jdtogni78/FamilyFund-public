@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\MatchingRule;
-use InfyOm\Generator\Request\APIRequest;
 
 class CreateMatchingRuleAPIRequest extends BaseAPIRequest
 {

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API;
 
 use App\Models\Fund;
-use InfyOm\Generator\Request\APIRequest;
 
 class UpdateFundAPIRequest extends BaseAPIRequest
 {

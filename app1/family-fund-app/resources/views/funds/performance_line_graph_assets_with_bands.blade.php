@@ -7,11 +7,29 @@
 @endphp
 @foreach ($api['asset_monthly_bands'] as $symbol => $data)
     @if ($symbol != 'SP500' && $symbol != 'CASH' && in_array($symbol, $portfolioSymbols))
+        @php
+            $symbolStatus = collect($api['allocation_status']['symbols'] ?? [])
+                ->firstWhere('symbol', $symbol);
+        @endphp
         <div class="row mb-4" id="section-{{$symbol}}">
             <div class="col">
               <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
-                    <strong><i class="fa fa-chart-line mr-2"></i>{{$symbol}}</strong>
+                    <div>
+                        <strong><i class="fa fa-chart-line mr-2"></i>{{$symbol}}</strong>
+                        @if($symbolStatus)
+                            @if($symbolStatus['status'] === 'ok')
+                                <span class="badge badge-success ml-2">OK</span>
+                            @elseif($symbolStatus['status'] === 'under')
+                                <span class="badge badge-danger ml-2">Under</span>
+                            @else
+                                <span class="badge badge-warning ml-2">Over</span>
+                            @endif
+                            <small class="ml-2" style="opacity: 0.8;">
+                                {{ number_format($symbolStatus['current_pct'], 1) }}% / {{ number_format($symbolStatus['target_pct'], 1) }}%
+                            </small>
+                        @endif
+                    </div>
                     <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapse{{$symbol}}"
                       role="button" aria-expanded="true" aria-controls="collapse{{$symbol}}">
                       <i class="fa fa-chevron-down"></i>

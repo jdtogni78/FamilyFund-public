@@ -44,7 +44,7 @@
         @endphp
         </tbody>
         <tfoot>
-            <tr style="background-color: #dbeafe; font-weight: 600;">
+            <tr class="table-subtotal-row">
                 <th scope="row">Total Allocated</th>
                 <td></td>
                 <td>{{ number_format($allocatedShares, 2) }}</td>
@@ -53,9 +53,9 @@
                 <td></td>
             </tr>
             @if($unallocatedShares > 0)
-            <tr style="background-color: #fef3c7;">
+            <tr class="table-warning-row">
                 <th scope="row">
-                    <i class="fa fa-exclamation-triangle text-warning"></i>
+                    <i class="fa fa-exclamation-triangle text-warning-dark"></i>
                     Unallocated
                 </th>
                 <td>-</td>
@@ -65,7 +65,7 @@
                 <td>-</td>
             </tr>
             @endif
-            <tr style="background-color: #1e40af; color: #ffffff; font-weight: bold;">
+            <tr class="table-total-row">
                 <th scope="row">Total</th>
                 <td></td>
                 <td>{{ number_format($totalShares, 2) }}</td>

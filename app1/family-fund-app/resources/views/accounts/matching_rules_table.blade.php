@@ -50,9 +50,9 @@
                     $totalAvailable += ($available - $used);
                 } elseif ($isUpcoming) {
                     $status = 'Upcoming';
-                    $statusColor = '#2563eb';
-                    $statusBg = '#dbeafe';
-                    $rowBg = '#eff6ff';
+                    $statusColor = '#0891b2';
+                    $statusBg = '#cffafe';
+                    $rowBg = '#ecfeff';
                     $textColor = '#000000';
                     $totalAvailable += $available;
                 } elseif ($isExpired && $used == 0 && $available > 0) {
@@ -100,23 +100,23 @@
         @endforeach
         </tbody>
         <tfoot>
-            <tr style="background: #1e40af; color: #ffffff; font-weight: 600;">
-                <td colspan="3" style="padding: 10px;">
+            <tr class="table-total-row">
+                <td colspan="3">
                     Totals
                     @if($totalAvailable > 0)
-                        <span class="badge ms-2" style="background: #16a34a; color: white;">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
+                        <span class="badge ms-2" style="background: #10b981; color: white;">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
                     @endif
                 </td>
-                <td class="text-end" style="padding: 10px;"></td>
-                <td class="text-end" style="padding: 10px;">${{ number_format($totalUsed, 2) }}</td>
-                <td class="text-end" style="padding: 10px;">
+                <td class="text-end"></td>
+                <td class="text-end">${{ number_format($totalUsed, 2) }}</td>
+                <td class="text-end">
                     @if($totalMissed > 0)
-                        <span style="color: #fbbf24;">${{ number_format($totalMissed, 2) }}</span>
+                        <span style="color: #fcd34d;">${{ number_format($totalMissed, 2) }}</span>
                     @else
                         -
                     @endif
                 </td>
-                <td class="text-end" style="padding: 10px;">${{ number_format($totalGranted, 2) }}</td>
+                <td class="text-end">${{ number_format($totalGranted, 2) }}</td>
             </tr>
         </tfoot>
     </table>

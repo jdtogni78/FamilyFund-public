@@ -103,6 +103,18 @@
         color: #0f766e !important;
     }
 
+    .btn-header-light i,
+    .btn-header-light .fa,
+    .btn-header-light [class^="fa-"] {
+        color: #0d9488 !important;
+    }
+
+    .btn-header-light:hover i,
+    .btn-header-light:hover .fa,
+    .btn-header-light:hover [class^="fa-"] {
+        color: #0f766e !important;
+    }
+
     /* ========================================
        Cards - Using Bootstrap defaults, only adding dark mode support
        ======================================== */
@@ -134,6 +146,34 @@
     .collapse.show .card-body {
         display: block !important;
         visibility: visible !important;
+    }
+
+    /* ========================================
+       Table Total Rows - Reusable styling
+       ======================================== */
+    .table-total-row {
+        background: #134e4a !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    .table-total-row th,
+    .table-total-row td {
+        color: #ffffff !important;
+        padding: 10px !important;
+    }
+
+    .table-subtotal-row {
+        background: #ccfbf1 !important;
+        font-weight: 600;
+    }
+
+    .table-warning-row {
+        background: #fef3c7 !important;
+    }
+
+    .table-warning-row .text-warning-dark {
+        color: #d97706;
     }
 
     /* ========================================

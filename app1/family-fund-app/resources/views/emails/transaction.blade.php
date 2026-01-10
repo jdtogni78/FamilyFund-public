@@ -9,17 +9,23 @@
         @php($isDebit = $transaction->value < 0)
 
         <!-- Header Card -->
-        <div class="card mb-3" style="border-left: 4px solid {{ $isDebit ? '#dc3545' : '#28a745' }};">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h4 class="mb-0" style="color: #333;">Transaction Confirmation</h4>
-                    <span class="badge" style="background-color: {{ $isDebit ? '#dc3545' : '#28a745' }}; color: white; padding: 8px 16px; font-size: 14px; border-radius: 4px;">
-                        {{ $isDebit ? 'Withdrawal' : 'Deposit' }}
-                    </span>
-                </div>
-                <p style="color: #666; margin: 0;">Dear {{ $api['to'] }},</p>
-            </div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-left: 4px solid {{ $isDebit ? '#dc3545' : '#28a745' }}; margin-bottom: 16px;">
+            <tr>
+                <td style="padding: 16px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="color: #333; font-size: 24px; font-weight: bold;">Transaction Confirmation</td>
+                            <td style="text-align: right;">
+                                <span style="background-color: {{ $isDebit ? '#dc3545' : '#28a745' }}; color: white; padding: 8px 16px; font-size: 14px; border-radius: 4px; display: inline-block;">
+                                    {{ $isDebit ? 'Withdrawal' : 'Deposit' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="color: #666; margin: 12px 0 0 0;">Dear {{ $api['to'] }},</p>
+                </td>
+            </tr>
+        </table>
 
         <!-- Transaction Details Card -->
         <div class="card mb-3">

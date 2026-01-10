@@ -61,7 +61,7 @@
                     </a>
                 </td>
                 <td>{{ $transaction->descr }}</td>
-                <td>{{ $transaction->flags }}</td>
+                <td>{{ \App\Models\TransactionExt::$flagsMap[$transaction->flags] ?? $transaction->flags }}</td>
                 <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
                 <td>{{ $transaction->scheduled_job_id }}</td>
                 <td>

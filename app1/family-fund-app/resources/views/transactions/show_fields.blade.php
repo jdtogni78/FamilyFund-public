@@ -64,7 +64,7 @@
 
                 @if($transaction->flags)
                 <div class="mt-2">
-                    <span class="badge bg-secondary">{{ $transaction->flags }}</span>
+                    <span class="badge bg-secondary">{{ \App\Models\TransactionExt::$flagsMap[$transaction->flags] ?? $transaction->flags }}</span>
                 </div>
                 @endif
             </div>

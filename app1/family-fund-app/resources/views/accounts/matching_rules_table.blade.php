@@ -69,8 +69,8 @@
                     $textColor = '#64748b';
                 }
 
-                // Format period - show year
-                $periodDisplay = $startDate->format('Y');
+                // Format period - show date range
+                $periodDisplay = $startDate->format('M j, Y') . ' - ' . $endDate->format('M j, Y');
 
                 $totalUsed += $used;
                 $totalGranted += $granted;

@@ -5,7 +5,15 @@
 @push('scripts')
 <script type="text/javascript">
 var api = {!! json_encode($api) !!};
-const perf_labels = Object.keys(api.yearly_performance);
+const rawPerfLabels = Object.keys(api.yearly_performance);
+// Extract end date from range labels like "2024-01-01 to 2025-01-01"
+const perf_labels = rawPerfLabels.map(label => {
+    const parts = label.split(' to ');
+    const endDate = parts.length > 1 ? parts[1] : label;
+    // Format as "Jan 2025"
+    const date = new Date(endDate);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+});
 const perf_values = Object.values(api.yearly_performance).map(function(e) { return e.value; });
 
 // Create background colors - last bar blue (primary), others gray (secondary)

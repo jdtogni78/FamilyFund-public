@@ -97,6 +97,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
     Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
+    Route::get('matchingRules/{id}/clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@clone')
+        ->name('matchingRules.clone');
+    Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
+        ->name('matchingRules.store_clone');
     Route::resource('matchingRules', App\Http\Controllers\MatchingRuleController::class);
     Route::resource('people', App\Http\Controllers\PersonController::class);
     Route::resource('persons', App\Http\Controllers\PersonController::class);

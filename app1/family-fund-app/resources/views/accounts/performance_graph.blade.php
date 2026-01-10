@@ -12,7 +12,16 @@
             try {
                 const api = {!! json_encode($api) !!};
                 const yearlyPerf = api.yearly_performance || {};
-                const labels = Object.keys(yearlyPerf);
+                const rawLabels = Object.keys(yearlyPerf);
+
+                // Extract end date from range labels like "2024-01-01 to 2025-01-01"
+                const labels = rawLabels.map(label => {
+                    const parts = label.split(' to ');
+                    const endDate = parts.length > 1 ? parts[1] : label;
+                    // Format as "Jan 2025"
+                    const date = new Date(endDate);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                });
 
                 if (labels.length === 0) {
                     console.log('No yearly performance data');

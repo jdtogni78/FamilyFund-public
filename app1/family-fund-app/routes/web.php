@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,14 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// Dev-only auto-login route for CLI testing
+if (app()->environment('local')) {
+    Route::get('/dev-login/{redirect?}', function ($redirect = '/') {
+        Auth::loginUsingId(\App\Models\User::where('email', 'claude@test.local')->first()->id);
+        return redirect('/' . $redirect);
+    })->where('redirect', '.*');
+}
 
 Route::view('/', 'welcome');
 

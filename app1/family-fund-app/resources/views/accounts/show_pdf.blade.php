@@ -18,6 +18,28 @@
         $disbValue = floatval($disb['value'] ?? 0);
         $disbYear = $disb['year'] ?? date('Y');
 
+        // Calculate year growth from yearly_performance (prev year + current year)
+        $yearlyPerf = $api['yearly_performance'] ?? [];
+        $currentYear = date('Y');
+        $prevYear = $currentYear - 1;
+
+        // Find current year (YTD) and previous year growth
+        $currentYearGrowth = 0;
+        $prevYearGrowth = 0;
+        $hasCurrentYear = false;
+        $hasPrevYear = false;
+
+        foreach ($yearlyPerf as $yearKey => $data) {
+            $year = substr($yearKey, 0, 4);
+            if ($year == $currentYear) {
+                $currentYearGrowth = $data['performance'] ?? 0;
+                $hasCurrentYear = true;
+            } elseif ($year == $prevYear) {
+                $prevYearGrowth = $data['performance'] ?? 0;
+                $hasPrevYear = true;
+            }
+        }
+
         // Calculate overall account health
         $onTrackGoals = 0;
         foreach ($account->goals as $goal) {
@@ -52,53 +74,111 @@
         </tr>
     </table>
 
-    {{-- Key Metrics Row --}}
-    <table width="100%" cellspacing="8" cellpadding="0" style="margin-bottom: 20px;">
+    {{-- Key Metrics Row (7 columns like web) --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 0; background: #eff6ff; border-radius: 8px 8px 0 0; padding: 12px;">
         <tr>
-            <td width="25%" style="background: #f8fafc; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
-                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Shares Owned</div>
-                <div style="font-size: 22px; font-weight: 700; color: #1e293b;">{{ number_format($shares, 2) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 0) }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Market Value</div>
             </td>
-            <td width="25%" style="background: #f8fafc; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
-                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Share Price</div>
-                <div style="font-size: 22px; font-weight: 700; color: #1e293b;">${{ number_format($sharePrice, 2) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Shares</div>
             </td>
-            <td width="25%" style="background: {{ $matchingAvailable > 0 ? '#dcfce7' : '#f8fafc' }}; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid {{ $matchingAvailable > 0 ? '#16a34a' : '#e2e8f0' }};">
-                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Matching Available</div>
-                <div style="font-size: 22px; font-weight: 700; color: {{ $matchingAvailable > 0 ? '#16a34a' : '#94a3b8' }};">${{ number_format($matchingAvailable, 0) }}</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Share Price</div>
             </td>
-            <td width="25%" style="background: #f8fafc; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid #e2e8f0;">
-                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Goals Status</div>
-                <div style="font-size: 22px; font-weight: 700; color: {{ $healthPct >= 50 ? '#16a34a' : '#d97706' }};">{{ $onTrackGoals }}/{{ $goalsCount }}</div>
-                <div style="font-size: 10px; color: #64748b;">on track</div>
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #059669;">${{ number_format($disbValue, 0) }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Eligible Disbursement</div>
             </td>
+            @if($matchingAvailable > 0)
+            <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 0) }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Matching Available</div>
+            </td>
+            @endif
+            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">{{ $goalsCount }}</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Active Goals</div>
+            </td>
+            @if($hasPrevYear)
+            <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #bfdbfe;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $prevYearGrowth >= 0 ? '+' : '' }}{{ number_format($prevYearGrowth, 1) }}%</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $prevYear }} Growth</div>
+            </td>
+            @endif
+            @if($hasCurrentYear)
+            <td width="12%" style="padding: 10px 6px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $currentYearGrowth >= 0 ? '+' : '' }}{{ number_format($currentYearGrowth, 1) }}%</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $currentYear }} YTD</div>
+            </td>
+            @endif
         </tr>
     </table>
 
-    {{-- Disbursement Eligibility Section --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 2px solid #d97706; border-radius: 8px; overflow: hidden;">
+    {{-- Goals Summary (like web header) --}}
+    @if($goalsCount > 0)
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #bfdbfe; border-top: none; border-radius: 0 0 8px 8px; padding: 12px;">
         <tr>
-            <td style="background: #d97706; padding: 10px 16px;">
+            <td style="padding: 8px 12px;">
+                <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Goals Summary</div>
+                @foreach($account->goals as $goal)
+                    @php
+                        $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
+                        $currentValue = $goal->progress['current']['value'] ?? 0;
+                        $expectedValue = $goal->progress['expected']['value'] ?? 0;
+                        $diff = $currentValue - $expectedValue;
+                        $isOnTrack = $diff >= 0;
+                    @endphp
+                    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
+                        <tr>
+                            <td width="50%" style="color: #1e40af; font-weight: 600; font-size: 12px;">{{ $goal->name }}</td>
+                            <td width="25%" align="right" style="font-size: 12px;">
+                                <span style="font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">{{ number_format($currentPct, 1) }}%</span>
+                                <span style="color: #64748b;"> complete</span>
+                            </td>
+                            <td width="25%" align="right">
+                                <span style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px;">
+                                    ${{ number_format(abs($diff), 0) }} {{ $isOnTrack ? 'ahead' : 'behind' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                @endforeach
+            </td>
+        </tr>
+    </table>
+    @else
+    <div style="margin-bottom: 20px;"></div>
+    @endif
+
+    {{-- Disbursement Eligibility Section --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <tr>
+            <td style="background: #1e293b; padding: 10px 16px;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 13px;">DISBURSEMENT ELIGIBILITY ({{ $disbYear }})</span>
             </td>
         </tr>
         <tr>
-            <td style="padding: 16px; background: #fffbeb;">
+            <td style="padding: 16px; background: #ffffff;">
                 <table width="100%" cellspacing="0" cellpadding="0">
                     <tr>
-                        <td width="33%" align="center" style="border-right: 1px solid #fcd34d; padding: 8px;">
-                            <div style="font-size: 11px; text-transform: uppercase; color: #92400e; margin-bottom: 4px;">Eligible Value</div>
-                            <div style="font-size: 24px; font-weight: 700; color: #1e293b;">${{ number_format($disbValue, 0) }}</div>
+                        <td width="33%" align="center" style="border-right: 1px solid #e2e8f0; padding: 8px;">
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Eligible Value</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #059669;">${{ number_format($disbValue, 0) }}</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">{{ number_format($disbLimit, 0) }}% of ${{ number_format($marketValue, 0) }}</div>
                         </td>
-                        <td width="33%" align="center" style="border-right: 1px solid #fcd34d; padding: 8px;">
-                            <div style="font-size: 11px; text-transform: uppercase; color: #92400e; margin-bottom: 4px;">YTD Performance</div>
+                        <td width="33%" align="center" style="border-right: 1px solid #e2e8f0; padding: 8px;">
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">YTD Performance</div>
                             <div style="font-size: 24px; font-weight: 700; color: {{ $disbPerformance >= 0 ? '#16a34a' : '#dc2626' }};">
                                 {{ $disbPerformance >= 0 ? '+' : '' }}{{ number_format($disbPerformance, 1) }}%
                             </div>
                         </td>
                         <td width="33%" align="center" style="padding: 8px;">
-                            <div style="font-size: 11px; text-transform: uppercase; color: #92400e; margin-bottom: 4px;">Annual Cap</div>
-                            <div style="font-size: 24px; font-weight: 700; color: #d97706;">{{ number_format($disbLimit, 0) }}%</div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Annual Cap</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #1e293b;">{{ number_format($disbLimit, 0) }}%</div>
                         </td>
                     </tr>
                 </table>
@@ -106,7 +186,7 @@
         </tr>
     </table>
 
-    {{-- Goals Progress Section --}}
+    {{-- Goals Progress Section (with details) --}}
     @if($goalsCount > 0)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
@@ -117,42 +197,13 @@
         <tr>
             <td style="padding: 16px; background: #ffffff;">
                 @foreach($account->goals as $goal)
-                    @php
-                        $currentPct = $goal->progress['current']['completed_pct'] ?? 0;
-                        $expectedPct = $goal->progress['expected']['completed_pct'] ?? 0;
-                        $currentValue = $goal->progress['current']['value'] ?? 0;
-                        $expectedValue = $goal->progress['expected']['value'] ?? 0;
-                        $targetValue = $goal->progress['current']['final_value'] ?? $goal->target_amount;
-                        $diff = $currentValue - $expectedValue;
-                        $isOnTrack = $diff >= 0;
-                        $progressColor = $isOnTrack ? '#16a34a' : '#d97706';
-                    @endphp
-                    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '16px' }};">
-                        <tr>
-                            <td>
-                                <table width="100%" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td width="50%">
-                                            <div style="font-weight: 700; color: #1e40af; font-size: 14px;">{{ $goal->name }}</div>
-                                            <div style="font-size: 11px; color: #64748b;">Target: ${{ number_format($targetValue, 0) }} by {{ $goal->end_dt->format('M Y') }}</div>
-                                        </td>
-                                        <td width="25%" align="center">
-                                            <span style="font-size: 20px; font-weight: 700; color: {{ $progressColor }};">{{ number_format($currentPct, 0) }}%</span>
-                                        </td>
-                                        <td width="25%" align="right">
-                                            <span style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 11px;">
-                                                ${{ number_format(abs($diff), 0) }} {{ $isOnTrack ? 'ahead' : 'behind' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </table>
-                                {{-- Progress Bar --}}
-                                <div style="background: #e2e8f0; border-radius: 4px; height: 8px; margin-top: 8px; overflow: hidden;">
-                                    <div style="background: {{ $progressColor }}; height: 100%; width: {{ min(100, $currentPct) }}%; border-radius: 4px;"></div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
+                    {{-- Summary row with progress bar and $ ahead badge --}}
+                    @include('goals.progress_summary', ['goal' => $goal, 'format' => 'pdf'])
+
+                    {{-- Detailed info: Expected/Current boxes, time progress, On Track badge --}}
+                    <div style="margin-top: 12px; {{ !$loop->last ? 'margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;' : '' }}">
+                        @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'pdf'])
+                    </div>
                 @endforeach
             </td>
         </tr>
@@ -306,7 +357,7 @@
                     <img src="{{ $files['goals_progress_' . $goal->id . '.png'] }}" alt="{{ $goal->name }} Progress"/>
                 </div>
                 <div class="mt-3">
-                    @include('goals.progress_details_pdf')
+                    @include('goals.progress_details_unified', ['goal' => $goal, 'format' => 'pdf'])
                 </div>
             </div>
         @endforeach

@@ -5,55 +5,38 @@
     $value = floatval($disb['value'] ?? 0);
     $year = $disb['year'] ?? '';
     $performanceColor = $performance >= 0 ? '#16a34a' : '#dc2626';
-    $capUsed = $limit > 0 ? min(100, ($performance / $limit) * 100) : 0;
+
+    // Get market value for calculation display
+    $accountBalance = $api['account']->balances['OWN'] ?? null;
+    $marketValue = $accountBalance->market_value ?? 0;
 @endphp
 
-<div class="row g-3">
-    {{-- Eligible Value --}}
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100" style="border-left: 4px solid #2563eb;">
-            <div class="card-body text-center">
-                <small class="text-muted d-block mb-1">Eligible Value</small>
-                <h4 class="mb-0" style="color: #2563eb;">${{ number_format($value, 2) }}</h4>
-            </div>
-        </div>
+{{-- Dark header layout (matching other sections) --}}
+<div class="card" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    <div class="card-header py-2" style="background: #1e293b; border: none;">
+        <strong style="color: #ffffff; font-size: 13px; text-transform: uppercase;">
+            <i class="fa fa-money-bill-wave me-2"></i>Disbursement Eligibility ({{ $year }})
+        </strong>
     </div>
-
-    {{-- Performance --}}
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100" style="border-left: 4px solid {{ $performanceColor }};">
-            <div class="card-body text-center">
-                <small class="text-muted d-block mb-1">Performance</small>
-                <h4 class="mb-0" style="color: {{ $performanceColor }};">
-                    @if($performance >= 0)+@endif{{ number_format($performance, 2) }}%
-                </h4>
+    <div class="card-body" style="background: #ffffff; padding: 20px;">
+        <div class="row text-center">
+            {{-- Eligible Value --}}
+            <div class="col-md-4" style="border-right: 1px solid #e2e8f0;">
+                <small class="d-block mb-1 text-muted text-uppercase" style="font-size: 11px;">Eligible Value</small>
+                <h3 class="mb-1" style="color: #059669; font-weight: 700;">${{ number_format($value, 0) }}</h3>
+                <small class="text-muted">{{ number_format($limit, 0) }}% of ${{ number_format($marketValue, 0) }}</small>
             </div>
-        </div>
-    </div>
-
-    {{-- Cap --}}
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100" style="border-left: 4px solid #d97706;">
-            <div class="card-body text-center">
-                <small class="text-muted d-block mb-1">Cap Limit</small>
-                <h4 class="mb-1" style="color: #d97706;">{{ number_format($limit, 2) }}%</h4>
-                @if($limit > 0)
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar" role="progressbar"
-                         style="width: {{ min(100, $capUsed) }}%; background-color: {{ $performance > $limit ? '#dc2626' : '#d97706' }};"
-                         aria-valuenow="{{ $capUsed }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                @endif
+            {{-- YTD Performance --}}
+            <div class="col-md-4" style="border-right: 1px solid #e2e8f0;">
+                <small class="d-block mb-1 text-muted text-uppercase" style="font-size: 11px;">YTD Performance</small>
+                <h3 class="mb-0" style="color: {{ $performanceColor }}; font-weight: 700;">
+                    {{ $performance >= 0 ? '+' : '' }}{{ number_format($performance, 1) }}%
+                </h3>
             </div>
-        </div>
-    </div>
-
-    {{-- Year --}}
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <small class="text-muted d-block mb-1">Year</small>
-                <h4 class="mb-0">{{ $year }}</h4>
+            {{-- Annual Cap --}}
+            <div class="col-md-4">
+                <small class="d-block mb-1 text-muted text-uppercase" style="font-size: 11px;">Annual Cap</small>
+                <h3 class="mb-0" style="color: #1e293b; font-weight: 700;">{{ number_format($limit, 0) }}%</h3>
             </div>
         </div>
     </div>

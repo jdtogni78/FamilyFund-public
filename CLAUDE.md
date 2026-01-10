@@ -122,3 +122,16 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 - Quarterly reports generated via queue jobs
 - PDF reports use wkhtmltopdf (installed in container)
 - Email testing via MailHog in development
+
+## Claude Testing
+
+A dedicated test user exists for automated testing:
+- **Email**: claude@test.local
+- **Password**: claude-test-2024
+- **User ID**: 1346
+
+Dev-only auto-login route (local environment only):
+```
+GET /dev-login/{redirect?}
+```
+Example: `curl -L http://localhost:3000/dev-login/accounts/8` to auto-login and access account 8.

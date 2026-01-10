@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); if(darkMode) $el.classList.add('dark')" :class="{ 'dark': darkMode }">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,39 +22,41 @@
                 <img src="{{ asset('images/hero-bg.png') }}" alt="" class="absolute inset-0 w-full h-full object-cover">
 
                 <!-- Gradient Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-purple-900/70 to-indigo-900/80"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-teal-900/70 via-cyan-900/60 to-teal-900/70"></div>
 
                 <!-- Content -->
                 <div class="relative z-10 flex flex-col justify-center items-center w-full px-12 text-white">
                     <!-- Logo -->
                     <div class="mb-8">
-                        <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="h-24 w-24 drop-shadow-2xl">
+                        <div class="rounded-full p-1 bg-white/20">
+                            <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="h-24 w-24 rounded-full drop-shadow-2xl">
+                        </div>
                     </div>
 
                     <!-- Brand Name -->
                     <h1 class="text-4xl font-bold mb-4 text-center drop-shadow-lg">Family Fund</h1>
 
                     <!-- Tagline -->
-                    <p class="text-xl text-indigo-100 text-center max-w-md mb-8 drop-shadow">
+                    <p class="text-xl text-teal-100 text-center max-w-md mb-8 drop-shadow">
                         Manage your family's financial future with confidence
                     </p>
 
                     <!-- Features -->
-                    <div class="space-y-4 text-indigo-100">
+                    <div class="space-y-4 text-teal-100">
                         <div class="flex items-center space-x-3">
-                            <svg class="w-6 h-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-6 h-6 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span class="drop-shadow">Track fund shares and portfolios</span>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <svg class="w-6 h-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-6 h-6 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span class="drop-shadow">Monitor beneficiary accounts</span>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <svg class="w-6 h-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-6 h-6 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span class="drop-shadow">Generate detailed reports</span>
@@ -84,10 +86,12 @@
                 </div>
 
                 <!-- Mobile Header (visible on small screens) -->
-                <div class="lg:hidden bg-gradient-to-r from-indigo-600 to-purple-700 dark:from-indigo-800 dark:to-purple-900 px-6 py-8 text-white text-center">
-                    <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="h-16 w-16 mx-auto mb-4">
+                <div class="lg:hidden bg-gradient-to-r from-teal-600 to-cyan-700 dark:from-teal-800 dark:to-cyan-900 px-6 py-8 text-white text-center">
+                    <div class="rounded-full p-0.5 bg-white/20 mx-auto mb-4 inline-block">
+                        <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="h-16 w-16 rounded-full">
+                    </div>
                     <h1 class="text-2xl font-bold">Family Fund</h1>
-                    <p class="text-indigo-100 text-sm mt-1">Manage your family's financial future</p>
+                    <p class="text-teal-100 text-sm mt-1">Manage your family's financial future</p>
                 </div>
 
                 <!-- Form Container -->

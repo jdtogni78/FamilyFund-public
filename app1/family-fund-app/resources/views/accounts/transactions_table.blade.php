@@ -31,6 +31,7 @@
                 <th class="text-end">Current Value</th>
                 <th class="text-end">Balance</th>
                 <th>Notes</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -80,6 +81,11 @@
                             <i class="fa fa-link me-1"></i>Matched #{{ $trans->reference_transaction }}
                         </small>
                     @endisset
+                </td>
+                <td>
+                    <a href="{{ route('transactions.show', $trans->id) }}" class="btn btn-sm btn-ghost-info" title="View">
+                        <i class="fa fa-eye"></i>
+                    </a>
                 </td>
             </tr>
         @endforeach

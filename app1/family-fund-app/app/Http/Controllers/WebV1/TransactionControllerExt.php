@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Response;
 use App\Models\ScheduledJobExt;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TransactionControllerExt extends TransactionController
 {
@@ -162,6 +163,50 @@ class TransactionControllerExt extends TransactionController
         return view('transactions.edit')
             ->with('transaction', $transaction)
             ->with('api', $api);
+    }
+
+    /**
+     * Clone a transaction with updated timestamp.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function clone($id)
+    {
+        $transaction = $this->transactionRepository->find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+            return redirect(route('transactions.index'));
+        }
+
+        // Prepare input for creating a new transaction
+        $input = [
+            'type' => $transaction->type,
+            'status' => TransactionExt::STATUS_PENDING,
+            'value' => $transaction->value,
+            'flags' => $transaction->flags,
+            'timestamp' => Carbon::now()->format('Y-m-d'),
+            'account_id' => $transaction->account_id,
+            'descr' => $transaction->descr,
+        ];
+
+        Log::info('TransactionControllerExt::clone: cloning transaction ' . $id . ' with input: ' . json_encode($input));
+
+        try {
+            $api1 = $this->createTransaction($input, true);
+        } catch (Exception $e) {
+            Log::error('TransactionControllerExt::clone: error: ' . $e->getMessage());
+            Flash::error($e->getMessage());
+            return redirect(route('transactions.show', $id));
+        }
+
+        $api1['transaction']->id = null;
+        $api1['transaction']->status = TransactionExt::STATUS_PENDING;
+
+        return view('transactions.preview')
+            ->with('api1', $api1)
+            ->with('api', $this->getApi());
     }
 
 }

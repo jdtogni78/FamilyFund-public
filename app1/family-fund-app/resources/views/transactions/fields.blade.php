@@ -2,8 +2,8 @@
 <div class="form-group col-sm-6">
 <label for="type">Type:</label>
 <select name="type" class="form-control">
-    @foreach({{ $api['typeMap'] }} as $value => $label)
-        <option value="{{ $value }}" { PUR == $value ? 'selected' : '' }>{ $label }</option>
+    @foreach($api['typeMap'] as $value => $label)
+        <option value="{{ $value }}" {{ 'PUR' == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -12,8 +12,8 @@
 <div class="form-group col-sm-6">
 <label for="status">Status:</label>
 <select name="status" class="form-control">
-    @foreach({{ $api['statusMap'] }} as $value => $label)
-        <option value="{{ $value }}" { P == $value ? 'selected' : '' }>{ $label }</option>
+    @foreach($api['statusMap'] as $value => $label)
+        <option value="{{ $value }}" {{ 'P' == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -28,8 +28,8 @@
 <div class="form-group col-sm-6">
 <label for="flags">Flags:</label>
 <select name="flags" class="form-control">
-    @foreach({{ $api['flagsMap'] }} as $value => $label)
-        <option value="{{ $value }}" { null == $value ? 'selected' : '' }>{ $label }</option>
+    @foreach($api['flagsMap'] as $value => $label)
+        <option value="{{ $value }}" {{ null == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>
@@ -139,7 +139,7 @@
 <label for="account_id">Account:</label>
 <select name="account_id" class="form-control">
     @foreach($api['accountMap'] as $value => $label)
-        <option value="{ $value }" { null == $value ? 'selected' : '' }>{ $label }</option>
+        <option value="{{ $value }}" {{ null == $value ? 'selected' : '' }}>{{ $label }}</option>
     @endforeach
 </select>
 </div>

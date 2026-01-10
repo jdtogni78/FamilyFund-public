@@ -19,6 +19,7 @@
                                 @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
                                     <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
                                 @endif
+                                <a href="{{ route('transactions.clone', [$transaction->id]) }}" class="btn btn-ghost-primary" title="Clone with today's date"><i class="fa fa-clone"></i></a>
                                 <a href="{{ route('transactions.index') }}" class="btn btn-light">Back</a>
                             </div>
                         </div>

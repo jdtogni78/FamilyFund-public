@@ -78,7 +78,7 @@ class DataFactory
     {
         $this->fund = Fund::factory()
             ->has(Portfolio::factory()->count(1), 'portfolios')
-            ->has(Account::factory()->count(1), 'accounts')
+            ->has(Account::factory()->fundAccount()->count(1), 'accounts')
             ->create();
         if ($this->verbose) Log::debug("this->fund: " . json_encode($this->fund));
         $this->funds[] = $this->fund;
@@ -122,7 +122,7 @@ class DataFactory
     public function createTradePortfolio($start_dt, $end_dt='9999-12-31')
     {
         $this->tradePortfolio = TradePortfolio::factory()
-//            ->for($this->portfolio, 'portfolio')
+            ->for($this->portfolio, 'portfolio')
             ->create([
                 'start_dt' => $start_dt,
                 'end_dt' => $end_dt,

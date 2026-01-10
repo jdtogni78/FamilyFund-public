@@ -21,7 +21,7 @@
                                 <strong>Create Transaction</strong>
                             </div>
                             <div class="card-body">
-<form method="POST" action="{ route('transactions.preview') }">
+<form method="POST" action="{{ route('transactions.preview') }}">
 @csrf
                                @include('transactions.fields')
 </form>

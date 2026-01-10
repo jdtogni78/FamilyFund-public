@@ -1,5 +1,5 @@
-<div>
-    <canvas id="perfGraphMonthly"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="perfGraphMonthly" style="display: block !important; visibility: visible !important;"></canvas>
 </div>
 <div class="col-xs-12 mt-2">
     <ul class="small text-muted">

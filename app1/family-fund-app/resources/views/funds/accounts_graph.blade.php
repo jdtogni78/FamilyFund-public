@@ -1,5 +1,5 @@
-<div>
-    <canvas id="accountGraph"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="accountGraph" style="display: block !important; visibility: visible !important;"></canvas>
 </div>
 
 @push('scripts')

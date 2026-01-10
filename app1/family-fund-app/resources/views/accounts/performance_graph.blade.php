@@ -1,5 +1,5 @@
-<div>
-    <canvas id="perfGraph"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="perfGraph" style="display: block !important; visibility: visible !important;"></canvas>
     <div id="perfGraphNoData" class="text-center text-muted py-5" style="display: none;">
         <i class="fa fa-chart-bar fa-3x mb-3" style="color: #cbd5e1;"></i>
         <p>No yearly performance data available</p>

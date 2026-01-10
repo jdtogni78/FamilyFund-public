@@ -1,5 +1,5 @@
-<div>
-    <canvas id="perfGraphMonthly"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="perfGraphMonthly" style="display: block !important; visibility: visible !important;"></canvas>
     <div id="perfGraphMonthlyNoData" class="text-center text-muted py-5" style="display: none;">
         <i class="fa fa-chart-line fa-3x mb-3" style="color: #cbd5e1;"></i>
         <p>No monthly performance data available</p>

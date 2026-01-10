@@ -1,5 +1,5 @@
-<div>
-    <canvas id="tradePortfolioGraph{{ $tradePortfolio->id }}"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="tradePortfolioGraph{{ $tradePortfolio->id }}" style="display: block !important; visibility: visible !important;"></canvas>
 </div>
 
 @push('scripts')

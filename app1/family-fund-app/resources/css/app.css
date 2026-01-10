@@ -2,5 +2,517 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   Family Fund - Base Styles
+   Teal/Cyan Theme matching the logo
+   ======================================== */
 
+@layer base {
+    /* Root variables for consistent theming */
+    :root {
+        --color-primary: theme('colors.teal.600');
+        --color-primary-dark: theme('colors.teal.700');
+        --color-primary-light: theme('colors.teal.500');
+        --color-secondary: theme('colors.cyan.600');
+        --color-accent: theme('colors.amber.500');
+        --color-success: theme('colors.emerald.500');
+        --color-warning: theme('colors.amber.500');
+        --color-danger: theme('colors.red.500');
+    }
 
+    /* Base typography */
+    body {
+        @apply text-gray-700 dark:text-gray-200;
+        font-feature-settings: "kern" 1, "liga" 1;
+    }
+
+    /* Headings */
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-semibold text-gray-900 dark:text-white;
+    }
+
+    h1 { @apply text-3xl; }
+    h2 { @apply text-2xl; }
+    h3 { @apply text-xl; }
+    h4 { @apply text-lg; }
+
+    /* Links */
+    a {
+        @apply text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors;
+    }
+
+    /* Focus styles */
+    *:focus-visible {
+        @apply outline-none ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-gray-900;
+    }
+}
+
+@layer components {
+    /* ========================================
+       Buttons
+       ======================================== */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-primary {
+        @apply btn bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 focus:ring-teal-500;
+    }
+
+    .btn-secondary {
+        @apply btn bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500;
+    }
+
+    .btn-outline {
+        @apply btn border-2 border-teal-600 dark:border-teal-400 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 focus:ring-teal-500;
+    }
+
+    .btn-danger {
+        @apply btn bg-red-600 hover:bg-red-700 text-white focus:ring-red-500;
+    }
+
+    .btn-success {
+        @apply btn bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500;
+    }
+
+    .btn-warning {
+        @apply btn bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-500;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .btn-lg {
+        @apply px-6 py-3 text-base;
+    }
+
+    .btn-icon {
+        @apply p-2;
+    }
+
+    /* ========================================
+       Cards - Using Bootstrap defaults, only adding dark mode support
+       ======================================== */
+    .dark .card {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    .dark .card-header {
+        border-color: #374151;
+        background-color: #1f2937;
+    }
+
+    .dark .card-body {
+        background-color: #1f2937;
+    }
+
+    .dark .card-footer {
+        border-color: #374151;
+        background-color: #111827;
+    }
+
+    /* ========================================
+       Forms
+       ======================================== */
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5;
+    }
+
+    .form-input {
+        @apply block w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors;
+    }
+
+    .form-input-error {
+        @apply form-input border-red-500 focus:ring-red-500;
+    }
+
+    .form-select {
+        @apply form-input pr-10 bg-no-repeat appearance-none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-size: 1.5em 1.5em;
+    }
+
+    .form-checkbox {
+        @apply h-4 w-4 text-teal-600 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500 dark:bg-gray-700;
+    }
+
+    .form-radio {
+        @apply h-4 w-4 text-teal-600 border-gray-300 dark:border-gray-600 focus:ring-teal-500 dark:bg-gray-700;
+    }
+
+    .form-textarea {
+        @apply form-input resize-y min-h-[100px];
+    }
+
+    .form-help {
+        @apply mt-1.5 text-sm text-gray-500 dark:text-gray-400;
+    }
+
+    .form-error {
+        @apply mt-1.5 text-sm text-red-600 dark:text-red-400;
+    }
+
+    /* Input with icon */
+    .input-group {
+        @apply relative;
+    }
+
+    .input-group-icon {
+        @apply absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400;
+    }
+
+    .input-group .form-input {
+        @apply pl-10;
+    }
+
+    /* ========================================
+       Tables
+       ======================================== */
+    .table-container {
+        @apply overflow-x-auto rounded-xl ring-1 ring-gray-200 dark:ring-gray-700;
+    }
+
+    .table {
+        @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700;
+    }
+
+    .table thead {
+        @apply bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30;
+    }
+
+    .table th {
+        @apply px-4 py-3 text-left text-xs font-semibold text-teal-700 dark:text-teal-300 uppercase tracking-wider;
+    }
+
+    .table tbody {
+        @apply bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700;
+    }
+
+    .table td {
+        @apply px-4 py-3 text-sm text-gray-700 dark:text-gray-300;
+    }
+
+    .table tbody tr {
+        @apply hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors;
+    }
+
+    /* ========================================
+       Badges / Tags
+       ======================================== */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-teal {
+        @apply badge bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300;
+    }
+
+    .badge-cyan {
+        @apply badge bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300;
+    }
+
+    .badge-success {
+        @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300;
+    }
+
+    .badge-warning {
+        @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300;
+    }
+
+    .badge-danger {
+        @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+    }
+
+    .badge-gray {
+        @apply badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
+    }
+
+    /* ========================================
+       Alerts
+       ======================================== */
+    .alert {
+        @apply p-4 rounded-xl flex items-start space-x-3;
+    }
+
+    .alert-icon {
+        @apply flex-shrink-0 w-5 h-5;
+    }
+
+    .alert-content {
+        @apply flex-1 text-sm;
+    }
+
+    .alert-success {
+        @apply alert bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-200 dark:ring-emerald-800;
+    }
+
+    .alert-warning {
+        @apply alert bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 ring-1 ring-amber-200 dark:ring-amber-800;
+    }
+
+    .alert-danger {
+        @apply alert bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 ring-1 ring-red-200 dark:ring-red-800;
+    }
+
+    .alert-info {
+        @apply alert bg-teal-50 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 ring-1 ring-teal-200 dark:ring-teal-800;
+    }
+
+    /* ========================================
+       Page Layout
+       ======================================== */
+    .page-header {
+        @apply mb-6;
+    }
+
+    .page-title {
+        @apply text-2xl font-bold text-gray-900 dark:text-white;
+    }
+
+    .page-subtitle {
+        @apply mt-1 text-sm text-gray-500 dark:text-gray-400;
+    }
+
+    .page-actions {
+        @apply flex items-center space-x-3;
+    }
+
+    .section {
+        @apply mb-8;
+    }
+
+    .section-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center;
+    }
+
+    .section-title::before {
+        content: '';
+        @apply w-1 h-5 bg-gradient-to-b from-teal-500 to-cyan-500 rounded-full mr-3;
+    }
+
+    /* ========================================
+       Stats / Metrics
+       ======================================== */
+    .stat-card {
+        @apply card p-6;
+    }
+
+    .stat-label {
+        @apply text-sm font-medium text-gray-500 dark:text-gray-400;
+    }
+
+    .stat-value {
+        @apply mt-1 text-3xl font-bold text-gray-900 dark:text-white;
+    }
+
+    .stat-change {
+        @apply mt-2 flex items-center text-sm;
+    }
+
+    .stat-change-up {
+        @apply text-emerald-600 dark:text-emerald-400;
+    }
+
+    .stat-change-down {
+        @apply text-red-600 dark:text-red-400;
+    }
+
+    /* ========================================
+       Modals
+       ======================================== */
+    .modal-backdrop {
+        @apply fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70 backdrop-blur-sm z-40;
+    }
+
+    .modal {
+        @apply fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4;
+    }
+
+    .modal-content {
+        @apply bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden;
+    }
+
+    .modal-header {
+        @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30;
+    }
+
+    .modal-body {
+        @apply p-6 overflow-y-auto;
+    }
+
+    .modal-footer {
+        @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-end space-x-3;
+    }
+
+    /* ========================================
+       Tabs
+       ======================================== */
+    .tabs {
+        @apply border-b border-gray-200 dark:border-gray-700;
+    }
+
+    .tabs-list {
+        @apply flex space-x-1 -mb-px;
+    }
+
+    .tab {
+        @apply px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-300 transition-colors;
+    }
+
+    .tab-active {
+        @apply text-teal-600 dark:text-teal-400 border-teal-600 dark:border-teal-400;
+    }
+
+    .tab-content {
+        @apply py-4;
+    }
+
+    /* ========================================
+       Breadcrumbs
+       ======================================== */
+    .breadcrumbs {
+        @apply flex items-center space-x-2 text-sm;
+    }
+
+    .breadcrumb-item {
+        @apply text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400;
+    }
+
+    .breadcrumb-separator {
+        @apply text-gray-300 dark:text-gray-600;
+    }
+
+    .breadcrumb-current {
+        @apply text-gray-900 dark:text-white font-medium;
+    }
+
+    /* ========================================
+       Pagination
+       ======================================== */
+    .pagination {
+        @apply flex items-center space-x-1;
+    }
+
+    .pagination-item {
+        @apply px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-300 dark:hover:border-teal-600 transition-colors;
+    }
+
+    .pagination-item-active {
+        @apply bg-teal-600 dark:bg-teal-500 text-white border-teal-600 dark:border-teal-500 hover:bg-teal-700 hover:text-white;
+    }
+
+    .pagination-item-disabled {
+        @apply opacity-50 cursor-not-allowed hover:bg-white dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300;
+    }
+
+    /* ========================================
+       Tooltips
+       ======================================== */
+    .tooltip {
+        @apply absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg whitespace-nowrap;
+    }
+
+    /* ========================================
+       Loading States
+       ======================================== */
+    .spinner {
+        @apply animate-spin h-5 w-5 text-teal-600 dark:text-teal-400;
+    }
+
+    .skeleton {
+        @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+    }
+
+    /* ========================================
+       Empty States
+       ======================================== */
+    .empty-state {
+        @apply text-center py-12;
+    }
+
+    .empty-state-icon {
+        @apply mx-auto h-12 w-12 text-gray-400 dark:text-gray-500;
+    }
+
+    .empty-state-title {
+        @apply mt-4 text-lg font-medium text-gray-900 dark:text-white;
+    }
+
+    .empty-state-description {
+        @apply mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto;
+    }
+
+    /* ========================================
+       Avatars
+       ======================================== */
+    .avatar {
+        @apply inline-flex items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-white font-semibold;
+    }
+
+    .avatar-sm {
+        @apply h-8 w-8 text-xs;
+    }
+
+    .avatar-md {
+        @apply h-10 w-10 text-sm;
+    }
+
+    .avatar-lg {
+        @apply h-12 w-12 text-base;
+    }
+
+    .avatar-xl {
+        @apply h-16 w-16 text-lg;
+    }
+
+    /* ========================================
+       Progress Bars
+       ======================================== */
+    .progress {
+        @apply w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+    }
+
+    .progress-bar {
+        @apply h-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-300;
+    }
+
+    /* ========================================
+       Dividers
+       ======================================== */
+    .divider {
+        @apply border-t border-gray-200 dark:border-gray-700 my-6;
+    }
+
+    .divider-vertical {
+        @apply border-l border-gray-200 dark:border-gray-700 mx-4 h-6;
+    }
+}
+
+@layer utilities {
+    /* Gradient text */
+    .text-gradient {
+        @apply bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent;
+    }
+
+    /* Glass effect */
+    .glass {
+        @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg;
+    }
+
+    /* Smooth scrolling */
+    .scroll-smooth {
+        scroll-behavior: smooth;
+    }
+
+    /* Hide scrollbar */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+}

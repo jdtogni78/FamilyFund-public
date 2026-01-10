@@ -18,8 +18,8 @@
     $groupData[$cashGroup] += $tradePortfolio->cash_target * 100;
 @endphp
 
-<div>
-    <canvas id="tradePortfolioGroupGraph{{ $tradePortfolio->id }}"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="tradePortfolioGroupGraph{{ $tradePortfolio->id }}" style="display: block !important; visibility: visible !important;"></canvas>
 </div>
 
 @push('scripts')

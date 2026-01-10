@@ -33,13 +33,13 @@
             @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
-                    <div class="card" style="border: 2px solid #1e40af; overflow: hidden;">
+                    <div class="card" style="border: 2px solid #0d9488;">
                         {{-- Header --}}
-                        <div class="card-header py-3" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none;">
+                        <div class="card-header card-header-dark py-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h4 class="mb-1" style="color: #ffffff; font-weight: 700;">{{ $account->nickname }}</h4>
-                                    <div style="color: #bfdbfe; font-size: 14px;">
+                                    <h4 class="mb-1" style="font-weight: 700;">{{ $account->nickname }}</h4>
+                                    <div class="subtitle" style="font-size: 14px;">
                                         {{ $account->fund->name }} &bull; {{ $account->user->name }}
                                         @if($account->email_cc)
                                             &bull; {{ $account->email_cc }}
@@ -47,9 +47,9 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <a href="{{ route('accounts.index') }}" class="btn btn-light btn-sm me-2">Back</a>
+                                    <a href="{{ route('accounts.index') }}" class="btn btn-sm me-2" style="background: white; color: #0d9488; border: 1px solid rgba(255,255,255,0.3);">Back</a>
                                     <a href="/accounts/{{ $account->id }}/pdf_as_of/{{ $api['asOf'] ?? now()->format('Y-m-d') }}"
-                                       class="btn btn-outline-light btn-sm" target="_blank" title="Download PDF Report">
+                                       class="btn btn-sm" style="background: white; color: #0d9488; border: 1px solid rgba(255,255,255,0.3);" target="_blank" title="Download PDF Report">
                                         <i class="fa fa-file-pdf me-1"></i> PDF
                                     </a>
                                 </div>
@@ -57,28 +57,28 @@
                         </div>
 
                         {{-- Stats Row --}}
-                        <div class="card-body py-3" style="background: #eff6ff;">
+                        <div class="card-body py-3" style="background: #f0fdfa;">
                             <div class="row text-center">
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
-                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($marketValue, 2) }}</div>
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Market Value</div>
                                 </div>
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
-                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ number_format($shares, 2) }}</div>
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Shares</div>
                                 </div>
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
-                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
+                                    <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
                                 @if($account->disbursement_cap !== 0.0)
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #059669;">${{ number_format($disbursableValue, 0) }}</div>
                                     <div class="text-muted text-uppercase small">Eligible Disbursement</div>
                                 </div>
                                 @endif
                                 @if($matchingAvailable > 0)
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #16a34a;">${{ number_format($matchingAvailable, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Matching Available</div>
                                 </div>
@@ -89,7 +89,7 @@
 
                         {{-- Goals Summary --}}
                         @if($goalsCount > 0)
-                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #bfdbfe;">
+                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #99f6e4;">
                             <div class="text-muted text-uppercase small mb-2 mt-2" style="font-weight: 600;">Goals Summary</div>
                             @foreach($account->goals as $goal)
                                 @php
@@ -117,7 +117,7 @@
                                     }
                                 @endphp
                                 <div class="d-flex align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
-                                    <div style="flex: 1; color: #1e40af; font-weight: 600;">{{ $goal->name }}</div>
+                                    <div style="flex: 1; color: #0d9488; font-weight: 600;">{{ $goal->name }}</div>
                                     <div style="flex: 1; text-align: center;">
                                         <span style="font-size: 1rem; font-weight: 700; color: {{ $isOnTrack ? '#16a34a' : '#d97706' }};">
                                             {{ number_format($currentPct, 1) }}%
@@ -165,7 +165,7 @@
             <div class="row mb-4" id="section-goals">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-bullseye" style="margin-right: 8px;"></i>Goals</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGoals"
                                role="button" aria-expanded="true" aria-controls="collapseGoals">
@@ -176,7 +176,7 @@
                             <div class="card-body">
                                 @foreach($account->goals as $goal)
                                     <div class="card mb-3 {{ $loop->last ? 'mb-0' : '' }}">
-                                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                                             <strong><i class="fa fa-bullseye" style="margin-right: 8px;"></i>{{ $goal->name }}</strong>
                                             <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">ID: {{ $goal->id }}</span>
                                         </div>
@@ -197,7 +197,7 @@
             <div class="row mb-4" id="section-charts">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-chart-line" style="margin-right: 8px;"></i>Monthly Value</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyValue">
@@ -215,7 +215,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Yearly Value</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyValue">
@@ -236,7 +236,7 @@
             <div class="row mb-4" id="section-forecast">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Forecast (Linear Regression)</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseForecast"
                                role="button" aria-expanded="true" aria-controls="collapseForecast">
@@ -252,7 +252,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Projection Table</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseProjection"
                                role="button" aria-expanded="true" aria-controls="collapseProjection">
@@ -273,7 +273,7 @@
             <div class="row mb-4" id="section-shares">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Shares History</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseShares"
                                role="button" aria-expanded="true" aria-controls="collapseShares">
@@ -282,8 +282,8 @@
                         </div>
                         <div class="collapse show" id="collapseShares">
                             <div class="card-body">
-                                <div>
-                                    <canvas id="balancesGraph"></canvas>
+                                <div style="position: relative; z-index: 1;">
+                                    <canvas id="balancesGraph" style="display: block !important; visibility: visible !important;"></canvas>
                                     <div id="balancesGraphNoData" class="text-center text-muted py-5" style="display: none;">
                                         <i class="fa fa-chart-area fa-3x mb-3" style="color: #cbd5e1;"></i>
                                         <p>No shares history data available</p>
@@ -300,7 +300,7 @@
             <div class="row mb-4" id="section-performance">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Yearly Performance</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyPerf">
@@ -317,7 +317,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-table" style="margin-right: 8px;"></i>Monthly Performance</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyPerf">
@@ -338,7 +338,7 @@
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-exchange-alt" style="margin-right: 8px;"></i>Transactions</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
                                role="button" aria-expanded="true" aria-controls="collapseTransactions">
@@ -359,7 +359,7 @@
                 <div class="row mb-4" id="section-matching">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: #ffffff;">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                                 <strong><i class="fa fa-hand-holding-usd" style="margin-right: 8px;"></i>Matching Rules</strong>
                                 <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMatching"
                                    role="button" aria-expanded="true" aria-controls="collapseMatching">

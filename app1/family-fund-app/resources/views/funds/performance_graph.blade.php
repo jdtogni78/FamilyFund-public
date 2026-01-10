@@ -1,5 +1,5 @@
-<div>
-    <canvas id="perfGraph"></canvas>
+<div style="position: relative; z-index: 1;">
+    <canvas id="perfGraph" style="display: block !important; visibility: visible !important;"></canvas>
 </div>
 
 @push('scripts')

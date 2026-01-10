@@ -4,46 +4,43 @@
 
     function updateAccountInfo() {
         var account = $('#account_id').find(":selected").val();
-        var accountName = $('#account_id').find(":selected").text();
         var dt = $('#timestamp').val();
 
         // Reset if no account or date
         if (!account || !dt) {
             $('#accountInfoPanel').hide();
             $('#accountPlaceholder').show();
-            $('#balanceCard').hide();
             $('#previewCard').hide();
             return;
         }
 
         var myUrl = '/api/accounts/' + account + '/share_value_as_of/' + dt;
-        console.log('Fetching: ' + myUrl);
 
         $.ajax({
             type: 'GET',
             url: myUrl,
             success: function(data) {
-                var share_price = parseFloat(data['data']['share_price']) || 0;
-                var account_shares = parseFloat(data['data']['account_shares']) || 0;
-                var account_value = parseFloat(data['data']['account_value']) || 0;
+                var d = data['data'];
+                var share_price = parseFloat(d['share_price']) || 0;
+                var account_shares = parseFloat(d['account_shares']) || 0;
+                var account_value = parseFloat(d['account_value']) || 0;
 
-                // Update Account Info Panel
-                $('#__account_name').text(accountName.replace('Select an Account', '-'));
+                // Update Account/User Info
+                var nickname = d['account_nickname'] || '-';
+                if (d['account_code']) nickname += ' (' + d['account_code'] + ')';
+                $('#__account_nickname').text(nickname);
+                var userInfo = d['user_name'] || 'No user';
+                if (d['user_email']) userInfo += ' - ' + d['user_email'];
+                $('#__user_info').text(userInfo);
+
+                // Update Balance Info
                 $('#__account_balance_lg').text('$' + account_value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#__account_shares_sm').text(account_shares.toFixed(4) + ' shares');
+                $('#__account_shares_sm').text(account_shares.toFixed(4));
                 $('#__share_price_lg').text('$' + share_price.toFixed(4));
-                $('#__price_date').text('as of ' + dt);
 
                 // Show/hide panels
                 $('#accountPlaceholder').hide();
                 $('#accountInfoPanel').show();
-                $('#balanceCard').show();
-
-                // Update sidebar cards
-                $('#__account_balance_display').text('$' + account_value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#__account_shares_display').text(account_shares.toFixed(4) + ' shares');
-                $('#__share_price_display').text('$' + share_price.toFixed(4));
-                $('#__as_of_date_display').text(dt);
 
                 // Store share price for calculations
                 $('#__share_price').val(share_price);
@@ -64,16 +61,16 @@
         var share_price = parseFloat($('#__share_price').val()) || 0;
         var type = $('#type').val();
 
+        var shares = 0;
         if (type === 'INI') {
             // For initial, shares are manually entered
-            var shares = parseFloat($('#shares').val()) || 0;
+            shares = parseFloat($('#shares').val()) || 0;
             if (shares !== 0 && value !== 0) {
                 share_price = value / shares;
                 $('#__share_price').val(share_price);
             }
         } else {
             // Calculate shares from value and price
-            var shares = 0;
             if (share_price !== 0) {
                 shares = value / share_price;
             }
@@ -81,16 +78,14 @@
         }
 
         // Update display
-        var shares = parseFloat($('#shares').val()) || 0;
         var sharesClass = shares >= 0 ? 'text-success' : 'text-danger';
-        var sharesSign = shares >= 0 ? '+' : '';
         $('#__shares_display')
-            .text(sharesSign + shares.toFixed(4))
+            .text((shares >= 0 ? '+' : '') + shares.toFixed(4))
             .removeClass('text-success text-danger')
             .addClass(sharesClass);
 
         // Show preview card if we have a value
-        if (value !== 0) {
+        if (value !== 0 && share_price !== 0) {
             $('#previewCard').show();
         } else {
             $('#previewCard').hide();
@@ -98,11 +93,7 @@
     }
 
     // Event handlers
-    $("#account_id").change(function() {
-        updateAccountInfo();
-    });
-
-    $("#timestamp").change(function() {
+    $("#account_id, #timestamp").change(function() {
         updateAccountInfo();
     });
 
@@ -112,11 +103,10 @@
 
     $("#type").change(function() {
         var value = $(this).val();
-        // Make shares editable if INI (initial value)
         if (value === 'INI') {
-            $('#shares').prop('readonly', false).removeClass('bg-light');
+            $('#shares').prop('readonly', false);
         } else {
-            $('#shares').prop('readonly', true).addClass('bg-light');
+            $('#shares').prop('readonly', true);
         }
         updateSharesCalculation();
     });
@@ -129,12 +119,9 @@
 
     // Initialize on page load
     $(document).ready(function() {
-        // If account and timestamp are prefilled (e.g., from clone), fetch info
         if ($('#account_id').val() && $('#timestamp').val()) {
             updateAccountInfo();
         }
-
-        // If value is prefilled, update calculations
         if ($('#value').val()) {
             updateSharesCalculation();
         }

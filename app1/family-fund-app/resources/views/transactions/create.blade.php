@@ -48,31 +48,7 @@
 
                 <!-- Right Column - Summary -->
                 <div class="col-lg-4">
-                    <!-- Account Balance Card -->
-                    <div class="card mb-4" id="balanceCard" style="display: none;">
-                        <div class="card-header bg-info text-white">
-                            <i class="fa fa-wallet me-2"></i>
-                            <strong>Account Balance</strong>
-                        </div>
-                        <div class="card-body text-center">
-                            <div class="text-muted small text-uppercase">Current Value</div>
-                            <div class="fs-2 fw-bold text-primary" id="__account_balance_display">-</div>
-                            <div class="text-muted" id="__account_shares_display">-</div>
-                            <hr>
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <div class="text-muted small">Share Price</div>
-                                    <div class="fw-bold" id="__share_price_display">-</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted small">As of Date</div>
-                                    <div class="fw-bold" id="__as_of_date_display">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Transaction Preview Card -->
+                    <!-- Calculated Shares Card -->
                     <div class="card mb-4" id="previewCard" style="display: none;">
                         <div class="card-header bg-success text-white">
                             <i class="fa fa-calculator me-2"></i>

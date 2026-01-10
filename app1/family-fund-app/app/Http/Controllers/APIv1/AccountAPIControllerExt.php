@@ -176,11 +176,16 @@ class AccountAPIControllerExt extends AccountAPIController
             return $this->sendError('Account not found');
         }
 
+        $user = $account->user;
         $arr = [
             'share_price' => $account->shareValueAsOf($asOf),
             'available_shares' => $account->fund()->first()->unallocatedShares($asOf),
             'account_shares' => $account->sharesAsOf($asOf),
             'account_value' => $account->valueAsOf($asOf),
+            'account_nickname' => $account->nickname,
+            'account_code' => $account->code,
+            'user_name' => $user?->name,
+            'user_email' => $user?->email,
         ];
         return $this->sendResponse($arr, 'Share value retrieved successfully');
     }

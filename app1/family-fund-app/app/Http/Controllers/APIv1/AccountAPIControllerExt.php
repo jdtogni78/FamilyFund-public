@@ -185,7 +185,7 @@ class AccountAPIControllerExt extends AccountAPIController
             'account_nickname' => $account->nickname,
             'account_code' => $account->code,
             'user_name' => $user?->name,
-            'user_email' => $user?->email,
+            'user_email' => $account->email_cc ?: $user?->email,
         ];
         return $this->sendResponse($arr, 'Share value retrieved successfully');
     }

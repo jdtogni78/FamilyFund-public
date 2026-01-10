@@ -68,10 +68,14 @@ Route::middleware('auth')->group(function () {
         ->name('transactions.process_pending');
     Route::get('transactions/{id}/clone', 'App\Http\Controllers\WebV1\TransactionControllerExt@clone')
         ->name('transactions.clone');
+    Route::get('transactions/{id}/resend-email', 'App\Http\Controllers\WebV1\TransactionControllerExt@resendEmail')
+        ->name('transactions.resend-email');
     Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkCreate')
         ->name('accountMatchingRules.create_bulk');
     Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkStore')
         ->name('accountMatchingRules.store_bulk');
+    Route::get('accountMatchingRules/{id}/resend-email', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@resendEmail')
+        ->name('accountMatchingRules.resend-email');
     Route::get('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@assign')
         ->name('cashDeposits.assign');
     Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
@@ -85,7 +89,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
-    Route::resource('accountMatchingRules', App\Http\Controllers\AccountMatchingRuleController::class);
+    Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('addresses', App\Http\Controllers\AddressController::class);
@@ -103,7 +107,9 @@ Route::middleware('auth')->group(function () {
         ->name('matchingRules.clone');
     Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
         ->name('matchingRules.store_clone');
-    Route::resource('matchingRules', App\Http\Controllers\MatchingRuleController::class);
+    Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
+        ->name('matchingRules.send-all-emails');
+    Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class);
     Route::resource('people', App\Http\Controllers\PersonController::class);
     Route::resource('persons', App\Http\Controllers\PersonController::class);
     Route::resource('phones', App\Http\Controllers\PhoneController::class);

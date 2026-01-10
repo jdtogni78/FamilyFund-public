@@ -6,6 +6,8 @@ use App\Http\Requests\CreateMatchingRuleRequest;
 use App\Repositories\MatchingRuleRepository;
 use App\Repositories\AccountMatchingRuleRepository;
 use App\Http\Controllers\MatchingRuleController;
+use App\Http\Controllers\Traits\MailTrait;
+use App\Mail\AccountMatchingRuleEmail;
 use App\Models\AccountExt;
 use App\Models\Fund;
 use Illuminate\Http\Request;
@@ -13,6 +15,8 @@ use Flash;
 
 class MatchingRuleControllerExt extends MatchingRuleController
 {
+    use MailTrait;
+
     protected $accountMatchingRuleRepository;
 
     public function __construct(
@@ -21,6 +25,89 @@ class MatchingRuleControllerExt extends MatchingRuleController
     ) {
         parent::__construct($matchingRuleRepo);
         $this->accountMatchingRuleRepository = $accountMatchingRuleRepo;
+    }
+
+    /**
+     * Display the specified MatchingRule with all assigned accounts.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $matchingRule = $this->matchingRuleRepository->find($id);
+
+        if (empty($matchingRule)) {
+            Flash::error('Matching Rule not found');
+            return redirect(route('matchingRules.index'));
+        }
+
+        // Load account matching rules with account details
+        $accountMatchingRules = $matchingRule->accountMatchingRules()
+            ->with(['account.user'])
+            ->get();
+
+        return view('matching_rules.show')
+            ->with('matchingRule', $matchingRule)
+            ->with('accountMatchingRules', $accountMatchingRules);
+    }
+
+    /**
+     * Send email notifications to all accounts with this matching rule.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function sendAllEmails($id)
+    {
+        $matchingRule = $this->matchingRuleRepository->find($id);
+
+        if (empty($matchingRule)) {
+            Flash::error('Matching Rule not found');
+            return redirect(route('matchingRules.index'));
+        }
+
+        $accountMatchingRules = $matchingRule->accountMatchingRules()->with('account')->get();
+        $sent = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($accountMatchingRules as $amr) {
+            $account = $amr->account;
+            $to = $account->email_cc;
+
+            if (empty($to)) {
+                $skipped++;
+                continue;
+            }
+
+            $api = [
+                'mr' => $matchingRule,
+                'account' => $account,
+            ];
+
+            $mail = new AccountMatchingRuleEmail($amr, $api);
+            $error = $this->sendMail($mail, $to);
+
+            if ($error) {
+                $errors[] = $account->nickname . ': ' . $error;
+            } else {
+                $sent++;
+            }
+        }
+
+        $message = "Sent {$sent} email(s).";
+        if ($skipped > 0) {
+            $message .= " Skipped {$skipped} account(s) without email.";
+        }
+
+        if (count($errors) > 0) {
+            Flash::warning($message . ' Errors: ' . implode(', ', $errors));
+        } else {
+            Flash::success($message);
+        }
+
+        return redirect()->back();
     }
 
     /**

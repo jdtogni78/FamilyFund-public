@@ -14,11 +14,12 @@
                 <td>{{ $accountMatchingRule->matching_rule_id }}</td>
                 <td>
                     <div class='btn-group'>
-                        <a href="{{ route('accountMatchingRules.show', [$accountMatchingRule->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('accountMatchingRules.edit', [$accountMatchingRule->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('accountMatchingRules.show', [$accountMatchingRule->id]) }}" class='btn btn-ghost-success' title="View"><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('accountMatchingRules.edit', [$accountMatchingRule->id]) }}" class='btn btn-ghost-info' title="Edit"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('accountMatchingRules.resend-email', [$accountMatchingRule->id]) }}" class='btn btn-ghost-primary' title="Resend Email" onclick="return confirm('Send email notification to {{ $accountMatchingRule->account->email_cc ?? "account" }}?')"><i class="fa fa-envelope"></i></a>
                         <form action="{{ route('accountMatchingRules.destroy', $accountMatchingRule->id) }}" method="DELETE">
                             @csrf
-                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account matching rule?')"><i class="fa fa-trash"></i></button>
+                            <button type="submit" class="btn btn-ghost-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this account matching rule?')"><i class="fa fa-trash"></i></button>
                         </form>
                     </div>
                 </td>

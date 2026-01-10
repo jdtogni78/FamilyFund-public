@@ -40,3 +40,16 @@
         </tbody>
     </table>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#matchingRules-table').DataTable({
+            order: [[0, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: -1 }  // Disable sorting on Action column
+            ]
+        });
+    });
+</script>
+@endpush

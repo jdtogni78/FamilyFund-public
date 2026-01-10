@@ -115,4 +115,44 @@ class AccountMatchingRuleControllerExt extends AccountMatchingRuleController
             ->with('api', $api);
     }
 
+    /**
+     * Resend the email notification for an AccountMatchingRule.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function resendEmail($id)
+    {
+        $accountMatchingRule = $this->accountMatchingRuleRepository->find($id);
+
+        if (empty($accountMatchingRule)) {
+            Flash::error('Account Matching Rule not found');
+            return redirect(route('accountMatchingRules.index'));
+        }
+
+        $account = $accountMatchingRule->account()->first();
+        $to = $account->email_cc;
+
+        if (empty($to)) {
+            Flash::error('No email address configured for account: ' . $account->nickname);
+            return redirect()->back();
+        }
+
+        $api = [
+            'mr' => $accountMatchingRule->matchingRule()->first(),
+            'account' => $account,
+        ];
+
+        $mail = new AccountMatchingRuleEmail($accountMatchingRule, $api);
+        $error = $this->sendMail($mail, $to);
+
+        if ($error) {
+            Flash::error('Failed to send email: ' . $error);
+        } else {
+            Flash::success('Email sent successfully to ' . $to);
+        }
+
+        return redirect()->back();
+    }
+
 }

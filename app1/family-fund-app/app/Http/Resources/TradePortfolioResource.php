@@ -18,6 +18,8 @@ class TradePortfolioResource extends JsonResource
             'id' => $this->id,
             'account_name' => $this->account_name,
             'portfolio_id' => $this->portfolio_id,
+            'tws_query_id' => $this->tws_query_id,
+            'tws_token' => $this->tws_token,
             'cash_target' => $this->cash_target,
             'cash_reserve_target' => $this->cash_reserve_target,
             'max_single_order' => $this->max_single_order,

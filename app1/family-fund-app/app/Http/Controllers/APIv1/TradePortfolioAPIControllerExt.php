@@ -57,19 +57,25 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
      *
      * @return Response
      */
-    public function show($accountName)
+    public function show($accountNameOrId)
     {
         $request = request();
         $asOf = $request->asOf ?? date('Y-m-d');
         $asOf .= "T23:59:59";
-        $this->debug("TRADE PORTFOLIO: " . $accountName . " " . $asOf);
-        # TODO: should be tested separately - end date comparison is wrong
+        $this->debug("TRADE PORTFOLIO: " . $accountNameOrId . " " . $asOf);
+
         /** @var TradePortfolioExt $tradePortfolio */
-        $tradePortfolio = $this->tradePortfolioRepository->all()
-            ->whereNotNull('portfolio_id')
-            ->where('start_dt', '<=', $asOf)
-            ->where('end_dt', '>', $asOf)
-            ->firstWhere('account_name', $accountName);
+        // Support lookup by both ID (numeric) and account_name (string)
+        if (is_numeric($accountNameOrId)) {
+            $tradePortfolio = $this->tradePortfolioRepository->find($accountNameOrId);
+        } else {
+            # TODO: should be tested separately - end date comparison is wrong
+            $tradePortfolio = $this->tradePortfolioRepository->all()
+                ->whereNotNull('portfolio_id')
+                ->where('start_dt', '<=', $asOf)
+                ->where('end_dt', '>', $asOf)
+                ->firstWhere('account_name', $accountNameOrId);
+        }
 
         if (empty($tradePortfolio)) {
             return $this->sendError('Trade Portfolio not found');

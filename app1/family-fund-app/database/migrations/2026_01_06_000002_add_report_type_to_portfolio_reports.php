@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('portfolio_reports', function (Blueprint $table) {
-            // Report type: custom, quarterly, annual
-            // - custom: uses explicit start/end dates
-            // - quarterly: calculates previous quarter from run date
-            // - annual: calculates previous year from run date
-            $table->string('report_type', 20)->default('custom')->after('end_date');
-        });
+        if (!Schema::hasColumn('portfolio_reports', 'report_type')) {
+            Schema::table('portfolio_reports', function (Blueprint $table) {
+                // Report type: custom, quarterly, annual
+                // - custom: uses explicit start/end dates
+                // - quarterly: calculates previous quarter from run date
+                // - annual: calculates previous year from run date
+                $table->string('report_type', 20)->default('custom')->after('end_date');
+            });
+        }
     }
 
     /**

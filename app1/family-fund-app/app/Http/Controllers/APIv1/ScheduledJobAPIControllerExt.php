@@ -5,22 +5,24 @@ namespace App\Http\Controllers\APIv1;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Controllers\Traits\ScheduledJobTrait;
 use App\Http\Controllers\Traits\TransactionTrait;
+use App\Http\Controllers\API\ScheduledJobAPIController;
+use App\Repositories\ScheduledJobRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Http\Controllers\AppBaseController;
 
 /**
  * Class ScheduledJobController
  * @package App\Http\Controllers\API
  */
 
-class ScheduledJobAPIControllerExt extends AppBaseController
+class ScheduledJobAPIControllerExt extends ScheduledJobAPIController
 {
     use ScheduledJobTrait;
 
     // contructor
-    public function __construct()
+    public function __construct(ScheduledJobRepository $scheduledJobRepo)
     {
+        parent::__construct($scheduledJobRepo);
         $this->setupHandlers();
     }
 

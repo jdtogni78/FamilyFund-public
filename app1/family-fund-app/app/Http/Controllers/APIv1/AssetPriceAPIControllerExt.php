@@ -55,7 +55,7 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
     {
         $input = $request->all();
 
-        $assetPrice = $this->insertHistoricalPrice($input['asset_id'], $input['start_dt'], $input['price']);
+        $assetPrice = $this->insertHistorical(null, $input['asset_id'], $input['start_dt'], $input['price'], 'price');
 
         return $this->sendResponse(new AssetPriceResource($assetPrice), 'Asset Price saved successfully');
     }

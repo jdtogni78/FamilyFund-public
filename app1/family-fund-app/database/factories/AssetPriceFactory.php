@@ -25,6 +25,7 @@ class AssetPriceFactory extends Factory
             'asset_id' => AssetFactory::new(),
             'price' => $this->faker->randomFloat(2),
             'start_dt' => $this->faker->dateTimeBetween($startDate = '-1 years', $endDate = 'now'),
+            'end_dt' => '9999-12-31',
         ];
     }
 }

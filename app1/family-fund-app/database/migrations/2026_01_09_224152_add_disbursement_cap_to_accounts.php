@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('accounts', function (Blueprint $table) {
-            $table->decimal('disbursement_cap', 5, 4)->nullable()->after('email_cc');
-        });
+        if (!Schema::hasColumn('accounts', 'disbursement_cap')) {
+            Schema::table('accounts', function (Blueprint $table) {
+                $table->decimal('disbursement_cap', 5, 4)->nullable()->after('email_cc');
+            });
+        }
     }
 
     /**

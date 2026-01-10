@@ -23,7 +23,7 @@ class PortfolioFactory extends Factory
     {
         return [
             'fund_id' => FundFactory::new(),
-            'source' => $this->faker->word,
+            'source' => $this->faker->unique()->word . '_' . $this->faker->unique()->randomNumber(5),
         ];
     }
 }

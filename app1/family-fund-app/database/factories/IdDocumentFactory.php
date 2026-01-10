@@ -23,7 +23,7 @@ class IdDocumentFactory extends Factory
     {
         return [
             'person_id' => PersonFactory::new(),
-            'type' => $this->faker->randomElement(['passport', 'license', 'ssn']),
+            'type' => $this->faker->randomElement(['CPF', 'RG', 'CNH', 'Passport', 'SSN', 'other']),
             'number' => $this->faker->numerify('###-##-####'),
         ];
     }

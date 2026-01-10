@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\API;
 
-use App\Models\Person;
+use App\Models\TradePortfolio;
 
-class UpdatePersonAPIRequest extends BaseAPIRequest
+class CreateTradePortfolioAPIRequest extends BaseAPIRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +23,6 @@ class UpdatePersonAPIRequest extends BaseAPIRequest
      */
     public function rules()
     {
-        $rules = Person::$rules;
-        // Format: unique:table,column,except_id
-        $rules['email'] = 'required|email|max:255|unique:persons,email,'.$this->route("person");
-        return $rules;
+        return TradePortfolio::$rules;
     }
 }

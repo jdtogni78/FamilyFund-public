@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('portfolio_reports', function (Blueprint $table) {
-            $table->bigInteger('id', true, true);
-            $table->foreignId('portfolio_id')->constrained();
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->foreignId('scheduled_job_id')->nullable()->constrained();
-            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
-            $table->timestamp('created_at')->useCurrent();
-            $table->softDeletes();
-        });
+        if (!Schema::hasTable('portfolio_reports')) {
+            Schema::create('portfolio_reports', function (Blueprint $table) {
+                $table->bigInteger('id', true, true);
+                $table->foreignId('portfolio_id')->constrained();
+                $table->date('start_date');
+                $table->date('end_date');
+                $table->foreignId('scheduled_job_id')->nullable()->constrained();
+                $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
+                $table->timestamp('created_at')->useCurrent();
+                $table->softDeletes();
+            });
+        }
     }
 
     /**

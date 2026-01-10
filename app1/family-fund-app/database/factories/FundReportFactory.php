@@ -23,7 +23,7 @@ class FundReportFactory extends Factory
     {
         return [
             'fund_id' => FundFactory::new(),
-            'type' => $this->faker->randomElement(['Q', 'A', 'M']),
+            'type' => $this->faker->randomElement(['ALL', 'ADM']),
             'as_of' => $this->faker->date('Y-m-d'),
         ];
     }

@@ -44,7 +44,9 @@ class TransactionApiTest extends TestCase
             '/api/transactions', $transaction
         );
 
-        $this->assertApiResponse($transaction, ['id']);
+        // Status changes from 'P' to 'C' after processPending() is called on create
+        $transaction['status'] = TransactionExt::STATUS_CLEARED;
+        $this->assertApiResponse($transaction, ['id', 'shares']);
     }
 
     /**

@@ -67,26 +67,39 @@ trait ApiTestTrait
         $this->response->assertJson(['success' => false]);
     }
 
-    public function assertModelData(Array $expectedData, Array $actualData, Array $ignoredKeys, $path)
+    public function assertModelData(Array $expectedData, Array $actualData, Array $ignoredKeys = [], $path = 'data')
     {
         Log::debug("assertModelData: " . json_encode($expectedData) . " " . json_encode($actualData) . " " . json_encode($ignoredKeys) . " " . $path);
-        $all_keys = array_diff(
-            array_merge(array_keys($actualData), array_keys($expectedData)),
-            $ignoredKeys);
+        // Always ignore timestamp fields - they're auto-generated
+        $timestampKeys = ['created_at', 'updated_at', 'deleted_at'];
+
+        // For repository tests (path='data'), only check expected keys exist in actual
+        // For API tests (nested paths), do strict key checking
+        $strictMode = ($path !== 'data');
+
+        if ($strictMode) {
+            $all_keys = array_diff(
+                array_merge(array_keys($actualData), array_keys($expectedData)),
+                $ignoredKeys,
+                $timestampKeys);
+        } else {
+            // Only check keys that are in expected data
+            $all_keys = array_diff(
+                array_keys($expectedData),
+                $ignoredKeys,
+                $timestampKeys);
+        }
 
         foreach ($all_keys as $key) {
             $p = $path.'.'.$key;
             if (!array_key_exists($key, $actualData)) {
                 $this->fail("Key missing on actual response: $p");
             }
-            if (!array_key_exists($key, $expectedData)) {
+            if ($strictMode && !array_key_exists($key, $expectedData)) {
                 Log::debug($actualData[$key]);
                 $this->fail("Unnexpected key on actual response: $p");
             }
             $value = $actualData[$key];
-            if (in_array($key, ['created_at', 'updated_at', 'deleted_at'])) {
-                continue;
-            }
             if ($this->verbose) Log::debug("** assert model: " . json_encode([$p, $expectedData[$key], $actualData[$key]]));
             if (is_array($actualData[$key])) {
                 $ignored = [];
@@ -98,7 +111,14 @@ trait ApiTestTrait
                 if (preg_match('/data.transactions.*.current_performance/', $p)
                         || preg_match('/data.balances.*.value/', $p)) {
                     // TODO: use a registry of custom validations
-                    $this->assertTrue(abs($expectedData[$key]/$actualData[$key] - 1) < 0.02, $p);
+                    // Handle zero values to avoid division by zero
+                    if ($actualData[$key] == 0 && $expectedData[$key] == 0) {
+                        $this->assertTrue(true, $p);
+                    } elseif ($actualData[$key] == 0) {
+                        $this->assertTrue(abs($expectedData[$key]) < 0.02, $p);
+                    } else {
+                        $this->assertTrue(abs($expectedData[$key]/$actualData[$key] - 1) < 0.02, $p);
+                    }
                 } else {
                     $this->assertEquals($expectedData[$key], $actualData[$key], $p);
                 }

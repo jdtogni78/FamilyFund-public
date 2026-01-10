@@ -8,6 +8,7 @@ use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Requests\PreviewTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\AccountExt;
+use App\Models\FundExt;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
 use App\Repositories\TransactionRepository;
@@ -43,11 +44,29 @@ class TransactionControllerExt extends TransactionController
 
     protected function getApi()
     {
+        // Build account data with fund_id for filtering
+        $accounts = AccountExt::with(['user', 'fund'])->orderBy('nickname')->get();
+        $accountMap = [null => 'Select an Account'];
+        $accountFundMap = []; // account_id => fund_id
+        foreach ($accounts as $account) {
+            $label = $account->nickname;
+            if ($account->code) {
+                $label .= ' (' . $account->code . ')';
+            }
+            if ($account->user) {
+                $label .= ' - ' . $account->user->name;
+            }
+            $accountMap[$account->id] = $label;
+            $accountFundMap[$account->id] = $account->fund_id;
+        }
+
         return [
             'typeMap' => TransactionExt::$typeMap,
             'statusMap' => TransactionExt::$statusMap,
             'flagsMap' => TransactionExt::$flagsMap,
-            'accountMap' => AccountExt::accountMap(),
+            'accountMap' => $accountMap,
+            'fundMap' => FundExt::fundMap(),
+            'accountFundMap' => $accountFundMap,
         ];
     }
 

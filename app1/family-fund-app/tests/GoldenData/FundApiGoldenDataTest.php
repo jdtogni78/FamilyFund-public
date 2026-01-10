@@ -10,6 +10,7 @@ use App\Models\Fund;
 use App\Models\FundExt;
 use App\Models\Utils;
 
+use PHPUnit\Framework\Attributes\Test;
 class FundApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -96,9 +97,7 @@ class FundApiGoldenDataTest extends TestCase
         ];
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_fund_as_of()
     {
         // Test fund 2 at various dates
@@ -108,7 +107,6 @@ class FundApiGoldenDataTest extends TestCase
         $this->_test_fund_as_of(2, '2022-01-02');
         $this->_test_fund_as_of(2, '2022-01-16');
     }
-
 
     private function _test_fund_performance_as_of($id, $asOf)
     {
@@ -146,9 +144,7 @@ class FundApiGoldenDataTest extends TestCase
         $this->assertApiResponse($expected);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_fund_performance_as_of()
     {
         // Test fund 2 performance at various dates
@@ -157,7 +153,6 @@ class FundApiGoldenDataTest extends TestCase
         $this->_test_fund_performance_as_of(2, '2022-01-01');
         $this->_test_fund_performance_as_of(2, '2022-01-15');
     }
-
 
     private function _test_fund_balances_as_of($fundId, $asOf)
     {
@@ -184,9 +179,7 @@ class FundApiGoldenDataTest extends TestCase
         $this->assertApiResponse($expected);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_fund_balances_as_of()
     {
         $this->loginWithFakeUser();

@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\AccountBalance;
 
+use PHPUnit\Framework\Attributes\Test;
 class AccountBalanceApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_account_balance()
     {
         $accountBalance = AccountBalance::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class AccountBalanceApiTest extends TestCase
         $this->assertApiResponse($accountBalance);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();
@@ -40,9 +37,7 @@ class AccountBalanceApiTest extends TestCase
         $this->assertApiResponse($accountBalance->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();
@@ -57,9 +52,7 @@ class AccountBalanceApiTest extends TestCase
         $this->assertApiResponse($editedAccountBalance);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();

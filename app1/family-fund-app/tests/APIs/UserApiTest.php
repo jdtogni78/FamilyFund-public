@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\User;
 
+use PHPUnit\Framework\Attributes\Test;
 class UserApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_user()
     {
         $user = User::factory()->make();
@@ -26,9 +25,7 @@ class UserApiTest extends TestCase
         $this->assertApiResponse($user->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_user()
     {
         $user = User::factory()->create();
@@ -41,9 +38,7 @@ class UserApiTest extends TestCase
         $this->assertApiResponse($user->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_user()
     {
         $user = User::factory()->create();
@@ -59,9 +54,7 @@ class UserApiTest extends TestCase
         $this->assertApiResponse($editedUser->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_user()
     {
         $user = User::factory()->create();

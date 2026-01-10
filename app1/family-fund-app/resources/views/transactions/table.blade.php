@@ -28,7 +28,11 @@
                 <td>{{ $transaction->shares }}</td>
                 <td>{{ $transaction->timestamp }}</td>
                 <td>{{ $transaction->account_id }}</td>
-                <td>{{ $transaction->account->nickname }}</td>
+                <td>
+                    <a href="{{ route('accounts.show', $transaction->account_id) }}" class="text-success">
+                        <i class="fa fa-eye me-1"></i>{{ $transaction->account->nickname }}
+                    </a>
+                </td>
                 <td>{{ $transaction->descr }}</td>
                 <td>{{ $transaction->flags }}</td>
                 <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
@@ -38,8 +42,9 @@
                         <div class='btn-group'>
                             <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                             <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                            <a href="{{ route('transactions.clone', [$transaction->id]) }}" class='btn btn-ghost-warning' title="Clone"><i class="fa fa-copy"></i></a>
                             @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
-                                <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-warning'><i class="fa fa-play"></i></a>
+                                <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-primary'><i class="fa fa-play"></i></a>
                             @endif
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this transaction?')"><i class="fa fa-trash"></i></button>
                         </div>
@@ -54,7 +59,9 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#transactions-table').DataTable();
+        $('#transactions-table').DataTable({
+            order: [[5, 'desc']]  // Sort by Timestamp column descending
+        });
     });
 </script>
 @endpush

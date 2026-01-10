@@ -2,6 +2,19 @@
 <script type="text/javascript">
     var api = {!! json_encode($api) !!};
 
+    // Store all account options for filtering
+    var allAccountOptions = [];
+    $(document).ready(function() {
+        $('#account_id option').each(function() {
+            allAccountOptions.push({
+                value: $(this).val(),
+                text: $(this).text(),
+                fundId: $(this).data('fund-id'),
+                selected: $(this).prop('selected')
+            });
+        });
+    });
+
     function updateAccountInfo() {
         var account = $('#account_id').find(":selected").val();
         var dt = $('#timestamp').val();
@@ -92,7 +105,46 @@
         }
     }
 
+    // Fund filter function - rebuilds options since hiding doesn't work in all browsers
+    function filterAccountsByFund() {
+        var selectedFund = $('#fund_filter').val();
+        var $accountSelect = $('#account_id');
+        var currentAccount = $accountSelect.val();
+
+        // Clear and rebuild options
+        $accountSelect.empty();
+
+        var foundCurrent = false;
+        allAccountOptions.forEach(function(opt) {
+            // Always show placeholder option, or options matching fund filter
+            if (!opt.value || !selectedFund || opt.fundId == selectedFund) {
+                var $option = $('<option>')
+                    .val(opt.value)
+                    .text(opt.text)
+                    .data('fund-id', opt.fundId);
+
+                // Keep current selection if it matches filter
+                if (opt.value == currentAccount) {
+                    $option.prop('selected', true);
+                    foundCurrent = true;
+                }
+
+                $accountSelect.append($option);
+            }
+        });
+
+        // If current selection was filtered out, select placeholder
+        if (!foundCurrent && currentAccount) {
+            $accountSelect.val('');
+        }
+    }
+
     // Event handlers
+    $("#fund_filter").change(function() {
+        filterAccountsByFund();
+        updateAccountInfo();
+    });
+
     $("#account_id, #timestamp").change(function() {
         updateAccountInfo();
     });
@@ -119,6 +171,9 @@
 
     // Initialize on page load
     $(document).ready(function() {
+        // Apply initial fund filter
+        filterAccountsByFund();
+
         if ($('#account_id').val() && $('#timestamp').val()) {
             updateAccountInfo();
         }

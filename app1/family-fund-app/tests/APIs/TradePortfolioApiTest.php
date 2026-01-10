@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\TradePortfolio;
 
+use PHPUnit\Framework\Attributes\Test;
 class TradePortfolioApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->make()->toArray();
@@ -26,9 +25,7 @@ class TradePortfolioApiTest extends TestCase
         $this->assertApiResponse($tradePortfolio, ['start_dt', 'end_dt', 'items']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->create();
@@ -42,9 +39,7 @@ class TradePortfolioApiTest extends TestCase
         $this->assertApiResponse($tradePortfolio->toArray(), ['start_dt', 'end_dt', 'items']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->create();
@@ -60,9 +55,7 @@ class TradePortfolioApiTest extends TestCase
         $this->assertApiResponse($editedTradePortfolio, ['start_dt', 'end_dt', 'items']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->create();

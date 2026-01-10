@@ -7,13 +7,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\FundReport;
 
+use PHPUnit\Framework\Attributes\Test;
 class FundReportApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_fund_report()
     {
         // Fake the queue to prevent jobs from running during test
@@ -29,9 +28,7 @@ class FundReportApiTest extends TestCase
         $this->assertApiResponse($fundReport);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_fund_report()
     {
         $fundReport = FundReport::factory()->create();
@@ -44,9 +41,7 @@ class FundReportApiTest extends TestCase
         $this->assertApiResponse($fundReport->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_fund_report()
     {
         $fundReport = FundReport::factory()->create();
@@ -61,9 +56,7 @@ class FundReportApiTest extends TestCase
         $this->assertApiResponse($editedFundReport);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_fund_report()
     {
         $fundReport = FundReport::factory()->create();

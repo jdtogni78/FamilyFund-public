@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Schedule;
 
+use PHPUnit\Framework\Attributes\Test;
 class ScheduleApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_schedule()
     {
         $schedule = Schedule::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class ScheduleApiTest extends TestCase
         $this->assertApiResponse($schedule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_schedule()
     {
         $schedule = Schedule::factory()->create();
@@ -40,9 +37,7 @@ class ScheduleApiTest extends TestCase
         $this->assertApiResponse($schedule->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_schedule()
     {
         $schedule = Schedule::factory()->create();
@@ -57,9 +52,7 @@ class ScheduleApiTest extends TestCase
         $this->assertApiResponse($editedSchedule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_schedule()
     {
         $schedule = Schedule::factory()->create();

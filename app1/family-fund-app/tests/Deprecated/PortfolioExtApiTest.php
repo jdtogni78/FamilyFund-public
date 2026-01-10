@@ -7,6 +7,7 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
 
+use PHPUnit\Framework\Attributes\Test;
 class PortfolioExtApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

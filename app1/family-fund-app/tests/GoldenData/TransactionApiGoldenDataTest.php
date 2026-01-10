@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\AccountBalance;
 use App\Models\Utils;
 use App\Models\TransactionExt;
+use PHPUnit\Framework\Attributes\Test;
 class TransactionApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -19,9 +20,7 @@ class TransactionApiGoldenDataTest extends TestCase
         $this->verbose = false;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_transaction_share_value()
     {
         // When fixValues is true, only prints mismatches but doesn't fail
@@ -90,9 +89,7 @@ class TransactionApiGoldenDataTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_balance_share_value()
     {
         // When fixValues is true, only prints mismatches but doesn't fail

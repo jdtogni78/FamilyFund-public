@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\IdDocument;
 
+use PHPUnit\Framework\Attributes\Test;
 class IdDocumentApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_id_document()
     {
         $idDocument = IdDocument::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class IdDocumentApiTest extends TestCase
         $this->assertApiResponse($idDocument);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_id_document()
     {
         $idDocument = IdDocument::factory()->create();
@@ -40,9 +37,7 @@ class IdDocumentApiTest extends TestCase
         $this->assertApiResponse($idDocument->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_id_document()
     {
         $idDocument = IdDocument::factory()->create();
@@ -57,9 +52,7 @@ class IdDocumentApiTest extends TestCase
         $this->assertApiResponse($editedIdDocument);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_id_document()
     {
         $idDocument = IdDocument::factory()->create();

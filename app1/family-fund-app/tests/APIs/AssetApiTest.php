@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Asset;
 
+use PHPUnit\Framework\Attributes\Test;
 class AssetApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_asset()
     {
         $asset = Asset::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class AssetApiTest extends TestCase
         $this->assertApiResponse($asset);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_asset()
     {
         $asset = Asset::factory()->create();
@@ -40,9 +37,7 @@ class AssetApiTest extends TestCase
         $this->assertApiResponse($asset->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_asset()
     {
         $asset = Asset::factory()->create();
@@ -57,9 +52,7 @@ class AssetApiTest extends TestCase
         $this->assertApiResponse($editedAsset);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_asset()
     {
         $asset = Asset::factory()->create();

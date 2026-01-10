@@ -39,6 +39,12 @@
                 const balanceValues = sortedDates.map(d => balances[d]);
                 const sparseLabels = createSparseLabels(sortedDates, 24);
 
+                // Calculate changes for tooltip
+                const balanceChanges = balanceValues.map((val, idx) => {
+                    if (idx === 0) return 0;
+                    return val - balanceValues[idx - 1];
+                });
+
                 const config = {
                     type: 'line',
                     data: {
@@ -67,7 +73,14 @@
                                         return sortedDates[items[0].dataIndex];
                                     },
                                     label: function(context) {
-                                        return 'Shares: ' + formatNumber(context.raw, 2);
+                                        const idx = context.dataIndex;
+                                        const change = balanceChanges[idx];
+                                        const lines = ['Shares: ' + formatNumber(context.raw, 4)];
+                                        if (change !== 0) {
+                                            const sign = change > 0 ? '+' : '';
+                                            lines.push('Change: ' + sign + formatNumber(change, 4));
+                                        }
+                                        return lines;
                                     }
                                 }
                             },

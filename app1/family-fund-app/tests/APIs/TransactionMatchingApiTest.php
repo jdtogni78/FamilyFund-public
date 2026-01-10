@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\TransactionMatching;
 
+use PHPUnit\Framework\Attributes\Test;
 class TransactionMatchingApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_transaction_matching()
     {
         $transactionMatching = TransactionMatching::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class TransactionMatchingApiTest extends TestCase
         $this->assertApiResponse($transactionMatching);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_transaction_matching()
     {
         $transactionMatching = TransactionMatching::factory()->create();
@@ -40,9 +37,7 @@ class TransactionMatchingApiTest extends TestCase
         $this->assertApiResponse($transactionMatching->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_transaction_matching()
     {
         $transactionMatching = TransactionMatching::factory()->create();
@@ -57,9 +52,7 @@ class TransactionMatchingApiTest extends TestCase
         $this->assertApiResponse($editedTransactionMatching);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_transaction_matching()
     {
         $transactionMatching = TransactionMatching::factory()->create();

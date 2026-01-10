@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\MatchingRule;
 
+use PHPUnit\Framework\Attributes\Test;
 class MatchingRuleApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class MatchingRuleApiTest extends TestCase
         $this->assertApiResponse($matchingRule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();
@@ -40,9 +37,7 @@ class MatchingRuleApiTest extends TestCase
         $this->assertApiResponse($matchingRule->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();
@@ -57,9 +52,7 @@ class MatchingRuleApiTest extends TestCase
         $this->assertApiResponse($editedMatchingRule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();

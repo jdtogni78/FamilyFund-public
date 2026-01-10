@@ -9,13 +9,12 @@ use App\Models\Fund;
 use Tests\DataFactory;
 use App\Http\Resources\AccountResource;
 
+use PHPUnit\Framework\Attributes\Test;
 class AccountApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_account()
     {
         $fund = Fund::factory()->create();
@@ -37,9 +36,7 @@ class AccountApiTest extends TestCase
         $account = $factory->fundAccount;
         return $account;
     }
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_account()
     {
         $account = $this->createAccount();
@@ -52,9 +49,7 @@ class AccountApiTest extends TestCase
         $this->assertApiResponse((new AccountResource($account))->toArray(null));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_account()
     {
         $account = $this->createAccount();
@@ -72,9 +67,7 @@ class AccountApiTest extends TestCase
         $this->assertApiResponse($editedAccount);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_account()
     {
         $account = $this->createAccount();

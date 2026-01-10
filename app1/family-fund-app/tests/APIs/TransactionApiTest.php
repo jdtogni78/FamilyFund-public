@@ -8,6 +8,7 @@ use Tests\DataFactory;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
 
+use PHPUnit\Framework\Attributes\Test;
 class TransactionApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -24,9 +25,7 @@ class TransactionApiTest extends TestCase
         $this->account = $this->factory->userAccount;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_transaction()
     {
         $transaction = Transaction::factory()
@@ -49,9 +48,7 @@ class TransactionApiTest extends TestCase
         $this->assertApiResponse($transaction, ['id', 'shares']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_transaction()
     {
         $transaction = Transaction::factory()
@@ -70,9 +67,7 @@ class TransactionApiTest extends TestCase
         $this->assertApiResponse($transaction->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_transaction()
     {
         $transaction = Transaction::factory()
@@ -101,9 +96,7 @@ class TransactionApiTest extends TestCase
         $this->assertApiResponse($editedTransaction);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_transaction()
     {
         $transaction = Transaction::factory()

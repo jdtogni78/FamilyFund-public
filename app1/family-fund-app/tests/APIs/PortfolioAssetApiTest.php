@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\PortfolioAsset;
 
+use PHPUnit\Framework\Attributes\Test;
 class PortfolioAssetApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class PortfolioAssetApiTest extends TestCase
         $this->assertApiResponse($portfolioAsset);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();
@@ -40,9 +37,7 @@ class PortfolioAssetApiTest extends TestCase
         $this->assertApiResponse($portfolioAsset->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();
@@ -57,9 +52,7 @@ class PortfolioAssetApiTest extends TestCase
         $this->assertApiResponse($editedPortfolioAsset);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();

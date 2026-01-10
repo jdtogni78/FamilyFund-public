@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Person;
 
+use PHPUnit\Framework\Attributes\Test;
 class PersonApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_person()
     {
         $person = Person::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class PersonApiTest extends TestCase
         $this->assertApiResponse($person);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_person()
     {
         $person = Person::factory()->create();
@@ -40,9 +37,7 @@ class PersonApiTest extends TestCase
         $this->assertApiResponse($person->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_person()
     {
         $person = Person::factory()->create();
@@ -57,9 +52,7 @@ class PersonApiTest extends TestCase
         $this->assertApiResponse($editedPerson);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_person()
     {
         $person = Person::factory()->create();

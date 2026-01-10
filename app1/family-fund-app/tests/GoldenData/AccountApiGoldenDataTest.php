@@ -9,6 +9,7 @@ use App\Models\AccountExt;
 use App\Models\TransactionExt;
 use App\Models\Utils;
 
+use PHPUnit\Framework\Attributes\Test;
 class AccountApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -184,9 +185,7 @@ class AccountApiGoldenDataTest extends TestCase
         return abs($a - $b) < 0.02;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_account_balance_as_of()
     {
         // $this->verbose = true;
@@ -197,9 +196,7 @@ class AccountApiGoldenDataTest extends TestCase
         $this->_test_account_balance_as_of(7, '2022-01-16', "Fidelity Fund", 2, 2561.0068, $balance[3]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_account_transactions_as_of()
     {
         // Transaction IDs for account 7

@@ -7,13 +7,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\AccountReport;
 
+use PHPUnit\Framework\Attributes\Test;
 class AccountReportApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_account_report()
     {
         // Fake the queue to prevent jobs from running during test
@@ -29,9 +28,7 @@ class AccountReportApiTest extends TestCase
         $this->assertApiResponse($accountReport);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_account_report()
     {
         $accountReport = AccountReport::factory()->create();
@@ -44,9 +41,7 @@ class AccountReportApiTest extends TestCase
         $this->assertApiResponse($accountReport->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_account_report()
     {
         $accountReport = AccountReport::factory()->create();
@@ -61,9 +56,7 @@ class AccountReportApiTest extends TestCase
         $this->assertApiResponse($editedAccountReport);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_account_report()
     {
         $accountReport = AccountReport::factory()->create();

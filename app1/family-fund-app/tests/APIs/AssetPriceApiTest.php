@@ -7,13 +7,12 @@ use Tests\ApiTestTrait;
 use App\Models\Asset;
 use App\Models\AssetPrice;
 
+use PHPUnit\Framework\Attributes\Test;
 class AssetPriceApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_asset_price()
     {
         // Create asset first so it exists in the database
@@ -34,9 +33,7 @@ class AssetPriceApiTest extends TestCase
         $this->assertApiResponse($assetPrice, ['start_dt', 'end_dt']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_asset_price()
     {
         $assetPrice = AssetPrice::factory()->create();
@@ -50,9 +47,7 @@ class AssetPriceApiTest extends TestCase
         $this->assertApiResponse($assetPrice->toArray(), ['start_dt', 'end_dt']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_asset_price()
     {
         $assetPrice = AssetPrice::factory()->create();
@@ -69,9 +64,7 @@ class AssetPriceApiTest extends TestCase
         $this->assertApiResponse($editedAssetPrice, ['start_dt', 'end_dt']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_asset_price()
     {
         $assetPrice = AssetPrice::factory()->create();

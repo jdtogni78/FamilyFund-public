@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
+use PHPUnit\Framework\Attributes\Test;
 class SymbolPriceRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;

@@ -7,21 +7,29 @@
 
 ## Current Metrics
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| **Line Coverage** | 5.6% (390/6922) | 50% (~3461 lines) |
-| **Tests Passing** | 290 | 304 (all) |
-| **Tests Failing** | 5 | 0 |
-| **Tests Skipped** | 9 | - |
+| Metric | Current | Target | Status |
+|--------|---------|--------|--------|
+| **Line Coverage** | 45.56% (3198/7019) | 50% (~3510 lines) | NEAR TARGET |
+| **Method Coverage** | 35.44% (431/1216) | 50% | IN PROGRESS |
+| **Class Coverage** | 28.49% (100/351) | 50% | IN PROGRESS |
+| **Tests Passing** | 319 | 327 (all) | NEAR TARGET |
+| **Tests Failing** | 0 | 0 | ACHIEVED |
+| **Tests Skipped** | 1 | - | OK |
+| **Incomplete** | 8 | - | OK |
+
+### Lines Needed to Reach 50%
+- Current: 3198 lines covered
+- Target: 3510 lines (50% of 7019)
+- **Gap: ~312 more lines needed**
 
 ### Test Suites
 
 | Suite | Files | Status | Coverage Contribution |
 |-------|-------|--------|----------------------|
 | Unit | 1 | Placeholder only | LOW - needs new tests |
-| Feature | 12 | 2 failing | MEDIUM |
-| APIs | 26 | ~30 failing | MEDIUM |
-| Repositories | 28 | ~25 failing | LOW |
+| Feature | 12 | ALL PASSING | MEDIUM |
+| APIs | 26 | ALL PASSING | MEDIUM |
+| Repositories | 28 | ALL PASSING | LOW |
 | GoldenData | 4 | All passing | HIGH (5131 assertions) |
 
 ---
@@ -49,19 +57,23 @@
 | WP1k: AccountReportFactory, AccountMatchingRuleFactory | opus2 | COMPLETED | 2026-01-10 | 2026-01-10 |
 | WP2: PersonFactory (date fixes) | opus2 | COMPLETED | 2026-01-10 | 2026-01-10 |
 | WP2b: FundReportFactory (date fixes) | opus2 | COMPLETED | 2026-01-10 | 2026-01-10 |
-| WP3: User test assertions (email_verified_at mismatch) | | NOT STARTED | | |
-| WP4: CashDepositTraitTest (unique constraint) | | NOT STARTED | | |
+| WP3: User test assertions (email_verified_at mismatch) | opus2 | COMPLETED | 2026-01-10 | 2026-01-10 |
+| WP4: CashDepositTraitTest (data isolation) | claude3 | COMPLETED | 2026-01-10 | 2026-01-10 |
+| WP4b: FetchDepositsTest (HTTP mocking) | claude3 | COMPLETED | 2026-01-10 | 2026-01-10 |
+| WP4c: FundReportTest (fixtures) | claude3 | COMPLETED | 2026-01-10 | 2026-01-10 |
+| WP4d: TradePortfolioExtTest (fund creation) | claude3 | COMPLETED | 2026-01-10 | 2026-01-10 |
+| WP4e: TestFixtures class creation | claude3 | COMPLETED | 2026-01-10 | 2026-01-10 |
 
-### Remaining Failures by Category (5 total)
+### Remaining Failures by Category - ALL FIXED
 
 #### Category A: Missing Tables - FIXED (claude11)
 Created migrations for position_updates, price_updates, symbol_positions, symbol_prices tables.
 Fixed SymbolPositionFactory and SymbolPriceFactory type field (VARCHAR(3)).
 
-#### Category B: SoftDeletes Mismatch - FIXED
+#### Category B: SoftDeletes Mismatch - FIXED (opus2)
 Removed SoftDeletes trait from AssetChangeLog and ChangeLog models.
 
-#### Category C: FundReportFactory Date Issue - FIXED
+#### Category C: FundReportFactory Date Issue - FIXED (opus2)
 Fixed FundReportFactory date format.
 
 #### Category D: IdDocument Table Name - FIXED (claude11)
@@ -71,20 +83,43 @@ Fixed IdDocument model to use `iddocuments` table (not `id_documents`).
 PositionUpdate and PriceUpdate use bulk operations, not standard CRUD APIs.
 Tests marked with `@group incomplete`.
 
-#### Category E: Application Bugs (~15 tests)
-Pre-existing issues in application code:
-- AssetPriceApiTest: `insertHistoricalPrice` method doesn't exist
-- AccountReportApiTest, FundReportApiTest: "No transactions found" business logic error
-- PersonApiTest: SQL column error in validation
+#### Category E: Application Bugs - FIXED
+- DataFactory: Fixed to use `fundAccount()` state for fund accounts
+- TransactionApiGoldenDataTest: Fixed division by zero with shareValue check
 
-#### Category F: Test Data Issues (~10 tests)
-Tests need proper data setup:
-- CashDepositTraitTest, FetchDepositsTest
-- PortfolioAssetApiTest: assertion mismatches
+#### Category F: Test Data Issues - FIXED (claude3)
+- CashDepositTraitTest: Use unique test account IDs, added ENUM migration
+- FetchDepositsTest: Added DatabaseTransactions, fixed HTTP assertions
+- FundReportTest: Refactored to use TestFixtures
+- TradePortfolioExtTest: Added createFund() before createTradePortfolio()
 
 ---
 
 ## Progress Summary
+
+### claude3 - 2026-01-10
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Tests Passing | 292 | 296 | +4 tests |
+| Tests Failing | 3 | 0 | -3 tests |
+
+**Work completed:**
+- Created `TestFixtures` class with reusable fixture methods:
+  - `fundReportFixture()` - Complete fund report setup
+  - `cashDepositFixture()` - Cash deposit with trade portfolio
+  - `cashDepositWithRequestsFixture()` - Cash deposit with deposit requests
+  - `minimalFundFixture()` - Simple fund setup
+  - `fundWithMatchingFixture()` - Fund with matching rules
+- Fixed CashDepositTraitTest: unique test account IDs, added ENUM migration for `COMPLETED`/`CANCELLED` statuses
+- Fixed FetchDepositsTest: DatabaseTransactions, isolated test data
+- Fixed FundReportTest: Refactored to use TestFixtures
+- Fixed TradePortfolioExtTest: Added createFund() call in setUp()
+- Fixed DataFactory: `createTradePortfolio()` properly associates with fund's portfolio
+
+**Files created:**
+- `tests/Fixtures/TestFixtures.php`
+- `database/migrations/2026_01_10_181834_add_completed_cancelled_to_cash_deposits_status.php`
 
 ### claude11 - 2026-01-10
 
@@ -128,6 +163,58 @@ Tests need proper data setup:
 - UserFactory: removed email_verified_at from default state (not fillable)
 - PortfolioAssetFactory: added end_dt field
 - CashDepositExt: fixed status constants (PEN->PENDING, etc.)
+
+---
+
+## Next Steps (Priority Order)
+
+### 1. Install PCOV for Coverage Reports - COMPLETED
+PCOV installed in container. Run coverage with:
+```bash
+docker exec familyfund ./vendor/bin/phpunit --exclude-group=incomplete --coverage-text
+```
+
+### 2. Systematic Coverage Improvement Plan
+
+**Strategy:** Focus on files with <50% coverage that have high line counts (biggest impact).
+
+#### Priority 1: High Impact Files (<50% coverage, >30 lines)
+
+| File | Coverage | Lines | Uncovered | Priority |
+|------|----------|-------|-----------|----------|
+| `FundTrait` | 31.68% | 202 | ~138 | HIGH |
+| `AccountReportAPIControllerExt` | 38.78% | 49 | ~30 | MEDIUM |
+| `AccountTrait` | 41.18% | 34 | ~20 | MEDIUM |
+| `TradePortfolioItem` | 46.88% | 64 | ~34 | MEDIUM |
+| `TradePortfolioAPIControllerExt` | 28.57% | 7 | ~5 | LOW |
+| `AssetExt` | 33.33% | 3 | ~2 | LOW |
+
+#### Priority 2: Quick Wins (Files needing few lines to reach 50%)
+
+| File | Current | Lines to 50% | Action |
+|------|---------|--------------|--------|
+| `TradePortfolioItem` | 46.88% | ~2 lines | Add 1 test |
+| `AccountTrait` | 41.18% | ~3 lines | Add 1-2 tests |
+
+#### Priority 3: Email/Mail Classes (Low coverage but isolated)
+
+| File | Coverage | Notes |
+|------|----------|-------|
+| `TransactionEmail` | 21.05% | Need Mail::fake() |
+| `FundReportEmail` | 21.43% | Need Mail::fake() |
+
+### 3. Estimated Impact
+
+| Task | Est. Lines Gained | Cumulative Coverage |
+|------|-------------------|---------------------|
+| FundTrait tests | +70 lines | ~46% |
+| AccountTrait tests | +15 lines | ~46.5% |
+| TradePortfolioItem tests | +20 lines | ~47% |
+| AccountReportAPIControllerExt tests | +20 lines | ~47.5% |
+| Email class tests | +20 lines | ~48% |
+| Misc quick wins | +100 lines | **~50%** |
+
+---
 
 ### Phase 2: New Unit Tests (Coverage Expansion)
 

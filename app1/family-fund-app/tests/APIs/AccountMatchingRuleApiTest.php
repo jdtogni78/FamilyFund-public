@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\AccountMatchingRule;
 
+use PHPUnit\Framework\Attributes\Test;
 class AccountMatchingRuleApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_account_matching_rule()
     {
         $accountMatchingRule = AccountMatchingRule::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class AccountMatchingRuleApiTest extends TestCase
         $this->assertApiResponse($accountMatchingRule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_account_matching_rule()
     {
         $accountMatchingRule = AccountMatchingRule::factory()->create();
@@ -40,9 +37,7 @@ class AccountMatchingRuleApiTest extends TestCase
         $this->assertApiResponse($accountMatchingRule->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_account_matching_rule()
     {
         $accountMatchingRule = AccountMatchingRule::factory()->create();
@@ -57,9 +52,7 @@ class AccountMatchingRuleApiTest extends TestCase
         $this->assertApiResponse($editedAccountMatchingRule);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_account_matching_rule()
     {
         $accountMatchingRule = AccountMatchingRule::factory()->create();

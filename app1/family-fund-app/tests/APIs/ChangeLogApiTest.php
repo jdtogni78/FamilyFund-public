@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\ChangeLog;
 
+use PHPUnit\Framework\Attributes\Test;
 class ChangeLogApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_change_log()
     {
         $changeLog = ChangeLog::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class ChangeLogApiTest extends TestCase
         $this->assertApiResponse($changeLog);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_change_log()
     {
         $changeLog = ChangeLog::factory()->create();
@@ -40,9 +37,7 @@ class ChangeLogApiTest extends TestCase
         $this->assertApiResponse($changeLog->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_change_log()
     {
         $changeLog = ChangeLog::factory()->create();
@@ -57,9 +52,7 @@ class ChangeLogApiTest extends TestCase
         $this->assertApiResponse($editedChangeLog);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_change_log()
     {
         $changeLog = ChangeLog::factory()->create();

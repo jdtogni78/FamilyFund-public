@@ -252,26 +252,27 @@ trait AccountTrait
         $defaultCap = 0.02;
         $account = $this->perfObject;
         $cap = $account->disbursement_cap ?? $defaultCap;
-        $year = Carbon::parse($asOf)->startOfYear();
-        $yearNow = $year->format('Y-m-d');
+        $capPct = $cap * 100.0; // Convert to percentage for comparison
+
+        // Use previous year's performance for eligibility
+        $prevYear = Carbon::parse($asOf)->subYear()->startOfYear()->format('Y-m-d');
+        $currentValue = $arr['account']['value'] ?? 0;
 
         $perf = $arr['yearly_performance'];
-//        Log::debug($perf);
         $disb = 0;
-        $perfValue = 0;
-        if (array_key_exists($yearNow, $perf)) {
-            $data = $perf[$yearNow];
-//            Log::debug("Found $yearNow " . json_encode($data));
-            $value = $data['value'];
-            $perfValue = $data['performance'];
-            $disb = $value * max(0.0, min($cap, $perfValue));
+        $perfPct = 0; // Performance is already stored as percentage (e.g., 15.23 for 15.23%)
+        if (array_key_exists($prevYear, $perf)) {
+            $data = $perf[$prevYear];
+            $perfPct = $data['performance']; // Already a percentage
+            // Effective rate is min of cap and performance, converted back to decimal
+            $effectiveRate = max(0.0, min($capPct, $perfPct)) / 100.0;
+            $disb = $currentValue * $effectiveRate;
         }
 
-//        Log::debug("Disb: " . $disb);
         return [
-            'year' => $yearNow,
-            'performance' => $perfValue,
-            'limit' => $cap * 100.0,
+            'year' => $prevYear,
+            'performance' => $perfPct, // Already a percentage
+            'limit' => $capPct,
             'value' => $disb
         ];
     }

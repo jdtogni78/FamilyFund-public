@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Address;
 
+use PHPUnit\Framework\Attributes\Test;
 class AddressApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_address()
     {
         $address = Address::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class AddressApiTest extends TestCase
         $this->assertApiResponse($address);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_address()
     {
         $address = Address::factory()->create();
@@ -40,9 +37,7 @@ class AddressApiTest extends TestCase
         $this->assertApiResponse($address->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_address()
     {
         $address = Address::factory()->create();
@@ -57,9 +52,7 @@ class AddressApiTest extends TestCase
         $this->assertApiResponse($editedAddress);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_address()
     {
         $address = Address::factory()->create();

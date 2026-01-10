@@ -8,6 +8,7 @@ use App\Models\Portfolio;
 use App\Models\Fund;
 use App\Http\Resources\PortfolioResource;
 
+use PHPUnit\Framework\Attributes\Test;
 class PortfolioApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -26,9 +27,7 @@ class PortfolioApiTest extends TestCase
         return $portfolio;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_portfolio()
     {
         $portfolio = $this->makePortfolio()->toArray();
@@ -41,9 +40,7 @@ class PortfolioApiTest extends TestCase
         $this->assertApiResponse($portfolio, ['id']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_portfolio()
     {
         $portfolio = $this->createPortfolio();
@@ -56,9 +53,7 @@ class PortfolioApiTest extends TestCase
         $this->assertApiResponse((new PortfolioResource($portfolio))->toArray(null));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_portfolio()
     {
         $portfolio = $this->createPortfolio();
@@ -76,9 +71,7 @@ class PortfolioApiTest extends TestCase
         $this->assertApiResponse($editedPortfolio);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_portfolio()
     {
         $portfolio = $this->createPortfolio();

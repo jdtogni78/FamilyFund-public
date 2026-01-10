@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\TradePortfolioItem;
 
+use PHPUnit\Framework\Attributes\Test;
 class TradePortfolioItemApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class TradePortfolioItemApiTest extends TestCase
         $this->assertApiResponse($tradePortfolioItem);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();
@@ -40,9 +37,7 @@ class TradePortfolioItemApiTest extends TestCase
         $this->assertApiResponse($tradePortfolioItem->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();
@@ -57,9 +52,7 @@ class TradePortfolioItemApiTest extends TestCase
         $this->assertApiResponse($editedTradePortfolioItem);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();

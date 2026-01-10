@@ -9,6 +9,7 @@ use App\Models\Portfolio;
 use App\Models\PortfolioExt;
 use App\Models\Utils;
 
+use PHPUnit\Framework\Attributes\Test;
 class PortfolioApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
@@ -47,9 +48,7 @@ class PortfolioApiGoldenDataTest extends TestCase
         $this->assertApiResponse($expected);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_portfolio_as_of() {
         // Test portfolio 2 at various dates
         $this->_test_read_portfolio_as_of(2, '2021-01-01');

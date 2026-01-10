@@ -5,18 +5,18 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\PositionUpdate;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
- * @group incomplete
  * Tests for incomplete feature - API routes/controllers not implemented
  */
+#[Group('incomplete')]
 class PositionUpdateApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_position_update()
     {
         $positionUpdate = PositionUpdate::factory()->make()->toArray();
@@ -29,9 +29,7 @@ class PositionUpdateApiTest extends TestCase
         $this->assertApiResponse($positionUpdate);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_position_update()
     {
         $positionUpdate = PositionUpdate::factory()->create();
@@ -44,9 +42,7 @@ class PositionUpdateApiTest extends TestCase
         $this->assertApiResponse($positionUpdate->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_position_update()
     {
         $positionUpdate = PositionUpdate::factory()->create();
@@ -61,9 +57,7 @@ class PositionUpdateApiTest extends TestCase
         $this->assertApiResponse($editedPositionUpdate);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_position_update()
     {
         $positionUpdate = PositionUpdate::factory()->create();

@@ -5,18 +5,18 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\PriceUpdate;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
- * @group incomplete
  * Tests for incomplete feature - API routes/controllers not implemented
  */
+#[Group('incomplete')]
 class PriceUpdateApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_price_update()
     {
         $priceUpdate = PriceUpdate::factory()->make()->toArray();
@@ -29,9 +29,7 @@ class PriceUpdateApiTest extends TestCase
         $this->assertApiResponse($priceUpdate);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_price_update()
     {
         $priceUpdate = PriceUpdate::factory()->create();
@@ -44,9 +42,7 @@ class PriceUpdateApiTest extends TestCase
         $this->assertApiResponse($priceUpdate->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_price_update()
     {
         $priceUpdate = PriceUpdate::factory()->create();
@@ -61,9 +57,7 @@ class PriceUpdateApiTest extends TestCase
         $this->assertApiResponse($editedPriceUpdate);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_price_update()
     {
         $priceUpdate = PriceUpdate::factory()->create();

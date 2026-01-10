@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\ScheduledJob;
 
+use PHPUnit\Framework\Attributes\Test;
 class ScheduledJobApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class ScheduledJobApiTest extends TestCase
         $this->assertApiResponse($scheduledJob);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();
@@ -40,9 +37,7 @@ class ScheduledJobApiTest extends TestCase
         $this->assertApiResponse($scheduledJob->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();
@@ -57,9 +52,7 @@ class ScheduledJobApiTest extends TestCase
         $this->assertApiResponse($editedScheduledJob);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();

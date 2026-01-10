@@ -29,7 +29,29 @@
                             <span class="float-end">{{ $transaction->account->nickname }}</span>
                         </div>
                         <div class="card-body">
-                            <!-- Amount Badge at Top -->
+                            <!-- Account Info -->
+                            @php($acct = $transaction->account)
+                            <div class="bg-light rounded p-2 mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ $acct->nickname }}</strong>
+                                        @if($acct->code)
+                                            <span class="text-muted">({{ $acct->code }})</span>
+                                        @endif
+                                    </div>
+                                    <span class="badge bg-secondary">{{ $acct->fund->name ?? 'Fund' }}</span>
+                                </div>
+                                @if($acct->user)
+                                    <div class="small text-muted">
+                                        <i class="fa fa-user me-1"></i>{{ $acct->user->name }}
+                                        @if($acct->user->email)
+                                            - {{ $acct->user->email }}
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Amount Badge -->
                             <div class="text-center mb-3">
                                 <span class="badge bg-{{ $isDebit ? 'danger' : 'success' }} fs-5 px-4 py-2">
                                     {{ $isDebit ? '-' : '+' }}${{ number_format(abs($transaction->value), 2) }}
@@ -101,11 +123,46 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Projected Account Value Card -->
-                @isset($api1['shares_today'])
-                @php($prevValue = $prevShares * $api1['share_value_today'])
-                @php($valueDelta = $api1['value_today'] - $prevValue)
+            <!-- Matching Transactions -->
+            @if(null !== $api1['matches'] && count($api1['matches']) > 0)
+            <div class="card mb-4 border-purple">
+                <div class="card-header" style="background-color: #9333ea; color: white;">
+                    <i class="fa fa-gift me-2"></i>
+                    <strong>Matching Contributions</strong>
+                </div>
+                <div class="card-body">
+                    @foreach($api1['matches'] as $matchTrans)
+                    @php($matchBalance = $matchTrans->balance)
+                    <div class="row align-items-center {{ !$loop->last ? 'border-bottom pb-3 mb-3' : '' }}">
+                        <div class="col-md-4">
+                            <div class="fw-bold">{{ $matchTrans->descr }}</div>
+                            <div class="text-success fs-5">+${{ number_format($matchTrans->value, 2) }}</div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <span class="badge bg-success">+{{ number_format($matchTrans->shares, 4) }} shares</span>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-end">
+                                <span class="text-muted me-2">{{ number_format($matchBalance->previousBalance?->shares ?? 0, 2) }}</span>
+                                <i class="fa fa-arrow-right text-success mx-2"></i>
+                                <span class="fw-bold text-success">{{ number_format($matchBalance->shares, 2) }}</span>
+                            </div>
+                            <div class="text-muted small text-end">{{ $matchBalance->account->nickname }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Projected Account Value Card -->
+            @isset($api1['shares_today'])
+            @php($prevShares = $balance->previousBalance?->shares ?? 0)
+            @php($prevValue = $prevShares * $api1['share_value_today'])
+            @php($valueDelta = $api1['value_today'] - $prevValue)
+            <div class="row">
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header bg-light">
@@ -144,40 +201,8 @@
                         </div>
                     </div>
                 </div>
-                @endisset
             </div>
-
-            <!-- Matching Transactions -->
-            @if(null !== $api1['matches'] && count($api1['matches']) > 0)
-            <div class="card mb-4 border-purple">
-                <div class="card-header" style="background-color: #9333ea; color: white;">
-                    <i class="fa fa-gift me-2"></i>
-                    <strong>Matching Contributions</strong>
-                </div>
-                <div class="card-body">
-                    @foreach($api1['matches'] as $matchTrans)
-                    @php($matchBalance = $matchTrans->balance)
-                    <div class="row align-items-center {{ !$loop->last ? 'border-bottom pb-3 mb-3' : '' }}">
-                        <div class="col-md-4">
-                            <div class="fw-bold">{{ $matchTrans->descr }}</div>
-                            <div class="text-success fs-5">+${{ number_format($matchTrans->value, 2) }}</div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <span class="badge bg-success">+{{ number_format($matchTrans->shares, 4) }} shares</span>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center justify-content-end">
-                                <span class="text-muted me-2">{{ number_format($matchBalance->previousBalance?->shares ?? 0, 2) }}</span>
-                                <i class="fa fa-arrow-right text-success mx-2"></i>
-                                <span class="fw-bold text-success">{{ number_format($matchBalance->shares, 2) }}</span>
-                            </div>
-                            <div class="text-muted small text-end">{{ $matchBalance->account->nickname }}</div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
+            @endisset
 
             <!-- Fund Cash Position -->
             @if(null !== $api1['fundCash'])

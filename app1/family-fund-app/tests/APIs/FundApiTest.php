@@ -8,13 +8,12 @@ use Tests\DataFactory;
 use App\Models\Fund;
 use App\Http\Resources\FundResource;
 
+use PHPUnit\Framework\Attributes\Test;
 class FundApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_fund()
     {
         $fund = Fund::factory()->make()->toArray();
@@ -27,9 +26,7 @@ class FundApiTest extends TestCase
         $this->assertApiResponse($fund, ['id']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_fund()
     {
         $fund = (new DataFactory())->createFund();
@@ -42,9 +39,7 @@ class FundApiTest extends TestCase
         $this->assertApiResponse((new FundResource($fund))->toArray(null));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_fund()
     {
         $fund = Fund::factory()->create();
@@ -59,9 +54,7 @@ class FundApiTest extends TestCase
         $this->assertApiResponse($editedFund, ['id']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_fund()
     {
         $fund = Fund::factory()->create();

@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Phone;
 
+use PHPUnit\Framework\Attributes\Test;
 class PhoneApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_phone()
     {
         $phone = Phone::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class PhoneApiTest extends TestCase
         $this->assertApiResponse($phone);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_phone()
     {
         $phone = Phone::factory()->create();
@@ -40,9 +37,7 @@ class PhoneApiTest extends TestCase
         $this->assertApiResponse($phone->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_phone()
     {
         $phone = Phone::factory()->create();
@@ -57,9 +52,7 @@ class PhoneApiTest extends TestCase
         $this->assertApiResponse($editedPhone);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_phone()
     {
         $phone = Phone::factory()->create();

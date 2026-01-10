@@ -6,13 +6,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\AssetChangeLog;
 
+use PHPUnit\Framework\Attributes\Test;
 class AssetChangeLogApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_create_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->make()->toArray();
@@ -25,9 +24,7 @@ class AssetChangeLogApiTest extends TestCase
         $this->assertApiResponse($assetChangeLog);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_read_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();
@@ -40,9 +37,7 @@ class AssetChangeLogApiTest extends TestCase
         $this->assertApiResponse($assetChangeLog->toArray());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_update_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();
@@ -57,9 +52,7 @@ class AssetChangeLogApiTest extends TestCase
         $this->assertApiResponse($editedAssetChangeLog);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function test_delete_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();

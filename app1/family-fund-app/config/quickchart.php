@@ -20,6 +20,7 @@ return [
     */
     'width' => 1200,
     'height' => 500,
+    'device_pixel_ratio' => env('QUICKCHART_DPR', 2.0),  // Higher = better quality (1.0, 2.0, 3.0)
     'progress_height' => 150,
     'doughnut_width' => 700,
     'doughnut_height' => 500,

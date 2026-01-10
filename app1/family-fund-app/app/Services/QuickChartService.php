@@ -11,6 +11,7 @@ class QuickChartService
     protected string $baseUrl;
     protected int $width;
     protected int $height;
+    protected float $devicePixelRatio;
     protected array $colors;
     protected array $datasetColors;
     protected string $backgroundColor;
@@ -25,6 +26,7 @@ class QuickChartService
         $this->baseUrl = config('quickchart.base_url');
         $this->width = config('quickchart.width');
         $this->height = config('quickchart.height');
+        $this->devicePixelRatio = config('quickchart.device_pixel_ratio', 2.0);
         $this->colors = config('quickchart.colors');
         $this->datasetColors = config('quickchart.dataset_colors');
         $this->backgroundColor = config('quickchart.background_color');
@@ -1025,6 +1027,7 @@ class QuickChartService
                 'height' => $height,
                 'backgroundColor' => $this->backgroundColor,
                 'format' => 'png',
+                'devicePixelRatio' => $this->devicePixelRatio,
             ]);
 
             if ($response->successful()) {

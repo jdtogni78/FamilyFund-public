@@ -6,6 +6,10 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\PositionUpdate;
 
+/**
+ * @group incomplete
+ * Tests for incomplete feature - API routes/controllers not implemented
+ */
 class PositionUpdateApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

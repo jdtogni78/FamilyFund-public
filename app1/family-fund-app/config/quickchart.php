@@ -48,37 +48,24 @@ return [
     | Dataset Colors (for multi-series charts)
     |--------------------------------------------------------------------------
     */
+    // Colors matching web Chart.js version for consistency
     'dataset_colors' => [
-        '#2563eb',  // Blue
-        '#dc2626',  // Red
+        '#ff6384',  // Red/Pink - rgb(255, 99, 132)
+        '#36a2eb',  // Blue - rgb(54, 162, 235)
+        '#4bc0c0',  // Green/Teal - rgb(75, 192, 192)
+        '#ff9f40',  // Orange - rgb(255, 159, 64)
+        '#00d4ff',  // Cyan - close to rgb(0, 255, 255)
+        '#ff00ff',  // Magenta - rgb(255, 0, 255)
+        '#8b4513',  // Brown - rgb(139, 69, 19)
+        '#800080',  // Purple - rgb(128, 0, 128)
+        '#9333ea',  // Violet
         '#16a34a',  // Green
         '#d97706',  // Amber
-        '#9333ea',  // Purple
-        '#0891b2',  // Cyan
         '#db2777',  // Pink
+        '#0891b2',  // Teal
         '#64748b',  // Slate
         '#f59e0b',  // Yellow
         '#10b981',  // Emerald
-        '#6366f1',  // Indigo
-        '#ec4899',  // Pink
-        '#14b8a6',  // Teal
-        '#f97316',  // Orange
-        '#4f46e5',  // Deep Indigo
-        '#059669',  // Deep Emerald
-        '#b91c1c',  // Deep Red
-        '#7c3aed',  // Violet
-        '#0369a1',  // Deep Sky
-        '#c026d3',  // Fuchsia
-        '#ca8a04',  // Deep Yellow
-        '#0d9488',  // Deep Teal
-        '#e11d48',  // Rose
-        '#0284c7',  // Light Blue
-        '#15803d',  // Forest Green
-        '#7e22ce',  // Deep Purple
-        '#be123c',  // Deep Rose
-        '#1d4ed8',  // Royal Blue
-        '#047857',  // Dark Emerald
-        '#a21caf',  // Deep Fuchsia
     ],
 
     /*

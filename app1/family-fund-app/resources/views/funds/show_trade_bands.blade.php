@@ -41,6 +41,9 @@
                                            value="{{ $asOf ?? '' }}" disabled title="Use as_of route for end date">
                                     <button type="submit" class="btn btn-light btn-sm">Apply</button>
                                 </form>
+                                <a href="/funds/{{ $api['id'] }}/trade_bands_pdf_as_of/{{ $asOf ?? now()->format('Y-m-d') }}{{ $fromDate ? '?from=' . $fromDate : '' }}" class="btn btn-outline-light btn-sm" title="Download PDF">
+                                    <i class="fa fa-file-pdf"></i>
+                                </a>
                                 <a href="/funds/{{ $api['id'] }}" class="btn btn-outline-light btn-sm" title="Fund Details">
                                     <i class="fa fa-info-circle"></i>
                                 </a>

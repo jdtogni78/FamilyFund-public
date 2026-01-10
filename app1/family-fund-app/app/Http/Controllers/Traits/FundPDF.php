@@ -26,20 +26,31 @@ class FundPDF
     public function createAssetPositionsGraph(array $arr, TemporaryDirectory $tempDir)
     {
         $assetPerf = $arr['asset_monthly_bands'];
-        $symbolShares = [];
+
+        // Build list of symbols that are in at least one trade portfolio
+        $portfolioSymbols = collect($arr['tradePortfolios'] ?? [])
+            ->flatMap(fn($tp) => collect($tp['items'] ?? [])->pluck('symbol'))
+            ->unique()
+            ->toArray();
+
         foreach ($assetPerf as $symbol => $values) {
-            $symbolShares[$symbol] = [];
+            // Skip symbols not in any trade portfolio (and SP500/CASH)
+            if ($symbol == 'SP500' || $symbol == 'CASH' || !in_array($symbol, $portfolioSymbols)) {
+                continue;
+            }
+
+            $symbolShares = [];
             foreach ($values as $date => $value) {
-                $symbolShares[$symbol][$date] = $value['shares'];
+                $symbolShares[$date] = $value['shares'];
             }
 
             $name = 'asset_positions_' . $symbol . '.png';
             $this->files[$name] = $file = $tempDir->path($name);
-            $labels = array_keys($symbolShares[$symbol]);
-            $values = array_values($symbolShares[$symbol]);
+            $labels = array_keys($symbolShares);
+            $shareValues = array_values($symbolShares);
             $this->addLineChart($labels,
               ["$symbol Shares"],
-              [$values]);
+              [$shareValues]);
             $this->createLineChart($file);
         }
     }
@@ -51,8 +62,15 @@ class FundPDF
      */
     public function createTradeBandsGraph(array $arr, TemporaryDirectory $tempDir)
     {
-        // create a graph of the trade bands for each symbol$symbol
         $assetPerf = $arr['asset_monthly_bands'];
+
+        // Build list of symbols that are in at least one trade portfolio
+        $portfolioSymbols = collect($arr['tradePortfolios'] ?? [])
+            ->flatMap(fn($tp) => collect($tp['items'] ?? [])->pluck('symbol'))
+            ->unique()
+            ->toArray();
+
+        // Calculate sum of all asset values per date
         $sumData = [];
         foreach ($assetPerf as $symbol => $values) {
             foreach ($values as $date => $value) {
@@ -63,43 +81,49 @@ class FundPDF
 
         $index = 0;
         foreach ($assetPerf as $symbol => $data) {
+            // Skip symbols not in any trade portfolio (except SP500/CASH)
+            if ($symbol == 'SP500' || $symbol == 'CASH' || !in_array($symbol, $portfolioSymbols)) {
+                continue;
+            }
+
             $name = 'trade_bands_' . $symbol . '.png';
             $this->files[$name] = $file = $tempDir->path($name);
             $labels = array_keys($data);
-            $values = array_values($data);
-            $values = array_map(function ($v) {
-                return $v['value'];
-            }, $values);
+            $values = array_map(fn($v) => $v['value'], array_values($data));
 
+            // Build band arrays aligned with labels (null for gaps)
             $values_max = [];
             $values_min = [];
             $values_target = [];
-            foreach ($sumData as $date => $value) {
-                // find trade portfolio item for this symbol & timeframe
+            foreach ($labels as $date) {
                 $port = $this->findTradePortfolioItem($arr, $symbol, $date);
                 if ($port == null) {
-                  continue;
+                    $values_max[] = null;
+                    $values_min[] = null;
+                    $values_target[] = null;
+                    continue;
                 }
-                $target_share = $port['target_share'];
-                $deviation_trigger = $port['deviation_trigger'];
+                $target_share = floatval($port['target_share']);
+                $deviation_trigger = floatval($port['deviation_trigger']);
                 $up = $target_share + $deviation_trigger;
                 $down = $target_share - $deviation_trigger;
-                $values_max[] = $sumData[$date] * $up;
-                $values_min[] = $sumData[$date] * $down;
-                $values_target[] = $sumData[$date] * $target_share;
+                $totalValue = $sumData[$date] ?? 0;
+                $values_max[] = $totalValue * $up;
+                $values_min[] = $totalValue * $down;
+                $values_target[] = $totalValue * $target_share;
             }
 
-            Log::debug("values_max: " . json_encode($values_max));
-            Log::debug("values_min: " . json_encode($values_min));
-            Log::debug("values_target: " . json_encode($values_target));
-            Log::debug("values: " . json_encode($values));
+            Log::debug("$symbol values_max: " . json_encode($values_max));
+            Log::debug("$symbol values_min: " . json_encode($values_min));
+            Log::debug("$symbol values_target: " . json_encode($values_target));
+            Log::debug("$symbol values: " . json_encode($values));
+
             $this->addLineChart($labels,
                 ["$symbol", "$symbol target"],
                 [$values, $values_target]);
-            if (count($values_max) > 0) {
+            if (count(array_filter($values_max, fn($v) => $v !== null)) > 0) {
                 $this->addZone("$symbol max", "$symbol min", $values_max, $values_min);
             }
-            // $this->chart->Palette[$index] = $this->chart->Palette[13];
             $this->createLineChart($file, $index, $symbol);
             $index++;
         }
@@ -108,7 +132,10 @@ class FundPDF
     public function findTradePortfolioItem(array $arr, string $symbol, string $date)
     {
         foreach ($arr['tradePortfolios'] as $tradePortfolio) {
-            if ($tradePortfolio['start_dt'] <= $date && $tradePortfolio['end_dt'] >= $date) {
+            // Normalize dates to Y-m-d format (strip time portion if present)
+            $startDt = substr($tradePortfolio['start_dt'] ?? '', 0, 10);
+            $endDt = substr($tradePortfolio['end_dt'] ?? '', 0, 10);
+            if ($startDt <= $date && $endDt >= $date) {
                 foreach ($tradePortfolio['items'] as $item) {
                     if ($item['symbol'] == $symbol) {
                         return $item;

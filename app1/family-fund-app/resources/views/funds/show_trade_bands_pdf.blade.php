@@ -3,32 +3,21 @@
 @section('report-type', 'Trading Bands Report')
 
 @section('content')
-    <!-- Fund Summary -->
-    <div class="summary-box">
-        <h2>{{ $api['name'] }}</h2>
-        <div class="stat-grid">
-            <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                <div class="stat-value">${{ number_format($api['summary']['value'], 2) }}</div>
-                <div class="stat-label">Total Value</div>
-            </div>
-            <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                <div class="stat-value">${{ number_format($api['summary']['share_value'], 4) }}</div>
-                <div class="stat-label">Share Price</div>
-            </div>
-            <div class="stat-card" style="background: rgba(255,255,255,0.1); border: none;">
-                <div class="stat-value">{{ count($api['tradePortfolios']) }}</div>
-                <div class="stat-label">Trade Portfolios</div>
-            </div>
-        </div>
-    </div>
+    @php
+        // Build list of symbols that are in at least one trade portfolio
+        $portfolioSymbols = collect($api['tradePortfolios'] ?? [])
+            ->flatMap(fn($tp) => collect($tp['items'] ?? [])->pluck('symbol'))
+            ->unique()
+            ->toArray();
+    @endphp
 
-    <!-- Fund Details Card -->
-    <div class="card mb-5">
-        <div class="card-header">
-            <h4 class="card-header-title">Fund Details</h4>
-        </div>
-        <div class="card-body">
-            @include('funds.show_fields_pdf')
+    <!-- Fund Summary (compact) -->
+    <div class="summary-box" style="padding: 15px 20px; margin-bottom: 20px;">
+        <h2 style="margin-bottom: 10px;">{{ $api['name'] }}</h2>
+        <div style="display: flex; gap: 30px; font-size: 14px;">
+            <span><strong>Total Value:</strong> ${{ number_format($api['summary']['value'], 2) }}</span>
+            <span><strong>Share Price:</strong> ${{ number_format($api['summary']['share_value'], 4) }}</span>
+            <span><strong>Trade Portfolios:</strong> {{ count($api['tradePortfolios']) }}</span>
         </div>
     </div>
 
@@ -36,17 +25,15 @@
     <h3 class="section-title">Trading Bands Analysis</h3>
 
     @foreach ($api['asset_monthly_bands'] as $symbol => $data)
-        @if ($symbol != 'SP500' && $symbol != 'CASH')
+        @if ($symbol != 'SP500' && $symbol != 'CASH' && in_array($symbol, $portfolioSymbols))
             @php
-                $hasPortfolioItem = false;
                 $portfolioInfo = [];
                 foreach ($api['tradePortfolios'] as $tp) {
                     foreach ($tp['items'] as $item) {
                         if ($item['symbol'] == $symbol) {
-                            $hasPortfolioItem = true;
                             $portfolioInfo[] = [
-                                'start_dt' => $tp['start_dt'],
-                                'end_dt' => $tp['end_dt'],
+                                'start_dt' => substr($tp['start_dt'] ?? '', 0, 10),
+                                'end_dt' => substr($tp['end_dt'] ?? '', 0, 10),
                                 'target_share' => $item['target_share'],
                                 'deviation_trigger' => $item['deviation_trigger'],
                                 'target_value' => $api['summary']['value'] * $item['target_share'],
@@ -56,7 +43,7 @@
                 }
             @endphp
 
-            @if ($hasPortfolioItem)
+            @if (count($portfolioInfo) > 0)
                 <div class="card mb-4 avoid-break">
                     <div class="card-header">
                         <h4 class="card-header-title">{{ $symbol }}</h4>

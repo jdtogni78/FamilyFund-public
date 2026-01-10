@@ -605,7 +605,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-logo">
-                <span class="header-logo-icon">FF</span>
+                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="height: 44px; width: auto; vertical-align: middle; margin-right: 12px;">
                 <span class="header-text">
                     <span class="header-title">{{ config('app.name') }}</span>
                     <br>

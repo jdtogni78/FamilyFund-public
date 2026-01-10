@@ -22,7 +22,7 @@ class IdDocument extends Model
 
     use HasFactory;
 
-    public $table = 'id_documents';
+    public $table = 'iddocuments';
     
 
     protected $dates = ['deleted_at'];

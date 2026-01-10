@@ -23,7 +23,7 @@ class SymbolPositionFactory extends Factory
     {
         return [
             'name' => $this->faker->word . "_" . $this->faker->randomNumber(5),
-        'type' => $this->faker->word,
+        'type' => $this->faker->randomElement(['STK', 'ETF', 'BND', 'CRY']),
 //            $table->decimal('position', 21, 8);
         // TODO: php max dig is 14?!?!
         'position' => $this->faker->randomFloat(4, 0.0001),

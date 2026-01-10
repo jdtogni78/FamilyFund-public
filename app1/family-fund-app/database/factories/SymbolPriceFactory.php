@@ -23,7 +23,7 @@ class SymbolPriceFactory extends Factory
     {
         return [
             'name' => $this->faker->word . "_" . $this->faker->randomNumber(5),
-        'type' => $this->faker->word,
+        'type' => $this->faker->randomElement(['STK', 'ETF', 'BND', 'CRY']),
         'price' => $this->faker->randomFloat(2, 0.01),
         ];
     }

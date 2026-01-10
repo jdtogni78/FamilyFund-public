@@ -62,6 +62,12 @@ Route::middleware('auth')->group(function () {
         ->name('tradePortfoliosItems.createWithParams');
     Route::post('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
+    Route::get('transactions/create_bulk', 'App\Http\Controllers\WebV1\TransactionControllerExt@bulkCreate')
+        ->name('transactions.create_bulk');
+    Route::post('transactions/preview_bulk', 'App\Http\Controllers\WebV1\TransactionControllerExt@bulkPreview')
+        ->name('transactions.preview_bulk');
+    Route::post('transactions/store_bulk', 'App\Http\Controllers\WebV1\TransactionControllerExt@bulkStore')
+        ->name('transactions.store_bulk');
     Route::get('transactions/preview_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@previewPending')
         ->name('transactions.preview_pending');
     Route::post('transactions/process_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@processPending')

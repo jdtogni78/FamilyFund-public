@@ -216,4 +216,229 @@ class TransactionControllerExt extends TransactionController
             ->with('api', $this->getApi());
     }
 
+    /**
+     * Resend transaction confirmation email.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function resendEmail($id)
+    {
+        /** @var TransactionExt $transaction */
+        $transaction = $this->transactionRepository->find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+            return redirect(route('transactions.index'));
+        }
+
+        // Check if account has email configured
+        if (empty($transaction->account->email_cc)) {
+            Flash::error('No email address configured for this account. Set email_cc on the account first.');
+            return redirect(route('transactions.show', $id));
+        }
+
+        // Build transaction data for email
+        $transaction_data = [
+            'transaction' => $transaction,
+            'shareValue' => $transaction->account->shareValueAsOf($transaction->timestamp),
+            'balance' => $transaction->balance,
+            'matches' => null,
+            'fundCash' => null,
+        ];
+        $api = $this->getPreviewData($transaction_data);
+
+        // Send the email
+        $this->sendTransactionConfirmation($api);
+
+        Flash::success('Transaction confirmation email sent to ' . $transaction->account->email_cc);
+        return redirect(route('transactions.show', $id));
+    }
+
+    /**
+     * Show the form for creating transactions for multiple accounts.
+     *
+     * @return Response
+     */
+    public function bulkCreate()
+    {
+        $api = $this->getApi();
+
+        // Group accounts by fund for easier selection
+        $accounts = AccountExt::with(['user', 'fund'])
+            ->whereNotNull('user_id')
+            ->orderBy('fund_id')
+            ->orderBy('nickname')
+            ->get();
+
+        $accountsByFund = [];
+        foreach ($accounts as $account) {
+            $fundName = $account->fund->name ?? 'Unknown Fund';
+            if (!isset($accountsByFund[$fundName])) {
+                $accountsByFund[$fundName] = [];
+            }
+            $label = $account->nickname;
+            if ($account->code) {
+                $label .= ' (' . $account->code . ')';
+            }
+            if ($account->user) {
+                $label .= ' - ' . $account->user->name;
+            }
+            $accountsByFund[$fundName][] = [
+                'id' => $account->id,
+                'label' => $label,
+                'email' => $account->email_cc,
+                'fund_id' => $account->fund_id,
+            ];
+        }
+
+        $api['accountsByFund'] = $accountsByFund;
+
+        return view('transactions.create_bulk')
+            ->with('api', $api);
+    }
+
+    /**
+     * Preview bulk transactions before creating them.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function bulkPreview(Request $request)
+    {
+        $request->validate([
+            'account_ids' => 'required|array|min:1',
+            'account_ids.*' => 'exists:accounts,id',
+            'type' => 'required',
+            'status' => 'required',
+            'value' => 'required|numeric',
+            'timestamp' => 'required|date',
+        ]);
+
+        $input = $request->all();
+        $accountIds = $input['account_ids'];
+        $previews = [];
+
+        $fundSharesData = [];
+        $timestamp = $input['timestamp'];
+
+        DB::beginTransaction();
+        try {
+            foreach ($accountIds as $accountId) {
+                $account = AccountExt::with('fund')->find($accountId);
+                $transInput = [
+                    'account_id' => $accountId,
+                    'type' => $input['type'],
+                    'status' => $input['status'],
+                    'value' => $input['value'],
+                    'timestamp' => $input['timestamp'],
+                    'descr' => $input['descr'] ?? null,
+                    'flags' => $input['flags'] ?? null,
+                ];
+
+                // Calculate shares
+                $sharePrice = $account->shareValueAsOf($input['timestamp']);
+                $shares = $sharePrice > 0 ? $input['value'] / $sharePrice : 0;
+
+                $previews[] = [
+                    'account' => $account,
+                    'input' => $transInput,
+                    'share_price' => $sharePrice,
+                    'shares' => $shares,
+                ];
+
+                // Aggregate shares by fund for fund shares source display
+                $fundId = $account->fund_id;
+                if (!isset($fundSharesData[$fundId])) {
+                    $fund = $account->fund;
+                    $fundSharesData[$fundId] = [
+                        'fund_name' => $fund->name ?? 'Unknown Fund',
+                        'fund' => $fund,
+                        'total_shares' => 0,
+                    ];
+                }
+                $fundSharesData[$fundId]['total_shares'] += $shares;
+            }
+
+            // Calculate before/after for each fund
+            foreach ($fundSharesData as $fundId => &$data) {
+                $fund = $data['fund'];
+                $unallocatedAfter = $fund->unallocatedShares($timestamp);
+                // For purchase: fund loses shares, so before = after + total_shares
+                // For sale: fund gains shares, so before = after - total_shares
+                $isPurchase = in_array($input['type'], ['PUR', 'INI', 'MAT']);
+                if ($isPurchase) {
+                    $data['before'] = $unallocatedAfter + $data['total_shares'];
+                    $data['after'] = $unallocatedAfter;
+                    $data['change'] = -$data['total_shares'];
+                } else {
+                    $data['before'] = $unallocatedAfter - $data['total_shares'];
+                    $data['after'] = $unallocatedAfter;
+                    $data['change'] = $data['total_shares'];
+                }
+                unset($data['fund']); // Don't pass the model to view
+            }
+        } finally {
+            DB::rollBack();
+        }
+
+        return view('transactions.preview_bulk')
+            ->with('previews', $previews)
+            ->with('input', $input)
+            ->with('fundSharesData', $fundSharesData)
+            ->with('api', $this->getApi());
+    }
+
+    /**
+     * Store multiple transactions at once.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'account_ids' => 'required|array|min:1',
+            'account_ids.*' => 'exists:accounts,id',
+            'type' => 'required',
+            'status' => 'required',
+            'value' => 'required|numeric',
+            'timestamp' => 'required|date',
+        ]);
+
+        $input = $request->all();
+        $accountIds = $input['account_ids'];
+        $created = 0;
+        $errors = [];
+
+        foreach ($accountIds as $accountId) {
+            $transInput = [
+                'account_id' => $accountId,
+                'type' => $input['type'],
+                'status' => $input['status'],
+                'value' => $input['value'],
+                'timestamp' => $input['timestamp'],
+                'descr' => $input['descr'] ?? null,
+                'flags' => $input['flags'] ?? null,
+            ];
+
+            try {
+                $this->createTransaction($transInput, false);
+                $created++;
+            } catch (Exception $e) {
+                $account = AccountExt::find($accountId);
+                $errors[] = ($account->nickname ?? "Account $accountId") . ': ' . $e->getMessage();
+                Log::error("Bulk transaction error for account $accountId: " . $e->getMessage());
+            }
+        }
+
+        if (count($errors) > 0) {
+            Flash::warning("Created $created transaction(s). Errors: " . implode(', ', $errors));
+        } else {
+            Flash::success("Successfully created $created transaction(s).");
+        }
+
+        return redirect(route('transactions.index'));
+    }
+
 }

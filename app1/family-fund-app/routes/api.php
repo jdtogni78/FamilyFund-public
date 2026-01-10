@@ -63,7 +63,7 @@ Route::resource('account_balances', App\Http\Controllers\API\AccountBalanceAPICo
 Route::resource('account_matching_rules', App\Http\Controllers\API\AccountMatchingRuleAPIController::class);
 Route::resource('matching_rules', App\Http\Controllers\API\MatchingRuleAPIController::class);
 Route::resource('portfolio_assets', PortfolioAssetAPIController::class);
-// Route::resource('users', App\Http\Controllers\API\UserAPIController::class);
+Route::resource('users', App\Http\Controllers\API\UserAPIController::class);
 Route::resource('asset_change_logs', App\Http\Controllers\API\AssetChangeLogAPIController::class);
 Route::resource('transaction_matchings', App\Http\Controllers\API\TransactionMatchingAPIController::class);
 

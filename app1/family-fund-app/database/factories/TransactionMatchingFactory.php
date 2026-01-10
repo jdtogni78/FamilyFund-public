@@ -22,12 +22,9 @@ class TransactionMatchingFactory extends Factory
     public function definition()
     {
         return [
-             //'matching_rule_id' => $this->faker->word,
-         //'transaction_id' => $this->faker->word,
-         //'reference_transaction_id' => $this->faker->word,
-         //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-         //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-         //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'matching_rule_id' => \App\Models\MatchingRule::factory(),
+            'transaction_id' => \App\Models\Transaction::factory(),
+            'reference_transaction_id' => \App\Models\Transaction::factory(),
         ];
     }
 }

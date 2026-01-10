@@ -17,7 +17,7 @@ class ScheduleTest extends TestCase
     }
 
     // create a parametrized test
-    public function scheduleProvider()
+    public static function scheduleProvider()
     {
         return [
             ['2024-02-04',         null, '2024-01-05'],
@@ -49,7 +49,7 @@ class ScheduleTest extends TestCase
 
 
     // create a parametrized test for different types and values
-    public function typesAndValuesProvider()
+    public static function typesAndValuesProvider()
     {
         return [
             ['2023-12-27', 370, ScheduleExt::TYPE_DAY_OF_MONTH, '5', 12],

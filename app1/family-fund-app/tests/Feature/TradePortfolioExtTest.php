@@ -34,7 +34,14 @@ class TradePortfolioExtTest extends TestCase
     /**
      * @dataProvider providerSplitDates
      */
-    public function testSplitDates($start1, $end1, $start2, $end2, $errRegEx) {
+    public function testSplitDates($start1Offset, $end1Offset, $start2Offset, $end2Offset, $errRegEx) {
+        // Convert day offsets to actual dates
+        $inf = Carbon::parse('9999-12-31');
+        $start1 = Carbon::today()->addDays($start1Offset);
+        $end1 = $end1Offset === 'inf' ? $inf : Carbon::today()->addDays($end1Offset);
+        $start2 = Carbon::today()->addDays($start2Offset);
+        $end2 = $end2Offset === 'inf' ? $inf : Carbon::today()->addDays($end2Offset);
+
         Log::debug("testSplitDates: $start1, $end1, $start2, $end2, $errRegEx");
         $tp = $this->factory->tradePortfolio;
         $tp->start_dt = $start1;
@@ -60,24 +67,21 @@ class TradePortfolioExtTest extends TestCase
         }
     }
 
-    public function providerSplitDates() {
-        $today = Carbon::today()->format('Y-m-d');
-        $yesterday = Carbon::today()->subDay()->format('Y-m-d');
-        $tomorrow = Carbon::today()->addDay()->format('Y-m-d');
-        $d3 = Carbon::today()->addDays(3)->format('Y-m-d');
-        $d4 = Carbon::today()->addDays(4)->format('Y-m-d');
-        $inf = Carbon::parse('9999-12-31')->format('Y-m-d');
+    public static function providerSplitDates() {
+        // Use day offsets relative to today: 0=today, -1=yesterday, 1=tomorrow, etc.
+        // These will be converted to actual dates in testSplitDates
+        $inf = 'inf';
 
         return array(
-            array($today,     $inf,      $tomorrow, $inf, null), // one day later: split tomorrow
-            array($yesterday, $inf,      $today,    $inf, null), // one day later: split today
-            array($yesterday, $today,    $today,    $inf, null), // split at exact end, making it infinite
-            array($tomorrow,  $d4,       $d3,       $inf, null), // split making it infinite
-            array($today,     $tomorrow, $d4,       $inf,      "Start date .* cannot be greater than previous end date"),
-            array($tomorrow,  $d4,       $tomorrow, $inf,      "Start date .* must be greater than previous start date"),
-            array($today,     $inf,      $tomorrow, $today,    "End date .* must be greater than today"),
-            array($today,     $inf,      $d4,       $tomorrow, "End date .* must be greater than start date"),
-            array($today,     $inf,      $tomorrow, $d4,       "End date .* must be greater than previous end date"),
+            array(0,  $inf, 1,  $inf, null), // one day later: split tomorrow
+            array(-1, $inf, 0,  $inf, null), // one day later: split today
+            array(-1, 0,    0,  $inf, null), // split at exact end, making it infinite
+            array(1,  4,    3,  $inf, null), // split making it infinite
+            array(0,  1,    4,  $inf,      "Start date .* cannot be greater than previous end date"),
+            array(1,  4,    1,  $inf,      "Start date .* must be greater than previous start date"),
+            array(0,  $inf, 1,  0,    "End date .* must be greater than today"),
+            array(0,  $inf, 4,  1,    "End date .* must be greater than start date"),
+            array(0,  $inf, 1,  4,    "End date .* must be greater than previous end date"),
         );
     }
 

@@ -88,9 +88,25 @@
             labels = Object.keys(api.asset_monthly_bands[symbol]);
           }
         }
-        colors = ['red', 'blue', 'green', 'orange', 'cyan', 'magenta', 'brown', 'purple',
-          // create darker variations of the colors
-          'darkred', 'darkblue', 'darkgreen', 'darkorange', 'darkcyan', 'darkmagenta', 'darkbrown', 'darkpurple',
+        colors = [
+          'rgb(255, 99, 132)',   // red
+          'rgb(54, 162, 235)',   // blue
+          'rgb(75, 192, 192)',   // green
+          'rgb(255, 159, 64)',   // orange
+          'rgb(0, 255, 255)',    // cyan
+          'rgb(255, 0, 255)',    // magenta
+          'rgb(139, 69, 19)',    // brown
+          'rgb(128, 0, 128)',    // purple
+        ];
+        colorsFill = [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(0, 255, 255, 0.2)',
+          'rgba(255, 0, 255, 0.2)',
+          'rgba(139, 69, 19, 0.2)',
+          'rgba(128, 0, 128, 0.2)',
         ];
 
         sumData = [];
@@ -100,34 +116,6 @@
           }
         }
         
-        shadingArea = {
-            id: 'shadingArea',
-            beforeDatasetsDraw: function(chart, args, options) {
-              const { ctx, chartArea: {top, bottom, left, right, width, height},
-                scales: {x, y} } = chart;
-
-              ctx.save();
-              ctx.beginPath();
-              ctx.fillStyle = chart.data.datasets[0].backgroundColor;
-              ctx.globalAlpha = 0.2;
-              if (chart.getDatasetMeta(1).data[0] == undefined || chart.getDatasetMeta(2).data[0] == undefined) {
-                ctx.restore();
-                return;
-              }
-              ctx.moveTo(chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(1).data[0].y);
-              for (let j = 1; j < chart.getDatasetMeta(0).data.length; j++) {
-                if (chart.getDatasetMeta(1).data[j] == undefined) continue;
-                ctx.lineTo(chart.getDatasetMeta(0).data[j].x, chart.getDatasetMeta(1).data[j].y);
-              }
-              for (let z = chart.getDatasetMeta(0).data.length - 1; 0 <= z; z--) {
-                if (chart.getDatasetMeta(2).data[z] == undefined) continue;
-                ctx.lineTo(chart.getDatasetMeta(0).data[z].x, chart.getDatasetMeta(2).data[z].y);
-              }
-              ctx.closePath();
-              ctx.fill();
-              ctx.restore();
-            }
-          };
 
         ind = 0;
         for (let symbol of symbols) {
@@ -142,54 +130,79 @@
 
           datasets = [];
           let data = Object.values(symbolData[symbol]).map(function(e) {return e.value;});
-          // find = undefined
-          upData = {};
-          downData = {};
-          targetData = {};
-          for (let key in sumData) {
+
+          // Build band arrays aligned with labels (null for gaps)
+          upData = [];
+          downData = [];
+          targetData = [];
+          for (let label of labels) {
             // find trade portfolio item for this symbol & timeframe
             // Normalize dates to YYYY-MM-DD format (strip time portion if present)
-            ports = api.tradePortfolios.filter(p => {
+            let ports = api.tradePortfolios.filter(p => {
               let startDt = (p.start_dt || '').substring(0, 10);
               let endDt = (p.end_dt || '').substring(0, 10);
-              return startDt <= key && key <= endDt;
+              return startDt <= label && label <= endDt;
             });
-            if (!ports || ports.length == 0) continue;
-            port = ports[0];
-            if (!port.items) continue;
-            port = port.items.find(i => i.symbol == symbol);
-            if (port == undefined) continue;
-            up = parseFloat(port.target_share) + parseFloat(port.deviation_trigger);
-            down = parseFloat(port.target_share) - parseFloat(port.deviation_trigger);
-            target = parseFloat(port.target_share);
-            upData[key] = sumData[key] * up;
-            downData[key] = sumData[key] * down;
-            targetData[key] = sumData[key] * target;
+            if (!ports || ports.length == 0 || !ports[0].items) {
+              upData.push(null);
+              downData.push(null);
+              targetData.push(null);
+              continue;
+            }
+            let portItem = ports[0].items.find(i => i.symbol == symbol);
+            if (!portItem) {
+              upData.push(null);
+              downData.push(null);
+              targetData.push(null);
+              continue;
+            }
+            let up = parseFloat(portItem.target_share) + parseFloat(portItem.deviation_trigger);
+            let down = parseFloat(portItem.target_share) - parseFloat(portItem.deviation_trigger);
+            let target = parseFloat(portItem.target_share);
+            let totalValue = sumData[label] || 0;
+            upData.push(totalValue * up);
+            downData.push(totalValue * down);
+            targetData.push(totalValue * target);
           }
 
-          datasets.push({
-              label: symbol,
-              data: data,
-              backgroundColor: [colors[ind]],
-              borderColor: [colors[ind]],
-          });
+          // Band fill (max to min)
           datasets.push({
               label: symbol + " max",
               data: upData,
-              // showLine: false,
-              // pointRadius: 0,
+              borderColor: 'rgba(150, 150, 150, 0.5)',
+              backgroundColor: colorsFill[ind % colorsFill.length],
+              fill: '+1', // fill to next dataset (min)
+              pointRadius: 2,
+              spanGaps: false,
           });
           datasets.push({
               label: symbol + " min",
               data: downData,
-              // showLine: false,
-              // pointRadius: 0,
+              borderColor: 'rgba(150, 150, 150, 0.5)',
+              fill: false,
+              pointRadius: 2,
+              spanGaps: false,
           });
+          // Actual value line (on top)
+          datasets.push({
+              label: symbol,
+              data: data,
+              backgroundColor: colors[ind],
+              borderColor: colors[ind],
+              borderWidth: 2,
+              pointRadius: 3,
+              fill: false,
+          });
+          // Target line
           datasets.push({
               label: symbol + " target",
               data: targetData,
-              backgroundColor: ['lightgray'],
-              borderColor: ['lightgray'],
+              backgroundColor: 'lightgray',
+              borderColor: 'lightgray',
+              borderDash: [5, 5],
+              pointRadius: 2,
+              spanGaps: false,
+              fill: false,
           });
 
 
@@ -203,7 +216,10 @@
                 },
                 options: {
                   plugins: {
-                    datalabels: { display: false }
+                    datalabels: { display: false },
+                    filler: {
+                      propagate: false
+                    }
                   },
                   scales: {
                     x: {
@@ -216,8 +232,7 @@
                       beginAtZero: false,
                     }
                   },
-                },
-                plugins: [shadingArea]
+                }
               }
           );
           datasets = [];

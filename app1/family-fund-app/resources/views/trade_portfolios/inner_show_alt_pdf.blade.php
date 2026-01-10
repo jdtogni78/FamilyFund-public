@@ -91,7 +91,7 @@
                             </div>
                             <div style="font-size: 9px;">
                                 <span style="background: #2563eb; color: white; padding: 2px 4px; border-radius: 3px; margin-right: 2px;">Cash {{ $tp->cash_target * 100 }}%</span>
-                                <span style="background: #64748b; color: white; padding: 2px 4px; border-radius: 3px; margin-right: 2px;">Rsv {{ $tp->cash_reserve_target * 100 }}%</span>
+                                <span style="background: #64748b; color: white; padding: 2px 4px; border-radius: 3px; margin-right: 2px;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
                                 <span style="background: #059669; color: white; padding: 2px 4px; border-radius: 3px;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
                             </div>
                         </td>

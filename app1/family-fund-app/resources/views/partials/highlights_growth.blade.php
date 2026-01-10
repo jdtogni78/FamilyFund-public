@@ -58,7 +58,7 @@
 
 {{-- Previous Year Growth --}}
 @if($prevYearKey)
-<div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+<div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
     <div style="font-size: 1.75rem; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">
         @if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%
     </div>
@@ -68,7 +68,7 @@
 
 {{-- Current Year Growth (YTD) --}}
 @if($currentYearKey)
-<div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
+<div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
     <div style="font-size: 1.75rem; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">
         @if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%
     </div>

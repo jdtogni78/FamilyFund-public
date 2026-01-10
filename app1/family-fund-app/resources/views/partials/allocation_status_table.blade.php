@@ -17,7 +17,7 @@
     ])
 --}}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+    <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
         <strong>
             <i class="fa fa-tasks mr-2"></i>Current Allocation Status
             <span class="text-muted ml-2" style="color: rgba(255,255,255,0.7) !important;">

@@ -10,7 +10,7 @@
     <div class="col-lg-3 col-md-4">
         <div class="card h-100">
             <div class="card-body">
-                <h4 class="card-title mb-3" style="color: #2563eb;">
+                <h4 class="card-title mb-3" style="color: #0d9488;">
                     <i class="fa fa-landmark mr-2"></i>{{ $api['name'] }}
                 </h4>
                 <div class="d-flex justify-content-between align-items-center">
@@ -32,10 +32,10 @@
         <div class="card h-100">
             <div class="card-body">
                 {{-- Top: Total Value and Share Info --}}
-                <div class="d-flex align-items-center justify-content-between p-2 rounded mb-3" style="background-color: #2563eb;">
+                <div class="d-flex align-items-center justify-content-between p-2 rounded mb-3" style="background-color: #0d9488;">
                     <div class="d-flex align-items-center">
                         <strong style="color: #ffffff;">Total</strong>
-                        <span class="badge ml-2" style="background-color: #ffffff; color: #2563eb;">${{ number_format($summary['share_value'], 2) }}/share</span>
+                        <span class="badge ml-2" style="background-color: #ffffff; color: #0d9488;">${{ number_format($summary['share_value'], 2) }}/share</span>
                     </div>
                     <div class="text-end">
                         <span class="d-block small" style="color: rgba(255,255,255,0.8);">{{ number_format($summary['shares'], 2) }} shares</span>

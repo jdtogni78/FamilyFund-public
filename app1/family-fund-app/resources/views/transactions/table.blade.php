@@ -43,7 +43,7 @@
                         $statusColors = [
                             'P' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Pending'],
                             'C' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Cleared'],
-                            'S' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Scheduled'],
+                            'S' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Scheduled'],
                         ];
                         $sc = $statusColors[$transaction->status] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->status];
                     @endphp

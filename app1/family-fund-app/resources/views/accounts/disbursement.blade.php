@@ -15,7 +15,7 @@
 
 {{-- Dark header layout (matching other sections) --}}
 <div class="card" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-    <div class="card-header py-2" style="background: #1e293b; border: none;">
+    <div class="card-header py-2" style="background: #134e4a; border: none;">
         <strong style="color: #ffffff; font-size: 13px; text-transform: uppercase;">
             <i class="fa fa-money-bill-wave me-2"></i>Disbursement Eligibility (Based on {{ $yearNum }} Performance)
         </strong>
@@ -38,7 +38,7 @@
             {{-- Annual Cap --}}
             <div class="col-md-4">
                 <small class="d-block mb-1 text-muted text-uppercase" style="font-size: 11px;">Annual Cap</small>
-                <h3 class="mb-0" style="color: #1e293b; font-weight: 700;">{{ number_format($limit, 0) }}%</h3>
+                <h3 class="mb-0" style="color: #134e4a; font-weight: 700;">{{ number_format($limit, 0) }}%</h3>
             </div>
         </div>
     </div>

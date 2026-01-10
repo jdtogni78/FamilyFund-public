@@ -6,7 +6,7 @@
 <div class="row mb-4">
 <div class="col">
 <div class="card">
-    <div class="card-header py-2" style="background: #1e40af; color: white;">
+    <div class="card-header py-2" style="background: #0d9488; color: white;">
         <strong><i class="fa fa-briefcase mr-2"></i>Trade Portfolios Summary</strong>
     </div>
     <div class="card-body p-0">
@@ -34,7 +34,7 @@
                         <td><strong>{{ $tp->id }}</strong></td>
                         <td>{{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}</td>
                         <td>{{ $tp->account_name }}</td>
-                        <td class="text-right" style="color: #2563eb;">{{ $tp->cash_target * 100 }}%</td>
+                        <td class="text-right" style="color: #0d9488;">{{ $tp->cash_target * 100 }}%</td>
                         <td class="text-right">{{ $tp->cash_reserve_target * 100 }}%</td>
                         <td class="text-right">${{ number_format($tp->minimum_order, 0) }}</td>
                         <td class="text-right">{{ $tp->max_single_order * 100 }}%</td>
@@ -146,11 +146,11 @@
                         $color = $groupColors[$data['group']] ?? $groupColors['default'];
                         $isCash = $data['isCash'] ?? false;
                     @endphp
-                    <tr @if($isCash) style="background: #f0f9ff;" @endif>
+                    <tr @if($isCash) style="background: #f0fdfa;" @endif>
                         <td><span class="badge" style="background: {{ $color }}; color: white;">{{ $data['group'] }}</span></td>
                         <td>
                             @if($isCash)
-                                <strong><i class="fa fa-coins mr-1" style="color: #2563eb;"></i>CASH</strong>
+                                <strong><i class="fa fa-coins mr-1" style="color: #0d9488;"></i>CASH</strong>
                             @else
                                 <strong>{{ $symbol }}</strong>
                             @endif

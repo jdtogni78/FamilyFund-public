@@ -23,12 +23,12 @@
 @endphp
 
 {{-- Portfolio Sub-header --}}
-<div class="d-flex justify-content-between align-items-center py-2 px-3 mb-2" style="background: #f1f5f9; border-left: 4px solid #1e293b; border-radius: 4px;">
+<div class="d-flex justify-content-between align-items-center py-2 px-3 mb-2" style="background: #f1f5f9; border-left: 4px solid #134e4a; border-radius: 4px;">
     <div>
-        <strong style="color: #1e293b;">
+        <strong style="color: #134e4a;">
             <i class="fa fa-briefcase mr-1"></i>Portfolio {{ $tradePortfolio->id }}
         </strong>
-        <span class="badge ml-2" style="background: #1e293b; color: white;">{{ $api['portfolio']['source'] ?? 'N/A' }}</span>
+        <span class="badge ml-2" style="background: #134e4a; color: white;">{{ $api['portfolio']['source'] ?? 'N/A' }}</span>
     </div>
     <div>
         @if(!$editable)
@@ -48,7 +48,7 @@
     </div>
     <div class="px-3 border-right">
         <div class="text-muted small">Cash</div>
-        <div class="font-weight-bold" style="color: #2563eb;">{{ $tradePortfolio->cash_target * 100 }}%</div>
+        <div class="font-weight-bold" style="color: #0d9488;">{{ $tradePortfolio->cash_target * 100 }}%</div>
     </div>
     <div class="px-3 border-right">
         <div class="text-muted small">Reserve</div>
@@ -138,8 +138,8 @@
                         @endif
                     @endforelse
                     @if($groupHasCash)
-                        <tr style="background: #f0f9ff;">
-                            <td><strong><i class="fa fa-coins mr-1" style="color: #2563eb;"></i>CASH</strong></td>
+                        <tr style="background: #f0fdfa;">
+                            <td><strong><i class="fa fa-coins mr-1" style="color: #0d9488;"></i>CASH</strong></td>
                             <td class="text-right">{{ $cashPct }}%</td>
                             <td class="text-right"></td>
                         </tr>

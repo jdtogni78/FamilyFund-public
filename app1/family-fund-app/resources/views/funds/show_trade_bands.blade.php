@@ -24,10 +24,10 @@
             {{-- Simple Header --}}
             <div class="row mb-3" id="section-details">
                 <div class="col">
-                    <div class="card" style="border: 2px solid #1e40af;">
-                        <div class="card-header py-2 d-flex justify-content-between align-items-center flex-wrap" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); gap: 8px;">
+                    <div class="card" style="border: 2px solid #0d9488;">
+                        <div class="card-header card-header-dark py-2 d-flex justify-content-between align-items-center flex-wrap" style="gap: 8px;">
                             <div class="d-flex align-items-center">
-                                <h5 class="mb-0" style="color: #ffffff; font-weight: 700;">
+                                <h5 class="mb-0" style="font-weight: 700;">
                                     <i class="fa fa-chart-bar mr-2"></i>{{ $api['name'] }} - Trading Bands
                                 </h5>
                             </div>
@@ -39,24 +39,24 @@
                                     <label for="to" class="mb-0 small" style="color: rgba(255,255,255,0.8);">To:</label>
                                     <input type="date" name="to" id="to" class="form-control form-control-sm" style="width: auto;"
                                            value="{{ $asOf ?? '' }}" disabled title="Use as_of route for end date">
-                                    <button type="submit" class="btn btn-light btn-sm">Apply</button>
+                                    <button type="submit" class="btn btn-sm btn-header-light">Apply</button>
                                 </form>
-                                <button class="btn btn-outline-light btn-sm" id="toggleAllFromHeader" title="Collapse/Expand All">
+                                <button class="btn btn-sm btn-header-light" id="toggleAllFromHeader" title="Collapse/Expand All">
                                     <i class="fa fa-compress-arrows-alt"></i> All
                                 </button>
-                                <button class="btn btn-outline-light btn-sm" id="toggleTablesFromHeader" title="Collapse/Expand Tables Only">
+                                <button class="btn btn-sm btn-header-light" id="toggleTablesFromHeader" title="Collapse/Expand Tables Only">
                                     <i class="fa fa-table"></i> Tables
                                 </button>
-                                <button class="btn btn-outline-light btn-sm" id="toggleAssetsFromHeader" title="Collapse/Expand Assets Only">
+                                <button class="btn btn-sm btn-header-light" id="toggleAssetsFromHeader" title="Collapse/Expand Assets Only">
                                     <i class="fa fa-chart-line"></i> Assets
                                 </button>
-                                <a href="/funds/{{ $api['id'] }}/trade_bands_pdf_as_of/{{ $asOf ?? now()->format('Y-m-d') }}{{ $fromDate ? '?from=' . $fromDate : '' }}" class="btn btn-outline-light btn-sm" title="Download PDF">
+                                <a href="/funds/{{ $api['id'] }}/trade_bands_pdf_as_of/{{ $asOf ?? now()->format('Y-m-d') }}{{ $fromDate ? '?from=' . $fromDate : '' }}" class="btn btn-sm btn-header-light" title="Download PDF">
                                     <i class="fa fa-file-pdf"></i>
                                 </a>
-                                <a href="/funds/{{ $api['id'] }}" class="btn btn-outline-light btn-sm" title="Fund Details">
+                                <a href="/funds/{{ $api['id'] }}" class="btn btn-sm btn-header-light" title="Fund Details">
                                     <i class="fa fa-info-circle"></i>
                                 </a>
-                                <a href="{{ route('funds.index') }}" class="btn btn-outline-light btn-sm">Back</a>
+                                <a href="{{ route('funds.index') }}" class="btn btn-sm btn-header-light">Back</a>
                             </div>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
             <div class="row mb-4" id="section-comparison">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
                             <strong><i class="fa fa-columns mr-2"></i>Trade Portfolios Comparison</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseComparison"
                                role="button" aria-expanded="true" aria-controls="collapseComparison">

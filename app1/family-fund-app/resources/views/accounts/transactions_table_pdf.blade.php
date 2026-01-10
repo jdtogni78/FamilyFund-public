@@ -18,9 +18,10 @@
             $typeStr = $trans->type_string();
             $statusStr = $trans->status_string();
 
-            // Type colors: Purchase green, Matching purple, Withdrawal red
+            // Type colors: Purchase green, Initial blue, Matching purple, Withdrawal red
             $typeColor = match($typeStr) {
                 'Purchase', 'Deposit' => '#16a34a',
+                'Initial', 'Initial Value' => '#2563eb',
                 'Withdrawal', 'Sell' => '#dc2626',
                 'Transfer In' => '#0ea5e9',
                 'Transfer Out' => '#f97316',
@@ -29,6 +30,7 @@
             };
             $typeBg = match($typeStr) {
                 'Purchase', 'Deposit' => '#dcfce7',
+                'Initial', 'Initial Value' => '#dbeafe',
                 'Withdrawal', 'Sell' => '#fef2f2',
                 'Transfer In' => '#e0f2fe',
                 'Transfer Out' => '#fff7ed',

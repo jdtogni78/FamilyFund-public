@@ -46,7 +46,7 @@
             <table width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                     <td width="50%">
-                        <div style="font-weight: 700; color: #1e40af; font-size: 14px;">{{ $goal->name }}</div>
+                        <div style="font-weight: 700; color: #0d9488; font-size: 14px;">{{ $goal->name }}</div>
                         <div style="font-size: 11px; color: #64748b;">Target: ${{ number_format($targetValue, 0) }} by {{ $goal->end_dt->format('M Y') }}</div>
                     </td>
                     <td width="25%" align="center">
@@ -72,7 +72,7 @@
 <div class="mb-3 {{ $loop->last ?? false ? 'mb-0' : '' }}" style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
     <div class="d-flex align-items-center mb-2">
         <div style="flex: 1;">
-            <div style="font-weight: 700; color: #1e40af; font-size: 14px;">{{ $goal->name }}</div>
+            <div style="font-weight: 700; color: #0d9488; font-size: 14px;">{{ $goal->name }}</div>
             <div class="small text-muted">Target: ${{ number_format($targetValue, 0) }} by {{ $goal->end_dt->format('M Y') }}</div>
         </div>
         <div style="flex: 1; text-align: center;">

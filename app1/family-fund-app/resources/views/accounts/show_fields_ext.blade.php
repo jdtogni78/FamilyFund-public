@@ -11,7 +11,7 @@
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <h4 class="card-title mb-3" style="color: #2563eb;">
+                <h4 class="card-title mb-3" style="color: #0d9488;">
                     <i class="fa fa-user-circle me-2"></i>{{ $account->nickname }}
                 </h4>
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -38,12 +38,12 @@
 
     {{-- Market Value Card --}}
     <div class="col-md-6">
-        <div class="card h-100" style="border-left: 4px solid #2563eb;">
+        <div class="card h-100" style="border-left: 4px solid #0d9488;">
             <div class="card-body d-flex align-items-center">
                 <div class="row w-100 text-center">
                     <div class="col-4">
                         <small class="text-muted d-block">Market Value</small>
-                        <h4 class="mb-0" style="color: #2563eb;">${{ number_format($marketValue, 2) }}</h4>
+                        <h4 class="mb-0" style="color: #0d9488;">${{ number_format($marketValue, 2) }}</h4>
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block">Shares</small>

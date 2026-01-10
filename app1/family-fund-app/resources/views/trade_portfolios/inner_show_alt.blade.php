@@ -78,7 +78,7 @@
         <div class="col-md-{{ 12 / count($tradePortfolios) }} mb-3">
             <div class="card h-100">
                 {{-- Portfolio Header --}}
-                <div class="card-header py-2" style="background: #1e293b; color: white;">
+                <div class="card-header py-2" style="background: #134e4a; color: white;">
                     <div class="d-flex justify-content-between align-items-center">
                         <strong><i class="fa fa-briefcase mr-1"></i> Portfolio {{ $tp->id }}</strong>
                         @if($editable)
@@ -92,7 +92,7 @@
                     <div class="small text-center">
                         <div class="text-muted">{{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}</div>
                         <div class="mt-1 d-flex flex-wrap justify-content-center" style="gap: 4px;">
-                            <span class="badge" style="background: #2563eb; color: white;">Cash {{ $tp->cash_target * 100 }}%</span>
+                            <span class="badge" style="background: #0d9488; color: white;">Cash {{ $tp->cash_target * 100 }}%</span>
                             <span class="badge" style="background: #64748b; color: white;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
                             <span class="badge" style="background: #059669; color: white;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
                             <span class="badge" style="background: #7c3aed; color: white;">Max {{ $tp->max_single_order * 100 }}%</span>
@@ -144,10 +144,10 @@
                                     </tr>
                                 @endif
 
-                                <tr @if($isCash) style="background: #f0f9ff;" @endif>
+                                <tr @if($isCash) style="background: #f0fdfa;" @endif>
                                     <td class="py-1">
                                         @if($isCash)
-                                            <i class="fa fa-coins mr-1" style="color: #2563eb;"></i>
+                                            <i class="fa fa-coins mr-1" style="color: #0d9488;"></i>
                                         @endif
                                         {{ $symbol }}
                                     </td>

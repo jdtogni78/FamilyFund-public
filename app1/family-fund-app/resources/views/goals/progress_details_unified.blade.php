@@ -67,10 +67,10 @@
     <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
         <strong style="font-size: 13px;">Target:</strong>
         @if($isTargetTotal)
-            Reach <strong style="color: #1e40af;">${{ number_format($finalValue, 0) }}</strong> account value
+            Reach <strong style="color: #0d9488;">${{ number_format($finalValue, 0) }}</strong> account value
             <span style="color: #64748b;">(generating ${{ number_format($finalYield, 0) }}/year at {{ $yieldPct }}% yield)</span>
         @else
-            Generate <strong style="color: #1e40af;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
+            Generate <strong style="color: #0d9488;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
             <span style="color: #64748b;">(requires ${{ number_format($finalValue, 0) }} at {{ $yieldPct }}% yield)</span>
         @endif
         by <strong>{{ $goal->end_dt->format('M Y') }}</strong>
@@ -117,10 +117,10 @@
     <div class="mb-3 pb-3 border-bottom">
         <strong>Target:</strong>
         @if($isTargetTotal)
-            Reach <strong style="color: #2563eb;">${{ number_format($finalValue, 0) }}</strong> account value
+            Reach <strong style="color: #14b8a6;">${{ number_format($finalValue, 0) }}</strong> account value
             <span class="text-muted">(generating ${{ number_format($finalYield, 0) }}/year at {{ $yieldPct }}% yield)</span>
         @else
-            Generate <strong style="color: #2563eb;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
+            Generate <strong style="color: #14b8a6;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
             <span class="text-muted">(requires ${{ number_format($finalValue, 0) }} at {{ $yieldPct }}% yield)</span>
         @endif
         by <strong>{{ $goal->end_dt->format('M Y') }}</strong>

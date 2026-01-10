@@ -272,7 +272,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 0.7rem;">ADMIN</span></strong>
+                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge" style="background: #fff; color: #b45309; font-size: 0.7rem; font-weight: 600;">ADMIN</span></strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAcctAlloc"
                                role="button" aria-expanded="true" aria-controls="collapseAcctAlloc">
                                 <i class="fa fa-chevron-down"></i>
@@ -416,7 +416,7 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 0.7rem;">ADMIN</span></strong>
+                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge" style="background: #fff; color: #b45309; font-size: 0.7rem; font-weight: 600;">ADMIN</span></strong>
                                 <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccounts"
                                    role="button" aria-expanded="true" aria-controls="collapseAccounts">
                                     <i class="fa fa-chevron-down"></i>

@@ -168,8 +168,18 @@
         font-weight: 600;
     }
 
+    .table-subtotal-row th,
+    .table-subtotal-row td {
+        color: #134e4a !important;
+    }
+
     .table-warning-row {
         background: #fef3c7 !important;
+    }
+
+    .table-warning-row th,
+    .table-warning-row td {
+        color: #92400e !important;
     }
 
     .table-warning-row .text-warning-dark {

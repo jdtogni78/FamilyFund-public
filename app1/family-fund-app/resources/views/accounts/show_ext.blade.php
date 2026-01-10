@@ -47,9 +47,9 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <a href="{{ route('accounts.index') }}" class="btn btn-sm me-2" style="background: white; color: #0d9488; border: 1px solid rgba(255,255,255,0.3);">Back</a>
+                                    <a href="{{ route('accounts.index') }}" class="btn btn-sm btn-header-light me-2">Back</a>
                                     <a href="/accounts/{{ $account->id }}/pdf_as_of/{{ $api['asOf'] ?? now()->format('Y-m-d') }}"
-                                       class="btn btn-sm" style="background: white; color: #0d9488; border: 1px solid rgba(255,255,255,0.3);" target="_blank" title="Download PDF Report">
+                                       class="btn btn-sm btn-header-light" target="_blank" title="Download PDF Report">
                                         <i class="fa fa-file-pdf me-1"></i> PDF
                                     </a>
                                 </div>

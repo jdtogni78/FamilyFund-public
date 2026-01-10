@@ -26,7 +26,7 @@
 <div class="row mb-4">
 <div class="col">
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #1e40af; color: white;">
+    <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: #0d9488; color: white;">
         <div>
             <strong>
                 <i class="fa fa-briefcase mr-2"></i>Trade Portfolio {{ $tradePortfolio->id }}
@@ -51,7 +51,7 @@
             </div>
             <div class="px-3 border-right">
                 <div class="text-muted small">Cash</div>
-                <div class="font-weight-bold" style="color: #2563eb;">{{ $tradePortfolio->cash_target * 100 }}%</div>
+                <div class="font-weight-bold" style="color: #0d9488;">{{ $tradePortfolio->cash_target * 100 }}%</div>
             </div>
             <div class="px-3 border-right">
                 <div class="text-muted small">Reserve</div>
@@ -142,8 +142,8 @@
                                 @endif
                             @endforelse
                             @if($groupHasCash)
-                                <tr style="background: #f0f9ff;">
-                                    <td><strong><i class="fa fa-coins mr-1" style="color: #2563eb;"></i>CASH</strong></td>
+                                <tr style="background: #f0fdfa;">
+                                    <td><strong><i class="fa fa-coins mr-1" style="color: #0d9488;"></i>CASH</strong></td>
                                     <td class="text-right">{{ $cashPct }}%</td>
                                     <td class="text-right text-muted">-</td>
                                     <td class="text-right"></td>

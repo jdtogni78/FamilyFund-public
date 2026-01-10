@@ -19,7 +19,7 @@
                 @if($isTargetTotal)
                     <div class="mb-2">
                         <span class="text-muted">Target Value:</span>
-                        <strong class="float-end" style="color: #2563eb;">${{ number_format($goal->target_amount, 0) }}</strong>
+                        <strong class="float-end" style="color: #0d9488;">${{ number_format($goal->target_amount, 0) }}</strong>
                     </div>
                     <div>
                         <span class="text-muted">Implied Yield:</span>
@@ -28,7 +28,7 @@
                 @else
                     <div class="mb-2">
                         <span class="text-muted">Target Yield:</span>
-                        <strong class="float-end" style="color: #2563eb;">${{ number_format($goal->target_amount, 0) }}/yr</strong>
+                        <strong class="float-end" style="color: #0d9488;">${{ number_format($goal->target_amount, 0) }}/yr</strong>
                     </div>
                     <div>
                         <span class="text-muted">Implied Value:</span>

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\MessageBag;
 use App\Mail\CashDepositMail;
+use App\Mail\DepositAllocationMail;
 
 class CashDepositControllerExt extends CashDepositController
 {
@@ -82,8 +83,32 @@ class CashDepositControllerExt extends CashDepositController
             return redirect()->route('cashDeposits.assign', $id)
                 ->withErrors(new MessageBag(['error' => $e->getMessage()]));
         }
-        
+
+        // Send allocation emails to each account
+        $this->sendAllocationEmails($id);
+
         return redirect()->route('cashDeposits.index');
+    }
+
+    protected function sendAllocationEmails($cashDepositId)
+    {
+        $cashDeposit = CashDepositExt::with('depositRequests.account')->find($cashDepositId);
+
+        foreach ($cashDeposit->depositRequests as $depositRequest) {
+            $emailTo = $depositRequest->account->email_cc;
+            if (empty($emailTo)) {
+                Log::info("Skipping allocation email for deposit request {$depositRequest->id} - no email configured");
+                continue;
+            }
+
+            try {
+                $mail = new DepositAllocationMail($depositRequest);
+                Mail::to($emailTo)->send($mail);
+                Log::info("Sent allocation email for deposit request {$depositRequest->id} to {$emailTo}");
+            } catch (\Exception $e) {
+                Log::error("Failed to send allocation email for deposit request {$depositRequest->id}: " . $e->getMessage());
+            }
+        }
     }
 
     public function resendEmail($id)

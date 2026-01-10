@@ -20,7 +20,7 @@ return [
     */
     'width' => 1200,
     'height' => 500,
-    'device_pixel_ratio' => env('QUICKCHART_DPR', 2.0),  // Higher = better quality (1.0, 2.0, 3.0)
+    'device_pixel_ratio' => env('QUICKCHART_DPR', 3.0),  // Higher = better quality (1.0, 2.0, 3.0)
     'progress_height' => 150,
     'doughnut_width' => 700,
     'doughnut_height' => 500,
@@ -81,9 +81,9 @@ return [
     | Font Configuration
     |--------------------------------------------------------------------------
     */
-    'font_family' => 'Arial, Helvetica, sans-serif',
-    'font_size' => 14,
-    'title_font_size' => 16,
+    'font_family' => 'Helvetica Neue, Arial, sans-serif',
+    'font_size' => 16,
+    'title_font_size' => 20,
     'font_color' => '#1e293b',
-    'legend_font_size' => 13,
+    'legend_font_size' => 15,
 ];

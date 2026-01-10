@@ -60,8 +60,9 @@
         .header {
             display: table;
             width: 100%;
-            padding: 16px 0;
-            border-bottom: 3px solid #1e40af;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            border-radius: 8px;
             margin-bottom: 24px;
         }
 
@@ -93,13 +94,13 @@
         .header-title {
             font-size: 20px;
             font-weight: 600;
-            color: #0f172a;
+            color: #ffffff;
             margin: 0;
         }
 
         .header-subtitle {
             font-size: 12px;
-            color: #64748b;
+            color: #99f6e4;
             margin-top: 2px;
         }
 
@@ -111,7 +112,7 @@
 
         .header-date {
             font-size: 12px;
-            color: #475569;
+            color: #ffffff;
         }
 
         .footer {
@@ -605,7 +606,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-logo">
-                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="height: 44px; width: auto; vertical-align: middle; margin-right: 12px;">
+                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="height: 44px; width: 44px; border-radius: 50%; vertical-align: middle; margin-right: 12px; object-fit: cover;">
                 <span class="header-text">
                     <span class="header-title">{{ config('app.name') }}</span>
                     <br>

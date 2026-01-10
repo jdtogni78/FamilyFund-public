@@ -125,12 +125,14 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02;
         $this->traitObject->setPerfObject($account);
 
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
         $asOf = '2022-06-01';
         $arr = [
+            'account' => ['value' => 10000],
             'yearly_performance' => [
-                '2022-01-01' => [
+                '2021-01-01' => [
                     'value' => 10000,
-                    'performance' => 0.10, // 10% return
+                    'performance' => 10, // 10% return (stored as percentage)
                 ],
             ],
         ];
@@ -141,7 +143,7 @@ class AccountTraitTest extends TestCase
         $this->assertArrayHasKey('performance', $result);
         $this->assertArrayHasKey('limit', $result);
         $this->assertArrayHasKey('value', $result);
-        $this->assertEquals('2022-01-01', $result['year']);
+        $this->assertEquals('2021-01-01', $result['year']);
         $this->assertEquals(2, $result['limit']); // 0.02 * 100
     }
 
@@ -151,12 +153,14 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02; // 2% cap
         $this->traitObject->setPerfObject($account);
 
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
         $asOf = '2022-06-01';
         $arr = [
+            'account' => ['value' => 10000],
             'yearly_performance' => [
-                '2022-01-01' => [
+                '2021-01-01' => [
                     'value' => 10000,
-                    'performance' => 0.10, // 10% return, but cap is 2%
+                    'performance' => 10, // 10% return, but cap is 2% (stored as percentage)
                 ],
             ],
         ];
@@ -173,12 +177,14 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02;
         $this->traitObject->setPerfObject($account);
 
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
         $asOf = '2022-06-01';
         $arr = [
+            'account' => ['value' => 10000],
             'yearly_performance' => [
-                '2022-01-01' => [
+                '2021-01-01' => [
                     'value' => 10000,
-                    'performance' => -0.05, // -5% return
+                    'performance' => -5, // -5% return (stored as percentage)
                 ],
             ],
         ];
@@ -195,12 +201,14 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = null; // No cap set
         $this->traitObject->setPerfObject($account);
 
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
         $asOf = '2022-06-01';
         $arr = [
+            'account' => ['value' => 10000],
             'yearly_performance' => [
-                '2022-01-01' => [
+                '2021-01-01' => [
                     'value' => 10000,
-                    'performance' => 0.10,
+                    'performance' => 10, // 10% return (stored as percentage)
                 ],
             ],
         ];

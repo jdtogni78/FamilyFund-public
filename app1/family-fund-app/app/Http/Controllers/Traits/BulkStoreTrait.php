@@ -35,6 +35,12 @@ trait BulkStoreTrait
             $input = array_intersect_key($symbol, array_flip((new AssetExt())->fillable));
             if ($this->verbose) Log::debug("input: " . json_encode($input));
             if (AssetExt::isCashInput($input)) {
+                // Validate cash symbols: if type is CSH, name must be CASH; if name is CASH, type must be CSH
+                $isCashName = ($input['name'] ?? '') === 'CASH';
+                $isCashType = ($input['type'] ?? '') === 'CSH';
+                if ($isCashName !== $isCashType) {
+                    throw new Exception("Invalid cash symbol: name='CASH' requires type='CSH' and vice versa");
+                }
                 unset($input['source']);
                 $asset = Asset::orWhere($input)->firstOrFail();
             } else {

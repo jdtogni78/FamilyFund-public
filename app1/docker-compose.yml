@@ -28,6 +28,9 @@ services:
     ports:
       - 1025:1025 # smtp server
       - 8025:8025 # web ui
+    volumes:
+      - ./mailhog-outgoing.json:/etc/mailhog-outgoing.json:ro
+    command: ["-outgoing-smtp", "/etc/mailhog-outgoing.json"]
 
   quickchart:
     image: ianw/quickchart

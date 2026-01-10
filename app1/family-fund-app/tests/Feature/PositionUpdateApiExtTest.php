@@ -39,6 +39,9 @@ class PositionUpdateApiExtTest extends TestCase
         $this->post['symbols'][] = $this->makeSymbol(null, 'CSH');
         $this->postError();
 
+        // Remove the invalid symbol before continuing
+        array_pop($this->post['symbols']);
+
         $this->nextDay(1);
         $this->postBulkAPI();
 

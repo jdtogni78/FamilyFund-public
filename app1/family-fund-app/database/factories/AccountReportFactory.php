@@ -22,12 +22,9 @@ class AccountReportFactory extends Factory
     public function definition()
     {
         return [
-            //'account_id' => $this->faker->word,
-        'type' => $this->faker->word,
-        'as_of' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'account_id' => \App\Models\Account::factory(),
+            'type' => $this->faker->randomElement(['quarterly', 'annual', 'monthly']),
+            'as_of' => $this->faker->date('Y-m-d'),
         ];
     }
 }

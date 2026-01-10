@@ -32,9 +32,6 @@ class ScheduledTransactionTest extends TestCase
         $factory->createUser();
     }
 
-    /**
-     * @test
-     */
     public function test_schedule_transaction()
     {
         $this->debug("\n\n\n");

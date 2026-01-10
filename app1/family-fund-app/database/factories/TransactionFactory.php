@@ -28,25 +28,21 @@ class TransactionFactory extends Factory
                 TransactionExt::TYPE_MATCHING,
                 TransactionExt::TYPE_BORROW,
                 TransactionExt::TYPE_REPAY,
-                ]),
+            ]),
             'status' => $this->faker->randomElement([
                 TransactionExt::STATUS_PENDING,
                 TransactionExt::STATUS_CLEARED,
-                ]),
-            'value' => $this->faker->randomFloat(2, $min = 0.01, $max = 999999.99),
-//        'shares' => $this->faker->word,
-//        'timestamp' => $this->faker->date('Y-m-d H:i:s'),
-//        'account_id' => $this->faker->word,
+            ]),
+            'value' => $this->faker->randomFloat(2, 0.01, 999999.99),
+            'shares' => $this->faker->randomFloat(4, 0.0001, 9999.9999),
+            'timestamp' => $this->faker->date('Y-m-d'),
             'descr' => $this->faker->word,
             'flags' => $this->faker->randomElement([
                 TransactionExt::FLAGS_ADD_CASH,
                 TransactionExt::FLAGS_CASH_ADDED,
                 TransactionExt::FLAGS_NO_MATCH,
-                null]),
-//        'scheduled_job_id' => $this->faker->word,
-//        'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-//        'created_at' => $this->faker->date('Y-m-d H:i:s'),
-//        'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+                null,
+            ]),
         ];
     }
 }

@@ -9,10 +9,10 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\DataFactory;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
-use const null;
 
 class TradePortfolioExtTest extends TestCase
 {
@@ -31,9 +31,7 @@ class TradePortfolioExtTest extends TestCase
         Log::debug('TradePortfolioExtTest::setUp');
     }
 
-    /**
-     * @dataProvider providerSplitDates
-     */
+    #[DataProvider('providerSplitDates')]
     public function testSplitDates($start1Offset, $end1Offset, $start2Offset, $end2Offset, $errRegEx) {
         // Convert day offsets to actual dates
         $inf = Carbon::parse('9999-12-31');

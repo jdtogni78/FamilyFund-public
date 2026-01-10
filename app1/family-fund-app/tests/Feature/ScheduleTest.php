@@ -5,6 +5,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleExt;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 // class Eloquent not found
 use Illuminate\Database\Eloquent\Model;
@@ -37,9 +38,7 @@ class ScheduleTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider scheduleProvider
-     */
+    #[DataProvider('scheduleProvider')]
     public function testSchedules($today, $lastRun, $expected)
     {
         $rs = Schedule::factory()->make(['type' => ScheduleExt::TYPE_DAY_OF_MONTH, 'value' => '5']);
@@ -67,9 +66,7 @@ class ScheduleTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider typesAndValuesProvider
-     */
+    #[DataProvider('typesAndValuesProvider')]
     public function testTypesAndValues($startDate, $days, $type, $value, $expected) {
         Log::info("startDate: $startDate, days: $days, type: $type, value: $value, expected: $expected");
         $rs = Schedule::factory()->make(['type' => $type, 'value' => $value]);

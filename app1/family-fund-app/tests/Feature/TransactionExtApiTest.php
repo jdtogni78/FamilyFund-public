@@ -55,9 +55,6 @@ class TransactionExtApiTest extends TestCase
         $this->postTransaction(50, TransactionExt::TYPE_SALE, TransactionExt::STATUS_PENDING, TransactionExt::FLAGS_NO_MATCH, $timestamp);
     }
 
-    /**
-     * @test
-     */
     public function test_validation_errors()
     {
         $timestamp = now()->format('Y-m-d');
@@ -79,16 +76,13 @@ class TransactionExtApiTest extends TestCase
         $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '9999-12-31');
         //  reject timestamp year old
         $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, now()->subYears(2)->format('Y-m-d'));
-        //  reject no timestamp - handled by business logic, not form validation
-        $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING);
+        //  reject no timestamp - now handled by form validation
+        $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING);
 
         // TODO: investigate - API now allows shares on purchase transactions
         // $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, $timestamp, 200);
     }
 
-    /**
-     * @test
-     */
     public function test_basics()
     {
         $factory = $this->factory;
@@ -106,9 +100,6 @@ class TransactionExtApiTest extends TestCase
         $this->assertEquals($transactions->count(), 1);
     }
 
-    /**
-     * @test
-     */
     public function test_fund_tran()
     {
         $factory = $this->factory;

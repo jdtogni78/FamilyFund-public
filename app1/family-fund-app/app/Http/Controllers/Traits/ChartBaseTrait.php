@@ -121,9 +121,10 @@ trait ChartBaseTrait
         Log::debug("createSharesLineChart: " . json_encode($arr));
         foreach ($arr as $v) {
             // max of last value and current value
+            $shares = $v->balance?->shares ?? 0;
             $data[substr($v->timestamp, 0, 10)] = max(
                 $data[substr($v->timestamp, 0, 10)] ?? 0,
-                $v->balance->shares * $v->share_price
+                $shares * $v->share_price
             );
         }
         // Sort by date (key) not by value

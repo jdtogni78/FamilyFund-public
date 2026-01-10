@@ -68,11 +68,13 @@ trait AccountTrait
             if ($refMatch) {
                 $this->debug('tran id: ' . $transaction->id . ' ref matching id: ' . $refMatch->id);
                 $refTrans = $refMatch->transaction;
-                $current = ($refTrans->shares + $transaction->shares) * $shareValue;
-                $this->debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
-                $this->debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
-                $transaction->current_value = Utils::currency($current);
-                $transaction->current_performance = Utils::percent(($current)/$value - 1);
+                if ($refTrans) {
+                    $current = ($refTrans->shares + $transaction->shares) * $shareValue;
+                    $this->debug('ref tran id: ' . $refTrans->id . ' ref shares: ' . $refTrans->shares . ' current: ' . $transaction->shares);
+                    $this->debug('ref tran id: ' . $refTrans->id . ' current: ' . $current);
+                    $transaction->current_value = Utils::currency($current);
+                    $transaction->current_performance = Utils::percent(($current)/$value - 1);
+                }
             }
 
             array_push($arr, $transaction);

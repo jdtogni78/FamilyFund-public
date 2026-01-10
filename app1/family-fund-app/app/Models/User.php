@@ -13,6 +13,17 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
+     * Validation rules
+     *
+     * @var array
+     */
+    public static $rules = [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'password' => 'required|string|min:8',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

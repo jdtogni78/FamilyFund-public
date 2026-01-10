@@ -22,11 +22,8 @@ class AccountMatchingRuleFactory extends Factory
     public function definition()
     {
         return [
-            //'account_id' => $this->faker->word,
-        //'matching_rule_id' => $this->faker->word,
-        //'updated_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'created_at' => $this->faker->date('Y-m-d H:i:s'),
-        //'deleted_at' => $this->faker->date('Y-m-d H:i:s')
+            'account_id' => \App\Models\Account::factory(),
+            'matching_rule_id' => \App\Models\MatchingRule::factory(),
         ];
     }
 }

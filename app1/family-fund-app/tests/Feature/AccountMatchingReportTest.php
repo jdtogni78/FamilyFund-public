@@ -143,7 +143,7 @@ class AccountMatchingReportTest extends TestCase
         $this->assertResponse(1, $value, $value, 150 - $value);
     }
 
-    protected function getAPI(mixed $account, string $date=null): mixed
+    protected function getAPI(mixed $account, ?string $date = null): mixed
     {
         if ($date == null) $date = $this->date;
         $uri = '/api/account_matching/' . $account->id . '/as_of/' . $date;

@@ -12,14 +12,14 @@ trait BulkStoreBaseTestTrait
 
     protected array $post;
 
-    protected function postValidationError(array $post=null, $error_code = null): void
+    protected function postValidationError(?array $post = null, $error_code = null): void
     {
         if ($error_code == null) $error_code = Response::HTTP_UNPROCESSABLE_ENTITY;
         $this->postForError($post);
         $this->assertApiValidationError($error_code);
     }
 
-    protected function postError(array $post=null, $error_code = null): void
+    protected function postError(?array $post = null, $error_code = null): void
     {
         if ($error_code == null) $error_code = Response::HTTP_UNPROCESSABLE_ENTITY;
         $this->postForError($post, $error_code);
@@ -28,7 +28,7 @@ trait BulkStoreBaseTestTrait
         $this->assertApiError($error_code);
     }
 
-    protected function postBulkAPI(array $post=null): void
+    protected function postBulkAPI(?array $post = null): void
     {
         if ($post==null) $post = $this->post;
         $this->debug("*** postBulkAPI ".$this->api.": " . json_encode($post));

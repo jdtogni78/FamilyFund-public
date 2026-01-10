@@ -15,14 +15,15 @@ class UserApiTest extends TestCase
      */
     public function test_create_user()
     {
-        $user = User::factory()->make()->toArray();
+        $user = User::factory()->make();
+        $userData = array_merge($user->toArray(), ['password' => 'password123']);
 
         $this->response = $this->json(
             'POST',
-            '/api/users', $user
+            '/api/users', $userData
         );
 
-        $this->assertApiResponse($user);
+        $this->assertApiResponse($user->toArray());
     }
 
     /**
@@ -46,15 +47,16 @@ class UserApiTest extends TestCase
     public function test_update_user()
     {
         $user = User::factory()->create();
-        $editedUser = User::factory()->make()->toArray();
+        $editedUser = User::factory()->make();
+        $editedUserData = array_merge($editedUser->toArray(), ['password' => 'password123']);
 
         $this->response = $this->json(
             'PUT',
             '/api/users/'.$user->id,
-            $editedUser
+            $editedUserData
         );
 
-        $this->assertApiResponse($editedUser);
+        $this->assertApiResponse($editedUser->toArray());
     }
 
     /**

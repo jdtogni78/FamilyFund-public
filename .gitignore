@@ -16,3 +16,6 @@ database/dev/familyfund_dev_data_240110.sql
 database/dev/familyfund_dev_data_240228.sql
 database/dev/familyfund_dev_full_240228.sql
 app1/family-fund-app/docker_tmp/
+.claude-agents
+database/dev/familyfund_dev_data_20260110.sql
+test_plan.md

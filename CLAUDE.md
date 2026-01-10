@@ -92,11 +92,33 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 Services:
 - **familyfund** - Laravel app (custom Dockerfile with wkhtmltopdf)
-- **mariadb** (container: `db`) - Database (famfun/1234, database: familyfund)
+- **mariadb** (container: `db`) - Database (famfun_dev/1234, database: familyfund_dev)
 - **mailhog** (container: `mail`) - Email testing (UI: http://localhost:8025)
 - **quickchart** - Chart image generation (http://localhost:3400)
 
 Environment: `.env` uses `MAIL_HOST=mail` to match container name.
+
+## Database Backup
+
+Run from `app1/family-fund-app/generators/`. Scripts need connection params since DB runs in Docker.
+
+```bash
+# Dev backup (connects to container on localhost:3306)
+./dump_data.sh dev --host=127.0.0.1 --port=3306 --user=famfun_dev -p1234
+
+# Dev DDL backup
+./dump_ddl.sh dev --host=127.0.0.1 --port=3306 --user=famfun_dev -p1234
+```
+
+Backups saved to:
+- DDL: `database/familyfund_ddl_YYYYMMDD.sql`
+- Data: `database/dev/familyfund_dev_data_YYYYMMDD.sql`
+
+Load prod to dev + anonymize (see README.md for full docs):
+```bash
+mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod/familyfund_prod_data_*.sql
+mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod_to_dev.sql
+```
 
 ## Code Generators
 
@@ -122,6 +144,15 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 - Quarterly reports generated via queue jobs
 - PDF reports use wkhtmltopdf (installed in container)
 - Email testing via MailHog in development
+
+## Agent Identification
+
+Register in `.claude-agents` file per global instructions. See `~/.claude/CLAUDE.md` for details.
+
+**Agent Name Map:**
+| Session ID | Name | Purpose |
+|------------|------|---------|
+| (your-session-id) | claude1 | (brief description) |
 
 ## Claude Testing
 

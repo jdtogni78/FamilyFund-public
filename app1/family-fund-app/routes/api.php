@@ -52,18 +52,18 @@ Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv
 
 Route::post('schedule_jobs', 'App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt@scheduleJobs');
 
-Route::resource('funds', App\Http\Controllers\API\FundAPIController::class);
-Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class);
-Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class);
-Route::resource('transactions', App\Http\Controllers\APIv1\TransactionAPIControllerExt::class);
+Route::resource('funds', App\Http\Controllers\API\FundAPIController::class)->names('api.funds');
+Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class)->names('api.accounts');
+Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class)->names('api.portfolios');
+Route::resource('transactions', App\Http\Controllers\APIv1\TransactionAPIControllerExt::class)->names('api.transactions');
 
 Route::resource('asset_prices', AssetPriceAPIControllerExt::class);
-Route::resource('assets', AssetAPIController::class);
+Route::resource('assets', AssetAPIController::class)->names('api.assets');
 Route::resource('account_balances', App\Http\Controllers\API\AccountBalanceAPIController::class);
 Route::resource('account_matching_rules', App\Http\Controllers\API\AccountMatchingRuleAPIController::class);
 Route::resource('matching_rules', App\Http\Controllers\API\MatchingRuleAPIController::class);
 Route::resource('portfolio_assets', PortfolioAssetAPIController::class);
-Route::resource('users', App\Http\Controllers\API\UserAPIController::class);
+Route::resource('users', App\Http\Controllers\API\UserAPIController::class)->names('api.users');
 Route::resource('asset_change_logs', App\Http\Controllers\API\AssetChangeLogAPIController::class);
 Route::resource('transaction_matchings', App\Http\Controllers\API\TransactionMatchingAPIController::class);
 
@@ -74,17 +74,17 @@ Route::resource('change_logs', App\Http\Controllers\API\ChangeLogAPIController::
 Route::resource('trade_portfolios', App\Http\Controllers\APIv1\TradePortfolioAPIControllerExt::class);
 Route::resource('trade_portfolio_items', App\Http\Controllers\API\TradePortfolioItemAPIController::class);
 
-Route::resource('schedules', App\Http\Controllers\API\ScheduleAPIController::class);
+Route::resource('schedules', App\Http\Controllers\API\ScheduleAPIController::class)->names('api.schedules');
 Route::resource('scheduled_jobs', App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt::class);
 
 
-Route::resource('addresses', App\Http\Controllers\API\AddressAPIController::class);
+Route::resource('addresses', App\Http\Controllers\API\AddressAPIController::class)->names('api.addresses');
 
 
-Route::resource('people', App\Http\Controllers\API\PersonAPIController::class);
+Route::resource('people', App\Http\Controllers\API\PersonAPIController::class)->names('api.people');
 
 
-Route::resource('id_documents', App\Http\Controllers\API\IdDocumentAPIController::class);
+Route::resource('id_documents', App\Http\Controllers\API\IdDocumentAPIController::class)->names('api.id_documents');
 
 
-Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class);
+Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class)->names('api.phones');

@@ -27,7 +27,104 @@ mysql -h 127.0.0.1 -u famfun -p1234 familyfund < familyfund_dump.sql
 generators/dump_ddl.sh
 generators/dump_data.sh
 
- 
+## Database Backup & Restore
+
+### Backup Locations
+
+```
+database/
+├── familyfund_ddl.sql          # Current schema (no data)
+├── drop_all.sql                # Drop all tables script
+├── truncate_all.sql            # Truncate all tables script
+├── prod_to_dev.sql             # Anonymization script for prod→dev
+├── delete_test_data.sql        # Clean up test data
+├── dev/
+│   └── familyfund_dev_data_*.sql   # Dev environment backups
+└── prod/
+    └── familyfund_prod_data_*.sql  # Prod environment backups
+```
+
+### Export Database Backups
+
+Run from `app1/family-fund-app/generators/`:
+
+The scripts require MySQL connection parameters passed as extra arguments.
+Docker exposes MariaDB on `127.0.0.1:3306`.
+
+```bash
+# Dev environment credentials
+DEV_CONN="--host=127.0.0.1 --port=3306 --user=famfun_dev -p1234"
+
+# Export schema only (DDL)
+./dump_ddl.sh dev $DEV_CONN    # Creates database/familyfund_ddl_YYYYMMDD.sql
+
+# Export data only
+./dump_data.sh dev $DEV_CONN   # Creates database/dev/familyfund_dev_data_YYYYMMDD.sql
+```
+
+For prod, use root credentials from docker-compose:
+```bash
+PROD_CONN="--host=127.0.0.1 --port=3306 --user=root -p123456"
+./dump_data.sh prod $PROD_CONN
+```
+
+### Load Prod Backup to Dev
+
+1. **Export prod data** (from prod server or via backup):
+   ```bash
+   cd app1/family-fund-app/generators
+   ./dump_data.sh prod
+   ```
+
+2. **Load into dev database**:
+   ```bash
+   # Reset dev database
+   docker-compose exec familyfund php artisan migrate:fresh
+
+   # Load prod data
+   mysql -h 127.0.0.1 -u famfun -p1234 familyfund_dev < database/prod/familyfund_prod_data_YYYYMMDD.sql
+   ```
+
+3. **Anonymize sensitive data**:
+   ```bash
+   mysql -h 127.0.0.1 -u famfun -p1234 familyfund_dev < database/prod_to_dev.sql
+   ```
+
+### Data Anonymization (prod_to_dev.sql)
+
+The `database/prod_to_dev.sql` script sanitizes production data:
+
+| Table | Field | Action |
+|-------|-------|--------|
+| users | name | Changed to "XUser{id}" (keeps first initial) |
+| users | email | Changed to "user{id}@dev.familyfund.local" |
+| users | password | Reset to 'devpassword123' |
+| accounts | nickname | Changed to "Acct{id}" |
+| accounts | email_cc | Changed to "account{id}@dev.familyfund.local" |
+| users | remember_token | Cleared |
+| password_resets | * | Deleted |
+| personal_access_tokens | * | Deleted |
+
+**Preserved accounts:**
+- `admin@dev.familyfund.local` - Admin (original password restored)
+- `claude@test.local` - Test user (unchanged)
+
+### Restore Dev from Backup
+
+```bash
+# Full restore (schema + data)
+mysql -h 127.0.0.1 -u famfun -p1234 familyfund_dev < database/familyfund_ddl.sql
+mysql -h 127.0.0.1 -u famfun -p1234 familyfund_dev < database/dev/familyfund_dev_data_YYYYMMDD.sql
+```
+
+### Clean Up Test Data
+
+After running tests that create data with IDs > 300:
+```bash
+mysql -h 127.0.0.1 -u famfun -p1234 familyfund_dev < database/delete_test_data.sql
+```
+
+
 * Create new lines to better see data changes:
 
 sed -e $'s/),(/),\\\n(/g' familyfund_dump.sql > familyfund_dump.sql
@@ -229,8 +326,8 @@ FFSERVER=REDACTED_LAN_HOST
 * setup NFS: https://kb.synology.com/en-br/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS
 * mount NAS:
   * ```sudo mount -v -t nfs -o vers=3 REDACTED_NAS_HOST:/volume1/NetBackup /mnt/backup```
-  * add to /etc/fstab
-    * ```REDACTED_NAS_HOST:/volume1/NetBackup    /mnt/backup   nfs    defaults 0 0```
+  * add to /etc/fstab (use `_netdev` for network mount dependency):
+    * ```REDACTED_NAS_HOST:/volume1/NetBackup    /mnt/backup   nfs    defaults,_netdev 0 0```
 * create user with exact same properties of NAS, ex
   * sudo useradd -u 1028 -g 100 backup2
 * choose folders to backup:
@@ -238,12 +335,69 @@ FFSERVER=REDACTED_LAN_HOST
   * /home/jdtogni
   * /etc
 
+### Backup Schedule (on spirit)
+
+The backup script `dstrader/opt/backup.sh` runs via root crontab 3x daily:
+- 3:10 AM, 12:50 PM, 11:10 PM
+
+It rsyncs `/home`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on melnick.
+
+Log file: `/var/log/dstrader/backup.log`
+
+### Troubleshooting Backup Sync
+
+If backups to NAS fail, check:
+
+1. **Is NFS mounted?**
+   ```bash
+   ssh jdtogni@REDACTED_PROD_HOST "mount | grep backup"
+   # Should show: REDACTED_NAS_HOST:/volume1/NetBackup on /mnt/backup type nfs
+   ```
+
+2. **Mount manually if needed:**
+   ```bash
+   ssh jdtogni@REDACTED_PROD_HOST "sudo mount /mnt/backup"
+   ```
+
+3. **Is melnick reachable?**
+   ```bash
+   ssh jdtogni@REDACTED_PROD_HOST "ping -c 2 REDACTED_NAS_HOST"
+   ```
+
+4. **Check backup log for errors:**
+   ```bash
+   ssh jdtogni@REDACTED_PROD_HOST "tail -50 /var/log/dstrader/backup.log"
+   ```
+
+5. **Common error:** `mkdir "/mnt/backup/..." failed: No such file or directory`
+   - Means NFS is not mounted. Run `sudo mount /mnt/backup` on spirit.
+
 ## VPN Setup
 
 L2TP/IPSec
 User/password
 
 ## Wake on LAN
+
+### Wake Servers from Mac
+
+```bash
+# Install wakeonlan (if not installed)
+brew install wakeonlan
+
+# Wake melnick (NAS/backup server)
+wakeonlan REDACTED_MAC
+
+# Wake spirit (dstrader server)
+wakeonlan E8:FF:1E:D6:6A:70
+```
+
+| Server | MAC Address | IP Address | Purpose |
+|--------|-------------|------------|---------|
+| melnick | REDACTED_MAC | REDACTED_NAS_HOST | NAS/Backup |
+| spirit | E8:FF:1E:D6:6A:70 | REDACTED_PROD_HOST | dstrader |
+
+### Server WOL Setup
 
 * enable WOL on BIOS
 * enable WOL on OS

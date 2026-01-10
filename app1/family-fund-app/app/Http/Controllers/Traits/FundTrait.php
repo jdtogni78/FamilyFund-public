@@ -121,7 +121,7 @@ Trait FundTrait
         return false;
     }
 
-    public function createFundResponseTradeBands($fund, $asOf, $isAdmin = false) {
+    public function createFundResponseTradeBands($fund, $asOf, $isAdmin = false, $startDate = null) {
         if ($asOf == null) $asOf = date('Y-m-d');
         $fund = FundExt::find($fund->id);
 
@@ -136,8 +136,8 @@ Trait FundTrait
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
         $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
 
-        $yearAgo = Utils::asOfAddYear($asOf, -5);
-        $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
+        $fromDate = $startDate ?? Utils::asOfAddYear($asOf, -5);
+        $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
         $arr['tradePortfolios'] = $tradePortfolios;
 
         $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr);

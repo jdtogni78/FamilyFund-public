@@ -77,6 +77,7 @@ trait PerformanceTrait
         }
         $yp = array();
         $yp['value'] = Utils::currency($value);
+        $yp['price'] = Utils::currency($value); // For chart compatibility
         return $yp;
     }
 

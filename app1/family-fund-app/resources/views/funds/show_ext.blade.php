@@ -20,42 +20,38 @@
                 }
                 $totalValue = '$' . number_format($totalValueRaw, 0);
                 $sharePrice = $api['share_price'] ?? 0;
-                $nav = $api['nav'] ?? 0;
                 $accountsCount = count($api['balances'] ?? []);
             @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
                     <div class="card" style="border: 2px solid #1e40af; overflow: hidden;">
                         {{-- Header --}}
-                        <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none;">
-                            <h4 class="mb-0" style="color: #ffffff; font-weight: 700;">{{ $api['name'] }}</h4>
-                            <div>
-                                <a href="{{ route('funds.index') }}" class="btn btn-light btn-sm me-2">Back</a>
-                                <a href="/funds/{{ $api['id'] }}/trade_bands"
-                                   class="btn btn-outline-light btn-sm me-2" title="View Trading Bands">
-                                    <i class="fa fa-chart-bar me-1"></i> Trade Bands
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap py-3" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none; gap: 8px;">
+                            <div class="d-flex align-items-center">
+                                <h4 class="mb-0" style="color: #ffffff; font-weight: 700;">{{ $api['name'] }}</h4>
+                                @isset($api['admin'])
+                                    <span class="badge ms-2" style="background: #d97706; font-size: 0.7rem;">ADMIN</span>
+                                @endisset
+                            </div>
+                            <div class="d-flex flex-wrap" style="gap: 4px;">
+                                <a href="{{ route('funds.index') }}" class="btn btn-light btn-sm">Back</a>
+                                <a href="/funds/{{ $api['id'] }}/trade_bands" class="btn btn-outline-light btn-sm" title="Trading Bands">
+                                    <i class="fa fa-chart-bar"></i>
                                 </a>
                                 @isset($api['admin'])
-                                    <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}?admin=0"
-                                       class="btn btn-outline-light btn-sm me-2" title="View as Non-Admin">
-                                        <i class="fa fa-user me-1"></i> User View
-                                    </a>
-                                    <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}"
-                                       class="btn btn-outline-light btn-sm" target="_blank" title="Download Admin PDF">
-                                        <i class="fa fa-file-pdf me-1"></i> PDF
+                                    <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}?admin=0" class="btn btn-outline-light btn-sm" title="Switch to User View">
+                                        <i class="fa fa-user"></i>
                                     </a>
                                 @else
                                     @if(in_array(Auth::user()->email ?? '', ['admin@dev.familyfund.local', 'claude@test.local']))
-                                        <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}"
-                                           class="btn btn-warning btn-sm me-2" title="View as Admin">
-                                            <i class="fa fa-user-shield me-1"></i> Admin View
+                                        <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}" class="btn btn-warning btn-sm" title="Switch to Admin View">
+                                            <i class="fa fa-user-shield"></i>
                                         </a>
                                     @endif
-                                    <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}?admin=0"
-                                       class="btn btn-outline-light btn-sm" target="_blank" title="Download PDF Report">
-                                        <i class="fa fa-file-pdf me-1"></i> PDF
-                                    </a>
                                 @endisset
+                                <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}{{ isset($api['admin']) ? '' : '?admin=0' }}" class="btn btn-outline-light btn-sm" target="_blank" title="Download PDF">
+                                    <i class="fa fa-file-pdf"></i>
+                                </a>
                             </div>
                         </div>
 
@@ -69,10 +65,6 @@
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
-                                </div>
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #bfdbfe;">
-                                    <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">${{ number_format($nav, 2) }}</div>
-                                    <div class="text-muted text-uppercase small">NAV</div>
                                 </div>
                                 @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'showBorder' => isset($api['admin'])])
                                 @isset($api['admin'])
@@ -177,7 +169,7 @@
             <div class="row mb-4" id="section-charts">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-chart-line mr-2"></i>Monthly Value</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyValue">
@@ -195,7 +187,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-chart-bar mr-2"></i>Yearly Value</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyValue">
@@ -215,7 +207,7 @@
             <div class="row mb-4" id="section-regression">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-chart-area mr-2"></i>Forecast (Linear Regression)</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseForecast"
                                role="button" aria-expanded="true" aria-controls="collapseForecast">
@@ -231,7 +223,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-table mr-2"></i>Projection Table</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseProjection"
                                role="button" aria-expanded="true" aria-controls="collapseProjection">
@@ -252,7 +244,7 @@
                 <div class="row mb-4" id="section-group-{{ Str::slug($group) }}">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                                 <strong><i class="fa fa-layer-group mr-2"></i>Group {{ $group }} Performance</strong>
                                 <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroup{{$group}}"
                                    role="button" aria-expanded="true" aria-controls="collapseGroup{{$group}}">
@@ -300,7 +292,7 @@
             <div class="row mb-4" id="section-performance">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-table mr-2"></i>Yearly Performance</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyPerf">
@@ -317,7 +309,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-table mr-2"></i>Monthly Performance</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyPerf">
@@ -338,7 +330,7 @@
             <div class="row mb-4" id="section-portfolios-alt">
             <div class="col">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                     <strong><i class="fa fa-columns mr-2"></i>Trade Portfolios Comparison</strong>
                     <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfoliosAlt"
                        role="button" aria-expanded="true" aria-controls="collapseTradePortfoliosAlt">
@@ -358,7 +350,7 @@
             <div class="row mb-4" id="section-trade-portfolios">
             <div class="col">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                     <strong><i class="fa fa-briefcase mr-2"></i>Trade Portfolios</strong>
                     <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfolios"
                        role="button" aria-expanded="true" aria-controls="collapseTradePortfolios">
@@ -382,7 +374,7 @@
             <div class="row mb-4" id="section-assets-table">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-coins mr-2"></i>Assets</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAssets"
                                role="button" aria-expanded="true" aria-controls="collapseAssets">
@@ -402,7 +394,7 @@
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #1e293b; color: white; position: relative; z-index: 10;">
                             <strong><i class="fa fa-exchange-alt mr-2"></i>Transactions</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
                                role="button" aria-expanded="true" aria-controls="collapseTransactions">

@@ -76,10 +76,6 @@
                 <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($shareValue, 2) }}</div>
                 <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Share Price</div>
             </td>
-            <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
-                <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${{ number_format($api['nav'] ?? 0, 2) }}</div>
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">NAV</div>
-            </td>
             @if($prevYearKey)
             <td style="background: #eff6ff; padding: 12px 8px; text-align: center; border-right: 1px solid #bfdbfe;">
                 <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%</div>

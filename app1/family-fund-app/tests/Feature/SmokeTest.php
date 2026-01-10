@@ -32,6 +32,15 @@ class SmokeTest extends TestCase
         $this->user = $this->factory->user;
     }
 
+    protected function tearDown(): void
+    {
+        // Clean up any unclosed output buffers from Livewire/Blade rendering
+        while (ob_get_level() > 1) {
+            ob_end_clean();
+        }
+        parent::tearDown();
+    }
+
     // ==================== Dashboard & Profile ====================
 
     public function test_dashboard_renders()
@@ -262,12 +271,11 @@ class SmokeTest extends TestCase
         $response->assertStatus(200);
     }
 
-    // Note: accounts edit page has a bug (undefined $api variable) - skipped until fixed
-    // public function test_accounts_edit_renders()
-    // {
-    //     $response = $this->actingAs($this->user)->get('/accounts/' . $this->factory->userAccount->id . '/edit');
-    //     $response->assertStatus(200);
-    // }
+    public function test_accounts_edit_renders()
+    {
+        $response = $this->actingAs($this->user)->get('/accounts/' . $this->factory->userAccount->id . '/edit');
+        $response->assertStatus(200);
+    }
 
     public function test_funds_edit_renders()
     {

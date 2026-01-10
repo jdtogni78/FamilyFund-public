@@ -74,12 +74,26 @@ php artisan queue:listen
 
 ## Testing
 
+**Current Status (2026-01-10):** 290 passing, 5 failing, 9 skipped
+
 Tests organized in `tests/`:
 - `Feature/` - Full HTTP request tests
 - `APIs/` - API endpoint tests (28+ suites)
 - `Repositories/` - Repository pattern tests (30+ suites)
 - `GoldenData/` - Integration tests with versioned datasets
 - `DataFactory.php` - Test data generation
+
+```bash
+# Run tests in Docker
+docker exec familyfund php artisan test
+docker exec familyfund php artisan test --exclude-group=incomplete  # Skip incomplete features
+docker exec familyfund php artisan test --filter=TransactionTest    # Single test
+
+# Coverage report
+docker exec familyfund ./vendor/bin/phpunit --coverage-text 2>&1 | grep -E "^  (Lines|Methods|Classes):"
+```
+
+See `test_plan.md` for detailed test fix progress and remaining issues.
 
 ## Docker Services
 

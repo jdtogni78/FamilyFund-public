@@ -125,8 +125,8 @@
                 </div>
             </div>
 
-            <!-- Fund Shares Source Card -->
-            @if(isset($api1['fundShares']))
+            <!-- Fund Shares Source Card (Admin Only) -->
+            @if(isset($api1['fundShares']) && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'claude@test.local']))
             @php($fundShares = $api1['fundShares'])
             @php($fundChange = $fundShares['change'])
             <div class="row">

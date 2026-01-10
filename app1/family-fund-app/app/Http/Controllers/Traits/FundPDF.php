@@ -33,6 +33,7 @@ class FundPDF
             ->unique()
             ->toArray();
 
+        $index = 0;
         foreach ($assetPerf as $symbol => $values) {
             // Skip symbols not in any trade portfolio (and SP500/CASH)
             if ($symbol == 'SP500' || $symbol == 'CASH' || !in_array($symbol, $portfolioSymbols)) {
@@ -51,7 +52,8 @@ class FundPDF
             $this->addLineChart($labels,
               ["$symbol Shares"],
               [$shareValues]);
-            $this->createLineChart($file);
+            $this->createLineChart($file, $index);
+            $index++;
         }
     }
 

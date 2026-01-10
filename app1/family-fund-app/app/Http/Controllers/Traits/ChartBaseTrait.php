@@ -182,7 +182,9 @@ trait ChartBaseTrait
                 $this->zoneBoundary2,
                 $file,
                 $width,
-                $height
+                $height,
+                24, // maxLabels
+                $colorIndex
             );
         } else {
             $this->getQuickChartService()->generateLineChart(
@@ -191,7 +193,10 @@ trait ChartBaseTrait
                 $this->pendingValues,
                 $file,
                 $width,
-                $height
+                $height,
+                false, // stepped
+                24, // maxLabels
+                $colorIndex
             );
         }
 

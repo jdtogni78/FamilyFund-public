@@ -96,7 +96,8 @@ class QuickChartService
         ?int $width = null,
         ?int $height = null,
         bool $stepped = false,
-        int $maxLabels = 24
+        int $maxLabels = 24,
+        int $colorIndex = 0
     ): string {
         // Reduce labels to show only maxLabels while keeping all data points
         $totalLabels = count($labels);
@@ -111,7 +112,8 @@ class QuickChartService
 
         $chartDatasets = [];
         foreach ($datasets as $i => $data) {
-            $color = $this->datasetColors[$i % count($this->datasetColors)];
+            // Use colorIndex offset for single-dataset charts (like share positions)
+            $color = $this->datasetColors[($colorIndex + $i) % count($this->datasetColors)];
             $chartDatasets[] = [
                 'label' => $titles[$i] ?? "Series $i",
                 'data' => $data,
@@ -228,7 +230,8 @@ class QuickChartService
         string $filePath,
         ?int $width = null,
         ?int $height = null,
-        int $maxLabels = 24
+        int $maxLabels = 24,
+        int $colorIndex = 0
     ): string {
         // Reduce labels to show only maxLabels while keeping all data points
         $totalLabels = count($labels);
@@ -243,13 +246,16 @@ class QuickChartService
 
         $chartDatasets = [];
 
+        // Get the color for this symbol based on colorIndex
+        $mainColor = $this->datasetColors[$colorIndex % count($this->datasetColors)];
+
         // Add zone as a filled area between boundaries (no legend labels)
-        $zoneColor = $this->hexToRgba($this->colors['gray'], 0.2);
+        // Use the same color as the main line but with transparency (matching web version)
         $chartDatasets[] = [
             'label' => '',
             'data' => $zoneBoundary1,
             'borderColor' => $this->hexToRgba($this->colors['gray'], 0.5),
-            'backgroundColor' => $zoneColor,
+            'backgroundColor' => $this->hexToRgba($mainColor, 0.2),
             'fill' => '+1',
             'borderWidth' => 1,
             'pointRadius' => 0,
@@ -283,18 +289,17 @@ class QuickChartService
                     'pointRadius' => 0,
                 ];
             } else {
-                // Other lines: colored with dots
-                $color = $this->datasetColors[$i % count($this->datasetColors)];
+                // Main value line: use color based on colorIndex
                 $chartDatasets[] = [
                     'label' => $label,
                     'data' => $data,
-                    'borderColor' => $color,
+                    'borderColor' => $mainColor,
                     'backgroundColor' => 'transparent',
                     'fill' => false,
                     'tension' => 0.1,
                     'borderWidth' => 2,
                     'pointRadius' => 2,
-                    'pointBackgroundColor' => $color,
+                    'pointBackgroundColor' => $mainColor,
                 ];
             }
         }

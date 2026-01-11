@@ -13,16 +13,40 @@
 (function() {
     const group = '{{$group}}';
     const perf = {!! json_encode($perf) !!};
-    const rawLabelsAssets = Object.keys(perf.SP500 || perf[Object.keys(perf)[0]]);
+
+    // Find earliest date among non-SP500 assets (the fund's actual assets)
+    let earliestDate = null;
+    for (let symbol in perf) {
+        if (symbol === 'SP500') continue;
+        const dates = Object.keys(perf[symbol]);
+        if (dates.length > 0 && (!earliestDate || dates[0] < earliestDate)) {
+            earliestDate = dates[0];
+        }
+    }
+
+    // Use SP500 dates but trim to start from earliestDate
+    const allDates = Object.keys(perf.SP500 || perf[Object.keys(perf)[0]]);
+    const rawLabelsAssets = earliestDate
+        ? allDates.filter(date => date >= earliestDate)
+        : allDates;
     const sparseLabelsAssets = createSparseLabels(rawLabelsAssets);
     const datasets = [];
 
     let colorIndex = 0;
     for (let symbol in perf) {
-        const firstDate = Object.keys(perf[symbol])[0];
-        const firstValue = perf[symbol][firstDate].price;
-        const data = Object.values(perf[symbol]).map(function(e) {
-            return e.price / firstValue;
+        const symbolData = perf[symbol];
+
+        // Find first valid date for this symbol within our trimmed range
+        const firstDate = rawLabelsAssets.find(date => symbolData[date] && symbolData[date].price);
+        if (!firstDate) continue; // Skip if no valid data
+        const firstValue = symbolData[firstDate].price;
+
+        // Align data to rawLabelsAssets dates (fill null for missing dates)
+        const data = rawLabelsAssets.map(function(date) {
+            if (symbolData[date] && symbolData[date].price) {
+                return symbolData[date].price / firstValue;
+            }
+            return null; // Chart.js skips null values
         });
 
         datasets.push({
@@ -35,6 +59,7 @@
             pointHoverRadius: 4,
             tension: 0.1,
             fill: false,
+            spanGaps: false, // Don't connect across null values
         });
         colorIndex++;
     }

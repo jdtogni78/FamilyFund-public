@@ -20,7 +20,9 @@ trait PerformanceTrait
         $yp = array();
         $yp['value']        = Utils::currency($value = $this->perfObject->valueAsOf($asOf));
         $yp['shares']       = Utils::shares($shares = $this->perfObject->sharesAsOf($asOf));
-        $yp['share_value']  = Utils::currency($shares > 0 ? $value/$shares : 0);
+        $shareValue = $shares > 0 ? $value/$shares : 0;
+        $yp['share_value']  = Utils::currency($shareValue);
+        $yp['price']        = Utils::currency($shareValue); // Required for chart filtering
         $yp['performance']  = Utils::percent($this->perfObject->periodPerformance($start, $asOf));
         return $yp;
     }
@@ -172,8 +174,14 @@ trait PerformanceTrait
             $ret = array_reverse($ret, true);
             $ret = $this->removeEmptyStart($ret);
         } else {
-            $ret = array_reverse($arr, true);;
+            $ret = array_reverse($arr, true);
         }
+
+        // Filter out data points without price (required for charts)
+        $ret = array_filter($ret, function($item) {
+            return isset($item['price']);
+        });
+
         $ret = $this->addValueChangeToArray($ret);
         return $ret;
     }

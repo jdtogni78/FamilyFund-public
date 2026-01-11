@@ -66,20 +66,20 @@
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
-                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'showBorder' => isset($api['admin'])])
-                                @isset($api['admin'])
+                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'showBorder' => isset($api['admin']) && $accountsCount > 0])
+                                @if(isset($api['admin']) && $accountsCount > 0)
                                 <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
                                     <div class="text-uppercase small" style="color: #92400e;">
                                         Accounts <span class="badge" style="background: #d97706; color: #fff; font-size: 0.6rem; vertical-align: top;">ADMIN</span>
                                     </div>
                                 </div>
-                                @endisset
+                                @endif
                             </div>
                         </div>
 
-                        {{-- Admin: Allocated/Unallocated Visual --}}
-                        @isset($api['admin'])
+                        {{-- Admin: Allocated/Unallocated Visual (only show if there are user accounts) --}}
+                        @if(isset($api['admin']) && $accountsCount > 0)
                         @php
                             $allocatedPct = $api['summary']['allocated_shares_percent'] ?? 0;
                             $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? (100 - $allocatedPct);
@@ -134,7 +134,7 @@
                                 </div>
                             </div>
                         </div>
-                        @endisset
+                        @endif
 
                         {{-- Fund Details --}}
                         <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #99f6e4;">
@@ -157,12 +157,12 @@
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
                 ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast'],
                 ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios'],
-                ['id' => 'section-allocation', 'icon' => 'fa-users', 'label' => 'Acct Alloc', 'condition' => isset($api['admin'])],
+                ['id' => 'section-allocation', 'icon' => 'fa-users', 'label' => 'Acct Alloc', 'condition' => isset($api['admin']) && $accountsCount > 0],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
                 ['id' => 'section-trade-portfolios', 'icon' => 'fa-briefcase', 'label' => 'Trade Portfolios'],
                 ['id' => 'section-assets-table', 'icon' => 'fa-coins', 'label' => 'Assets'],
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transaction History', 'condition' => isset($api['admin'])],
-                ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin'])],
+                ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin']) && $accountsCount > 0],
             ]])
 
             {{-- Main Charts Row (Collapsible, start expanded) --}}

@@ -562,7 +562,7 @@ Trait FundTrait
 
             if (!isset($assetPerf[$group])) {
                 $assetPerf[$group] = [];
-                $assetPerf[$group]['SP500'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $transactions);
+                $assetPerf[$group]['SP500'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $transactions, true);
             }
             $assetPerf[$group][$asset->name] = $perf;
         }

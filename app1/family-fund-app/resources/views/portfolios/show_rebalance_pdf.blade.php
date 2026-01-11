@@ -12,10 +12,10 @@
     @endphp
 
     <!-- Portfolio Header -->
-    <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #1e40af; margin-bottom: 16px;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="border: 2px solid #0d9488; margin-bottom: 16px;">
         <tr>
-            <td style="padding: 12px; background-color: #1e40af;">
-                <h2 style="margin: 0; color: #ffffff; font-size: 20px;">{{ $portfolio->fund->name ?? 'Portfolio #'.$portfolio->id }}</h2>
+            <td class="section-header-cell" style="padding: 12px;">
+                <h2 style="margin: 0;" class="section-header-text" style="font-size: 20px;">{{ $portfolio->fund->name ?? 'Portfolio #'.$portfolio->id }}</h2>
             </td>
         </tr>
         <tr>
@@ -23,15 +23,15 @@
                 <table width="100%" cellspacing="0" cellpadding="8">
                     <tr>
                         <td width="33%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ $api['tradePortfolios']->count() }}</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #0d9488;">{{ $api['tradePortfolios']->count() }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Trade Portfolios</div>
                         </td>
                         <td width="33%" align="center" style="border-right: 1px solid #e2e8f0;">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ count($api['symbols']) }}</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #0d9488;">{{ count($api['symbols']) }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Assets Tracked</div>
                         </td>
                         <td width="33%" align="center">
-                            <div style="font-size: 20px; font-weight: 700; color: #1e40af;">{{ count($rebalance) }}</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #0d9488;">{{ count($rebalance) }}</div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin-top: 4px;">Days Analyzed</div>
                         </td>
                     </tr>
@@ -54,16 +54,16 @@
         @foreach($symbolChunks as $chunkIdx => $symbolChunk)
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4 class="card-header-title">Trade Portfolio Timeline @if(count($symbolChunks) > 1)<span style="font-weight: normal; font-size: 12px; color: #64748b;">({{ $chunkIdx + 1 }}/{{ count($symbolChunks) }})</span>@endif</h4>
+                    <h4 class="card-header-title"><img src="{{ public_path('images/icons/calendar.svg') }}" class="header-icon">Trade Portfolio Timeline @if(count($symbolChunks) > 1)<span style="font-weight: normal; font-size: 12px; color: #64748b;">({{ $chunkIdx + 1 }}/{{ count($symbolChunks) }})</span>@endif</h4>
                 </div>
                 <div class="card-body" style="padding: 0;">
                     <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 10px; border-collapse: collapse;">
                         <thead>
-                            <tr style="background: #1e40af; color: white;">
-                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">ID</th>
-                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid rgba(255,255,255,0.2);">Period</th>
+                            <tr class="section-header-cell" style="color: #0f766e;">
+                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid #99f6e4;">ID</th>
+                                <th style="padding: 6px 8px; text-align: left; border-right: 1px solid #99f6e4;">Period</th>
                                 @foreach($symbolChunk as $symbolInfo)
-                                    <th style="padding: 6px 4px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);">{{ $symbolInfo['symbol'] }}</th>
+                                    <th style="padding: 6px 4px; text-align: center; border-right: 1px solid #99f6e4;">{{ $symbolInfo['symbol'] }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -97,17 +97,17 @@
         <!-- Current Allocation Status -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4 class="card-header-title">Current Allocation Status <span style="font-weight: normal; font-size: 12px; color: #64748b;">(as of {{ $lastDate ?? 'N/A' }})</span></h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/tasks.svg') }}" class="header-icon">Current Allocation Status <span style="font-weight: normal; font-size: 12px; color: #64748b;">(as of {{ $lastDate ?? 'N/A' }})</span></h4>
             </div>
             <div class="card-body" style="padding: 0;">
                 <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 11px; border-collapse: collapse;">
                     <thead>
-                        <tr style="background: #1e40af; color: white;">
-                            <th style="padding: 8px; text-align: left;">Symbol</th>
-                            <th style="padding: 8px; text-align: left;">Type</th>
-                            <th style="padding: 8px; text-align: right;">Target</th>
-                            <th style="padding: 8px; text-align: right;">Range</th>
-                            <th style="padding: 8px; text-align: right;">Current</th>
+                        <tr class="section-header-cell" style="color: #0f766e;">
+                            <th style="padding: 8px; text-align: left; border-right: 1px solid #99f6e4;">Symbol</th>
+                            <th style="padding: 8px; text-align: left; border-right: 1px solid #99f6e4;">Type</th>
+                            <th style="padding: 8px; text-align: right; border-right: 1px solid #99f6e4;">Target</th>
+                            <th style="padding: 8px; text-align: right; border-right: 1px solid #99f6e4;">Range</th>
+                            <th style="padding: 8px; text-align: right; border-right: 1px solid #99f6e4;">Current</th>
                             <th style="padding: 8px; text-align: center; width: 60px;">Status</th>
                         </tr>
                     </thead>
@@ -167,7 +167,7 @@
                 @php $chartIndex++; @endphp
                 <div class="card mb-2">
                     <div class="card-header">
-                        <h4 class="card-header-title">{{ $symbol }}</h4>
+                        <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-line.svg') }}" class="header-icon">{{ $symbol }}</h4>
                         <span class="badge badge-primary" style="float: right;">{{ $symbolInfo['type'] }}</span>
                     </div>
                     <div class="card-body">

@@ -18,10 +18,10 @@
             $typeStr = $trans->type_string();
             $statusStr = $trans->status_string();
 
-            // Type colors: Purchase green, Initial blue, Matching purple, Withdrawal red
+            // Type colors and icons: Purchase green, Initial purple, Matching purple, Withdrawal red
             $typeColor = match($typeStr) {
                 'Purchase', 'Deposit' => '#16a34a',
-                'Initial', 'Initial Value' => '#2563eb',
+                'Initial', 'Initial Value' => '#7c3aed',
                 'Withdrawal', 'Sell' => '#dc2626',
                 'Transfer In' => '#0ea5e9',
                 'Transfer Out' => '#f97316',
@@ -30,12 +30,21 @@
             };
             $typeBg = match($typeStr) {
                 'Purchase', 'Deposit' => '#dcfce7',
-                'Initial', 'Initial Value' => '#dbeafe',
+                'Initial', 'Initial Value' => '#ede9fe',
                 'Withdrawal', 'Sell' => '#fef2f2',
                 'Transfer In' => '#e0f2fe',
                 'Transfer Out' => '#fff7ed',
                 'Matching', 'Match' => '#faf5ff',
                 default => '#f1f5f9'
+            };
+            $typeIconFile = match($typeStr) {
+                'Purchase', 'Deposit' => 'trans-purchase.svg',
+                'Initial', 'Initial Value' => 'trans-initial.svg',
+                'Withdrawal', 'Sell' => 'trans-withdrawal.svg',
+                'Transfer In' => 'trans-transfer-in.svg',
+                'Transfer Out' => 'trans-transfer-out.svg',
+                'Matching', 'Match' => 'trans-matching.svg',
+                default => 'trans-default.svg'
             };
 
             // Status colors
@@ -55,8 +64,8 @@
         <tr>
             <td>{{ \Carbon\Carbon::parse($trans->timestamp)->format('Y-m-d') }}</td>
             <td>
-                <span style="background: {{ $typeBg }}; color: {{ $typeColor }}; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 10px;">
-                    {{ $typeStr }}
+                <span style="background: {{ $typeBg }}; color: {{ $typeColor }}; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 10px;">
+                    <img src="{{ public_path('images/icons/' . $typeIconFile) }}" style="width: 10px; height: 10px; vertical-align: middle; margin-right: 2px;"> {{ $typeStr }}
                 </span>
             </td>
             <td>

@@ -24,9 +24,9 @@
     <!-- Current Allocation Status -->
     @if(!empty($api['allocation_status']['symbols']))
         <div class="card mb-4">
-            <div class="card-header" style="background: #1e293b; color: white; padding: 10px 15px;">
-                <h4 class="card-header-title" style="margin: 0; font-size: 14px;">
-                    Current Allocation Status
+            <div class="card-header">
+                <h4 class="card-header-title">
+                    <img src="{{ public_path('images/icons/tasks.svg') }}" class="header-icon">Current Allocation Status
                     <span style="font-weight: normal; font-size: 11px; opacity: 0.8; margin-left: 10px;">
                         (as of {{ $api['allocation_status']['as_of_date'] ?? 'N/A' }})
                     </span>
@@ -75,6 +75,20 @@
         </div>
     @endif
 
+    <!-- Trade Portfolios Comparison -->
+    @if(count($api['tradePortfolios']) > 0)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-header-title">
+                    <img src="{{ public_path('images/icons/columns.svg') }}" class="header-icon">Trade Portfolios Comparison
+                </h4>
+            </div>
+            <div class="card-body">
+                @include('trade_portfolios.inner_show_alt_pdf')
+            </div>
+        </div>
+    @endif
+
     <!-- Trading Bands by Symbol -->
     <h3 class="section-title">Trading Bands Analysis</h3>
 
@@ -100,7 +114,7 @@
             @if (count($portfolioInfo) > 0)
                 <div class="card mb-4 avoid-break">
                     <div class="card-header">
-                        <h4 class="card-header-title">{{ $symbol }}</h4>
+                        <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-line.svg') }}" class="header-icon">{{ $symbol }}</h4>
                         @if (count($portfolioInfo) > 0)
                             <span class="badge badge-primary">
                                 Target: {{ number_format($portfolioInfo[0]['target_share'] * 100, 1) }}%

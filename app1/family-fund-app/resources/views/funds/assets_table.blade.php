@@ -96,6 +96,18 @@
             </tr>
         @endforeach
         </tbody>
+        <tfoot>
+            <tr class="table-secondary" style="font-weight: 600;">
+                <th scope="row">Total</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>${{ number_format($api['summary']['value'], 2) }}</td>
+                <td>100%</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 

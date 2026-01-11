@@ -3,6 +3,7 @@
     $now = \Carbon\Carbon::now();
     $totalUsed = 0;
     $totalGranted = 0;
+    $totalAvailable = 0;
     $totalMissed = 0;
 @endphp
 <table style="width: 100%; font-size: 11px;">
@@ -45,12 +46,14 @@
                 $statusBg = '#dcfce7';
                 $rowBg = '#f0fdf4';
                 $textColor = '#000000';
+                $totalAvailable += ($available - $used);
             } elseif ($isUpcoming) {
                 $status = 'Upcoming';
-                $statusColor = '#2563eb';
-                $statusBg = '#dbeafe';
-                $rowBg = '#eff6ff';
+                $statusColor = '#0891b2';
+                $statusBg = '#cffafe';
+                $rowBg = '#ecfeff';
                 $textColor = '#000000';
+                $totalAvailable += $available;
             } elseif ($isExpired && $used == 0 && $available > 0) {
                 $status = 'Missed';
                 $statusColor = '#d97706';
@@ -96,17 +99,22 @@
     @endforeach
     </tbody>
     <tfoot>
-        <tr style="background: #1e40af; color: #ffffff; font-weight: 600;">
-            <td colspan="4" style="padding: 10px;">Total Matching Received</td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($totalUsed, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">
-                @if($totalMissed > 0)
-                    <span style="color: #fbbf24;">${{ number_format($totalMissed, 2) }}</span>
-                @else
-                    -
+        <tr style="background: #134e4a; color: #ffffff; font-weight: 600;">
+            <td colspan="4" style="padding: 10px;">
+                Totals
+                @if($totalAvailable > 0)
+                    <span style="background: #10b981; color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px;">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
                 @endif
             </td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($totalGranted, 2) }}</td>
+            <td class="col-number" style="padding: 10px; color: #ffffff;">${{ number_format($totalUsed, 2) }}</td>
+            <td class="col-number" style="padding: 10px;">
+                @if($totalMissed > 0)
+                    <span style="color: #fcd34d;">${{ number_format($totalMissed, 2) }}</span>
+                @else
+                    <span style="color: #ffffff;">-</span>
+                @endif
+            </td>
+            <td class="col-number" style="padding: 10px; color: #ffffff;">${{ number_format($totalGranted, 2) }}</td>
         </tr>
     </tfoot>
 </table>

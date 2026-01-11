@@ -49,6 +49,15 @@
             page-break-inside: avoid;
         }
 
+        /* Keep header with following content */
+        .keep-together {
+            page-break-inside: avoid;
+        }
+
+        .keep-with-next {
+            page-break-after: avoid;
+        }
+
         /* ============================================
            Layout
            ============================================ */
@@ -61,7 +70,7 @@
             display: table;
             width: 100%;
             padding: 16px 20px;
-            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            background: #134e4a;
             border-radius: 8px;
             margin-bottom: 24px;
         }
@@ -75,7 +84,7 @@
             display: inline-block;
             width: 44px;
             height: 44px;
-            background: #0d9488;
+            background: #14b8a6;
             border-radius: 6px;
             text-align: center;
             line-height: 44px;
@@ -100,7 +109,7 @@
 
         .header-subtitle {
             font-size: 12px;
-            color: #99f6e4;
+            color: rgba(255, 255, 255, 0.85);
             margin-top: 2px;
         }
 
@@ -178,27 +187,80 @@
 
         .card-header {
             padding: 12px 16px;
-            background: #f1f5f9;
-            border-bottom: 1px solid #e2e8f0;
+            background-color: #f0fdfa !important;
+            border-bottom: 1px solid #99f6e4;
+            border-left: 4px solid #14b8a6;
             border-radius: 6px 6px 0 0;
             page-break-after: avoid;
         }
 
         .card-header.admin-header {
-            background: #fef3c7;
+            background-color: #fffbeb !important;
             border-bottom: 2px solid #d97706;
+            border-left: 4px solid #d97706;
         }
 
         .card-header-title {
             font-size: 14px;
             font-weight: 600;
-            color: #1e293b;
+            color: #0f766e;
             margin: 0;
             display: inline-block;
         }
 
+        .card-header-icon,
+        .header-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* Section header for table-based layouts */
+        .section-header-cell {
+            padding: 10px 16px;
+            background-color: #f0fdfa !important;
+            border-bottom: 1px solid #99f6e4;
+            border-left: 4px solid #14b8a6;
+            page-break-after: avoid;
+        }
+
+        .section-header-cell.admin {
+            background-color: #fffbeb !important;
+            border-bottom: 2px solid #d97706;
+            border-left: 4px solid #d97706;
+        }
+
+        .section-header-text {
+            color: #0f766e;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .section-header-text.admin {
+            color: #92400e;
+        }
+
+        /* Hero header for main account/fund info */
+        .hero-header-cell {
+            padding: 28px 24px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+            border-radius: 8px;
+            border: 1px solid #99f6e4;
+            border-left: 4px solid #14b8a6;
+        }
+
+        /* Icon in headers */
+        .header-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
         .card-body {
             padding: 16px;
+            page-break-before: avoid;
         }
 
         .card-footer {
@@ -230,13 +292,13 @@
         }
 
         table thead th {
-            background: #f1f5f9;
+            background-color: #f0fdfa !important;
             font-weight: 600;
-            color: #334155;
+            color: #0f766e;
             text-transform: uppercase;
             font-size: 10px;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid #cbd5e1;
+            border-bottom: 2px solid #99f6e4;
         }
 
         table tbody tr:nth-child(even) {
@@ -413,7 +475,7 @@
         }
 
         .badge-primary {
-            background: #dbeafe;
+            background: #ccfbf1;
             color: #0d9488;
         }
 

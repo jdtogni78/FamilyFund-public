@@ -23,7 +23,7 @@
 @if($portfolioCollection->count() >= 1)
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-        <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations Comparison</strong>
+        <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations by Symbol</strong>
         <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapsePortfolioAllocations"
            role="button" aria-expanded="true" aria-controls="collapsePortfolioAllocations">
             <i class="fa fa-chevron-down"></i>

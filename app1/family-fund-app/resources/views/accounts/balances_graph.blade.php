@@ -50,16 +50,16 @@
                     data: {
                         labels: sparseLabels,
                         datasets: [{
-                            label: 'Share Balance',
+                            label: 'Shares Holdings',
                             data: balanceValues,
                             fill: true,
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            borderColor: chartTheme.primary,
+                            backgroundColor: 'rgba(13, 148, 136, 0.15)',
+                            borderColor: '#0d9488',
                             borderWidth: 2,
                             stepped: true,
-                            pointRadius: sortedDates.length > 50 ? 0 : 3,
-                            pointHoverRadius: 5,
-                            pointBackgroundColor: chartTheme.primary,
+                            pointRadius: sortedDates.length > 30 ? 0 : 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#0d9488',
                         }]
                     },
                     options: {
@@ -84,7 +84,22 @@
                                     }
                                 }
                             },
-                            datalabels: { display: false }
+                            datalabels: {
+                                display: function(context) {
+                                    // Only show labels at step changes (where value differs from previous)
+                                    const idx = context.dataIndex;
+                                    if (idx === 0) return true;
+                                    return balanceValues[idx] !== balanceValues[idx - 1];
+                                },
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 4,
+                                color: '#0f766e',
+                                font: { size: 11, weight: 'bold' },
+                                formatter: function(value) {
+                                    return formatNumber(value, 2);
+                                }
+                            }
                         },
                         scales: {
                             x: {
@@ -96,7 +111,7 @@
                                 }
                             },
                             y: {
-                                beginAtZero: true,
+                                beginAtZero: false,
                                 ticks: {
                                     callback: function(value) {
                                         return formatNumber(value, 2);

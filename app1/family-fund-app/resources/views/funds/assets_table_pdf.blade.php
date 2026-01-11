@@ -51,7 +51,20 @@
         @endphp
         <tr>
             <td><strong>{{ $asset['name'] }}</strong></td>
-            <td>{{ $asset['type'] ?? '-' }}</td>
+            <td>
+                @php
+                    $typeColors = [
+                        'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
+                        'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
+                        'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
+                    ];
+                    $assetType = $asset['type'] ?? '-';
+                    $colors = $typeColors[$assetType] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $assetType];
+                @endphp
+                <span style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                    {{ $colors['label'] }}
+                </span>
+            </td>
             <td class="col-number">{{ number_format($asset['position'] ?? 0, 6) }}</td>
             <td class="col-number">
                 @isset($asset['price'])

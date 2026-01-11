@@ -200,6 +200,7 @@ class QuickChartService
 
     /**
      * Generate a step/line chart (for shares over time)
+     * Uses teal color to match web version
      */
     public function generateStepChart(
         array $labels,
@@ -209,15 +210,78 @@ class QuickChartService
         ?int $width = null,
         ?int $height = null
     ): string {
-        return $this->generateLineChart(
-            $labels,
-            [$title],
-            [$values],
-            $filePath,
-            $width,
-            $height,
-            true  // stepped
-        );
+        $tealColor = '#0d9488';  // Match web chart color
+
+        // Reduce labels to show only maxLabels while keeping all data points
+        $maxLabels = 24;
+        $totalLabels = count($labels);
+        if ($totalLabels > $maxLabels) {
+            $step = ceil($totalLabels / $maxLabels);
+            $sparseLabels = [];
+            foreach ($labels as $i => $label) {
+                $sparseLabels[] = ($i % $step === 0) ? $label : '';
+            }
+            $labels = $sparseLabels;
+        }
+
+        // Find step changes for data labels
+        $showLabels = [];
+        for ($i = 0; $i < count($values); $i++) {
+            $showLabels[] = ($i === 0 || $values[$i] !== $values[$i - 1]);
+        }
+
+        $config = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [[
+                    'label' => $title,
+                    'data' => $values,
+                    'borderColor' => $tealColor,
+                    'backgroundColor' => $this->hexToRgba($tealColor, 0.15),
+                    'fill' => true,
+                    'lineTension' => 0,
+                    'borderWidth' => 2,
+                    'pointRadius' => count($values) > 30 ? 0 : 4,
+                    'pointBackgroundColor' => $tealColor,
+                    'steppedLine' => 'before',
+                ]],
+            ],
+            'options' => [
+                'responsive' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'datalabels' => [
+                        'display' => $showLabels,
+                        'anchor' => 'end',
+                        'align' => 'top',
+                        'offset' => 4,
+                        'color' => '#0f766e',
+                        'font' => ['size' => 11, 'weight' => 'bold'],
+                        'formatter' => "function(value) { return value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }",
+                    ],
+                ],
+                'scales' => [
+                    'xAxes' => [[
+                        'gridLines' => ['display' => false],
+                        'ticks' => [
+                            'fontColor' => $this->fontColor,
+                            'maxRotation' => 45,
+                            'minRotation' => 45,
+                        ],
+                    ]],
+                    'yAxes' => [[
+                        'ticks' => [
+                            'fontColor' => $this->fontColor,
+                            'callback' => "function(v) { return v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }",
+                        ],
+                        'gridLines' => ['color' => 'rgba(0,0,0,0.05)'],
+                    ]],
+                ],
+            ],
+        ];
+
+        return $this->generateChart($config, $filePath, $width, $height);
     }
 
     /**
@@ -988,6 +1052,136 @@ class QuickChartService
                         'fontSize' => 11,
                         'fontStyle' => 'bold',
                         'padding' => 8,
+                    ],
+                ],
+            ],
+        ];
+
+        return $this->generateChart(
+            $config,
+            $filePath,
+            $width ?? 800,
+            $height ?? 400
+        );
+    }
+
+    /**
+     * Generate a vertical stacked bar chart for comparing trade portfolios BY GROUP
+     * Each bar represents a portfolio, segments represent group allocations (Growth, Stability, Crypto)
+     */
+    public function generatePortfolioGroupComparisonChart(
+        array $portfolios,
+        string $filePath,
+        ?int $width = null,
+        ?int $height = null,
+        ?array $currentGroups = null
+    ): string {
+        // Group colors matching the updated color scheme
+        $groupColors = [
+            'Growth' => '#16a34a',
+            'Stability' => '#2563eb',
+            'Crypto' => '#d97706',
+            'Other' => '#64748b',
+        ];
+        $groupOrder = ['Growth', 'Stability', 'Crypto', 'Other'];
+
+        // Create datasets - one per group
+        $datasets = [];
+        foreach ($groupOrder as $group) {
+            $data = [];
+            $hasData = false;
+
+            // Add data for each trade portfolio
+            foreach ($portfolios as $portfolio) {
+                $groupPct = $portfolio['groups'][$group] ?? 0;
+                $data[] = $groupPct;
+                if ($groupPct > 0) {
+                    $hasData = true;
+                }
+            }
+
+            // Add data for current groups if provided
+            if ($currentGroups) {
+                $groupPct = $currentGroups[$group] ?? 0;
+                $data[] = $groupPct;
+                if ($groupPct > 0) {
+                    $hasData = true;
+                }
+            }
+
+            // Only include groups that have data
+            if ($hasData) {
+                $datasets[] = [
+                    'label' => $group,
+                    'data' => $data,
+                    'backgroundColor' => $groupColors[$group],
+                    'borderColor' => '#ffffff',
+                    'borderWidth' => 2,
+                ];
+            }
+        }
+
+        // Portfolio labels
+        $labels = array_map(function($p) {
+            return '#' . $p['id'] . ': ' . $p['start_dt'] . ' to ' . $p['end_dt'];
+        }, $portfolios);
+
+        // Add "Current" label if current groups provided
+        if ($currentGroups) {
+            $labels[] = 'Current';
+        }
+
+        // QuickChart uses Chart.js v2
+        $config = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => $datasets,
+            ],
+            'options' => [
+                'responsive' => false,
+                'scales' => [
+                    'xAxes' => [[
+                        'stacked' => true,
+                        'gridLines' => ['display' => false],
+                        'ticks' => [
+                            'fontColor' => $this->fontColor,
+                            'fontFamily' => $this->fontFamily,
+                            'fontSize' => 10,
+                        ],
+                    ]],
+                    'yAxes' => [[
+                        'stacked' => true,
+                        'ticks' => [
+                            'max' => 100,
+                            'min' => 0,
+                            'fontColor' => $this->fontColor,
+                            'callback' => "function(v) { return v + '%'; }",
+                        ],
+                        'gridLines' => ['color' => 'rgba(0,0,0,0.05)'],
+                    ]],
+                ],
+                'plugins' => [
+                    'datalabels' => [
+                        'display' => true,
+                        'color' => '#ffffff',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => 'bold',
+                        ],
+                        'formatter' => "function(value, context) { if (value < 5) return ''; return context.dataset.label + '\\n' + value.toFixed(0) + '%'; }",
+                        'textShadowColor' => 'rgba(0,0,0,0.5)',
+                        'textShadowBlur' => 3,
+                    ],
+                ],
+                'legend' => [
+                    'position' => 'top',
+                    'labels' => [
+                        'fontColor' => '#000000',
+                        'fontFamily' => $this->fontFamily,
+                        'fontSize' => 12,
+                        'fontStyle' => 'bold',
+                        'padding' => 12,
                     ],
                 ],
             ],

@@ -23,11 +23,11 @@
 {{-- Compact Header --}}
 <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
     <tr>
-        <td style="padding: 10px 16px; background: #1e40af; border-radius: 6px 6px 0 0;">
-            <span style="color: #ffffff; font-weight: 700; font-size: 14px;">
+        <td class="section-header-cell" style="border-radius: 6px 6px 0 0;">
+            <span class="section-header-text">
                 Trade Portfolio {{ $tradePortfolio->id }}
             </span>
-            <span style="background: rgba(255,255,255,0.2); color: #ffffff; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">
+            <span style="background: #14b8a6; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">
                 {{ $api['portfolio']['source'] ?? 'N/A' }}
             </span>
         </td>
@@ -42,7 +42,7 @@
                     </td>
                     <td width="10%" style="text-align: center; border-right: 1px solid #e2e8f0; padding: 4px;">
                         <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Cash</div>
-                        <div style="font-size: 12px; font-weight: 700; color: #2563eb;">{{ $tradePortfolio->cash_target * 100 }}%</div>
+                        <div style="font-size: 12px; font-weight: 700; color: #0d9488;">{{ $tradePortfolio->cash_target * 100 }}%</div>
                     </td>
                     <td width="10%" style="text-align: center; border-right: 1px solid #e2e8f0; padding: 4px;">
                         <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Reserve</div>
@@ -138,7 +138,7 @@
                         @endforelse
                         @if($groupHasCash)
                             <tr style="background: #f0f9ff;">
-                                <td style="font-weight: 600; color: #2563eb;">CASH</td>
+                                <td style="font-weight: 600; color: #0d9488;">CASH</td>
                                 <td style="text-align: right;">{{ $cashPct }}%</td>
                             </tr>
                         @endif

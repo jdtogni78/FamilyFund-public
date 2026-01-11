@@ -147,7 +147,7 @@
                 ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1],
                 ['id' => 'section-shares', 'icon' => 'fa-chart-area', 'label' => 'Shares'],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
-                ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transactions'],
+                ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'History'],
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
             ]])
 
@@ -274,7 +274,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-                            <strong><i class="fa fa-chart-area" style="margin-right: 8px;"></i>Shares History</strong>
+                            <strong><i class="fa fa-coins" style="margin-right: 8px;"></i>Shares Holdings Over Time</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseShares"
                                role="button" aria-expanded="true" aria-controls="collapseShares">
                                 <i class="fa fa-chevron-down"></i>
@@ -334,12 +334,12 @@
                 </div>
             </div>
 
-            {{-- Transactions (Collapsible, start expanded) --}}
+            {{-- Transaction History (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-                            <strong><i class="fa fa-exchange-alt" style="margin-right: 8px;"></i>Transactions</strong>
+                            <strong><i class="fa fa-exchange-alt" style="margin-right: 8px;"></i>Transaction History</strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
                                role="button" aria-expanded="true" aria-controls="collapseTransactions">
                                 <i class="fa fa-chevron-down"></i>

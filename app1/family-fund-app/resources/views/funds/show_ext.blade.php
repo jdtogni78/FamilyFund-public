@@ -19,7 +19,7 @@
                     $totalValueRaw = floatval(str_replace(['$', ','], '', $totalValueRaw));
                 }
                 $totalValue = '$' . number_format($totalValueRaw, 0);
-                $sharePrice = $api['share_price'] ?? 0;
+                $sharePrice = $api['summary']['share_value'] ?? 0;
                 $accountsCount = count($api['balances'] ?? []);
             @endphp
             <div class="row mb-4" id="section-details">
@@ -85,8 +85,8 @@
                             $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? (100 - $allocatedPct);
                             $allocatedShares = ($api['summary']['shares'] ?? 0) * $allocatedPct / 100;
                             $unallocatedShares = ($api['summary']['shares'] ?? 0) - $allocatedShares;
-                            $allocatedValueCalc = $allocatedShares * ($api['share_price'] ?? 0);
-                            $unallocatedValueCalc = $unallocatedShares * ($api['share_price'] ?? 0);
+                            $allocatedValueCalc = $allocatedShares * ($api['summary']['share_value'] ?? 0);
+                            $unallocatedValueCalc = $unallocatedShares * ($api['summary']['share_value'] ?? 0);
                         @endphp
                         <div class="card-body py-3" style="background: #fffbeb; border-top: 1px solid #99f6e4;">
                             <div class="d-flex align-items-center mb-2">
@@ -161,7 +161,7 @@
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
                 ['id' => 'section-trade-portfolios', 'icon' => 'fa-briefcase', 'label' => 'Trade Portfolios'],
                 ['id' => 'section-assets-table', 'icon' => 'fa-coins', 'label' => 'Assets'],
-                ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transactions'],
+                ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transaction History', 'condition' => isset($api['admin'])],
                 ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin'])],
             ]])
 
@@ -261,7 +261,12 @@
                 </div>
             @endforeach
 
-            {{-- Trade Portfolios Comparison (includes Current Assets) --}}
+            {{-- Trade Portfolios Comparison by Group --}}
+            <div id="section-portfolios-groups">
+                @include('trade_portfolios.stacked_bar_groups_graph')
+            </div>
+
+            {{-- Trade Portfolios Comparison by Symbol --}}
             <div id="section-portfolios">
                 @include('trade_portfolios.stacked_bar_graph')
             </div>
@@ -390,12 +395,13 @@
                 </div>
             </div>
 
-            {{-- Transactions Table (Collapsible, start expanded) --}}
+            {{-- Transactions Table - Admin Only (Collapsible, start expanded) --}}
+            @isset($api['admin'])
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transactions</strong>
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #b45309; color: white; position: relative; z-index: 10;">
+                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transaction History <span class="badge badge-warning ml-2">ADMIN</span></strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
                                role="button" aria-expanded="true" aria-controls="collapseTransactions">
                                 <i class="fa fa-chevron-down"></i>
@@ -409,6 +415,7 @@
                     </div>
                 </div>
             </div>
+            @endisset
 
             {{-- Accounts Table - Admin Only (Collapsible, start expanded) --}}
             @isset($api['balances']) @isset($api['admin'])

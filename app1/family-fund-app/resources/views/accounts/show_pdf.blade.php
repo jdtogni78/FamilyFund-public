@@ -67,16 +67,16 @@
     {{-- Hero Header --}}
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
         <tr>
-            <td style="background-color: #0d9488; padding: 28px 24px; border-radius: 8px;">
+            <td class="hero-header-cell">
                 <table width="100%" cellspacing="0" cellpadding="0">
                     <tr>
                         <td width="65%">
-                            <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">{{ $account->nickname }}</div>
-                            <div style="font-size: 16px; color: #99f6e4;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
+                            <div style="font-size: 36px; font-weight: 800; color: #0f766e; margin-bottom: 6px;">{{ $account->nickname }}</div>
+                            <div style="font-size: 16px; color: #0d9488;">{{ $account->fund->name }} &bull; {{ $account->user->name }}</div>
                         </td>
                         <td width="35%" align="right">
-                            <div style="font-size: 42px; font-weight: 800; color: #ffffff;">${{ number_format($marketValue, 0) }}</div>
-                            <div style="font-size: 14px; color: #99f6e4; text-transform: uppercase;">Total Value</div>
+                            <div style="font-size: 42px; font-weight: 800; color: #0f766e;">${{ number_format($marketValue, 0) }}</div>
+                            <div style="font-size: 14px; color: #0d9488; text-transform: uppercase;">Total Value</div>
                         </td>
                     </tr>
                 </table>
@@ -113,19 +113,19 @@
             @endif
             @if($hasPrevYear)
             <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $prevYearGrowth >= 0 ? '+' : '' }}{{ number_format($prevYearGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">{{ $prevYearGrowth >= 0 ? '+' : '' }}{{ number_format($prevYearGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $prevYear }} Growth</div>
             </td>
             @endif
             @if($hasCurrentYear)
             <td width="12%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $currentYearGrowth >= 0 ? '+' : '' }}{{ number_format($currentYearGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">{{ $currentYearGrowth >= 0 ? '+' : '' }}{{ number_format($currentYearGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">{{ $currentYear }} YTD</div>
             </td>
             @endif
             @if(!empty($yearlyPerf))
             <td width="12%" style="padding: 10px 6px; text-align: center;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#16a34a' : '#dc2626' }};">{{ $allTimeGrowth >= 0 ? '+' : '' }}{{ number_format($allTimeGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#2563eb' : '#dc2626' }};">{{ $allTimeGrowth >= 0 ? '+' : '' }}{{ number_format($allTimeGrowth, 1) }}%</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">All-Time</div>
             </td>
             @endif
@@ -189,8 +189,8 @@
     @if($account->disbursement_cap !== 0.0)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #1e293b; font-weight: 700; font-size: 13px;">DISBURSEMENT ELIGIBILITY ({{ $disbYear }})</span>
+            <td class="section-header-cell">
+                <img src="{{ public_path('images/icons/money-bill.svg') }}" class="header-icon"><span class="section-header-text">DISBURSEMENT ELIGIBILITY ({{ $disbYear }})</span>
             </td>
         </tr>
         <tr>
@@ -224,8 +224,8 @@
     @foreach($account->goals as $goal)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; page-break-inside: avoid;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #1e293b; font-weight: 700; font-size: 13px;">{{ $goal->name }} - PROGRESS</span>
+            <td class="section-header-cell">
+                <img src="{{ public_path('images/icons/bullseye.svg') }}" class="header-icon"><span class="section-header-text">{{ $goal->name }} - PROGRESS</span>
             </td>
         </tr>
         <tr>
@@ -244,10 +244,10 @@
     @endif
 
     {{-- Monthly Value Chart --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #1e293b; font-weight: 700; font-size: 12px;">MONTHLY VALUE</span>
+            <td class="section-header-cell keep-with-next">
+                <img src="{{ public_path('images/icons/chart-line.svg') }}" class="header-icon"><span class="section-header-text">MONTHLY VALUE</span>
             </td>
         </tr>
         @if(isset($files['monthly_performance.png']) && file_exists($files['monthly_performance.png']))
@@ -266,10 +266,10 @@
     </table>
 
     {{-- Yearly Value Chart --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY VALUE</span>
+            <td class="section-header-cell keep-with-next">
+                <img src="{{ public_path('images/icons/chart-bar.svg') }}" class="header-icon"><span class="section-header-text">YEARLY VALUE</span>
             </td>
         </tr>
         <tr>
@@ -324,10 +324,10 @@
         @endif
 
         {{-- Forecast Chart --}}
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td style="background: #0d9488; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">10-YEAR FORECAST (LINEAR REGRESSION)</span>
+                <td class="section-header-cell keep-with-next">
+                    <img src="{{ public_path('images/icons/chart-area.svg') }}" class="header-icon"><span class="section-header-text">10-YEAR FORECAST (LINEAR REGRESSION)</span>
                 </td>
             </tr>
             <tr>
@@ -342,10 +342,10 @@
         </table>
 
         {{-- Projection Table --}}
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td style="background: #0d9488; padding: 10px 16px;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 12px;">PROJECTION TABLE</span>
+                <td class="section-header-cell keep-with-next">
+                    <img src="{{ public_path('images/icons/table.svg') }}" class="header-icon"><span class="section-header-text">PROJECTION TABLE</span>
                 </td>
             </tr>
             <tr>
@@ -384,7 +384,7 @@
     {{-- Shares Holdings --}}
     <div class="card mb-4">
         <div class="card-header">
-            <h4 class="card-header-title">Shares Holdings Over Time</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/coins.svg') }}" class="header-icon">Shares Holdings Over Time</h4>
         </div>
         <div class="card-body">
             <div class="chart-container">
@@ -401,10 +401,10 @@
     <h3 class="section-title">Performance Data</h3>
 
     {{-- Yearly Performance Table --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">YEARLY PERFORMANCE</span>
+            <td class="section-header-cell keep-with-next">
+                <img src="{{ public_path('images/icons/chart-bar.svg') }}" class="header-icon"><span class="section-header-text">YEARLY PERFORMANCE</span>
             </td>
         </tr>
         <tr>
@@ -416,10 +416,10 @@
     </table>
 
     {{-- Monthly Performance Table --}}
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    <table width="100%" cellspacing="0" cellpadding="0" class="keep-together" style="margin-bottom: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <tr>
-            <td style="background: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 12px;">MONTHLY PERFORMANCE (Recent)</span>
+            <td class="section-header-cell keep-with-next">
+                <img src="{{ public_path('images/icons/chart-line.svg') }}" class="header-icon"><span class="section-header-text">MONTHLY PERFORMANCE (Recent)</span>
             </td>
         </tr>
         <tr>
@@ -431,12 +431,12 @@
     </table>
 
     {{-- ============================================== --}}
-    {{-- TRANSACTIONS - Page 5 --}}
+    {{-- TRANSACTIONS --}}
     {{-- ============================================== --}}
     <div class="page-break"></div>
     <div class="card mb-4">
         <div class="card-header">
-            <h4 class="card-header-title">Transaction History</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Transaction History</h4>
         </div>
         <div class="card-body">
             @include('accounts.transactions_table_pdf')
@@ -448,17 +448,17 @@
     {{-- ============================================== --}}
     @if(!empty($api['matching_rules']))
         <div class="page-break"></div>
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #16a34a; border-radius: 8px; overflow: hidden;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #0d9488; border-radius: 8px; overflow: hidden;">
             <tr>
-                <td style="background: #16a34a; padding: 12px 16px;">
+                <td style="background: #f0fdf4; padding: 12px 16px; border-bottom: 1px solid #99f6e4;">
                     <table width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                             <td>
-                                <span style="color: #ffffff; font-weight: 700; font-size: 14px;">MATCHING CONTRIBUTION RULES</span>
+                                <img src="{{ public_path('images/icons/hand-holding-usd.svg') }}" style="width:16px;height:16px;margin-right:8px;vertical-align:middle;"><span style="color: #0f766e; font-weight: 700; font-size: 14px;">Matching Rules</span>
                             </td>
                             <td align="right">
-                                <span style="background: #ffffff; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px;">
-                                    ${{ number_format($matchingAvailable, 2) }} Available
+                                <span style="background: #10b981; color: #ffffff; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px;">
+                                    ${{ number_format($matchingAvailable, 0) }} AVAILABLE
                                 </span>
                             </td>
                         </tr>
@@ -466,7 +466,7 @@
                 </td>
             </tr>
             <tr>
-                <td style="padding: 16px; background: #f0fdf4;">
+                <td style="padding: 16px; background: #ffffff;">
                     @include('accounts.matching_rules_table_pdf')
                 </td>
             </tr>

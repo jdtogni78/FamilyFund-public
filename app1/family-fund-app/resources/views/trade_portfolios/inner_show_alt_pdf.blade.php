@@ -78,21 +78,23 @@
                 <table width="100%" cellspacing="0" cellpadding="0" style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
                     {{-- Header --}}
                     <tr>
-                        <td style="padding: 8px 12px; background: #1e293b; color: #ffffff;">
-                            <strong style="font-size: 12px;">Portfolio {{ $tp->id }}</strong>
+                        <td class="section-header-cell" style="padding: 8px 12px;">
+                            <strong class="section-header-text" style="font-size: 12px;">Portfolio {{ $tp->id }}</strong>
                         </td>
                     </tr>
 
                     {{-- Period & Settings --}}
                     <tr>
                         <td style="padding: 8px 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: center;">
-                            <div style="font-size: 10px; color: #64748b; margin-bottom: 6px;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
                                 {{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}
                             </div>
-                            <div style="font-size: 9px;">
-                                <span style="background: #2563eb; color: white; padding: 2px 4px; border-radius: 3px; margin-right: 2px;">Cash {{ $tp->cash_target * 100 }}%</span>
-                                <span style="background: #64748b; color: white; padding: 2px 4px; border-radius: 3px; margin-right: 2px;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
-                                <span style="background: #059669; color: white; padding: 2px 4px; border-radius: 3px;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
+                            <div style="font-size: 10px;">
+                                <span style="background: #0ea5e9; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Cash {{ $tp->cash_target * 100 }}%</span>
+                                <span style="background: #64748b; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
+                                <span style="background: #16a34a; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
+                                <span style="background: #7c3aed; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Max {{ $tp->max_single_order * 100 }}%</span>
+                                <span style="background: #dc2626; color: white; padding: 3px 6px; border-radius: 4px; font-weight: 600;">Rebal {{ $tp->rebalance_period }}d</span>
                             </div>
                         </td>
                     </tr>
@@ -140,10 +142,10 @@
                                         </tr>
                                     @endif
 
-                                    <tr @if($isCash) style="background: #f0f9ff;" @endif>
+                                    <tr @if($isCash) style="background: #f0fdfa;" @endif>
                                         <td style="padding: 4px 10px; border-bottom: 1px solid #f1f5f9;">
                                             @if($isCash)
-                                                <span style="color: #2563eb;">&#9679;</span>
+                                                <span style="color: #0d9488;">&#9679;</span>
                                             @endif
                                             {{ $symbol }}
                                         </td>

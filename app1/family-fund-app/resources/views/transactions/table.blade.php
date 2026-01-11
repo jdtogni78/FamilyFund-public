@@ -25,17 +25,17 @@
                 <td>
                     @php
                         $typeColors = [
-                            'PUR' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Purchase'],
-                            'INI' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Initial'],
-                            'SAL' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Sale'],
-                            'MAT' => ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7c3aed', 'label' => 'Matching'],
-                            'BOR' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Borrow'],
-                            'REP' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Repay'],
+                            'PUR' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Purchase', 'icon' => 'fa-arrow-up'],
+                            'INI' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Initial', 'icon' => 'fa-star'],
+                            'SAL' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Sale', 'icon' => 'fa-arrow-down'],
+                            'MAT' => ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7c3aed', 'label' => 'Matching', 'icon' => 'fa-gift'],
+                            'BOR' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Borrow', 'icon' => 'fa-hand-holding-usd'],
+                            'REP' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Repay', 'icon' => 'fa-undo'],
                         ];
-                        $tc = $typeColors[$transaction->type] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->type];
+                        $tc = $typeColors[$transaction->type] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->type, 'icon' => 'fa-circle'];
                     @endphp
                     <span class="badge" style="background: {{ $tc['bg'] }}; color: {{ $tc['text'] }}; border: 1px solid {{ $tc['border'] }};">
-                        {{ $tc['label'] }}
+                        <i class="fa {{ $tc['icon'] }} me-1"></i>{{ $tc['label'] }}
                     </span>
                 </td>
                 <td>

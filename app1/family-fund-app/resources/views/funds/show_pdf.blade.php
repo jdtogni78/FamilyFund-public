@@ -64,6 +64,9 @@
         <tr>
             <td colspan="7" style="padding: 12px 16px; background-color: #0d9488;">
                 <span style="color: #ffffff; font-size: 18px; font-weight: 700;">{{ $api['name'] }}</span>
+                @isset($api['admin'])
+                    <span style="background: #d97706; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: 600;">ADMIN</span>
+                @endisset
             </td>
         </tr>
         <!-- Stats Row -->
@@ -78,19 +81,19 @@
             </td>
             @if($prevYearKey)
             <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">@if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%</div>
                 <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">{{ $prevYear }} Growth</div>
             </td>
             @endif
             @if($currentYearKey)
             <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">@if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%</div>
                 <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">{{ $currentYear }} YTD</div>
             </td>
             @endif
             @if(!empty($yearlyPerf))
             <td style="background: #f0fdfa; padding: 12px 8px; text-align: center; border-right: 1px solid #99f6e4;">
-                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#16a34a' : '#dc2626' }};">@if($allTimeGrowth >= 0)+@endif{{ number_format($allTimeGrowth, 1) }}%</div>
+                <div style="font-size: 18px; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#2563eb' : '#dc2626' }};">@if($allTimeGrowth >= 0)+@endif{{ number_format($allTimeGrowth, 1) }}%</div>
                 <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">All-Time</div>
             </td>
             @endif
@@ -175,7 +178,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Monthly Value</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-line.svg') }}" class="header-icon">Monthly Value</h4>
         </div>
         <div class="card-body">
             @if(isset($files['monthly_performance.png']) && file_exists($files['monthly_performance.png']))
@@ -197,7 +200,7 @@
     <!-- Yearly Value Chart -->
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Yearly Value</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-bar.svg') }}" class="header-icon">Yearly Value</h4>
         </div>
         <div class="card-body">
             @if(isset($files['yearly_performance.png']) && file_exists($files['yearly_performance.png']))
@@ -219,7 +222,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">10-Year Projection</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-area.svg') }}" class="header-icon">10-Year Projection</h4>
         </div>
         <div class="card-body">
             @if(isset($files['forecast.png']) && file_exists($files['forecast.png']))
@@ -235,7 +238,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Projection Table</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Projection Table</h4>
         </div>
         <div class="card-body">
             <table class="table" style="width: 100%;">
@@ -269,7 +272,7 @@
     @foreach($api['asset_monthly_performance'] as $group => $perf)
         <div class="card mb-3 avoid-break">
             <div class="card-header">
-                <h4 class="card-header-title">{{ $group }} Group Performance</h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/layer-group.svg') }}" class="header-icon">{{ $group }} Group Performance</h4>
             </div>
             <div class="card-body">
                 @php($i = array_search($group, array_keys($api['asset_monthly_performance'])))
@@ -283,10 +286,23 @@
     <!-- Trade Portfolios Section -->
     <h3 class="section-title">Portfolio Allocation</h3>
 
+    @if(isset($files['portfolio_group_comparison.png']))
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/layer-group.svg') }}" class="header-icon">Portfolio Allocations by Group</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <img src="{{ $files['portfolio_group_comparison.png'] }}" alt="Portfolio Group Comparison" style="width: 100%;"/>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(isset($files['portfolio_comparison.png']))
         <div class="card mb-4">
             <div class="card-header">
-                <h4 class="card-header-title">Portfolio Allocations Comparison</h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/chart-bar.svg') }}" class="header-icon">Portfolio Allocations by Symbol</h4>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -301,7 +317,7 @@
                     <td width="50%" valign="top">
                         <div class="card" style="margin-bottom: 0;">
                             <div class="card-header">
-                                <h4 class="card-header-title">Target Allocation</h4>
+                                <h4 class="card-header-title"><img src="{{ public_path('images/icons/bullseye.svg') }}" class="header-icon">Target Allocation</h4>
                                 <div class="text-sm text-muted">
                                     {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
                                 </div>
@@ -316,7 +332,7 @@
                     <td width="50%" valign="top">
                         <div class="card" style="margin-bottom: 0;">
                             <div class="card-header">
-                                <h4 class="card-header-title">Group Allocation</h4>
+                                <h4 class="card-header-title"><img src="{{ public_path('images/icons/layer-group.svg') }}" class="header-icon">Group Allocation</h4>
                                 <div class="text-sm text-muted">
                                     {{ $tradePortfolio->start_dt->format('M j, Y') }} - {{ $tradePortfolio->end_dt->format('M j, Y') }}
                                 </div>
@@ -336,7 +352,7 @@
     <!-- Trade Portfolios Comparison -->
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Trade Portfolios Comparison</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/exchange.svg') }}" class="header-icon">Trade Portfolios Comparison</h4>
         </div>
         <div class="card-body">
             @include('trade_portfolios.inner_show_alt_pdf')
@@ -352,7 +368,7 @@
     @isset($api['balances']) @isset($api['admin'])
         <div class="card mb-3">
             <div class="card-header admin-header">
-                <h4 class="card-header-title">Accounts Allocation <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/users.svg') }}" class="header-icon">Accounts Allocation <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -367,7 +383,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Yearly Performance Data</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/calendar.svg') }}" class="header-icon">Yearly Performance Data</h4>
         </div>
         <div class="card-body">
             @php ($performance_key = 'yearly_performance')
@@ -377,7 +393,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Monthly Performance Data</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Monthly Performance Data</h4>
         </div>
         <div class="card-body">
             @php ($performance_key = 'monthly_performance')
@@ -388,18 +404,33 @@
     <!-- Assets Table -->
     <div class="card mb-3">
         <div class="card-header">
-            <h4 class="card-header-title">Assets</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/coins.svg') }}" class="header-icon">Assets</h4>
         </div>
         <div class="card-body">
             @include('funds.assets_table_pdf')
         </div>
     </div>
 
-    <!-- Admin Only: Accounts Table -->
-    @isset($api['balances']) @isset($api['admin'])
+    <!-- Admin Only: Transactions Table -->
+    @isset($api['admin'])
+    @isset($api['transactions'])
         <div class="card mb-3">
             <div class="card-header admin-header">
-                <h4 class="card-header-title">Accounts <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Transaction History <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
+            </div>
+            <div class="card-body">
+                @include('accounts.transactions_table_pdf')
+            </div>
+        </div>
+    @endisset
+    @endisset
+
+    <!-- Admin Only: Accounts Table -->
+    @isset($api['balances']) @isset($api['admin'])
+        <div class="page-break"></div>
+        <div class="card mb-3">
+            <div class="card-header admin-header">
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/users.svg') }}" class="header-icon">Accounts <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 @include('funds.accounts_table_pdf')

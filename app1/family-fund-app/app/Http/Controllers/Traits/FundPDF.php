@@ -162,6 +162,7 @@ class FundPDF
         $this->createMonthlyPerformanceGraph($arr, $tempDir);
         $this->createGroupMonthlyPerformanceGraphs($arr, $tempDir);
         $this->createForecastGraph($arr, $tempDir);
+        $this->createPortfolioGroupComparisonGraph($arr, $tempDir);
         $this->createPortfolioComparisonGraph($arr, $tempDir);
         $this->createTradePortfoliosGraph($arr, $tempDir);
         $this->createTradePortfoliosGroupGraph($arr, $tempDir);
@@ -341,6 +342,72 @@ class FundPDF
 
         $this->files[$name] = $file = $tempDir->path($name);
         $this->getQuickChartService()->generatePortfolioComparisonChart($portfolios, $file, null, null, $currentAssets);
+    }
+
+    public function createPortfolioGroupComparisonGraph(array $api, TemporaryDirectory $tempDir)
+    {
+        $arr = $api['tradePortfolios'];
+        if (count($arr) < 1) {
+            return; // Need at least 1 portfolio
+        }
+
+        $name = 'portfolio_group_comparison.png';
+
+        // Get cash asset's group
+        $cashAsset = \App\Models\AssetExt::getCashAsset();
+        $cashGroup = $cashAsset->display_group ?? 'Stability';
+
+        // Format portfolios with group data for the chart service
+        $portfolios = [];
+        foreach ($arr as $tradePortfolio) {
+            $groups = ['Growth' => 0, 'Stability' => 0, 'Crypto' => 0, 'Other' => 0];
+
+            foreach ($tradePortfolio->items as $item) {
+                $group = $item->group ?? 'Other';
+                if (!isset($groups[$group])) {
+                    $groups['Other'] += $item->target_share * 100;
+                } else {
+                    $groups[$group] += $item->target_share * 100;
+                }
+            }
+
+            // Add cash to its group
+            $cashPct = $tradePortfolio->cash_target * 100;
+            if (isset($groups[$cashGroup])) {
+                $groups[$cashGroup] += $cashPct;
+            } else {
+                $groups['Other'] += $cashPct;
+            }
+
+            $portfolios[] = [
+                'id' => $tradePortfolio->id,
+                'start_dt' => $tradePortfolio->start_dt->format('Y-m-d'),
+                'end_dt' => $tradePortfolio->end_dt->format('Y-m-d'),
+                'groups' => $groups,
+            ];
+        }
+
+        // Format current assets grouped for comparison
+        $currentGroups = null;
+        if (isset($api['portfolio']['assets'])) {
+            $totalValue = floatval(str_replace(['$', ','], '', $api['portfolio']['total_value'] ?? '0'));
+            if ($totalValue > 0) {
+                $currentGroups = ['Growth' => 0, 'Stability' => 0, 'Crypto' => 0, 'Other' => 0];
+                foreach ($api['portfolio']['assets'] as $asset) {
+                    $value = floatval(str_replace(['$', ','], '', $asset['value'] ?? '0'));
+                    $pct = ($value / $totalValue) * 100;
+                    $group = $asset['group'] ?? 'Other';
+                    if (!isset($currentGroups[$group])) {
+                        $currentGroups['Other'] += $pct;
+                    } else {
+                        $currentGroups[$group] += $pct;
+                    }
+                }
+            }
+        }
+
+        $this->files[$name] = $file = $tempDir->path($name);
+        $this->getQuickChartService()->generatePortfolioGroupComparisonChart($portfolios, $file, null, null, $currentGroups);
     }
 
 }

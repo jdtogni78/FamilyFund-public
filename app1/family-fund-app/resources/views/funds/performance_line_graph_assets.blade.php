@@ -64,7 +64,7 @@
         colorIndex++;
     }
 
-    new Chart(
+    registerChart(new Chart(
         document.getElementById('perfGraph' + group),
         {
             type: 'line',
@@ -140,7 +140,7 @@
                 }
             },
         }
-    );
+    ));
 })();
 </script>
 @endpush

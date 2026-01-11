@@ -57,7 +57,7 @@ datasets.push({
     fill: false,
 });
 
-var perfMonthlyChart = new Chart(
+var perfMonthlyChart = registerChart(new Chart(
     document.getElementById('perfGraphMonthly'),
     {
         type: 'line',
@@ -132,6 +132,6 @@ var perfMonthlyChart = new Chart(
             }
         },
     }
-);
+));
 </script>
 @endpush

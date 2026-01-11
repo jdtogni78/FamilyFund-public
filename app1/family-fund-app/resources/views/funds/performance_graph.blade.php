@@ -99,9 +99,9 @@ const perf_config = {
     },
 };
 
-var myChart = new Chart(
+var myChart = registerChart(new Chart(
     document.getElementById('perfGraph'),
     perf_config
-);
+));
 </script>
 @endpush

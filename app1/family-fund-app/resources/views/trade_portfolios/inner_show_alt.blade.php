@@ -88,7 +88,7 @@
                 </div>
 
                 {{-- Period & Settings --}}
-                <div class="card-body py-2" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <div class="card-body py-2 bg-slate-50 dark:bg-slate-700" style="border-bottom: 1px solid #e2e8f0;">
                     <div class="small text-center">
                         <div class="text-muted">{{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}</div>
                         <div class="mt-1 d-flex flex-wrap justify-content-center" style="gap: 4px;">

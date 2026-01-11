@@ -11,7 +11,7 @@
     </div>
     <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
-            <thead style="background: #f8fafc;">
+            <thead class="bg-slate-50 dark:bg-slate-700">
                 <tr>
                     <th>ID</th>
                     <th>Period</th>
@@ -128,7 +128,7 @@
     </div>
     <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
-            <thead style="background: #f8fafc;">
+            <thead class="bg-slate-50 dark:bg-slate-700">
                 <tr>
                     <th>Group</th>
                     <th>Symbol</th>

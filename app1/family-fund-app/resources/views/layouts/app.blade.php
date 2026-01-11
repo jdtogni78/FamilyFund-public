@@ -50,14 +50,35 @@
         ];
 
         // Theme colors
+        const isDarkMode = () => localStorage.getItem('darkMode') === 'true' || document.documentElement.classList.contains('dark');
         const chartTheme = {
             primary: '#2563eb',
             secondary: '#64748b',
             success: '#16a34a',
             warning: '#d97706',
             danger: '#dc2626',
-            fontColor: '#1e293b',
+            get fontColor() { return isDarkMode() ? '#e2e8f0' : '#1e293b'; },
         };
+
+        // Chart registry for dark mode updates
+        const chartRegistry = [];
+        function registerChart(chart) {
+            chartRegistry.push(chart);
+            return chart;
+        }
+
+        // Update all charts when dark mode toggles
+        window.addEventListener('toggle-dark-mode', function() {
+            setTimeout(() => {
+                const newColor = chartTheme.fontColor;
+                chartRegistry.forEach(chart => {
+                    if (chart.options.scales?.x?.ticks) chart.options.scales.x.ticks.color = newColor;
+                    if (chart.options.scales?.y?.ticks) chart.options.scales.y.ticks.color = newColor;
+                    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = newColor;
+                    chart.update();
+                });
+            }, 50);
+        });
 
         // Format number with thousand separators
         function formatNumber(num, decimals = 0) {
@@ -137,7 +158,7 @@
             const total = cleanData.reduce((a, b) => a + b, 0);
             const percents = total > 0 ? cleanData.map(v => (v / total) * 100) : cleanData.map(() => 0);
 
-            return new Chart(document.getElementById(canvasId), {
+            return registerChart(new Chart(document.getElementById(canvasId), {
                 type: 'doughnut',
                 data: {
                     labels: labels,
@@ -150,7 +171,7 @@
                     }]
                 },
                 options: getDoughnutOptions(percents, options)
-            });
+            }));
         }
         </script>
 

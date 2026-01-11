@@ -53,7 +53,7 @@ const linRegDatasets = [{
     borderDash: [5, 5],
 }];
 
-var linRegChart = new Chart(
+var linRegChart = registerChart(new Chart(
     document.getElementById('perfGraphLinReg'),
     {
         type: 'line',
@@ -127,6 +127,6 @@ var linRegChart = new Chart(
             }
         },
     }
-);
+));
 </script>
 @endpush

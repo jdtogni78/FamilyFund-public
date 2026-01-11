@@ -111,7 +111,7 @@
 
             {{-- Group Items --}}
             <table class="table table-sm table-hover mb-0" style="border: 1px solid #e2e8f0; border-top: none; font-size: 0.85rem;">
-                <thead style="background: #f8fafc;">
+                <thead class="bg-slate-50 dark:bg-slate-700">
                     <tr>
                         <th>Symbol</th>
                         <th class="text-right">Target</th>
@@ -161,7 +161,7 @@
                 <span class="badge" style="background: {{ $colors['border'] }}; color: white;">{{ number_format($items->sum('target_share') * 100, 1) }}%</span>
             </div>
             <table class="table table-sm table-hover mb-0" style="border: 1px solid #e2e8f0; border-top: none; font-size: 0.85rem;">
-                <thead style="background: #f8fafc;">
+                <thead class="bg-slate-50 dark:bg-slate-700">
                     <tr>
                         <th>Symbol</th>
                         <th class="text-right">Target</th>

@@ -100,7 +100,7 @@
                     }
                 };
 
-                new Chart(document.getElementById('perfGraph'), config);
+                registerChart(new Chart(document.getElementById('perfGraph'), config));
             } catch (e) {
                 console.error('Error creating yearly chart:', e);
                 $('#perfGraph').hide();

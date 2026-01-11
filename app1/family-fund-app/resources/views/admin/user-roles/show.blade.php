@@ -14,9 +14,14 @@
                 {{-- User Info Card --}}
                 <div class="col-lg-4">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fa fa-user me-2"></i>
-                            <strong>User Information</strong>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fa fa-user me-2"></i>
+                                <strong>User Information</strong>
+                            </div>
+                            <a class="btn btn-sm btn-primary" href="{{ route('admin.user-roles.index') }}">
+                                <i class="fa fa-arrow-left me-1"></i> Back
+                            </a>
                         </div>
                         <div class="card-body">
                             <dl class="row mb-0">

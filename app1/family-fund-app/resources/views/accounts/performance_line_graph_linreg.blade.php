@@ -60,7 +60,7 @@ $(document).ready(function() {
             borderDash: [5, 5],
         }];
 
-        new Chart(
+        registerChart(new Chart(
             document.getElementById('accountPerfGraphLinReg'),
             {
                 type: 'line',
@@ -134,7 +134,7 @@ $(document).ready(function() {
                     }
                 },
             }
-        );
+        ));
     } catch (e) {
         console.error('Error creating linear regression chart:', e);
     }

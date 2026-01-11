@@ -112,7 +112,21 @@
 </div>
 @else
 {{-- Web Layout --}}
-<div class="p-3 rounded goals-progress-container" style="background: var(--bs-tertiary-bg, #f8f9fa);">
+<style>
+    .dark .goal-box-expected { background: #422006 !important; border-color: #a16207 !important; }
+    .dark .goal-box-expected .goal-label { color: #fcd34d !important; }
+    .dark .goal-box-expected .goal-value { color: #fbbf24 !important; }
+    .dark .goal-box-expected .goal-yield { color: #fcd34d !important; }
+    .dark .goal-box-current-success { background: #14532d !important; border-color: #16a34a !important; }
+    .dark .goal-box-current-success .goal-label { color: #86efac !important; }
+    .dark .goal-box-current-success .goal-value { color: #4ade80 !important; }
+    .dark .goal-box-current-success .goal-yield { color: #86efac !important; }
+    .dark .goal-box-current-danger { background: #450a0a !important; border-color: #dc2626 !important; }
+    .dark .goal-box-current-danger .goal-label { color: #fca5a5 !important; }
+    .dark .goal-box-current-danger .goal-value { color: #f87171 !important; }
+    .dark .goal-box-current-danger .goal-yield { color: #fca5a5 !important; }
+</style>
+<div class="p-3 rounded" style="background: var(--bs-tertiary-bg, #f8f9fa);">
     {{-- Target explanation with 4% rule --}}
     <div class="mb-3 pb-3 border-bottom">
         <strong>Target:</strong>
@@ -130,24 +144,24 @@
     <div class="row text-center g-3 mb-3">
         {{-- Expected Box --}}
         <div class="col-md-6">
-            <div class="p-3 rounded h-100 bg-warning bg-opacity-25 border-start border-warning border-4">
-                <small class="text-body-secondary d-block">Expected ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <div class="mb-0 text-warning" style="font-size: 1.75rem; font-weight: 700;">${{ number_format($expectedValue, 0) }}</div>
-                <small class="text-body-secondary">${{ number_format($expectedYield, 0) }}/yr yield</small>
+            <div class="goal-box-expected p-3 rounded h-100" style="background: #fef9c3; border: 1px solid #fcd34d;">
+                <small class="goal-label text-uppercase d-block" style="font-size: 10px; color: #92400e;">Expected ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
+                <h3 class="goal-value mb-0" style="color: #d97706; font-size: 1.75rem;">${{ number_format($expectedValue, 0) }}</h3>
+                <small class="goal-yield" style="color: #92400e;">${{ number_format($expectedYield, 0) }}/yr yield</small>
             </div>
         </div>
         {{-- Current Box --}}
         <div class="col-md-6">
-            <div class="p-3 rounded h-100 {{ $isOnTrack ? 'bg-success' : 'bg-danger' }} bg-opacity-25 border-start border-4 {{ $isOnTrack ? 'border-success' : 'border-danger' }}">
-                <small class="text-body-secondary d-block">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <div class="mb-0 {{ $isOnTrack ? 'text-success' : 'text-danger' }}" style="font-size: 1.75rem; font-weight: 700;">${{ number_format($currentValue, 0) }}</div>
-                <small class="text-body-secondary">${{ number_format($currentYield, 0) }}/yr yield</small>
+            <div class="goal-box-current-{{ $isOnTrack ? 'success' : 'danger' }} p-3 rounded h-100" style="background: {{ $trackBg }}; border: 1px solid {{ $trackBorder }};">
+                <small class="goal-label text-uppercase d-block" style="font-size: 10px; color: {{ $isOnTrack ? '#166534' : '#991b1b' }};">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
+                <h3 class="goal-value mb-0" style="color: {{ $trackColor }}; font-size: 1.75rem;">${{ number_format($currentValue, 0) }}</h3>
+                <small class="goal-yield" style="color: {{ $isOnTrack ? '#166534' : '#991b1b' }};">${{ number_format($currentYield, 0) }}/yr yield</small>
             </div>
         </div>
     </div>
 
     {{-- On Track Badge with time ahead/behind --}}
-    <div class="alert {{ $isOnTrack ? 'alert-success' : 'alert-warning' }} mb-0 d-flex align-items-center">
+    <div class="alert {{ $isOnTrack ? 'alert-success' : 'alert-danger' }} mb-0 d-flex align-items-center">
         <i class="fa {{ $isOnTrack ? 'fa-check-circle' : 'fa-exclamation-triangle' }} fa-2x me-3"></i>
         <div>
             @if($isOnTrack)

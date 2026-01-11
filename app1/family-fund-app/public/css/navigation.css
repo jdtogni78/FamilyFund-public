@@ -562,7 +562,7 @@ html.dark .text-muted {
 }
 
 /* Navigation dropdown dark mode */
-html.dark nav [class*="bg-white"] {
+html.dark nav div.absolute[class*="bg-white"] {
     background-color: #1f2937 !important;
 }
 

@@ -73,8 +73,7 @@ class FundReportController extends AppBaseController
      */
     public function show($id)
     {
-        $fundReport = $this->fundReportRepository->find($id)
-            ->orderBy('as_of', 'desc');
+        $fundReport = $this->fundReportRepository->find($id);
 
         if (empty($fundReport)) {
             Flash::error('Fund Report not found');

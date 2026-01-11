@@ -33,6 +33,18 @@ class FundReportControllerExt extends FundReportController
             ->with('fundReports', $fundReports);
     }
 
+    public function show($id)
+    {
+        $fundReport = FundReport::with(['fund', 'scheduledJob.schedule'])->find($id);
+
+        if (empty($fundReport)) {
+            Flash::error('Fund Report not found');
+            return redirect(route('fundReports.index'));
+        }
+
+        return view('fund_reports.show')->with('fundReport', $fundReport);
+    }
+
     public function create()
     {
         $api = [

@@ -47,25 +47,22 @@
                 'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
             ],
         ],
-        'People & Users' => [
-            'icon' => 'fa fa-users',
-            'items' => [
-                'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
-                'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
-            ],
-        ],
     ];
 
-    // Add Operations menu for admins only
+    // Admin menu - includes People, Users, and Operations (for admins)
+    $adminItems = [
+        'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
+        'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
+    ];
+
     if (auth()->check() && auth()->user()->isAdmin()) {
-        $menu['Operations'] = [
-            'icon' => 'fa fa-cogs',
-            'items' => [
-                'Dashboard' => ['route' => 'operations.index', 'icon' => 'fa fa-tachometer'],
-                'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
-            ],
-        ];
+        $adminItems['Operations'] = ['route' => 'operations.index', 'icon' => 'fa fa-tachometer'];
     }
+
+    $menu['Admin'] = [
+        'icon' => 'fa fa-cog',
+        'items' => $adminItems,
+    ];
 
     View::share('menu', $menu);
 @endphp

@@ -184,10 +184,10 @@
         <span>Change Logs</span>
     </a>
 </li> -->
-<li class="nav-item nav-dropdown {{ Request::is('people*') ? 'active' : '' }}">
+<li class="nav-item nav-dropdown {{ Request::is('people*') || Request::is('users*') || Request::is('operations*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
-        <i class="nav-icon fa fa-users"></i>
-        <span>People & Users</span>
+        <i class="nav-icon fa fa-cog"></i>
+        <span>Admin</span>
     </a>
     <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('people*') ? 'active' : '' }}">
@@ -202,32 +202,13 @@
                 <span>Users</span>
             </a>
         </li>
-        <!-- <li class="nav-item {{ Request::is('addresses*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('addresses.index') }}">
-                <i class="nav-icon fa fa-map-marker"></i>
-                <span>Addresses</span>
-            </a>
-        </li> -->
-        <!-- <li class="nav-item {{ Request::is('id_documents*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('id_documents.index') }}">
-                <i class="nav-icon fa fa-id-card"></i>
-                <span>Id Documents</span>
+        @if(auth()->check() && auth()->user()->isAdmin())
+        <li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('operations.index') }}">
+                <i class="nav-icon fa fa-tachometer"></i>
+                <span>Operations</span>
             </a>
         </li>
-        <li class="nav-item {{ Request::is('phones*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('phones.index') }}">
-                <i class="nav-icon fa fa-phone"></i>
-                <span>Phones</span>
-            </a>
-        </li> -->
+        @endif
     </ul>
 </li>
-
-@if(auth()->check() && auth()->user()->isAdmin())
-<li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('operations.index') }}">
-        <i class="nav-icon fa fa-cogs"></i>
-        <span>Operations</span>
-    </a>
-</li>
-@endif

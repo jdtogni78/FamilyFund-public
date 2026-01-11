@@ -7,7 +7,6 @@ use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
 use App\Jobs\SendFundReport;
-use App\Models\FundReport;
 use App\Models\FundReportExt;
 use App\Repositories\FundReportRepository;
 use Illuminate\Http\Request;
@@ -25,7 +24,7 @@ class FundReportControllerExt extends FundReportController
 
     public function index(Request $request)
     {
-        $fundReports = FundReport::with('fund')
+        $fundReports = FundReportExt::with('fund')
             ->orderBy('as_of', 'desc')
             ->get();
 
@@ -35,7 +34,7 @@ class FundReportControllerExt extends FundReportController
 
     public function show($id)
     {
-        $fundReport = FundReport::with(['fund', 'scheduledJob.schedule'])->find($id);
+        $fundReport = FundReportExt::with(['fund', 'scheduledJob.schedule'])->find($id);
 
         if (empty($fundReport)) {
             Flash::error('Fund Report not found');

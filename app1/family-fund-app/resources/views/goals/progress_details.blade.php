@@ -13,7 +13,7 @@
 <div class="row g-3">
     {{-- Goal Target --}}
     <div class="col-md-6">
-        <div class="card h-100 bg-light">
+        <div class="card h-100">
             <div class="card-body">
                 <h6 class="text-muted mb-2"><i class="fa fa-bullseye me-1"></i> Target</h6>
                 @if($isTargetTotal)
@@ -50,7 +50,7 @@
 
     {{-- Time Progress --}}
     <div class="col-md-6">
-        <div class="card h-100 bg-light">
+        <div class="card h-100">
             <div class="card-body">
                 <h6 class="text-muted mb-2"><i class="fa fa-hourglass-half me-1"></i> Time Progress</h6>
                 <div class="mb-2">
@@ -76,24 +76,24 @@
                 <h6 class="text-muted mb-3"><i class="fa fa-balance-scale me-1"></i> Value Comparison</h6>
                 <div class="row text-center g-3">
                     <div class="col-md-4">
-                        <div class="p-3 rounded" style="background: #f1f5f9; border-left: 4px solid #64748b;">
-                            <small class="text-muted d-block">Starting ({{ $goal->start_dt->format('Y-m-d') }})</small>
-                            <h5 class="mb-0" style="color: #475569;">${{ number_format($goal->progress['start_value']['value'], 0) }}</h5>
-                            <small class="text-muted">${{ number_format($goal->progress['start_value']['value_4pct'], 0) }}/yr yield</small>
+                        <div class="p-3 rounded bg-secondary bg-opacity-10 border-start border-secondary border-4">
+                            <small class="text-body-secondary d-block">Starting ({{ $goal->start_dt->format('Y-m-d') }})</small>
+                            <h5 class="mb-0 text-body-secondary">${{ number_format($goal->progress['start_value']['value'], 0) }}</h5>
+                            <small class="text-body-secondary">${{ number_format($goal->progress['start_value']['value_4pct'], 0) }}/yr yield</small>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded" style="background: #fef3c7; border-left: 4px solid #d97706;">
-                            <small class="text-muted d-block">Expected ({{ $goal->as_of }})</small>
-                            <h5 class="mb-0" style="color: #d97706;">${{ number_format($goal->progress['expected']['value'], 0) }}</h5>
-                            <small class="text-muted">${{ number_format($goal->progress['expected']['value_4pct'], 0) }}/yr yield</small>
+                        <div class="p-3 rounded bg-warning bg-opacity-25 border-start border-warning border-4">
+                            <small class="text-body-secondary d-block">Expected ({{ $goal->as_of }})</small>
+                            <h5 class="mb-0 text-warning">${{ number_format($goal->progress['expected']['value'], 0) }}</h5>
+                            <small class="text-body-secondary">${{ number_format($goal->progress['expected']['value_4pct'], 0) }}/yr yield</small>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded" style="background: {{ $isOnTrack ? '#dcfce7' : '#fee2e2' }}; border-left: 4px solid {{ $isOnTrack ? '#16a34a' : '#dc2626' }};">
-                            <small class="text-muted d-block">Current ({{ $goal->as_of }})</small>
-                            <h5 class="mb-0" style="color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }};">${{ number_format($goal->progress['current']['value'], 0) }}</h5>
-                            <small class="text-muted">${{ number_format($goal->progress['current']['value_4pct'], 0) }}/yr yield</small>
+                        <div class="p-3 rounded {{ $isOnTrack ? 'bg-success' : 'bg-danger' }} bg-opacity-25 border-start border-4 {{ $isOnTrack ? 'border-success' : 'border-danger' }}">
+                            <small class="text-body-secondary d-block">Current ({{ $goal->as_of }})</small>
+                            <h5 class="mb-0 {{ $isOnTrack ? 'text-success' : 'text-danger' }}">${{ number_format($goal->progress['current']['value'], 0) }}</h5>
+                            <small class="text-body-secondary">${{ number_format($goal->progress['current']['value_4pct'], 0) }}/yr yield</small>
                         </div>
                     </div>
                 </div>

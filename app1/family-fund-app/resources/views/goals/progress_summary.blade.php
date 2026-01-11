@@ -69,7 +69,7 @@
 </table>
 @else
 {{-- Web Layout (matching PDF style) --}}
-<div class="mb-3 {{ $loop->last ?? false ? 'mb-0' : '' }}" style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
+<div class="mb-3 {{ $loop->last ?? false ? 'mb-0' : '' }} goals-summary-row" style="background: var(--bs-tertiary-bg, #f8fafc); padding: 12px 16px; border-radius: 8px;">
     <div class="d-flex align-items-center mb-2">
         <div style="flex: 1;">
             <div style="font-weight: 700; color: #0d9488; font-size: 14px;">{{ $goal->name }}</div>

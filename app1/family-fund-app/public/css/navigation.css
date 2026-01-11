@@ -665,3 +665,11 @@ html.dark [style*="--bs-tertiary-bg"] {
 html.dark .goals-progress-container {
     background-color: #1f2937 !important;
 }
+
+html.dark .goals-summary-row {
+    background-color: #1f2937 !important;
+}
+
+html.dark .bg-secondary.bg-opacity-10 {
+    background-color: rgba(107, 114, 128, 0.15) !important;
+}

@@ -30,6 +30,8 @@ class OperationLog extends Model
     const OP_QUEUE_RETRY = 'queue_retry';
     const OP_QUEUE_RETRY_ALL = 'queue_retry_all';
     const OP_QUEUE_FLUSH = 'queue_flush';
+    const OP_QUEUE_JOB_COMPLETED = 'queue_job_completed';
+    const OP_QUEUE_JOB_FAILED = 'queue_job_failed';
 
     public static array $operationMap = [
         self::OP_RUN_DUE_JOBS => 'Run Due Scheduled Jobs',
@@ -39,6 +41,8 @@ class OperationLog extends Model
         self::OP_QUEUE_RETRY => 'Retry Failed Job',
         self::OP_QUEUE_RETRY_ALL => 'Retry All Failed Jobs',
         self::OP_QUEUE_FLUSH => 'Flush Failed Jobs',
+        self::OP_QUEUE_JOB_COMPLETED => 'Queue Job Completed',
+        self::OP_QUEUE_JOB_FAILED => 'Queue Job Failed',
     ];
 
     public function user(): BelongsTo

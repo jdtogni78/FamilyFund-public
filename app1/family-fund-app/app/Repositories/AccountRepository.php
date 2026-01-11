@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Models\AccountExt;
 use App\Repositories\BaseRepository;
+use App\Repositories\Traits\AuthorizesQueries;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class AccountRepository
@@ -13,6 +15,8 @@ use App\Repositories\BaseRepository;
 
 class AccountRepository extends BaseRepository
 {
+    use AuthorizesQueries;
+
     /**
      * @var array
      */
@@ -40,5 +44,19 @@ class AccountRepository extends BaseRepository
     public function model()
     {
         return AccountExt::class;
+    }
+
+    /**
+     * Apply authorization scope to filter accounts.
+     */
+    protected function applyAuthorizationScope(Builder $query): Builder
+    {
+        $authService = $this->getAuthorizationService();
+
+        if (!$authService) {
+            return $query;
+        }
+
+        return $authService->scopeAccountsQuery($query);
     }
 }

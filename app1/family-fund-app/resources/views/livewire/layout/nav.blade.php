@@ -53,7 +53,19 @@
                 'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
                 'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
             ],
-        ]
+        ],
     ];
+
+    // Add Operations menu for admins only
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        $menu['Operations'] = [
+            'icon' => 'fa fa-cogs',
+            'items' => [
+                'Dashboard' => ['route' => 'operations.index', 'icon' => 'fa fa-tachometer'],
+                'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
+            ],
+        ];
+    }
+
     View::share('menu', $menu);
 @endphp

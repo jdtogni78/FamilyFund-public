@@ -10,7 +10,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "bacon/bacon-qr-code": "^3.0",
         "coreui/coreui": "^5.2",
+        "jenssegers/agent": "^2.6",
         "knplabs/knp-snappy": "^1.4",
         "laracasts/flash": "^3.2",
         "laravel/framework": "^12.0",
@@ -20,6 +22,8 @@
         "livewire/livewire": "^3.4",
         "livewire/volt": "^1.0",
         "php-ai/php-ml": "^0.10.0",
+        "pragmarx/google2fa-laravel": "^2.3",
+        "spatie/laravel-permission": "^6.24",
         "spatie/temporary-directory": "^2.3",
         "szymach/c-pchart": "^3.0"
     },

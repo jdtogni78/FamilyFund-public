@@ -1,21 +1,47 @@
 <div class="table-responsive">
+    @php
+        $currentSort = request('sort', 'start_dt');
+        $currentDir = request('dir', 'desc');
+        $nextDir = $currentDir === 'asc' ? 'desc' : 'asc';
+
+        function sortLinkPA($column, $label, $currentSort, $currentDir, $nextDir) {
+            $isActive = $currentSort === $column;
+            $dir = $isActive ? $nextDir : 'desc';
+            $icon = '';
+            if ($isActive) {
+                $icon = $currentDir === 'asc' ? ' <i class="fa fa-sort-up"></i>' : ' <i class="fa fa-sort-down"></i>';
+            }
+            $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $dir]);
+            return '<a href="' . $url . '" class="text-decoration-none' . ($isActive ? ' fw-bold' : '') . '">' . $label . $icon . '</a>';
+        }
+    @endphp
     <table class="table table-striped" id="portfolioAssets-table">
         <thead>
             <tr>
-                <th>Fund</th>
-                <th>Asset</th>
-                <th>Position</th>
-                <th>Start Date</th>
-                <th>End Date</th>
+                <th>{!! sortLinkPA('fund', 'Fund', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLinkPA('asset', 'Asset', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLinkPA('position', 'Position', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLinkPA('start_dt', 'Start Date', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLinkPA('end_dt', 'End Date', $currentSort, $currentDir, $nextDir) !!}</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($portfolioAssets as $portfolioAsset)
-            <tr>
+            @php
+                $isOverlapping = in_array($portfolioAsset->id, $dataWarnings['overlappingIds'] ?? []);
+                $hasGap = in_array($portfolioAsset->id, $dataWarnings['gapIds'] ?? []);
+            @endphp
+            <tr class="{{ ($isOverlapping || $hasGap) ? 'table-warning' : '' }}">
                 <td>
+                    @if($isOverlapping)
+                        <i class="fa fa-clone text-warning me-1" title="Overlapping date range"></i>
+                    @endif
+                    @if($hasGap)
+                        <i class="fa fa-calendar-times text-warning me-1" title="Adjacent to data gap"></i>
+                    @endif
                     @if($portfolioAsset->portfolio && $portfolioAsset->portfolio->fund)
-                        <a href="{{ route('portfolioAssets.index', ['portfolio_id' => $portfolioAsset->portfolio_id]) }}">
+                        <a href="{{ route('portfolioAssets.index', ['fund_id' => $portfolioAsset->portfolio->fund_id]) }}">
                             {{ $portfolioAsset->portfolio->fund->name }}
                         </a>
                     @else

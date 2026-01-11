@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\AssetPriceController;
+use App\Http\Controllers\Traits\DetectsDataIssuesTrait;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class AssetPriceControllerExt extends AssetPriceController
 {
+    use DetectsDataIssuesTrait;
     public function __construct(AssetPriceRepository $assetPriceRepo)
     {
         parent::__construct($assetPriceRepo);
@@ -61,11 +63,33 @@ class AssetPriceControllerExt extends AssetPriceController
             $query->where('start_dt', '<=', $endDt);
         }
 
-        // Order by asset name, then by date descending
+        // Join for sorting by asset name/type
         $query->join('assets', 'asset_prices.asset_id', '=', 'assets.id')
-            ->orderBy('assets.name')
-            ->orderBy('asset_prices.start_dt', 'desc')
             ->select('asset_prices.*');
+
+        // Dynamic sorting
+        $sortColumn = $request->input('sort', 'start_dt');
+        $sortDir = $request->input('dir', 'desc');
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+
+        switch ($sortColumn) {
+            case 'asset':
+                $query->orderBy('assets.name', $sortDir);
+                break;
+            case 'type':
+                $query->orderBy('assets.type', $sortDir);
+                break;
+            case 'price':
+                $query->orderBy('asset_prices.price', $sortDir);
+                break;
+            case 'end_dt':
+                $query->orderBy('asset_prices.end_dt', $sortDir);
+                break;
+            case 'start_dt':
+            default:
+                $query->orderBy('asset_prices.start_dt', $sortDir);
+                break;
+        }
 
         $assetPrices = $query->paginate(50);
 
@@ -87,16 +111,24 @@ class AssetPriceControllerExt extends AssetPriceController
         // Get asset map - filtered by fund if selected
         $assetMap = $this->getAssetMapWithType($fundId);
 
+        // Detect data issues (overlaps and gaps)
+        $dataWarnings = $this->detectDataIssues($assetPrices, 'asset_id', 'asset');
+
         $api = [
             'assetMap' => $assetMap,
             'fundMap' => $this->getFundMap(),
             'filters' => $request->only(['asset_id', 'fund_id', 'start_dt', 'end_dt']),
         ];
 
+        // Collect issue dates for chart visualization
+        $issueDates = $this->collectIssueDates($dataWarnings);
+
         return view('asset_prices.index')
             ->with('assetPrices', $assetPrices)
             ->with('api', $api)
-            ->with('chartData', $chartData);
+            ->with('chartData', $chartData)
+            ->with('dataWarnings', $dataWarnings)
+            ->with('issueDates', $issueDates);
     }
 
     /**

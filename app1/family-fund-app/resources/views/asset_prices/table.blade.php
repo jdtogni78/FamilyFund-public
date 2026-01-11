@@ -1,19 +1,45 @@
 <div class="table-responsive-sm">
+    @php
+        $currentSort = request('sort', 'start_dt');
+        $currentDir = request('dir', 'desc');
+        $nextDir = $currentDir === 'asc' ? 'desc' : 'asc';
+
+        function sortLink($column, $label, $currentSort, $currentDir, $nextDir) {
+            $isActive = $currentSort === $column;
+            $dir = $isActive ? $nextDir : 'desc';
+            $icon = '';
+            if ($isActive) {
+                $icon = $currentDir === 'asc' ? ' <i class="fa fa-sort-up"></i>' : ' <i class="fa fa-sort-down"></i>';
+            }
+            $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $dir]);
+            return '<a href="' . $url . '" class="text-decoration-none' . ($isActive ? ' fw-bold' : '') . '">' . $label . $icon . '</a>';
+        }
+    @endphp
     <table class="table table-striped" id="assetPrices-table">
         <thead>
             <tr>
-                <th>Asset</th>
-                <th>Type</th>
-                <th>Price</th>
-                <th>Start Date</th>
-                <th>End Date</th>
+                <th>{!! sortLink('asset', 'Asset', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLink('type', 'Type', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLink('price', 'Price', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLink('start_dt', 'Start Date', $currentSort, $currentDir, $nextDir) !!}</th>
+                <th>{!! sortLink('end_dt', 'End Date', $currentSort, $currentDir, $nextDir) !!}</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($assetPrices as $assetPrice)
-            <tr>
+            @php
+                $isOverlapping = in_array($assetPrice->id, $dataWarnings['overlappingIds'] ?? []);
+                $hasGap = in_array($assetPrice->id, $dataWarnings['gapIds'] ?? []);
+            @endphp
+            <tr class="{{ ($isOverlapping || $hasGap) ? 'table-warning' : '' }}">
                 <td>
+                    @if($isOverlapping)
+                        <i class="fa fa-clone text-warning me-1" title="Overlapping date range"></i>
+                    @endif
+                    @if($hasGap)
+                        <i class="fa fa-calendar-times text-warning me-1" title="Adjacent to data gap"></i>
+                    @endif
                     <a href="{{ route('assetPrices.index', ['asset_id' => $assetPrice->asset_id]) }}">
                         {{ $assetPrice->asset->name ?? 'Unknown' }}
                     </a>

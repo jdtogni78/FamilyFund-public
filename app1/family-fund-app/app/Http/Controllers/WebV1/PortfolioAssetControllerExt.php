@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\PortfolioAssetController;
+use App\Http\Controllers\Traits\DetectsDataIssuesTrait;
 use App\Models\AssetExt;
 use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class PortfolioAssetControllerExt extends PortfolioAssetController
 {
+    use DetectsDataIssuesTrait;
     public function __construct(PortfolioAssetRepository $portfolioAssetRepo)
     {
         parent::__construct($portfolioAssetRepo);
@@ -62,11 +64,35 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
             $query->where('start_dt', '<=', $endDt);
         }
 
-        // Order by asset name, then by date descending
+        // Join for sorting
         $query->join('assets', 'portfolio_assets.asset_id', '=', 'assets.id')
-            ->orderBy('assets.name')
-            ->orderBy('portfolio_assets.start_dt', 'desc')
+            ->join('portfolios', 'portfolio_assets.portfolio_id', '=', 'portfolios.id')
+            ->join('funds', 'portfolios.fund_id', '=', 'funds.id')
             ->select('portfolio_assets.*');
+
+        // Dynamic sorting
+        $sortColumn = $request->input('sort', 'start_dt');
+        $sortDir = $request->input('dir', 'desc');
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+
+        switch ($sortColumn) {
+            case 'fund':
+                $query->orderBy('funds.name', $sortDir);
+                break;
+            case 'asset':
+                $query->orderBy('assets.name', $sortDir);
+                break;
+            case 'position':
+                $query->orderBy('portfolio_assets.position', $sortDir);
+                break;
+            case 'end_dt':
+                $query->orderBy('portfolio_assets.end_dt', $sortDir);
+                break;
+            case 'start_dt':
+            default:
+                $query->orderBy('portfolio_assets.start_dt', $sortDir);
+                break;
+        }
 
         $portfolioAssets = $query->paginate(50);
 
@@ -88,16 +114,24 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
         // Get asset map - filtered by fund if selected
         $assetMap = $this->getAssetMapWithType($fundId);
 
+        // Detect data issues (overlaps and gaps)
+        $dataWarnings = $this->detectDataIssues($portfolioAssets, 'asset_id', 'asset');
+
         $api = [
             'assetMap' => $assetMap,
             'fundMap' => $this->getFundMap(),
             'filters' => $request->only(['asset_id', 'fund_id', 'start_dt', 'end_dt']),
         ];
 
+        // Collect issue dates for chart visualization
+        $issueDates = $this->collectIssueDates($dataWarnings);
+
         return view('portfolio_assets.index')
             ->with('portfolioAssets', $portfolioAssets)
             ->with('api', $api)
-            ->with('chartData', $chartData);
+            ->with('chartData', $chartData)
+            ->with('dataWarnings', $dataWarnings)
+            ->with('issueDates', $issueDates);
     }
 
     /**

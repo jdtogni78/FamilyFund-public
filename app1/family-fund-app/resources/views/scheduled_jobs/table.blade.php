@@ -79,7 +79,11 @@
                     <div class='btn-group'>
                         <a href="{{ route('scheduledJobs.show', [$scheduledJob->id]) }}" class='btn btn-ghost-success' title="View"><i class="fa fa-eye"></i></a>
                         <a href="{{ route('scheduledJobs.edit', [$scheduledJob->id]) }}" class='btn btn-ghost-info' title="Edit"><i class="fa fa-edit"></i></a>
-                        <a href="{{ route('scheduledJobs.preview', ['id' => $scheduledJob->id, 'asOf' => now()->format('Y-m-d')]) }}" class="btn btn-ghost-warning" title="Preview/Run"><i class="fa fa-play"></i></a>
+                        <a href="{{ route('scheduledJobs.preview', ['id' => $scheduledJob->id, 'asOf' => now()->format('Y-m-d')]) }}" class="btn btn-ghost-warning" title="Preview"><i class="fa fa-eye"></i></a>
+                        <form action="{{ route('scheduledJobs.force-run', ['id' => $scheduledJob->id, 'asOf' => now()->format('Y-m-d')]) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-danger" title="Force Run" onclick="return confirm('Force run will bypass schedule checks. Are you sure?')"><i class="fa fa-forward"></i></button>
+                        </form>
                         <form action="{{ route('scheduledJobs.destroy', $scheduledJob->id) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')

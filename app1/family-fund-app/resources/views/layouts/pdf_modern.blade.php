@@ -217,6 +217,30 @@
             object-fit: contain;
         }
 
+        /* Generic icon classes for all SVG icons */
+        .icon {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            object-fit: contain;
+        }
+
+        .icon-sm {
+            width: 10px;
+            height: 10px;
+            vertical-align: middle;
+            margin-right: 3px;
+            object-fit: contain;
+        }
+
+        .icon-md {
+            width: 12px;
+            height: 12px;
+            vertical-align: middle;
+            margin-right: 6px;
+            object-fit: contain;
+        }
+
         /* Section header for table-based layouts */
         .section-header-cell {
             padding: 10px 16px;

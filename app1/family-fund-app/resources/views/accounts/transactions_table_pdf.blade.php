@@ -65,7 +65,7 @@
             <td>{{ \Carbon\Carbon::parse($trans->timestamp)->format('Y-m-d') }}</td>
             <td>
                 <span style="background: {{ $typeBg }}; color: {{ $typeColor }}; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 10px;">
-                    <img src="{{ public_path('images/icons/' . $typeIconFile) }}" style="width: 10px; height: 10px; vertical-align: middle; margin-right: 2px;"> {{ $typeStr }}
+                    <img src="{{ public_path('images/icons/' . $typeIconFile) }}" class="icon-sm"> {{ $typeStr }}
                 </span>
             </td>
             <td>

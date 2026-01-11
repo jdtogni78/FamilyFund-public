@@ -79,7 +79,7 @@
                     {{-- Header --}}
                     <tr>
                         <td class="section-header-cell" style="padding: 8px 12px;">
-                            <img src="{{ public_path('images/icons/columns.svg') }}" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 6px; object-fit: contain;">
+                            <img src="{{ public_path('images/icons/columns.svg') }}" class="icon-md">
                             <strong class="section-header-text" style="font-size: 12px;">Portfolio {{ $tp->id }}</strong>
                         </td>
                     </tr>

@@ -454,7 +454,7 @@
                     <table width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                             <td>
-                                <img src="{{ public_path('images/icons/hand-holding-usd.svg') }}" style="width:16px;height:16px;margin-right:8px;vertical-align:middle;"><span style="color: #0f766e; font-weight: 700; font-size: 14px;">Matching Rules</span>
+                                <img src="{{ public_path('images/icons/hand-holding-usd.svg') }}" class="header-icon"><span style="color: #0f766e; font-weight: 700; font-size: 14px;">Matching Rules</span>
                             </td>
                             <td align="right">
                                 <span style="background: #10b981; color: #ffffff; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px;">

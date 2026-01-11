@@ -928,30 +928,34 @@ class QuickChartService
         }
         $allSymbols[] = 'Cash';
 
-        // Create datasets - one per symbol
+        // Create datasets - one per symbol (with deviation triggers)
         $datasets = [];
         foreach ($allSymbols as $i => $symbol) {
             $data = [];
+            $deviations = [];
             // Add data for each trade portfolio
             foreach ($portfolios as $portfolio) {
                 if ($symbol === 'Cash') {
                     $data[] = ($portfolio['cash_target'] ?? 0) * 100;
+                    $deviations[] = 0;
                 } else {
                     $found = false;
                     foreach ($portfolio['items'] as $item) {
                         if ($item['symbol'] === $symbol) {
                             $data[] = $item['target_share'] * 100;
+                            $deviations[] = ($item['deviation_trigger'] ?? 0) * 100;
                             $found = true;
                             break;
                         }
                     }
                     if (!$found) {
                         $data[] = 0;
+                        $deviations[] = 0;
                     }
                 }
             }
 
-            // Add data for current assets if provided
+            // Add data for current assets if provided (no deviations for current)
             if ($currentAssets) {
                 if ($symbol === 'Cash') {
                     // Find cash in current assets
@@ -979,12 +983,14 @@ class QuickChartService
                         $data[] = 0;
                     }
                 }
+                $deviations[] = 0; // No deviation for current assets
             }
 
             $color = $this->datasetColors[$i % count($this->datasetColors)];
             $datasets[] = [
                 'label' => $symbol,
                 'data' => $data,
+                'deviations' => $deviations,
                 'backgroundColor' => $color,
                 'borderColor' => '#ffffff',
                 'borderWidth' => 1,
@@ -1039,7 +1045,7 @@ class QuickChartService
                             'size' => 9,
                             'weight' => 'bold',
                         ],
-                        'formatter' => "function(value, context) { if (value < 2) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
+                        'formatter' => "function(value, context) { if (value < 2) return ''; var label = context.dataset.label + ' ' + value.toFixed(1) + '%'; var dev = context.dataset.deviations ? context.dataset.deviations[context.dataIndex] : 0; if (dev > 0) label += ' ±' + dev.toFixed(0) + '%'; return label; }",
                         'textShadowColor' => 'rgba(0,0,0,0.5)',
                         'textShadowBlur' => 3,
                     ],
@@ -1169,7 +1175,7 @@ class QuickChartService
                             'size' => 12,
                             'weight' => 'bold',
                         ],
-                        'formatter' => "function(value, context) { if (value < 5) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
+                        'formatter' => "function(value, context) { if (value < 5) return ''; return context.dataset.label + ' ' + value.toFixed(1) + '%'; }",
                         'textShadowColor' => 'rgba(0,0,0,0.5)',
                         'textShadowBlur' => 3,
                     ],

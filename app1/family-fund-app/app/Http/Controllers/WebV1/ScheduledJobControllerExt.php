@@ -145,6 +145,39 @@ class ScheduledJobControllerExt extends ScheduledJobController
         return redirect(route('scheduledJobs.show', $id));
     }
 
+    public function forceRunScheduledJob($id, $asOf)
+    {
+        $scheduledJob = ScheduledJobExt::find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+            return redirect()->back()->withErrors('Scheduled Job not found');
+        }
+
+        DB::beginTransaction();
+        try {
+            list ($data, $error) = $this->forceRunJob(new Carbon($asOf), $scheduledJob);
+
+            if (null !== $error) {
+                DB::rollBack();
+                Flash::error('Job failed: ' . $error->getMessage());
+            } elseif (null === $data) {
+                DB::rollBack();
+                Flash::warning('Job did not produce any output.');
+            } else {
+                DB::commit();
+                Flash::success('Scheduled job force executed successfully. Email will be sent via queue.');
+                Log::info('Force executed scheduled job: ' . $scheduledJob->id . ', created: ' . get_class($data) . ' #' . $data->id);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Force run scheduled job failed: ' . $e->getMessage());
+            Flash::error('Job failed: ' . $e->getMessage());
+        }
+
+        return redirect(route('scheduledJobs.show', $id));
+    }
+
     private function getChildren(ScheduledJobExt $scheduledJob)
     {
         $children = null;

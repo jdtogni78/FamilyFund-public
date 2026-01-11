@@ -35,6 +35,12 @@
                                         <i class="fa fa-play me-1"></i> Run Now
                                     </button>
                                 </form>
+                                <form action="{{ route('scheduledJobs.force-run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Force run will bypass schedule checks. Are you sure?')">
+                                        <i class="fa fa-forward me-1"></i> Force Run
+                                    </button>
+                                </form>
                                 <a href="{{ route('scheduledJobs.index') }}" class="btn btn-light">Back</a>
                             </div>
                         </div>

@@ -74,4 +74,24 @@ Trait ScheduledJobTrait
         return $this->$func($shouldRunByDate, $schedule, $asOf);
     }
 
+    /**
+     * Force run a scheduled job, bypassing the schedule check
+     */
+    public function forceRunJob(Carbon $asOf, ScheduledJob $schedule): array
+    {
+        Log::info('Force running scheduled job: ' . $schedule->id);
+
+        try {
+            $model = $this->scheduleDue($asOf, $schedule, $asOf);
+            if ($model !== null) {
+                Log::info('Force run scheduled job ' . $schedule->id . ' succeeded');
+                return [$model, null];
+            }
+            return [null, new \Exception('Job returned no data')];
+        } catch (\Exception $e) {
+            report($e);
+            return [null, $e];
+        }
+    }
+
 }

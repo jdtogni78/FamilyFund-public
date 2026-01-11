@@ -7,8 +7,10 @@ use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
 use App\Jobs\SendFundReport;
+use App\Models\FundReport;
 use App\Models\FundReportExt;
 use App\Repositories\FundReportRepository;
+use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Response;
 
@@ -19,6 +21,16 @@ class FundReportControllerExt extends FundReportController
     public function __construct(FundReportRepository $fundReportRepo)
     {
         parent::__construct($fundReportRepo);
+    }
+
+    public function index(Request $request)
+    {
+        $fundReports = FundReport::with('fund')
+            ->orderBy('as_of', 'desc')
+            ->get();
+
+        return view('fund_reports.index')
+            ->with('fundReports', $fundReports);
     }
 
     public function create()

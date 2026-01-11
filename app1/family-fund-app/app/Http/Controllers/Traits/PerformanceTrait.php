@@ -77,7 +77,9 @@ trait PerformanceTrait
         }
         $yp = array();
         $yp['value'] = Utils::currency($value);
-        $yp['price'] = Utils::currency($value); // For chart compatibility
+        // Cash price is always $1 - use constant to show 0% growth in performance charts
+        // (value changes from deposits/withdrawals, not price appreciation)
+        $yp['price'] = Utils::currency(1);
         return $yp;
     }
 

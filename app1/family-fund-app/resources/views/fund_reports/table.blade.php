@@ -3,7 +3,7 @@
         <thead>
         <tr>
             <th>Id</th>
-            <th>Fund Id</th>
+            <th>Fund</th>
             <th>Type</th>
             <th>As Of</th>
             <th>Scheduled Job Id</th>
@@ -15,7 +15,7 @@
         @foreach($fundReports as $fundReport)
             <tr>
                 <td>{{ $fundReport->id }}</td>
-                <td>{{ $fundReport->fund_id }}</td>
+                <td>{{ $fundReport->fund->name ?? 'N/A' }}</td>
                 <td>{{ $fundReport->type }}</td>
                 <td>{{ $fundReport->as_of->format('Y-m-d') }}</td>
                 <td>{{ $fundReport->scheduled_job_id }}</td>

@@ -14,6 +14,8 @@ class ScheduledJobExt extends ScheduledJob
     const ENTITY_FUND_REPORT = 'fund_report';
     const ENTITY_TRANSACTION = 'transaction';
     const ENTITY_TRADE_BAND_REPORT = 'trade_band_report';
+    /** @deprecated Use ENTITY_TRADE_BAND_REPORT instead */
+    const ENTITY_PORTFOLIO_REPORT = 'portfolio_report';
 
     public static $entityMap = [
         self::ENTITY_FUND_REPORT => 'Fund Report',
@@ -24,11 +26,15 @@ class ScheduledJobExt extends ScheduledJob
         self::ENTITY_FUND_REPORT => 'as_of',
         self::ENTITY_TRANSACTION => 'timestamp',
         self::ENTITY_TRADE_BAND_REPORT => 'as_of',
+        // Backwards compatibility for old portfolio_report records
+        self::ENTITY_PORTFOLIO_REPORT => 'as_of',
     ];
     private static $classMap = [
         self::ENTITY_FUND_REPORT => FundReportExt::class,
         self::ENTITY_TRANSACTION => TransactionExt::class,
         self::ENTITY_TRADE_BAND_REPORT => TradeBandReport::class,
+        // Backwards compatibility for old portfolio_report records
+        self::ENTITY_PORTFOLIO_REPORT => TradeBandReport::class,
     ];
 
     public function shouldRunBy($today)

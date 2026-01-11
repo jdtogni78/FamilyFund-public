@@ -30,7 +30,7 @@
                             <div class="d-flex align-items-center">
                                 <h4 class="mb-0" style="font-weight: 700;">{{ $api['name'] }}</h4>
                                 @isset($api['admin'])
-                                    <span class="badge ms-2" style="background: #d97706; font-size: 0.7rem;">ADMIN</span>
+                                    <span class="badge badge-warning ms-2">ADMIN</span>
                                 @endisset
                             </div>
                             <div class="d-flex flex-wrap" style="gap: 4px;">
@@ -71,7 +71,7 @@
                                 <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
                                     <div class="text-uppercase small" style="color: #92400e;">
-                                        Accounts <span class="badge" style="background: #d97706; color: #fff; font-size: 0.6rem; vertical-align: top;">ADMIN</span>
+                                        Accounts <span class="badge badge-warning">ADMIN</span>
                                     </div>
                                 </div>
                                 @endif
@@ -90,8 +90,8 @@
                         @endphp
                         <div class="card-body py-3" style="background: #fffbeb; border-top: 1px solid #99f6e4;">
                             <div class="d-flex align-items-center mb-2">
-                                <span class="badge" style="background: #d97706; color: #fff; font-size: 0.7rem; margin-right: 8px;">ADMIN</span>
-                                <strong class="text-muted small">Share Allocation</strong>
+                                <span class="badge badge-warning">ADMIN</span>
+                                <strong class="text-muted small ms-2">Share Allocation</strong>
                             </div>
                             {{-- Progress Bar --}}
                             <div class="d-flex mb-3" style="border-radius: 6px; overflow: hidden;">
@@ -277,7 +277,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge" style="background: #fff; color: #b45309; font-size: 0.7rem; font-weight: 600;">ADMIN</span></strong>
+                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge badge-warning">ADMIN</span></strong>
                             <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAcctAlloc"
                                role="button" aria-expanded="true" aria-controls="collapseAcctAlloc">
                                 <i class="fa fa-chevron-down"></i>
@@ -423,7 +423,7 @@
                     <div class="col">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge" style="background: #fff; color: #b45309; font-size: 0.7rem; font-weight: 600;">ADMIN</span></strong>
+                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge badge-warning">ADMIN</span></strong>
                                 <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccounts"
                                    role="button" aria-expanded="true" aria-controls="collapseAccounts">
                                     <i class="fa fa-chevron-down"></i>

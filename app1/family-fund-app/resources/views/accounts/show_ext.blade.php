@@ -125,7 +125,7 @@
                                         <span class="text-muted ms-1 small">complete</span>
                                     </div>
                                     <div style="flex: 1; text-align: right;">
-                                        <span class="px-2 py-1 rounded small" style="background: {{ $isOnTrack ? '#dcfce7' : '#fef2f2' }}; color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }}; font-weight: 600;">
+                                        <span class="px-2 py-1 rounded small {{ $isOnTrack ? 'badge-positive' : 'badge-negative' }}">
                                             ${{ number_format(abs($diff), 0) }} or {{ $timeAheadStr }} {{ $isOnTrack ? 'ahead' : 'behind' }}
                                         </span>
                                     </div>

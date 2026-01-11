@@ -2,9 +2,9 @@
     use App\Models\TransactionExt;
 
     $typeColors = [
-        TransactionExt::TYPE_PURCHASE => ['bg' => '#dcfce7', 'text' => '#16a34a', 'icon' => 'fa-arrow-down'],
+        TransactionExt::TYPE_PURCHASE => ['bg' => '#dcfce7', 'text' => '#16a34a', 'icon' => 'fa-arrow-up'],
         TransactionExt::TYPE_INITIAL => ['bg' => '#dbeafe', 'text' => '#2563eb', 'icon' => 'fa-star'],
-        TransactionExt::TYPE_SALE => ['bg' => '#fee2e2', 'text' => '#dc2626', 'icon' => 'fa-arrow-up'],
+        TransactionExt::TYPE_SALE => ['bg' => '#fee2e2', 'text' => '#dc2626', 'icon' => 'fa-arrow-down'],
         TransactionExt::TYPE_MATCHING => ['bg' => '#f3e8ff', 'text' => '#9333ea', 'icon' => 'fa-gift'],
         TransactionExt::TYPE_BORROW => ['bg' => '#fef3c7', 'text' => '#d97706', 'icon' => 'fa-hand-holding-usd'],
         TransactionExt::TYPE_REPAY => ['bg' => '#fed7aa', 'text' => '#ea580c', 'icon' => 'fa-undo'],

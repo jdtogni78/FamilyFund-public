@@ -43,7 +43,13 @@
                 <td>
                     <span class="badge bg-info">{{ $accountReport->type }}</span>
                 </td>
-                <td>{{ $accountReport->as_of?->format('Y-m-d') }}</td>
+                <td>
+                    @if($accountReport->as_of?->format('Y-m-d') === '9999-12-31')
+                        <span class="badge bg-info text-white">Template</span>
+                    @else
+                        {{ $accountReport->as_of?->format('Y-m-d') }}
+                    @endif
+                </td>
                 <td>{{ $accountReport->created_at?->format('Y-m-d H:i') }}</td>
                 <td>
                     <div class='btn-group'>

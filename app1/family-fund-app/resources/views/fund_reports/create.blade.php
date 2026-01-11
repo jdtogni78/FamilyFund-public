@@ -21,7 +21,6 @@
                                 <form action="{{ route('fundReports.store') }}" method="POST">
                                     @csrf
                                     @include('fund_reports.fields')
-                                    <button type="submit" class="btn btn-primary">Create</button>
                                 </form>
                             </div>
                         </div>

@@ -18,7 +18,7 @@
                                 <strong>Create Trade Portfolio</strong>
                             </div>
                             <div class="card-body">
-<form method="POST" action="{ route('tradePortfolios.store') }">
+<form method="POST" action="{{ route('tradePortfolios.store') }}">
 @csrf
 
                                    @include('trade_portfolios.fields')

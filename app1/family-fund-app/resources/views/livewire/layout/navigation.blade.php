@@ -50,19 +50,19 @@ $logout = function (Logout $logout) {
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 translate-y-1"
                         @mouseleave="activeMenu = null"
-                        class="absolute left-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl ring-1 ring-black/10 py-2 z-50"
+                        class="absolute left-0 mt-1 w-56 bg-white dark:bg-teal-800 rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-teal-700/50 py-2 z-50"
                         style="display: none;"
                     >
-                        <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                            <p class="text-xs font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wider">{{ str_replace(' Menu', '', $label) }}</p>
+                        <div class="px-3 py-2 border-b border-gray-100 dark:border-teal-700">
+                            <p class="text-xs font-semibold text-teal-600 dark:text-teal-300 uppercase tracking-wider">{{ str_replace(' Menu', '', $label) }}</p>
                         </div>
                         <div class="py-1">
                             @foreach ($menuData['items'] as $sublabel => $subroute)
                             <a
                                 href="{{ route($subroute['route']) }}"
-                                class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-150"
+                                class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-white/90 hover:bg-teal-50 dark:hover:bg-teal-700 hover:text-teal-700 dark:hover:text-white transition-colors duration-150"
                             >
-                                <i class="{{ $subroute['icon'] }} w-5 text-teal-500 dark:text-teal-400 mr-3"></i>
+                                <i class="{{ $subroute['icon'] }} w-5 text-teal-500 dark:text-teal-300 mr-3"></i>
                                 {{ $sublabel }}
                             </a>
                             @endforeach

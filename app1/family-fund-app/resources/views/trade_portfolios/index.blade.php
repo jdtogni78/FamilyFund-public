@@ -8,9 +8,6 @@
         <div class="animated fadeIn">
              @include('layouts.flash-messages')
 
-             {{-- Stacked Bar Comparison Chart --}}
-             @include('trade_portfolios.stacked_bar_graph')
-
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">

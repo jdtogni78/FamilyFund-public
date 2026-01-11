@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
 use App\Jobs\SendFundReport;
+use App\Models\Fund;
 use App\Models\FundReportExt;
 use App\Repositories\FundReportRepository;
 use Illuminate\Http\Request;
@@ -48,6 +49,7 @@ class FundReportControllerExt extends FundReportController
     {
         $api = [
             'typeMap' => FundReportExt::$typeMap,
+            'funds' => Fund::orderBy('name')->pluck('name', 'id'),
         ];
 
         return view('fund_reports.create')
@@ -65,6 +67,7 @@ class FundReportControllerExt extends FundReportController
         }
         $api = [
             'typeMap' => FundReportExt::$typeMap,
+            'funds' => Fund::orderBy('name')->pluck('name', 'id'),
         ];
 
         return view('fund_reports.edit')
@@ -76,7 +79,13 @@ class FundReportControllerExt extends FundReportController
     {
         try {
             $fundReport = $this->createFundReport($request->all());
-            SendFundReport::dispatch($fundReport);
+            // Only send if not a template (9999-12-31)
+            if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
+                SendFundReport::dispatch($fundReport);
+                Flash::success('Report created and queued for sending.');
+            } else {
+                Flash::success('Template saved successfully.');
+            }
         } catch (Exception $e) {
             report($e);
             Flash::error($e->getMessage());

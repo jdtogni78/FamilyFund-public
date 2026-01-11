@@ -16,8 +16,14 @@
             <tr>
                 <td>{{ $fundReport->id }}</td>
                 <td>{{ $fundReport->fund->name ?? 'N/A' }}</td>
-                <td>{{ $fundReport->type }}</td>
-                <td>{{ $fundReport->as_of->format('Y-m-d') }}</td>
+                <td><span class="badge bg-{{ $fundReport->type === 'ADM' ? 'warning' : 'info' }}">{{ $fundReport->type }}</span></td>
+                <td>
+                    @if($fundReport->as_of->format('Y-m-d') === '9999-12-31')
+                        <span class="badge bg-info text-white">Template</span>
+                    @else
+                        {{ $fundReport->as_of->format('Y-m-d') }}
+                    @endif
+                </td>
                 <td>{{ $fundReport->scheduled_job_id }}</td>
                 <td>{{ $fundReport->created_at }}</td>
                 <td>

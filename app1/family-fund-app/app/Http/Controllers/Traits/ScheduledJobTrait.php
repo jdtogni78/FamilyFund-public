@@ -15,12 +15,9 @@ Trait ScheduledJobTrait
 
     public function setupHandlers()
     {
-        // create fund report handler
         $this->handlers[ScheduledJobExt::ENTITY_FUND_REPORT] = 'fundReportScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRANSACTION] = 'transactionScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRADE_BAND_REPORT] = 'tradeBandReportScheduleDue';
-        // Backwards compatibility for old portfolio_report records
-        $this->handlers[ScheduledJobExt::ENTITY_PORTFOLIO_REPORT] = 'tradeBandReportScheduleDue';
     }
 
     public function scheduleDueJobs($asOf, $entityDescrFilter=null) {

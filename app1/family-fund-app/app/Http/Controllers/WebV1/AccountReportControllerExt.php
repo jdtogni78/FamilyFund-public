@@ -6,6 +6,7 @@ use App\Http\Controllers\AccountReportController;
 use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
 use App\Jobs\SendAccountReport;
+use App\Models\Account;
 use App\Models\AccountReport;
 use App\Models\AccountReportExt;
 use App\Repositories\AccountReportRepository;
@@ -21,7 +22,13 @@ class AccountReportControllerExt extends AccountReportController
 
     public function create()
     {
-        $api = ['typeMap' => AccountReportExt::$typeMap];
+        $api = [
+            'typeMap' => AccountReportExt::$typeMap,
+            'accounts' => Account::with('fund')
+                ->orderBy('nickname')
+                ->get()
+                ->mapWithKeys(fn($a) => [$a->id => $a->nickname . ' (' . ($a->fund->name ?? 'No Fund') . ')']),
+        ];
         return parent::create()->with('api', $api);
     }
 
@@ -36,7 +43,14 @@ class AccountReportControllerExt extends AccountReportController
         $input = $request->all();
 
         $accountReport = AccountReport::create($input);
-        SendAccountReport::dispatch($accountReport);
+
+        // Only send if not a template (9999-12-31)
+        if ($accountReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendAccountReport::dispatch($accountReport);
+            Flash::success('Report created and queued for sending.');
+        } else {
+            Flash::success('Template saved successfully.');
+        }
 
         return redirect(route('accountReports.index'));
     }

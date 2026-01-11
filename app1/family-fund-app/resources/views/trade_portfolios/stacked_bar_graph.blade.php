@@ -2,6 +2,12 @@
     // Support both $tradePortfolios (index page) and $api['tradePortfolios'] (fund page)
     $portfolioCollection = $tradePortfolios ?? ($api['tradePortfolios'] ?? collect());
 
+    // Check if any portfolio has items to display
+    $hasItems = $portfolioCollection->contains(function($tp) {
+        $items = $tp->tradePortfolioItems ?? $tp->items ?? collect();
+        return $items->count() > 0 || $tp->cash_target > 0;
+    });
+
     // Get current assets if available (fund page)
     $currentAssets = [];
     if (isset($api['portfolio']['assets']) && isset($api['portfolio']['total_value'])) {
@@ -20,11 +26,11 @@
     }
 @endphp
 
-@if($portfolioCollection->count() >= 1)
+@if($portfolioCollection->count() >= 1 && $hasItems)
 <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-        <strong><i class="fa fa-chart-bar" style="margin-right: 8px;"></i>Portfolio Allocations by Symbol</strong>
-        <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapsePortfolioAllocations"
+    <div class="card-header d-flex justify-content-between align-items-center flex-nowrap" style="background: #134e4a; color: #ffffff;">
+        <strong class="text-truncate" style="min-width: 0;"><i class="fa fa-chart-bar mr-2"></i>Portfolio Allocations by Symbol</strong>
+        <a class="btn btn-sm btn-outline-light flex-shrink-0 ml-2" data-toggle="collapse" href="#collapsePortfolioAllocations"
            role="button" aria-expanded="true" aria-controls="collapsePortfolioAllocations">
             <i class="fa fa-chevron-down"></i>
         </a>

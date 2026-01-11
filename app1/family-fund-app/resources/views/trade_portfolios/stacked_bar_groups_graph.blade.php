@@ -72,9 +72,9 @@
 
 @if($portfolioCollection->count() >= 1)
 <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-        <strong><i class="fa fa-layer-group" style="margin-right: 8px;"></i>Portfolio Allocations by Group</strong>
-        <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroupAllocations"
+    <div class="card-header d-flex justify-content-between align-items-center flex-nowrap" style="background: #134e4a; color: #ffffff;">
+        <strong class="text-truncate" style="min-width: 0;"><i class="fa fa-layer-group mr-2"></i>Portfolio Allocations by Group</strong>
+        <a class="btn btn-sm btn-outline-light flex-shrink-0 ml-2" data-toggle="collapse" href="#collapseGroupAllocations"
            role="button" aria-expanded="true" aria-controls="collapseGroupAllocations">
             <i class="fa fa-chevron-down"></i>
         </a>

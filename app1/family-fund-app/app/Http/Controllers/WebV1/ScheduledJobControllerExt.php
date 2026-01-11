@@ -28,7 +28,7 @@ class ScheduledJobControllerExt extends ScheduledJobController
 
     public function index(Request $request)
     {
-        $scheduledJobs = ScheduledJobExt::with(['schedule', 'fund', 'portfolio'])
+        $scheduledJobs = ScheduledJobExt::with(['schedule', 'fund', 'tradeBandFund'])
             ->orderBy('start_dt', 'desc')
             ->get();
 

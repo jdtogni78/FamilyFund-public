@@ -1,12 +1,12 @@
 <x-app-layout>
 
 @section('content')
-     <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ route('scheduledJobs.index') }}">Scheduled Job</a>
-            </li>
-            <li class="breadcrumb-item active">Detail</li>
-     </ol>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ route('scheduledJobs.index') }}">Scheduled Jobs</a>
+        </li>
+        <li class="breadcrumb-item active">Job #{{ $scheduledJob->id }}</li>
+    </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
                  @include('layouts.flash-messages')
@@ -17,13 +17,15 @@
                              <div class="card-header d-flex justify-content-between align-items-center">
                                  <div>
                                      <i class="fa fa-clock me-2"></i>
-                                     <strong>Details</strong>
+                                     <strong>Scheduled Job #{{ $scheduledJob->id }}</strong>
                                  </div>
                                  <div class="d-flex flex-wrap" style="gap: 4px;">
                                      <a href="{{ route('scheduledJobs.preview', ['id' => $scheduledJob->id, 'asOf' => new Carbon\Carbon()]) }}" class="btn btn-sm btn-outline-primary" title="Run Now">
                                          <i class="fa fa-play me-1"></i> Run
                                      </a>
-                                     <a href="{{ route('scheduledJobs.index') }}" class="btn btn-sm btn-primary">Back</a>
+                                     <a href="{{ route('scheduledJobs.index') }}" class="btn btn-sm btn-secondary">
+                                         <i class="fa fa-arrow-left me-1"></i> Back
+                                     </a>
                                  </div>
                              </div>
                              <div class="card-body">
@@ -55,7 +57,13 @@
                                              <tr class="bg-slate-50 dark:bg-slate-700">
                                                  <th>ID</th>
                                                  <th>Date</th>
-                                                 <th>Created</th>
+                                                 @if($scheduledJob->entity_descr == 'transaction')
+                                                     <th>Account</th>
+                                                     <th>Value</th>
+                                                     <th>Status</th>
+                                                 @else
+                                                     <th>Created</th>
+                                                 @endif
                                                  <th>Action</th>
                                              </tr>
                                          </thead>
@@ -84,7 +92,33 @@
                                                          {{ $entity->end_date->format('M j, Y') }}
                                                      @endif
                                                  </td>
-                                                 <td>{{ $entity->created_at->format('M j, Y g:i A') }}</td>
+                                                 @if($scheduledJob->entity_descr == 'transaction')
+                                                     <td>
+                                                         <a href="{{ route('accounts.show', $entity->account_id) }}">
+                                                             {{ $entity->account->nickname ?? 'Acct#'.$entity->account_id }}
+                                                         </a>
+                                                     </td>
+                                                     <td>
+                                                         <span class="{{ $entity->value >= 0 ? 'text-success' : 'text-danger' }}">
+                                                             {{ $entity->value >= 0 ? '+' : '' }}${{ number_format($entity->value, 2) }}
+                                                         </span>
+                                                     </td>
+                                                     <td>
+                                                         @php
+                                                             $statusColors = [
+                                                                 'P' => 'warning',
+                                                                 'C' => 'success',
+                                                                 'S' => 'info',
+                                                             ];
+                                                             $statusColor = $statusColors[$entity->status] ?? 'secondary';
+                                                         @endphp
+                                                         <span class="badge bg-{{ $statusColor }}">
+                                                             {{ \App\Models\TransactionExt::$statusMap[$entity->status] ?? $entity->status }}
+                                                         </span>
+                                                     </td>
+                                                 @else
+                                                     <td>{{ $entity->created_at->format('M j, Y g:i A') }}</td>
+                                                 @endif
                                                  <td>
                                                      @if($scheduledJob->entity_descr == 'fund_report')
                                                          <a href="{{ route('fundReports.show', $entity->id) }}" class="btn btn-ghost-success" title="View">

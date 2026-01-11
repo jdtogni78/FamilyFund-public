@@ -29,8 +29,8 @@
                     <a href="{{ route('transactions.edit', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Edit transaction">
                         <i class="fa fa-edit me-1"></i> Edit
                     </a>
-                    <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-primary">
-                        Back
+                    <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-secondary">
+                        <i class="fa fa-arrow-left me-1"></i> Back
                     </a>
                 </div>
             </div>

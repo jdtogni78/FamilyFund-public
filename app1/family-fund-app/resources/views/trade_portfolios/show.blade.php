@@ -6,10 +6,20 @@
     </script>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{{ route('tradePortfolios.index') }}">Trade Portfolio</a>
+            <a href="{{ route('tradePortfolios.index') }}">Trade Portfolios</a>
         </li>
-        <li class="breadcrumb-item active">Detail</li>
+        <li class="breadcrumb-item active">Portfolio #{{ $tradePortfolio->id }}</li>
     </ol>
+
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('portfolios.show', $tradePortfolio->portfolio_id) }}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="fa fa-briefcase me-1"></i> View Portfolio
+        </a>
+        <a href="{{ route('tradePortfolios.index') }}" class="btn btn-sm btn-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
     <div class="container-fluid">
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')

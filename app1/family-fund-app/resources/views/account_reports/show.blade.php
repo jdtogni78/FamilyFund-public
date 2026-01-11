@@ -18,9 +18,14 @@
                                      <i class="fa fa-file-alt me-2"></i>
                                      <strong>Account Report #{{ $accountReport->id }}</strong>
                                  </div>
-                                 <a href="{{ route('accountReports.index') }}" class="btn btn-sm btn-outline-secondary">
-                                     <i class="fa fa-arrow-left me-1"></i> Back to List
-                                 </a>
+                                 <div>
+                                     <a href="{{ route('accountReports.edit', $accountReport->id) }}" class="btn btn-sm btn-primary">
+                                         <i class="fa fa-edit me-1"></i> Edit
+                                     </a>
+                                     <a href="{{ route('accountReports.index') }}" class="btn btn-sm btn-secondary">
+                                         <i class="fa fa-arrow-left me-1"></i> Back
+                                     </a>
+                                 </div>
                              </div>
                              <div class="card-body">
                                  @include('account_reports.show_fields')

@@ -59,6 +59,40 @@ class TransactionExt extends Transaction
         TransactionExt::FLAGS_NO_MATCH => 'No matching',
     ];
 
+    /**
+     * Check if this transaction is a scheduled template (referenced by a scheduled job)
+     */
+    public function isTemplate(): bool
+    {
+        return ScheduledJobExt::where('entity_descr', ScheduledJobExt::ENTITY_TRANSACTION)
+            ->where('entity_id', $this->id)
+            ->exists();
+    }
+
+    /**
+     * Get all transactions that can be used as templates
+     */
+    public static function templates()
+    {
+        return static::with('account')
+            ->orderBy('account_id')
+            ->orderByDesc('timestamp')
+            ->get();
+    }
+
+    /**
+     * Get transaction templates as options for select dropdowns
+     * Returns [id => "Account - Type - Amount"]
+     */
+    public static function templateOptions()
+    {
+        return static::templates()->mapWithKeys(function ($tran) {
+            $typeName = self::$typeMap[$tran->type] ?? $tran->type;
+            $accountName = $tran->account->nickname ?? 'Account #' . $tran->account_id;
+            return [$tran->id => $accountName . ' - ' . $typeName . ' - $' . number_format($tran->value, 0)];
+        });
+    }
+
     public function status_string() {
         return self::$statusMap[$this->status];
     }

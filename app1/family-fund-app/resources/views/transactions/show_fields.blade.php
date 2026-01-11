@@ -56,15 +56,15 @@
                 </div>
 
                 @if($transaction->descr)
-                <div class="bg-light rounded p-2 mt-2">
+                <div class="rounded p-2 mt-2 bg-slate-100 dark:bg-slate-700">
                     <div class="text-muted small">Description</div>
-                    <div>{{ $transaction->descr }}</div>
+                    <div class="text-body">{{ $transaction->descr }}</div>
                 </div>
                 @endif
 
                 @if($transaction->flags)
                 <div class="mt-2">
-                    <span class="badge bg-secondary">{{ \App\Models\TransactionExt::$flagsMap[$transaction->flags] ?? $transaction->flags }}</span>
+                    <span class="badge bg-primary">{{ \App\Models\TransactionExt::$flagsMap[$transaction->flags] ?? $transaction->flags }}</span>
                 </div>
                 @endif
             </div>

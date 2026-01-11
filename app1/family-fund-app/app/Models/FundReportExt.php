@@ -41,4 +41,35 @@ class FundReportExt extends FundReport
     {
         return ScheduledJobExt::scheduledJobs(ScheduledJobExt::ENTITY_FUND_REPORT, $this->id);
     }
+
+    /**
+     * Check if this report is a template (as_of = 9999-12-31)
+     */
+    public function isTemplate(): bool
+    {
+        return $this->as_of && $this->as_of->format('Y-m-d') === '9999-12-31';
+    }
+
+    /**
+     * Get all fund report templates (as_of = 9999-12-31)
+     */
+    public static function templates()
+    {
+        return static::with('fund')
+            ->where('as_of', '9999-12-31')
+            ->orderBy('fund_id')
+            ->get();
+    }
+
+    /**
+     * Get fund report templates as options for select dropdowns
+     * Returns [id => "Fund Name - Type"]
+     */
+    public static function templateOptions()
+    {
+        return static::templates()->mapWithKeys(function ($report) {
+            $typeName = self::$typeMap[$report->type] ?? $report->type;
+            return [$report->id => $report->fund->name . ' - ' . $typeName];
+        });
+    }
 }

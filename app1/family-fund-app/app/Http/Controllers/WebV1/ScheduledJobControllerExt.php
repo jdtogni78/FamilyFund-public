@@ -28,7 +28,7 @@ class ScheduledJobControllerExt extends ScheduledJobController
 
     public function index(Request $request)
     {
-        $scheduledJobs = ScheduledJobExt::with(['schedule', 'fund', 'tradeBandFund'])
+        $scheduledJobs = ScheduledJobExt::with(['schedule', 'fundReportTemplate.fund', 'tradeBandReportTemplate.fund', 'transactionTemplate.account'])
             ->orderBy('start_dt', 'desc')
             ->get();
 
@@ -40,6 +40,19 @@ class ScheduledJobControllerExt extends ScheduledJobController
     {
         return view('scheduled_jobs.create')
             ->with($this->getFormData());
+    }
+
+    public function show($id)
+    {
+        $scheduledJob = ScheduledJobExt::with(['schedule', 'fundReportTemplate.fund', 'tradeBandReportTemplate.fund', 'transactionTemplate.account'])
+            ->find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+            return redirect(route('scheduledJobs.index'));
+        }
+
+        return view('scheduled_jobs.show')->with('scheduledJob', $scheduledJob);
     }
 
     public function edit($id)
@@ -59,13 +72,16 @@ class ScheduledJobControllerExt extends ScheduledJobController
     private function getFormData()
     {
         $schedules = Schedule::orderBy('descr')->pluck('descr', 'id');
-        $funds = FundExt::orderBy('name')->get()->mapWithKeys(function ($fund) {
-            return [$fund->id => $fund->name];
-        });
+
+        $fundReportTemplates = FundReportExt::templateOptions();
+        $tradeBandReportTemplates = TradeBandReport::templateOptions();
+        $transactionTemplates = TransactionExt::templateOptions();
 
         return [
             'schedules' => $schedules,
-            'funds' => $funds,
+            'fundReportTemplates' => $fundReportTemplates,
+            'tradeBandReportTemplates' => $tradeBandReportTemplates,
+            'transactionTemplates' => $transactionTemplates,
             'entityTypes' => ScheduledJobExt::$entityMap,
         ];
     }

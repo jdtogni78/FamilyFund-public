@@ -11,7 +11,7 @@
         @if($tradeBandReport->as_of && $tradeBandReport->as_of->format('Y') !== '9999')
             {{ $tradeBandReport->as_of->format('Y-m-d') }}
         @else
-            <span class="text-muted">Not set</span>
+            <span class="badge bg-info text-white">Template</span>
         @endif
     </p>
 </div>

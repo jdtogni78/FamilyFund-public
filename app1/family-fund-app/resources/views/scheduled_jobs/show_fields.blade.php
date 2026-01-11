@@ -34,14 +34,30 @@
         <div class="form-group mb-3">
             <label class="text-body-secondary"><i class="fa fa-link me-1"></i> Entity:</label>
             <p class="mb-0">
-                @if($scheduledJob->entity_descr == 'fund_report')
-                    <a href="{{ route('funds.show', $scheduledJob->entity_id) }}">
-                        Fund #{{ $scheduledJob->entity_id }}
+                @if($scheduledJob->entity_descr == 'fund_report' && $scheduledJob->fundReportTemplate)
+                    @php
+                        $template = $scheduledJob->fundReportTemplate;
+                        $typeName = \App\Models\FundReportExt::$typeMap[$template->type] ?? $template->type;
+                    @endphp
+                    <a href="{{ route('fundReports.show', $template->id) }}">
+                        {{ $template->fund->name }} - {{ $typeName }}
                     </a>
-                @elseif($scheduledJob->entity_descr == 'trade_band_report')
-                    <a href="{{ route('funds.show', $scheduledJob->entity_id) }}">
-                        Fund #{{ $scheduledJob->entity_id }} (Trading Bands)
+                    <span class="badge bg-info ms-1">Template</span>
+                @elseif($scheduledJob->entity_descr == 'trade_band_report' && $scheduledJob->tradeBandReportTemplate)
+                    <a href="{{ route('tradeBandReports.show', $scheduledJob->tradeBandReportTemplate->id) }}">
+                        {{ $scheduledJob->tradeBandReportTemplate->fund->name }}
                     </a>
+                    <span class="badge bg-info ms-1">Template</span>
+                @elseif($scheduledJob->entity_descr == 'transaction' && $scheduledJob->transactionTemplate)
+                    @php
+                        $tran = $scheduledJob->transactionTemplate;
+                        $typeName = \App\Models\TransactionExt::$typeMap[$tran->type] ?? $tran->type;
+                        $accountName = $tran->account->nickname ?? 'Acct#' . $tran->account_id;
+                    @endphp
+                    <a href="{{ route('transactions.show', $tran->id) }}">
+                        {{ $accountName }} - {{ $typeName }} - ${{ number_format($tran->value, 0) }}
+                    </a>
+                    <span class="badge bg-info ms-1">Template</span>
                 @else
                     #{{ $scheduledJob->entity_id }}
                 @endif
@@ -94,64 +110,3 @@
     </div>
 </div>
 
-@php
-    $entities = $scheduledJob->entities();
-@endphp
-
-@if($entities->count() > 0)
-<hr>
-<h6 class="text-body-secondary mb-3"><i class="fa fa-list me-1"></i> Generated Reports ({{ $entities->count() }})</h6>
-<div class="table-responsive-sm">
-    <table class="table table-sm table-hover">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Created</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($entities->sortByDesc(function($e) {
-                return $e->as_of ?? $e->timestamp ?? $e->end_date ?? $e->created_at;
-            })->take(10) as $entity)
-            <tr>
-                <td>
-                    @if($scheduledJob->entity_descr == 'fund_report')
-                        <a href="{{ route('fundReports.show', $entity->id) }}">#{{ $entity->id }}</a>
-                    @elseif($scheduledJob->entity_descr == 'trade_band_report')
-                        <a href="{{ route('tradeBandReports.show', $entity->id) }}">#{{ $entity->id }}</a>
-                    @else
-                        #{{ $entity->id }}
-                    @endif
-                </td>
-                <td>
-                    @if(isset($entity->as_of))
-                        {{ $entity->as_of->format('M j, Y') }}
-                    @elseif(isset($entity->timestamp))
-                        {{ $entity->timestamp->format('M j, Y') }}
-                    @elseif(isset($entity->end_date))
-                        {{ $entity->end_date->format('M j, Y') }}
-                    @endif
-                </td>
-                <td>{{ $entity->created_at->format('M j, Y g:i A') }}</td>
-                <td>
-                    @if($scheduledJob->entity_descr == 'fund_report')
-                        <a href="{{ route('fundReports.show', $entity->id) }}" class="btn btn-sm btn-ghost-success" title="View Fund Report">
-                            <i class="fa fa-eye"></i>
-                        </a>
-                    @elseif($scheduledJob->entity_descr == 'trade_band_report')
-                        <a href="{{ route('tradeBandReports.show', $entity->id) }}" class="btn btn-sm btn-ghost-success" title="View Trade Band Report">
-                            <i class="fa fa-eye"></i>
-                        </a>
-                    @endif
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @if($entities->count() > 10)
-        <small class="text-body-secondary">Showing 10 of {{ $entities->count() }} records</small>
-    @endif
-</div>
-@endif

@@ -39,10 +39,17 @@
 
                 // Get entity name
                 $entityName = '#' . $scheduledJob->entity_id;
-                if ($scheduledJob->entity_descr == 'fund_report' && $scheduledJob->fund) {
-                    $entityName = $scheduledJob->fund->name;
-                } elseif ($scheduledJob->entity_descr == 'trade_band_report' && $scheduledJob->tradeBandFund) {
-                    $entityName = $scheduledJob->tradeBandFund->name;
+                if ($scheduledJob->entity_descr == 'fund_report' && $scheduledJob->fundReportTemplate) {
+                    $template = $scheduledJob->fundReportTemplate;
+                    $typeName = \App\Models\FundReportExt::$typeMap[$template->type] ?? $template->type;
+                    $entityName = $template->fund->name . ' - ' . $typeName;
+                } elseif ($scheduledJob->entity_descr == 'trade_band_report' && $scheduledJob->tradeBandReportTemplate) {
+                    $entityName = $scheduledJob->tradeBandReportTemplate->fund->name;
+                } elseif ($scheduledJob->entity_descr == 'transaction' && $scheduledJob->transactionTemplate) {
+                    $tran = $scheduledJob->transactionTemplate;
+                    $typeName = \App\Models\TransactionExt::$typeMap[$tran->type] ?? $tran->type;
+                    $accountName = $tran->account->nickname ?? 'Acct#' . $tran->account_id;
+                    $entityName = $accountName . ' - ' . $typeName . ' - $' . number_format($tran->value, 0);
                 }
             @endphp
             <tr class="{{ $rowClass }}">

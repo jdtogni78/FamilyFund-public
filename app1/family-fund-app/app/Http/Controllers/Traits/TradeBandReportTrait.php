@@ -95,18 +95,18 @@ trait TradeBandReportTrait
 
     protected function tradeBandReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?TradeBandReport
     {
-        // entity_id is the Fund ID for trade_band_report scheduled jobs
-        $fund = FundExt::find($job->entity_id);
+        // entity_id is the TradeBandReport template ID
+        $templateReport = TradeBandReport::find($job->entity_id);
 
-        if (!$fund) {
-            Log::error("Fund not found for scheduled job entity_id: " . $job->entity_id);
+        if (!$templateReport) {
+            Log::error("Trade band report template not found for scheduled job entity_id: " . $job->entity_id);
             return null;
         }
 
-        Log::info("Creating trade band report for fund {$fund->id} as of {$shouldRunBy->toDateString()}");
+        Log::info("Creating trade band report from template {$templateReport->id} for fund {$templateReport->fund_id} as of {$shouldRunBy->toDateString()}");
 
         $tradeBandReport = $this->createTradeBandReport([
-            'fund_id' => $fund->id,
+            'fund_id' => $templateReport->fund_id,
             'as_of' => $shouldRunBy,
             'scheduled_job_id' => $job->id,
         ]);

@@ -14,23 +14,23 @@
             <!-- Action Bar -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0">Transaction Details</h4>
-                <div class="btn-group">
+                <div class="d-flex flex-wrap" style="gap: 4px;">
                     @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
-                        <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-warning' title="Process Pending">
+                        <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class="btn btn-sm btn-warning" title="Process Pending">
                             <i class="fa fa-play me-1"></i> Process
                         </a>
                     @endif
-                    <a href="{{ route('transactions.clone', [$transaction->id]) }}" class="btn btn-outline-warning" title="Clone with today's date">
+                    <a href="{{ route('transactions.clone', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Clone with today's date">
                         <i class="fa fa-copy me-1"></i> Clone
                     </a>
-                    <a href="{{ route('transactions.resend-email', [$transaction->id]) }}" class="btn btn-outline-secondary" title="Resend confirmation email">
-                        <i class="fa fa-envelope me-1"></i> Resend Email
+                    <a href="{{ route('transactions.resend-email', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Resend confirmation email">
+                        <i class="fa fa-envelope me-1"></i> Resend
                     </a>
-                    <a href="{{ route('transactions.edit', [$transaction->id]) }}" class="btn btn-outline-info" title="Edit transaction">
+                    <a href="{{ route('transactions.edit', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Edit transaction">
                         <i class="fa fa-edit me-1"></i> Edit
                     </a>
-                    <a href="{{ route('transactions.index') }}" class="btn btn-light">
-                        <i class="fa fa-arrow-left me-1"></i> Back
+                    <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-primary">
+                        Back
                     </a>
                 </div>
             </div>

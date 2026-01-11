@@ -85,19 +85,30 @@ class ScheduledJobExt extends ScheduledJob
     }
 
     /**
-     * Get the fund if entity_descr is fund_report
+     * Get the fund report template if entity_descr is fund_report
+     * (entity_id is a fund_report_id pointing to a template)
      */
-    public function fund()
+    public function fundReportTemplate()
     {
-        return $this->belongsTo(FundExt::class, 'entity_id');
+        return $this->belongsTo(FundReportExt::class, 'entity_id');
     }
 
     /**
-     * Get the fund for trade_band_report (entity_id is fund_id)
+     * Get the trade band report template if entity_descr is trade_band_report
+     * (entity_id is a trade_band_report_id pointing to a template)
      */
-    public function tradeBandFund()
+    public function tradeBandReportTemplate()
     {
-        return $this->belongsTo(FundExt::class, 'entity_id');
+        return $this->belongsTo(TradeBandReport::class, 'entity_id');
+    }
+
+    /**
+     * Get the transaction template if entity_descr is transaction
+     * (entity_id is a transaction_id)
+     */
+    public function transactionTemplate()
+    {
+        return $this->belongsTo(TransactionExt::class, 'entity_id');
     }
 
 }

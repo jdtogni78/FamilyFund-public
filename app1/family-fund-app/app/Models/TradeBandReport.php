@@ -53,7 +53,7 @@ class TradeBandReport extends Model
      */
     public static $rules = [
         'fund_id' => 'required',
-        'as_of' => 'required',
+        'as_of' => 'nullable|date',
         'scheduled_job_id' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
@@ -74,5 +74,35 @@ class TradeBandReport extends Model
     public function scheduledJob()
     {
         return $this->belongsTo(\App\Models\ScheduledJobExt::class, 'scheduled_job_id');
+    }
+
+    /**
+     * Check if this report is a template (as_of is null)
+     */
+    public function isTemplate(): bool
+    {
+        return $this->as_of === null;
+    }
+
+    /**
+     * Get all trade band report templates (as_of is null)
+     */
+    public static function templates()
+    {
+        return static::with('fund')
+            ->whereNull('as_of')
+            ->orderBy('fund_id')
+            ->get();
+    }
+
+    /**
+     * Get trade band report templates as options for select dropdowns
+     * Returns [id => "Fund Name"]
+     */
+    public static function templateOptions()
+    {
+        return static::templates()->mapWithKeys(function ($report) {
+            return [$report->id => $report->fund->name];
+        });
     }
 }

@@ -22,11 +22,16 @@
     <!-- As Of Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="as_of" class="form-label">
-            <i class="fa fa-calendar me-1"></i> As Of Date <span class="text-danger">*</span>
+            <i class="fa fa-calendar me-1"></i> As Of Date
         </label>
-        <input type="text" name="as_of" id="as_of" class="form-control"
-               value="{{ old('as_of', isset($tradeBandReport) ? $tradeBandReport->as_of->format('Y-m-d') : '') }}" required>
-        <small class="text-body-secondary">Report date (YYYY-MM-DD)</small>
+        <div class="input-group">
+            <input type="text" name="as_of" id="as_of" class="form-control"
+                   value="{{ old('as_of', isset($tradeBandReport) && $tradeBandReport->as_of ? $tradeBandReport->as_of->format('Y-m-d') : '') }}">
+            <button type="button" class="btn btn-outline-secondary" id="makeTemplate" title="Make this a template for scheduling">
+                <i class="fa fa-calendar-alt me-1"></i> Template
+            </button>
+        </div>
+        <small class="text-body-secondary">Leave empty or click "Template" to create a scheduling template</small>
     </div>
 </div>
 
@@ -41,6 +46,25 @@
         },
         sideBySide: true
     });
+
+    // Template button functionality
+    function updateTemplateState() {
+        const isTemplate = $('#as_of').val() === '';
+        const $btn = $('button[type="submit"]');
+        if (isTemplate) {
+            $btn.html('<i class="fa fa-save me-1"></i> Save Template');
+            $('#makeTemplate').removeClass('btn-outline-secondary').addClass('btn-info');
+        } else {
+            $btn.html('<i class="fa fa-save me-1"></i> Save');
+            $('#makeTemplate').removeClass('btn-info').addClass('btn-outline-secondary');
+        }
+    }
+    $('#makeTemplate').click(function() {
+        $('#as_of').val('');
+        updateTemplateState();
+    });
+    $('#as_of').on('change dp.change', updateTemplateState);
+    updateTemplateState();
 </script>
 @endpush
 

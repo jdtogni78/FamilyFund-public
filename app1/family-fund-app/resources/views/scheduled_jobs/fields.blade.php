@@ -43,35 +43,52 @@
 </div>
 
 <div class="row">
-    <!-- Entity Selection - Fund (shown when entity_descr is fund_report) -->
-    <div class="form-group col-md-6 mb-3" id="fund_select_group">
-        <label for="fund_id" class="form-label">
-            <i class="fa fa-landmark me-1"></i> Generate Reports For <span class="text-danger">*</span>
+    <!-- Entity Selection - Fund Report Template (shown when entity_descr is fund_report) -->
+    <div class="form-group col-md-6 mb-3" id="fund_report_template_group">
+        <label for="fund_report_template_id" class="form-label">
+            <i class="fa fa-file-alt me-1"></i> Report Template <span class="text-danger">*</span>
         </label>
-        <select name="fund_id" id="fund_id" class="form-control form-select">
-            <option value="">-- Select Fund --</option>
-            @foreach($funds ?? [] as $id => $name)
+        <select name="fund_report_template_id" id="fund_report_template_id" class="form-control form-select">
+            <option value="">-- Select Report Template --</option>
+            @foreach($fundReportTemplates ?? [] as $id => $name)
                 <option value="{{ $id }}" {{ (isset($scheduledJob) && $scheduledJob->entity_id == $id && $scheduledJob->entity_descr == 'fund_report') ? 'selected' : '' }}>
                     {{ $name }}
                 </option>
             @endforeach
         </select>
-        <small class="text-body-secondary">Select the fund for which reports will be generated</small>
+        <small class="text-body-secondary">Select a fund report template to use for scheduled generation</small>
     </div>
 
-    <!-- Entity Selection - Fund for Trade Band (shown when entity_descr is trade_band_report) -->
-    <div class="form-group col-md-6 mb-3" id="trade_band_fund_select_group" style="display: none;">
-        <label for="trade_band_fund_id" class="form-label">
-            <i class="fa fa-chart-line me-1"></i> Fund (Trading Bands) <span class="text-danger">*</span>
+    <!-- Entity Selection - Trade Band Report Template (shown when entity_descr is trade_band_report) -->
+    <div class="form-group col-md-6 mb-3" id="trade_band_template_group" style="display: none;">
+        <label for="trade_band_template_id" class="form-label">
+            <i class="fa fa-chart-line me-1"></i> Trade Band Template <span class="text-danger">*</span>
         </label>
-        <select name="trade_band_fund_id" id="trade_band_fund_id" class="form-control form-select">
-            <option value="">-- Select Fund --</option>
-            @foreach($funds ?? [] as $id => $name)
+        <select name="trade_band_template_id" id="trade_band_template_id" class="form-control form-select">
+            <option value="">-- Select Template --</option>
+            @foreach($tradeBandReportTemplates ?? [] as $id => $name)
                 <option value="{{ $id }}" {{ (isset($scheduledJob) && $scheduledJob->entity_id == $id && $scheduledJob->entity_descr == 'trade_band_report') ? 'selected' : '' }}>
                     {{ $name }}
                 </option>
             @endforeach
         </select>
+        <small class="text-body-secondary">Select a trade band report template</small>
+    </div>
+
+    <!-- Entity Selection - Transaction Template (shown when entity_descr is transaction) -->
+    <div class="form-group col-md-6 mb-3" id="transaction_template_group" style="display: none;">
+        <label for="transaction_template_id" class="form-label">
+            <i class="fa fa-exchange-alt me-1"></i> Transaction Template <span class="text-danger">*</span>
+        </label>
+        <select name="transaction_template_id" id="transaction_template_id" class="form-control form-select">
+            <option value="">-- Select Transaction --</option>
+            @foreach($transactionTemplates ?? [] as $id => $name)
+                <option value="{{ $id }}" {{ (isset($scheduledJob) && $scheduledJob->entity_id == $id && $scheduledJob->entity_descr == 'transaction') ? 'selected' : '' }}>
+                    {{ $name }}
+                </option>
+            @endforeach
+        </select>
+        <small class="text-body-secondary">Select a transaction to duplicate on schedule</small>
     </div>
 
     <!-- Hidden entity_id field that gets populated by JS -->
@@ -119,29 +136,33 @@ $(document).ready(function() {
         var entityType = $('#entity_descr').val();
 
         // Hide all entity selects
-        $('#fund_select_group').hide();
-        $('#trade_band_fund_select_group').hide();
+        $('#fund_report_template_group').hide();
+        $('#trade_band_template_group').hide();
+        $('#transaction_template_group').hide();
 
         // Show the appropriate one and update entity_id
         if (entityType === 'fund_report') {
-            $('#fund_select_group').show();
-            $('#entity_id').val($('#fund_id').val());
+            $('#fund_report_template_group').show();
+            $('#entity_id').val($('#fund_report_template_id').val());
         } else if (entityType === 'trade_band_report') {
-            $('#trade_band_fund_select_group').show();
-            $('#entity_id').val($('#trade_band_fund_id').val());
+            $('#trade_band_template_group').show();
+            $('#entity_id').val($('#trade_band_template_id').val());
         } else if (entityType === 'transaction') {
-            // Transaction might need fund selection too
-            $('#fund_select_group').show();
-            $('#entity_id').val($('#fund_id').val());
+            $('#transaction_template_group').show();
+            $('#entity_id').val($('#transaction_template_id').val());
         }
     }
 
-    // Update entity_id when fund changes
-    $('#fund_id').on('change', function() {
+    // Update entity_id when template changes
+    $('#fund_report_template_id').on('change', function() {
         $('#entity_id').val($(this).val());
     });
 
-    $('#trade_band_fund_id').on('change', function() {
+    $('#trade_band_template_id').on('change', function() {
+        $('#entity_id').val($(this).val());
+    });
+
+    $('#transaction_template_id').on('change', function() {
         $('#entity_id').val($(this).val());
     });
 

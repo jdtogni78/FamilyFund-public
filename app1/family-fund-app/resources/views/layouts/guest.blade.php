@@ -34,7 +34,7 @@
                     </div>
 
                     <!-- Brand Name -->
-                    <h1 class="text-4xl font-bold mb-4 text-center drop-shadow-lg">Family Fund</h1>
+                    <h1 class="text-4xl font-bold mb-4 text-center drop-shadow-lg text-teal-100">Family Fund</h1>
 
                     <!-- Tagline -->
                     <p class="text-xl text-teal-100 text-center max-w-md mb-8 drop-shadow">

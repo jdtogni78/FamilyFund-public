@@ -97,7 +97,7 @@
         @endforeach
         </tbody>
         <tfoot>
-            <tr class="table-secondary" style="font-weight: 600;">
+            <tr class="table-total-row">
                 <th scope="row">Total</th>
                 <td></td>
                 <td></td>

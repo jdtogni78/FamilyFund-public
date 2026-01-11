@@ -186,6 +186,25 @@
         color: #d97706;
     }
 
+    /* Dark mode overrides for table rows */
+    .dark .table-subtotal-row {
+        background: #115e59 !important;
+    }
+
+    .dark .table-subtotal-row th,
+    .dark .table-subtotal-row td {
+        color: #ccfbf1 !important;
+    }
+
+    .dark .table-warning-row {
+        background: #78350f !important;
+    }
+
+    .dark .table-warning-row th,
+    .dark .table-warning-row td {
+        color: #fef3c7 !important;
+    }
+
     /* ========================================
        Forms
        ======================================== */

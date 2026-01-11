@@ -104,24 +104,23 @@ trait PortfolioReportTrait
 
     protected function createPortfolioReportFromSchedule(mixed $job, $asOf, $shouldRunBy)
     {
-        // Get the template report to find the portfolio and report type
-        $templateReport = PortfolioReportExt::query()
-            ->where('id', $job->entity_id)->first();
+        // entity_id is the Portfolio ID for portfolio_report scheduled jobs
+        $portfolio = PortfolioExt::find($job->entity_id);
 
-        if (!$templateReport) {
-            Log::error("Portfolio report template not found for job entity_id: " . $job->entity_id);
+        if (!$portfolio) {
+            Log::error("Portfolio not found for scheduled job entity_id: " . $job->entity_id);
             return null;
         }
 
-        // Calculate date range based on report type
+        // Calculate date range based on report type (default to quarterly)
         $runDate = Carbon::parse($shouldRunBy);
-        $reportType = $templateReport->report_type ?? PortfolioReportExt::TYPE_CUSTOM;
+        $reportType = PortfolioReportExt::TYPE_QUARTERLY;
         [$startDate, $endDate] = PortfolioReportExt::calculateDateRange($reportType, $runDate);
 
-        Log::info("Creating portfolio report: type={$reportType}, range={$startDate->toDateString()} to {$endDate->toDateString()}");
+        Log::info("Creating portfolio report for portfolio {$portfolio->id}: type={$reportType}, range={$startDate->toDateString()} to {$endDate->toDateString()}");
 
         $portfolioReport = $this->createPortfolioReport([
-            'portfolio_id' => $templateReport->portfolio_id,
+            'portfolio_id' => $portfolio->id,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'report_type' => $reportType,

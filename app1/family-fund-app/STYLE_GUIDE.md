@@ -1,5 +1,59 @@
 # Family Fund Style Guide
 
+## Progress & Notes
+
+### Standardization Progress (Jan 2026)
+
+**Completed:**
+- [x] Chart labels - dynamic dark mode support with registry pattern
+- [x] Table headers - Tailwind dark mode classes
+- [x] Goal progress boxes - dark mode CSS overrides
+- [x] Table total/subtotal rows - dark mode support
+- [x] Login screen title color
+- [x] Badge contrast (bg-primary instead of bg-secondary)
+- [x] Index page headers (26 pages) - standardized layout with icons, badges, buttons
+
+**Index Pages Standardized:**
+| Entity | Icon | Variable |
+|--------|------|----------|
+| Accounts | `fa-users` | `$accounts` |
+| Account Balances | `fa-balance-scale` | `$accountBalances` |
+| Account Goals | `fa-bullseye` | `$accountGoals` |
+| Account Matching Rules | `fa-link` | `$accountMatchingRules` |
+| Account Reports | `fa-file-alt` | `$accountReports` |
+| Addresses | `fa-map-marker-alt` | `$addresses` |
+| Assets | `fa-coins` | `$assets` |
+| Asset Change Logs | `fa-history` | `$assetChangeLogs` |
+| Asset Prices | `fa-chart-line` | `$assetPrices` |
+| Cash Deposits | `fa-dollar-sign` | `$cashDeposits` |
+| Change Logs | `fa-history` | `$changeLogs` |
+| Deposit Requests | `fa-hand-holding-usd` | `$depositRequests` |
+| Fund Reports | `fa-file-alt` | `$fundReports` |
+| Funds | `fa-landmark` | `$funds` |
+| Goals | `fa-bullseye` | `$goals` |
+| ID Documents | `fa-id-card` | `$idDocuments` |
+| Matching Rules | `fa-link` | `$matchingRules` |
+| People | `fa-users` | `$people` |
+| Phones | `fa-phone` | `$phones` |
+| Portfolio Assets | `fa-coins` | `$portfolioAssets` |
+| Portfolio Reports | `fa-file-alt` | `$portfolioReports` |
+| Portfolios | `fa-briefcase` | `$portfolios` |
+| Scheduled Jobs | `fa-clock` | `$scheduledJobs` |
+| Schedules | `fa-calendar-alt` | `$schedules` |
+| Trade Band Reports | `fa-file-alt` | `$tradeBandReports` |
+| Trade Portfolio Items | `fa-list` | `$tradePortfolioItems` |
+| Trade Portfolios | `fa-chart-pie` | `$tradePortfolios` |
+| Transaction Matchings | `fa-link` | `$transactionMatchings` |
+| Transactions | `fa-exchange-alt` | `$transactions` |
+| Users | `fa-user-cog` | `$users` |
+
+**Pending:**
+- [ ] Review trade_portfolios detail views (27 files)
+- [ ] Review accounts detail views (23 files)
+- [ ] Review other detail/show pages
+
+---
+
 ## Buttons
 
 ### Primary Actions
@@ -15,6 +69,16 @@
 ### Secondary/Back Actions
 - **Class:** `btn btn-sm btn-primary` (same as primary for header buttons)
 - **Use for:** Back, navigation icons in headers
+
+### Outline Actions (Secondary buttons in groups)
+- **Class:** `btn btn-sm btn-outline-primary`
+- **Use for:** Bulk operations, secondary actions alongside primary
+- **Example:**
+```html
+<a class="btn btn-sm btn-outline-primary me-1" href="...">
+    <i class="fa fa-users me-1"></i> Bulk
+</a>
+```
 
 ### Warning/Admin Actions
 - **Class:** `btn btn-sm btn-warning`
@@ -59,6 +123,25 @@
     <a class="btn btn-sm btn-primary" href="{{ route('funds.create') }}">
         <i class="fa fa-plus me-1"></i> New Fund
     </a>
+</div>
+```
+
+### Index Page with Multiple Buttons
+```html
+<div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+        <i class="fa fa-exchange-alt me-2"></i>
+        <strong>Transactions</strong>
+        <span class="badge bg-primary ms-2">{{ $transactions->count() }}</span>
+    </div>
+    <div>
+        <a href="..." class="btn btn-sm btn-outline-primary me-1">
+            <i class="fa fa-users me-1"></i> Bulk
+        </a>
+        <a class="btn btn-sm btn-primary" href="...">
+            <i class="fa fa-plus me-1"></i> New Transaction
+        </a>
+    </div>
 </div>
 ```
 
@@ -130,6 +213,20 @@
 ### Chart Labels
 - Charts use `chartTheme.fontColor` which adapts via getter function
 - Charts must be registered with `registerChart()` for dynamic dark mode updates
+- Example:
+```javascript
+const chart = registerChart(new Chart(ctx, config));
+```
+
+### Dark Mode CSS Overrides
+When light mode styles need preserving but dark mode needs different colors:
+```css
+/* In app.css or inline <style> */
+.dark .my-element {
+    background: #darker-color !important;
+    color: #lighter-text !important;
+}
+```
 
 ---
 
@@ -220,14 +317,43 @@
 
 ## Icons
 
-### Font Awesome Icons
+### Entity Icons (for index pages)
+| Category | Icon | Entities |
+|----------|------|----------|
+| Financial | `fa-landmark` | Funds |
+| Financial | `fa-coins` | Assets, Portfolio Assets |
+| Financial | `fa-dollar-sign` | Cash Deposits |
+| Financial | `fa-hand-holding-usd` | Deposit Requests |
+| Financial | `fa-balance-scale` | Account Balances |
+| Financial | `fa-exchange-alt` | Transactions |
+| Reports | `fa-file-alt` | All report types |
+| Portfolios | `fa-briefcase` | Portfolios |
+| Portfolios | `fa-chart-pie` | Trade Portfolios |
+| Portfolios | `fa-list` | Trade Portfolio Items |
+| Goals | `fa-bullseye` | Goals, Account Goals |
+| People | `fa-users` | Accounts, People |
+| People | `fa-user-cog` | Users |
+| Contact | `fa-phone` | Phones |
+| Contact | `fa-map-marker-alt` | Addresses |
+| Contact | `fa-id-card` | ID Documents |
+| Rules | `fa-link` | Matching Rules, Transaction Matchings |
+| Time | `fa-clock` | Scheduled Jobs |
+| Time | `fa-calendar-alt` | Schedules |
+| History | `fa-history` | Change Logs, Asset Change Logs |
+| Data | `fa-chart-line` | Asset Prices |
+
+### Action Icons
+- Create: `fa-plus`
+- View: `fa-eye`
+- Edit: `fa-edit`
+- Delete: `fa-trash`
+- PDF: `fa-file-pdf`
+- Back: (text only, no icon)
+- Bulk: `fa-users`
+- Charts: `fa-chart-line`, `fa-chart-bar`
+- Admin: `fa-user-shield`
+
+### Icon Spacing
 - Always include spacing: `me-1` or `me-2` after icon before text
-- Common icons:
-  - Create: `fa-plus`
-  - View: `fa-eye`
-  - Edit: `fa-edit`
-  - Delete: `fa-trash`
-  - PDF: `fa-file-pdf`
-  - Back: (text only, no icon)
-  - Charts: `fa-chart-line`, `fa-chart-bar`
-  - Users: `fa-user`, `fa-user-shield` (admin)
+- Use `me-2` for header icons (before title)
+- Use `me-1` for button icons (before button text)

@@ -11,10 +11,15 @@
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
-                         <div class="card-header">
-                             <i class="fa fa-align-justify"></i>
-                             TradePortfolios
-                             <a class="pull-right" href="{{ route('tradePortfolios.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
+                         <div class="card-header d-flex justify-content-between align-items-center">
+                             <div>
+                                 <i class="fa fa-chart-pie me-2"></i>
+                                 <strong>Trade Portfolios</strong>
+                                 <span class="badge bg-primary ms-2">{{ $tradePortfolios->count() }}</span>
+                             </div>
+                             <a class="btn btn-sm btn-primary" href="{{ route('tradePortfolios.create') }}">
+                                 <i class="fa fa-plus me-1"></i> New Portfolio
+                             </a>
                          </div>
                          <div class="card-body">
                              @include('trade_portfolios.table')

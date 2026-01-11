@@ -10,16 +10,18 @@
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
-                         <div class="card-header">
-                             <i class="fa fa-align-justify"></i>
-                             PortfolioAssets
-                             <a class="pull-right" href="{{ route('portfolioAssets.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
+                         <div class="card-header d-flex justify-content-between align-items-center">
+                             <div>
+                                 <i class="fa fa-coins me-2"></i>
+                                 <strong>Portfolio Assets</strong>
+                                 <span class="badge bg-primary ms-2">{{ $portfolioAssets->count() }}</span>
+                             </div>
+                             <a class="btn btn-sm btn-primary" href="{{ route('portfolioAssets.create') }}">
+                                 <i class="fa fa-plus me-1"></i> New Asset
+                             </a>
                          </div>
                          <div class="card-body">
                              @include('portfolio_assets.table')
-                              <div class="pull-right mr-3">
-                                     
-                              </div>
                          </div>
                      </div>
                   </div>

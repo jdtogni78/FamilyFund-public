@@ -10,16 +10,18 @@
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">
-                         <div class="card-header">
-                             <i class="fa fa-align-justify"></i>
-                             DepositRequests
-                             <a class="pull-right" href="{{ route('depositRequests.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
+                         <div class="card-header d-flex justify-content-between align-items-center">
+                             <div>
+                                 <i class="fa fa-hand-holding-usd me-2"></i>
+                                 <strong>Deposit Requests</strong>
+                                 <span class="badge bg-primary ms-2">{{ $depositRequests->count() }}</span>
+                             </div>
+                             <a class="btn btn-sm btn-primary" href="{{ route('depositRequests.create') }}">
+                                 <i class="fa fa-plus me-1"></i> New Request
+                             </a>
                          </div>
                          <div class="card-body">
                              @include('deposit_requests.table')
-                              <div class="pull-right mr-3">
-                                     
-                              </div>
                          </div>
                      </div>
                   </div>

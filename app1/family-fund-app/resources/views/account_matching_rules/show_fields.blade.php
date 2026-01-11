@@ -1,16 +1,68 @@
-<div class="form-group">
-<label for="account_id">Account Id:</label>
-    <p>{{ $api['account']->id }}</p>
+@php
+    $account = $api['account'] ?? $accountMatchingRule->account;
+    $matchingRule = $api['mr'] ?? $accountMatchingRule->matchingRule;
+@endphp
+
+<div class="row">
+    <div class="col-md-6">
+        <!-- Account Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Account:</label>
+            <p class="mb-0">
+                @if($account)
+                    <a href="{{ route('accounts.show', $account->id) }}" class="fw-bold">
+                        {{ $account->nickname }}
+                    </a>
+                    @if($account->code)
+                        <span class="text-body-secondary">({{ $account->code }})</span>
+                    @endif
+                    @if($account->fund)
+                        <br><small class="text-body-secondary">
+                            <i class="fa fa-landmark me-1"></i>
+                            <a href="{{ route('funds.show', $account->fund_id) }}">{{ $account->fund->name }}</a>
+                        </small>
+                    @endif
+                @else
+                    <span class="text-body-secondary">N/A</span>
+                @endif
+            </p>
+        </div>
+
+        <!-- Matching Rule Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-link me-1"></i> Matching Rule:</label>
+            <p class="mb-0">
+                @if($matchingRule)
+                    <a href="{{ route('matchingRules.show', $matchingRule->id) }}" class="fw-bold">
+                        {{ $matchingRule->name }}
+                    </a>
+                    <br><small class="text-body-secondary">
+                        {{ number_format($matchingRule->match_percent * 100, 0) }}% match
+                    </small>
+                @else
+                    <span class="text-body-secondary">N/A</span>
+                @endif
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <!-- Effective From Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-calendar me-1"></i> Effective From:</label>
+            <p class="mb-0 fw-bold">
+                @if($matchingRule)
+                    {{ max($matchingRule->date_start, $accountMatchingRule->created_at?->format('Y-m-d')) }}
+                @else
+                    {{ $accountMatchingRule->created_at?->format('Y-m-d') ?? '-' }}
+                @endif
+            </p>
+        </div>
+
+        <!-- Account Matching Rule ID Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-hashtag me-1"></i> Account Matching Rule ID:</label>
+            <p class="mb-0">#{{ $accountMatchingRule->id }}</p>
+        </div>
+    </div>
 </div>
-
-<div class="form-group">
-<label for="account_nickname">Account Nickname:</label>
-    <p>{{ $api['account']->nickname }}</p>
-</div>
-
-<div class="form-group">
-<label for="effective_from">Effective From:</label>
-    <p>{{ max($api['mr']->date_start, $accountMatchingRule->created_at) }}</p>
-</div>
-
-

@@ -1,78 +1,76 @@
-<!-- Person Id Field -->
-<div class="form-group">
-<label for="person_id">Person Id:</label>
-    <p>{{ $address->person_id }}</p>
-</div>
+@php
+    $person = $address->person;
+@endphp
 
-<!-- Type Field -->
-<div class="form-group">
-<label for="type">Type:</label>
-    <p>{{ $address->type }}</p>
-</div>
+<div class="row">
+    <div class="col-md-6">
+        <!-- Person Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Person:</label>
+            <p class="mb-0">
+                @if($person)
+                    <a href="{{ route('people.show', $person->id) }}" class="fw-bold">
+                        {{ $person->first_name }} {{ $person->last_name }}
+                    </a>
+                @else
+                    <span class="text-body-secondary">ID: {{ $address->person_id }}</span>
+                @endif
+            </p>
+        </div>
 
-<!-- Is Primary Field -->
-<div class="form-group">
-<label for="is_primary">Is Primary:</label>
-    <p>{{ $address->is_primary }}</p>
-</div>
+        <!-- Type Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-tag me-1"></i> Type:</label>
+            <p class="mb-0">
+                <span class="badge bg-info">{{ ucfirst($address->type) }}</span>
+                @if($address->is_primary)
+                    <span class="badge bg-success ms-1">Primary</span>
+                @endif
+            </p>
+        </div>
 
-<!-- Street Field -->
-<div class="form-group">
-<label for="street">Street:</label>
-    <p>{{ $address->street }}</p>
-</div>
+        <!-- Full Address Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-map-marker-alt me-1"></i> Address:</label>
+            <p class="mb-0">
+                <span class="fw-bold">{{ $address->street }}, {{ $address->number }}</span>
+                @if($address->complement)
+                    <span class="text-body-secondary">({{ $address->complement }})</span>
+                @endif
+                <br>
+                {{ $address->city }}, {{ $address->state }} {{ $address->zip_code }}
+                @if($address->county)
+                    <br><small class="text-body-secondary">County: {{ $address->county }}</small>
+                @endif
+                @if($address->country)
+                    <br><small class="text-body-secondary">{{ $address->country }}</small>
+                @endif
+            </p>
+        </div>
+    </div>
 
-<!-- Number Field -->
-<div class="form-group">
-<label for="number">Number:</label>
-    <p>{{ $address->number }}</p>
-</div>
+    <div class="col-md-6">
+        <!-- Street & Number Fields -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-road me-1"></i> Street:</label>
+            <p class="mb-0">{{ $address->street }}</p>
+        </div>
 
-<!-- Complement Field -->
-<div class="form-group">
-<label for="complement">Complement:</label>
-    <p>{{ $address->complement }}</p>
-</div>
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-home me-1"></i> Number:</label>
+            <p class="mb-0">{{ $address->number }}</p>
+        </div>
 
-<!-- County Field -->
-<div class="form-group">
-<label for="county">County:</label>
-    <p>{{ $address->county }}</p>
-</div>
+        <!-- Created At Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-clock me-1"></i> Created:</label>
+            <p class="mb-0">{{ $address->created_at?->format('M j, Y') ?: '-' }}</p>
+        </div>
 
-<!-- City Field -->
-<div class="form-group">
-<label for="city">City:</label>
-    <p>{{ $address->city }}</p>
+        <!-- Address ID Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-hashtag me-1"></i> Address ID:</label>
+            <p class="mb-0">#{{ $address->id }}</p>
+        </div>
+    </div>
 </div>
-
-<!-- State Field -->
-<div class="form-group">
-<label for="state">State:</label>
-    <p>{{ $address->state }}</p>
-</div>
-
-<!-- Zip Code Field -->
-<div class="form-group">
-<label for="zip_code">Zip Code:</label>
-    <p>{{ $address->zip_code }}</p>
-</div>
-
-<!-- Country Field -->
-<div class="form-group">
-<label for="country">Country:</label>
-    <p>{{ $address->country }}</p>
-</div>
-
-<!-- Created At Field -->
-<div class="form-group">
-<label for="created_at">Created At:</label>
-    <p>{{ $address->created_at }}</p>
-</div>
-
-<!-- Updated At Field -->
-<div class="form-group">
-<label for="updated_at">Updated At:</label>
-    <p>{{ $address->updated_at }}</p>
-</div>
-

@@ -1,30 +1,67 @@
-<!-- Code Field -->
-<div class="form-group">
-<label for="code">Code:</label>
-    <p>{{ $account->code }}</p>
-</div>
+@php
+    $fund = $account->fund;
+    $user = $account->user;
+@endphp
 
-<!-- Nickname Field -->
-<div class="form-group">
-<label for="nickname">Nickname:</label>
-    <p>{{ $account->nickname }}</p>
-</div>
+<div class="row">
+    <div class="col-md-6">
+        <!-- Nickname Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Nickname:</label>
+            <p class="mb-0 fs-5 fw-bold">{{ $account->nickname }}</p>
+        </div>
 
-<!-- Email Cc Field -->
-<div class="form-group">
-<label for="email_cc">Email Cc:</label>
-    <p>{{ $account->email_cc }}</p>
-</div>
+        <!-- Code Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-key me-1"></i> Code:</label>
+            <p class="mb-0">{{ $account->code ?: '-' }}</p>
+        </div>
 
-<!-- User Id Field -->
-<div class="form-group">
-<label for="user_id">User Id:</label>
-    <p>{{ $account->user_id }}</p>
-</div>
+        <!-- Fund Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund:</label>
+            <p class="mb-0">
+                @if($fund)
+                    <a href="{{ route('funds.show', $fund->id) }}" class="fw-bold">
+                        {{ $fund->name }}
+                    </a>
+                @else
+                    <span class="text-body-secondary">N/A</span>
+                @endif
+            </p>
+        </div>
+    </div>
 
-<!-- Fund Id Field -->
-<div class="form-group">
-<label for="fund_id">Fund Id:</label>
-    <p>{{ $account->fund_id }}</p>
-</div>
+    <div class="col-md-6">
+        <!-- User Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-user-circle me-1"></i> User:</label>
+            <p class="mb-0">
+                @if($user)
+                    <a href="{{ route('users.show', $user->id) }}" class="fw-bold">
+                        {{ $user->name }}
+                    </a>
+                    @if($user->email)
+                        <br><small class="text-body-secondary">
+                            <i class="fa fa-envelope me-1"></i>{{ $user->email }}
+                        </small>
+                    @endif
+                @else
+                    <span class="badge bg-info">Fund Account</span>
+                @endif
+            </p>
+        </div>
 
+        <!-- Email CC Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-at me-1"></i> Email CC:</label>
+            <p class="mb-0">{{ $account->email_cc ?: '-' }}</p>
+        </div>
+
+        <!-- Account ID Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-hashtag me-1"></i> Account ID:</label>
+            <p class="mb-0">#{{ $account->id }}</p>
+        </div>
+    </div>
+</div>

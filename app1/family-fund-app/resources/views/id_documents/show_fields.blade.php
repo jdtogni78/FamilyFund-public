@@ -1,30 +1,49 @@
-<!-- Person Id Field -->
-<div class="form-group">
-<label for="person_id">Person Id:</label>
-    <p>{{ $idDocument->person_id }}</p>
-</div>
+@php
+    $person = $idDocument->person;
+@endphp
 
-<!-- Type Field -->
-<div class="form-group">
-<label for="type">Type:</label>
-    <p>{{ $idDocument->type }}</p>
-</div>
+<div class="row">
+    <div class="col-md-6">
+        <!-- Person Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Person:</label>
+            <p class="mb-0">
+                @if($person)
+                    <a href="{{ route('people.show', $person->id) }}" class="fw-bold">
+                        {{ $person->first_name }} {{ $person->last_name }}
+                    </a>
+                @else
+                    <span class="text-body-secondary">ID: {{ $idDocument->person_id }}</span>
+                @endif
+            </p>
+        </div>
 
-<!-- Number Field -->
-<div class="form-group">
-<label for="number">Number:</label>
-    <p>{{ $idDocument->number }}</p>
-</div>
+        <!-- Type Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-id-card me-1"></i> Type:</label>
+            <p class="mb-0">
+                <span class="badge bg-info">{{ strtoupper($idDocument->type) }}</span>
+            </p>
+        </div>
 
-<!-- Created At Field -->
-<div class="form-group">
-<label for="created_at">Created At:</label>
-    <p>{{ $idDocument->created_at }}</p>
-</div>
+        <!-- Number Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-hashtag me-1"></i> Number:</label>
+            <p class="mb-0 fs-5 fw-bold">{{ $idDocument->number }}</p>
+        </div>
+    </div>
 
-<!-- Updated At Field -->
-<div class="form-group">
-<label for="updated_at">Updated At:</label>
-    <p>{{ $idDocument->updated_at }}</p>
-</div>
+    <div class="col-md-6">
+        <!-- Created At Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-clock me-1"></i> Created:</label>
+            <p class="mb-0">{{ $idDocument->created_at?->format('M j, Y') ?: '-' }}</p>
+        </div>
 
+        <!-- ID Document ID Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-hashtag me-1"></i> ID Document ID:</label>
+            <p class="mb-0">#{{ $idDocument->id }}</p>
+        </div>
+    </div>
+</div>

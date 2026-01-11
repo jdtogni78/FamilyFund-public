@@ -34,22 +34,22 @@
                                 @endisset
                             </div>
                             <div class="d-flex flex-wrap" style="gap: 4px;">
-                                <a href="{{ route('funds.index') }}" class="btn btn-sm btn-header-light">Back</a>
-                                <a href="/funds/{{ $api['id'] }}/trade_bands" class="btn btn-sm btn-header-light" title="Trading Bands">
+                                <a href="{{ route('funds.index') }}" class="btn btn-sm btn-primary">Back</a>
+                                <a href="/funds/{{ $api['id'] }}/trade_bands" class="btn btn-sm btn-primary" title="Trading Bands">
                                     <i class="fa fa-chart-bar"></i>
                                 </a>
                                 @isset($api['admin'])
-                                    <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}?admin=0" class="btn btn-sm btn-header-light" title="Switch to User View">
+                                    <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}?admin=0" class="btn btn-sm btn-primary" title="Switch to User View">
                                         <i class="fa fa-user"></i>
                                     </a>
                                 @else
                                     @if(in_array(Auth::user()->email ?? '', ['admin@dev.familyfund.local', 'claude@test.local']))
-                                        <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}" class="btn btn-warning btn-sm" title="Switch to Admin View">
+                                        <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}" class="btn btn-sm btn-warning" title="Switch to Admin View">
                                             <i class="fa fa-user-shield"></i>
                                         </a>
                                     @endif
                                 @endisset
-                                <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}{{ isset($api['admin']) ? '' : '?admin=0' }}" class="btn btn-sm btn-header-light" target="_blank" title="Download PDF">
+                                <a href="/funds/{{ $api['id'] }}/pdf_as_of/{{ $asOf }}{{ isset($api['admin']) ? '' : '?admin=0' }}" class="btn btn-sm btn-primary" target="_blank" title="Download PDF">
                                     <i class="fa fa-file-pdf"></i>
                                 </a>
                             </div>

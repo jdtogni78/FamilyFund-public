@@ -14,7 +14,7 @@
                              <div>
                                  <i class="fa fa-file-alt me-2"></i>
                                  <strong>Account Reports</strong>
-                                 <span class="badge bg-secondary ms-2">{{ $accountReports->count() }}</span>
+                                 <span class="badge bg-primary ms-2">{{ $accountReports->count() }}</span>
                              </div>
                              <a class="btn btn-sm btn-primary" href="{{ route('accountReports.create') }}">
                                  <i class="fa fa-plus me-1"></i> New Report

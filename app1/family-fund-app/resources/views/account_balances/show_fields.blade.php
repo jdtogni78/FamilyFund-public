@@ -46,7 +46,7 @@
                     <a href="{{ route('transactions.show', $transaction->id) }}">
                         #{{ $transaction->id }}
                     </a>
-                    <span class="badge ms-1" style="background: {{ $transaction->value >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                    <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
                     <br><small class="text-body-secondary">
@@ -67,7 +67,7 @@
             <p class="mb-0">
                 <span class="fs-4 fw-bold">{{ number_format($accountBalance->shares, 4) }}</span>
                 @if($sharesDelta != 0)
-                    <span class="badge ms-2" style="background: {{ $sharesDelta >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                    <span class="{{ $sharesDelta >= 0 ? 'badge-positive' : 'badge-negative' }} ms-2">
                         {{ $sharesDelta >= 0 ? '+' : '' }}{{ number_format($sharesDelta, 4) }}
                     </span>
                 @endif

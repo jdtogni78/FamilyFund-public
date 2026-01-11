@@ -1,19 +1,19 @@
 @php
     use App\Models\TransactionExt;
 
-    $typeColors = [
-        TransactionExt::TYPE_PURCHASE => ['bg' => '#dcfce7', 'text' => '#16a34a', 'icon' => 'fa-arrow-up'],
-        TransactionExt::TYPE_INITIAL => ['bg' => '#dbeafe', 'text' => '#2563eb', 'icon' => 'fa-star'],
-        TransactionExt::TYPE_SALE => ['bg' => '#fee2e2', 'text' => '#dc2626', 'icon' => 'fa-arrow-down'],
-        TransactionExt::TYPE_MATCHING => ['bg' => '#f3e8ff', 'text' => '#9333ea', 'icon' => 'fa-gift'],
-        TransactionExt::TYPE_BORROW => ['bg' => '#fef3c7', 'text' => '#d97706', 'icon' => 'fa-hand-holding-usd'],
-        TransactionExt::TYPE_REPAY => ['bg' => '#fed7aa', 'text' => '#ea580c', 'icon' => 'fa-undo'],
+    $typeClasses = [
+        TransactionExt::TYPE_PURCHASE => ['class' => 'badge-tx-purchase', 'icon' => 'fa-arrow-up'],
+        TransactionExt::TYPE_INITIAL => ['class' => 'badge-tx-initial', 'icon' => 'fa-star'],
+        TransactionExt::TYPE_SALE => ['class' => 'badge-tx-sale', 'icon' => 'fa-arrow-down'],
+        TransactionExt::TYPE_MATCHING => ['class' => 'badge-tx-matching', 'icon' => 'fa-gift'],
+        TransactionExt::TYPE_BORROW => ['class' => 'badge-tx-borrow', 'icon' => 'fa-hand-holding-usd'],
+        TransactionExt::TYPE_REPAY => ['class' => 'badge-tx-repay', 'icon' => 'fa-undo'],
     ];
 
-    $statusColors = [
-        TransactionExt::STATUS_PENDING => ['bg' => '#fef9c3', 'text' => '#ca8a04', 'label' => 'Pending'],
-        TransactionExt::STATUS_CLEARED => ['bg' => '#dcfce7', 'text' => '#16a34a', 'label' => 'Cleared'],
-        TransactionExt::STATUS_SCHEDULED => ['bg' => '#e0e7ff', 'text' => '#4f46e5', 'label' => 'Scheduled'],
+    $statusClasses = [
+        TransactionExt::STATUS_PENDING => ['class' => 'badge-status-pending'],
+        TransactionExt::STATUS_CLEARED => ['class' => 'badge-status-cleared'],
+        TransactionExt::STATUS_SCHEDULED => ['class' => 'badge-status-scheduled'],
     ];
 @endphp
 
@@ -37,40 +37,38 @@
         <tbody>
         @foreach($api['transactions'] as $trans)
             @php
-                $typeStyle = $typeColors[$trans->type] ?? ['bg' => '#f3f4f6', 'text' => '#374151', 'icon' => 'fa-circle'];
-                $statusStyle = $statusColors[$trans->status] ?? ['bg' => '#f3f4f6', 'text' => '#374151', 'label' => $trans->status];
+                $typeStyle = $typeClasses[$trans->type] ?? ['class' => 'badge-gray', 'icon' => 'fa-circle'];
+                $statusStyle = $statusClasses[$trans->status] ?? ['class' => 'badge-gray'];
                 $perfValue = floatval($trans->current_performance ?? 0);
-                $perfColor = $perfValue >= 0 ? '#16a34a' : '#dc2626';
-                $valueColor = $trans->value >= 0 ? '#16a34a' : '#dc2626';
             @endphp
             <tr>
                 <td><small class="text-muted">{{ $trans->id }}</small></td>
                 <td>{{ \Carbon\Carbon::parse($trans->timestamp)->format('Y-m-d') }}</td>
                 <td>
-                    <span class="badge d-inline-flex align-items-center" style="background-color: {{ $typeStyle['bg'] }}; color: {{ $typeStyle['text'] }};">
+                    <span class="{{ $typeStyle['class'] }} d-inline-flex align-items-center">
                         <i class="fa {{ $typeStyle['icon'] }} me-1" style="font-size: 0.7em;"></i>
                         {{ $trans->type_string() }}
                     </span>
                 </td>
                 <td>
-                    <span class="badge" style="background-color: {{ $statusStyle['bg'] }}; color: {{ $statusStyle['text'] }};">
+                    <span class="{{ $statusStyle['class'] }}">
                         {{ $trans->status_string() }}
                     </span>
                 </td>
                 <td class="text-end">
-                    <span style="color: {{ $valueColor }}; font-weight: 500;">
+                    <span class="{{ $trans->value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }} font-medium">
                         @if($trans->value >= 0)+@endif${{ number_format($trans->value, 2) }}
                     </span>
                 </td>
                 <td class="text-end">${{ number_format($trans->share_price, 2) }}</td>
                 <td class="text-end">
-                    <span style="color: {{ $trans->shares >= 0 ? '#16a34a' : '#dc2626' }};">
+                    <span class="{{ $trans->shares >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                         @if($trans->shares >= 0)+@endif{{ number_format($trans->shares, 4) }}
                     </span>
                 </td>
                 <td class="text-end">
                     ${{ number_format($trans->current_value, 2) }}
-                    <small style="color: {{ $perfColor }};">
+                    <small class="{{ $perfValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                         (@if($perfValue >= 0)+@endif{{ number_format($perfValue, 1) }}%)
                     </small>
                 </td>

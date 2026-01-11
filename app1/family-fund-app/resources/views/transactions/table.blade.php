@@ -24,30 +24,30 @@
                 <td>{{ $transaction->id }}</td>
                 <td>
                     @php
-                        $typeColors = [
-                            'PUR' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Purchase', 'icon' => 'fa-arrow-up'],
-                            'INI' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Initial', 'icon' => 'fa-star'],
-                            'SAL' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Sale', 'icon' => 'fa-arrow-down'],
-                            'MAT' => ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7c3aed', 'label' => 'Matching', 'icon' => 'fa-gift'],
-                            'BOR' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Borrow', 'icon' => 'fa-hand-holding-usd'],
-                            'REP' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Repay', 'icon' => 'fa-undo'],
+                        $typeClasses = [
+                            'PUR' => ['class' => 'badge-tx-purchase', 'label' => 'Purchase', 'icon' => 'fa-arrow-up'],
+                            'INI' => ['class' => 'badge-tx-initial', 'label' => 'Initial', 'icon' => 'fa-star'],
+                            'SAL' => ['class' => 'badge-tx-sale', 'label' => 'Sale', 'icon' => 'fa-arrow-down'],
+                            'MAT' => ['class' => 'badge-tx-matching', 'label' => 'Matching', 'icon' => 'fa-gift'],
+                            'BOR' => ['class' => 'badge-tx-borrow', 'label' => 'Borrow', 'icon' => 'fa-hand-holding-usd'],
+                            'REP' => ['class' => 'badge-tx-repay', 'label' => 'Repay', 'icon' => 'fa-undo'],
                         ];
-                        $tc = $typeColors[$transaction->type] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->type, 'icon' => 'fa-circle'];
+                        $tc = $typeClasses[$transaction->type] ?? ['class' => 'badge-gray', 'label' => $transaction->type, 'icon' => 'fa-circle'];
                     @endphp
-                    <span class="badge" style="background: {{ $tc['bg'] }}; color: {{ $tc['text'] }}; border: 1px solid {{ $tc['border'] }};">
+                    <span class="{{ $tc['class'] }}">
                         <i class="fa {{ $tc['icon'] }} me-1"></i>{{ $tc['label'] }}
                     </span>
                 </td>
                 <td>
                     @php
-                        $statusColors = [
-                            'P' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Pending'],
-                            'C' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Cleared'],
-                            'S' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Scheduled'],
+                        $statusClasses = [
+                            'P' => ['class' => 'badge-status-pending', 'label' => 'Pending'],
+                            'C' => ['class' => 'badge-status-cleared', 'label' => 'Cleared'],
+                            'S' => ['class' => 'badge-status-scheduled', 'label' => 'Scheduled'],
                         ];
-                        $sc = $statusColors[$transaction->status] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->status];
+                        $sc = $statusClasses[$transaction->status] ?? ['class' => 'badge-gray', 'label' => $transaction->status];
                     @endphp
-                    <span class="badge" style="background: {{ $sc['bg'] }}; color: {{ $sc['text'] }}; border: 1px solid {{ $sc['border'] }};">
+                    <span class="{{ $sc['class'] }}">
                         {{ $sc['label'] }}
                     </span>
                 </td>
@@ -65,7 +65,9 @@
                 <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
                 <td>{{ $transaction->scheduled_job_id }}</td>
                 <td>
-                    <form action="{{ route('transactions.destroy', $transaction->id) }}" method="DELETE">
+                    <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
                         <div class='btn-group'>
                             <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                             <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>

@@ -1,4 +1,4 @@
-<form action="{{ route('funds.destroy', $fund->id) }}" method="POST">
+<form action="{{ route('funds.destroy', $fund->id) }}" method="POST" class="d-inline-block">
     @csrf
     @method('DELETE')
     <div class='btn-group'>

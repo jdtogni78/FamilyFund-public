@@ -84,7 +84,7 @@
                     {{-- Header --}}
                     <tr>
                         <td class="section-header-cell" style="padding: 8px 12px;">
-                            <img src="{{ public_path('images/icons/columns.svg') }}" class="icon-md">
+                            <img src="{{ public_path('images/icons/columns.svg') }}" style="width: 13px; height: 13px; vertical-align: text-bottom; margin-right: 6px;">
                             <strong class="section-header-text" style="font-size: 12px;">Portfolio {{ $tp->id }}</strong>
                         </td>
                     </tr>
@@ -92,16 +92,23 @@
                     {{-- Period & Settings --}}
                     <tr>
                         <td style="padding: 8px 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: center;">
-                            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
                                 {{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}
                             </div>
-                            <div style="font-size: 10px;">
-                                <span style="background: #0ea5e9; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Cash {{ $tp->cash_target * 100 }}%</span>
-                                <span style="background: #64748b; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
-                                <span style="background: #16a34a; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
-                                <span style="background: #7c3aed; color: white; padding: 3px 6px; border-radius: 4px; margin-right: 3px; font-weight: 600;">Max {{ $tp->max_single_order * 100 }}%</span>
-                                <span style="background: #dc2626; color: white; padding: 3px 6px; border-radius: 4px; font-weight: 600;">Rebal {{ $tp->rebalance_period }}d</span>
-                            </div>
+                            <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 9px;">
+                                <tr>
+                                    <td style="padding: 2px; text-align: center;" width="33%"><span style="background: #0ea5e9; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600; white-space: nowrap;">Cash {{ $tp->cash_target * 100 }}%</span></td>
+                                    <td style="padding: 2px; text-align: center;" width="34%"><span style="background: #64748b; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600; white-space: nowrap;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span></td>
+                                    <td style="padding: 2px; text-align: center;" width="33%"><span style="background: #16a34a; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600; white-space: nowrap;">Min ${{ number_format($tp->minimum_order, 0) }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="padding: 2px; text-align: center;">
+                                        <span style="background: #7c3aed; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600; white-space: nowrap;">Max {{ $tp->max_single_order * 100 }}%</span>
+                                        &nbsp;
+                                        <span style="background: #dc2626; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600; white-space: nowrap;">Rebal {{ $tp->rebalance_period }}d</span>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
 

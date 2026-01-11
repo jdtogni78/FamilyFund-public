@@ -416,7 +416,7 @@
     @isset($api['transactions'])
         <div class="card mb-3">
             <div class="card-header admin-header">
-                <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Transaction History <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
+                <h4 class="card-header-title"><img src="{{ public_path('images/icons/exchange.svg') }}" class="header-icon">Transaction History <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
             </div>
             <div class="card-body">
                 @include('accounts.transactions_table_pdf')

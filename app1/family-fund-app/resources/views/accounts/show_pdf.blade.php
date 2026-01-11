@@ -436,7 +436,7 @@
     <div class="page-break"></div>
     <div class="card mb-4">
         <div class="card-header">
-            <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Transaction History</h4>
+            <h4 class="card-header-title"><img src="{{ public_path('images/icons/exchange.svg') }}" class="header-icon">Transaction History</h4>
         </div>
         <div class="card-body">
             @include('accounts.transactions_table_pdf')

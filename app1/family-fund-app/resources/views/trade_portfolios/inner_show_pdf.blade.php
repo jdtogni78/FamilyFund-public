@@ -24,6 +24,7 @@
 <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 12px;">
     <tr>
         <td class="section-header-cell" style="border-radius: 6px 6px 0 0;">
+            <img src="{{ public_path('images/icons/columns.svg') }}" style="width: 14px; height: 14px; vertical-align: text-bottom; margin-right: 6px;">
             <span class="section-header-text">
                 Trade Portfolio {{ $tradePortfolio->id }}
             </span>

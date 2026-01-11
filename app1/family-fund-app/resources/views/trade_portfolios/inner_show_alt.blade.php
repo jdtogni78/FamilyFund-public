@@ -78,11 +78,11 @@
         <div class="col-md-{{ 12 / count($tradePortfolios) }} mb-3">
             <div class="card h-100">
                 {{-- Portfolio Header --}}
-                <div class="card-header py-2" style="background: #134e4a; color: white;">
+                <div class="card-header py-2" style="background: #f0fdfa; border-left: 4px solid #14b8a6; border-bottom: 1px solid #99f6e4;">
                     <div class="d-flex justify-content-between align-items-center">
-                        <strong><i class="fa fa-briefcase mr-1"></i> Portfolio {{ $tp->id }}</strong>
+                        <strong style="color: #0f766e;"><i class="fa fa-columns mr-1" style="color: #14b8a6;"></i> Portfolio {{ $tp->id }}</strong>
                         @if($editable)
-                            <a href="{{ route('tradePortfolios.edit', [$tp->id]) }}" class="btn btn-sm btn-outline-light" title="Edit"><i class="fa fa-edit"></i></a>
+                            <a href="{{ route('tradePortfolios.edit', [$tp->id]) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="fa fa-edit"></i></a>
                         @endif
                     </div>
                 </div>

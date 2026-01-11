@@ -62,7 +62,7 @@
     <div style="font-size: 1.75rem; font-weight: 700; color: {{ $prevYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">
         @if($prevYearGrowth >= 0)+@endif{{ number_format($prevYearGrowth, 1) }}%
     </div>
-    <div class="text-muted text-uppercase small">{{ $prevYear }} Growth</div>
+    <div class="text-muted text-uppercase small" style="font-weight: 600;">{{ $prevYear }} Growth</div>
 </div>
 @endif
 
@@ -72,7 +72,7 @@
     <div style="font-size: 1.75rem; font-weight: 700; color: {{ $currentYearGrowth >= 0 ? '#2563eb' : '#dc2626' }};">
         @if($currentYearGrowth >= 0)+@endif{{ number_format($currentYearGrowth, 1) }}%
     </div>
-    <div class="text-muted text-uppercase small">{{ $currentYear }} YTD</div>
+    <div class="text-muted text-uppercase small" style="font-weight: 600;">{{ $currentYear }} YTD</div>
 </div>
 @endif
 
@@ -82,6 +82,6 @@
     <div style="font-size: 1.75rem; font-weight: 700; color: {{ $allTimeGrowth >= 0 ? '#2563eb' : '#dc2626' }};">
         @if($allTimeGrowth >= 0)+@endif{{ number_format($allTimeGrowth, 1) }}%
     </div>
-    <div class="text-muted text-uppercase small">All-Time</div>
+    <div class="text-muted text-uppercase small" style="font-weight: 600;">All-Time</div>
 </div>
 @endif

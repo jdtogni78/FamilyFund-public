@@ -72,7 +72,7 @@
             padding: 16px 20px;
             background: #134e4a;
             border-radius: 8px;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
         }
 
         .header-logo {
@@ -210,30 +210,30 @@
 
         .card-header-icon,
         .header-icon {
-            width: 18px;
-            height: auto;
+            width: 16px;
+            height: 16px;
             margin-right: 8px;
             vertical-align: middle;
         }
 
         /* Generic icon classes for all SVG icons */
         .icon {
-            width: 18px;
-            height: auto;
-            vertical-align: middle;
+            width: 16px;
+            height: 16px;
+            vertical-align: text-bottom;
         }
 
         .icon-sm {
-            width: 12px;
-            height: auto;
-            vertical-align: middle;
+            width: 11px;
+            height: 11px;
+            vertical-align: text-bottom;
             margin-right: 3px;
         }
 
         .icon-md {
-            width: 14px;
-            height: auto;
-            vertical-align: middle;
+            width: 13px;
+            height: 13px;
+            vertical-align: text-bottom;
             margin-right: 6px;
         }
 

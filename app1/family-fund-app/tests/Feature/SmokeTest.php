@@ -609,4 +609,239 @@ class SmokeTest extends TestCase
     {
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str));
     }
+
+    // ==================== POST/PUT Route Discovery ====================
+
+    /**
+     * Routes to skip for write operations (special handling needed).
+     */
+    private function getSkippedWriteRoutes(): array
+    {
+        return [
+            // Auth routes with special requirements
+            'login',
+            'register',
+            'forgot-password',
+            'reset-password',
+            'logout',
+            'two-factor',
+            'two-factor/confirm',
+            'email/verification-notification',
+
+            // These need special file uploads or complex data
+            'import',
+            'upload',
+
+            // These need related entity IDs (person_id, etc.)
+            'addresses',
+            'phones',
+            'id_documents',
+            'users',
+        ];
+    }
+
+    /**
+     * Test that POST routes (create) don't throw 500 errors.
+     * Validation errors (422) are acceptable - we're testing the route works.
+     */
+    public function test_all_post_routes_respond()
+    {
+        $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        $tested = [];
+        $skipped = [];
+        $failed = [];
+
+        $skippedRoutes = $this->getSkippedWriteRoutes();
+        $paramResolvers = $this->getParameterResolvers();
+
+        foreach ($routes as $route) {
+            if (!in_array('POST', $route->methods())) {
+                continue;
+            }
+
+            $uri = $route->uri();
+
+            // Skip API, livewire, sanctum routes
+            if (str_starts_with($uri, 'api/') || str_starts_with($uri, 'livewire/') || str_starts_with($uri, 'sanctum/')) {
+                continue;
+            }
+
+            // Check skip list
+            $shouldSkip = false;
+            foreach ($skippedRoutes as $skip) {
+                if (str_contains($uri, $skip)) {
+                    $shouldSkip = true;
+                    break;
+                }
+            }
+            if ($shouldSkip) {
+                $skipped[] = $uri;
+                continue;
+            }
+
+            // Resolve parameters
+            $resolvedUri = $this->resolveRouteParameters($uri, $paramResolvers);
+            if ($resolvedUri === null) {
+                $skipped[] = $uri . ' (unresolved)';
+                continue;
+            }
+
+            try {
+                // POST with empty data - should get validation error (422) not server error (500)
+                $response = $this->actingAs($this->user)->post('/' . ltrim($resolvedUri, '/'), []);
+                $status = $response->status();
+
+                // Accept: 200, 201, 302 (success/redirect), 422 (validation), 403 (forbidden)
+                if (in_array($status, [200, 201, 302, 301, 422, 403])) {
+                    $tested[] = ['uri' => $resolvedUri, 'status' => $status];
+                } else {
+                    $failed[] = ['uri' => $resolvedUri, 'status' => $status, 'original' => $uri];
+                }
+            } catch (\Exception $e) {
+                $failed[] = ['uri' => $resolvedUri, 'status' => 'exception', 'error' => substr($e->getMessage(), 0, 80), 'original' => $uri];
+            }
+        }
+
+        $this->addToAssertionCount(count($tested));
+
+        if (!empty($failed)) {
+            $failMessages = array_map(fn($f) => "POST '{$f['uri']}' returned {$f['status']}" . (isset($f['error']) ? ": {$f['error']}" : ""), $failed);
+            $this->fail("POST route discovery found " . count($failed) . " failing route(s):\n" . implode("\n", $failMessages) . "\n\nTested: " . count($tested) . ", Skipped: " . count($skipped));
+        }
+
+        $this->assertTrue(true, "Tested " . count($tested) . " POST routes");
+    }
+
+    /**
+     * Test that PUT/PATCH routes (update) don't throw 500 errors.
+     */
+    public function test_all_update_routes_respond()
+    {
+        $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        $tested = [];
+        $skipped = [];
+        $failed = [];
+
+        $skippedRoutes = $this->getSkippedWriteRoutes();
+        $paramResolvers = $this->getParameterResolvers();
+
+        foreach ($routes as $route) {
+            $methods = $route->methods();
+            if (!in_array('PUT', $methods) && !in_array('PATCH', $methods)) {
+                continue;
+            }
+
+            $uri = $route->uri();
+
+            // Skip API, livewire, sanctum routes
+            if (str_starts_with($uri, 'api/') || str_starts_with($uri, 'livewire/') || str_starts_with($uri, 'sanctum/')) {
+                continue;
+            }
+
+            // Check skip list
+            $shouldSkip = false;
+            foreach ($skippedRoutes as $skip) {
+                if (str_contains($uri, $skip)) {
+                    $shouldSkip = true;
+                    break;
+                }
+            }
+            if ($shouldSkip) {
+                $skipped[] = $uri;
+                continue;
+            }
+
+            // Resolve parameters
+            $resolvedUri = $this->resolveRouteParameters($uri, $paramResolvers);
+            if ($resolvedUri === null) {
+                $skipped[] = $uri . ' (unresolved)';
+                continue;
+            }
+
+            try {
+                // PUT with empty data - should get validation error (422) not server error (500)
+                $response = $this->actingAs($this->user)->put('/' . ltrim($resolvedUri, '/'), []);
+                $status = $response->status();
+
+                // Accept: 200, 302 (success/redirect), 422 (validation), 403 (forbidden), 404 (not found - OK for missing records)
+                if (in_array($status, [200, 302, 301, 422, 403, 404])) {
+                    $tested[] = ['uri' => $resolvedUri, 'status' => $status];
+                } else {
+                    $failed[] = ['uri' => $resolvedUri, 'status' => $status, 'original' => $uri];
+                }
+            } catch (\Exception $e) {
+                $failed[] = ['uri' => $resolvedUri, 'status' => 'exception', 'error' => substr($e->getMessage(), 0, 80), 'original' => $uri];
+            }
+        }
+
+        $this->addToAssertionCount(count($tested));
+
+        if (!empty($failed)) {
+            $failMessages = array_map(fn($f) => "PUT '{$f['uri']}' returned {$f['status']}" . (isset($f['error']) ? ": {$f['error']}" : ""), $failed);
+            $this->fail("PUT route discovery found " . count($failed) . " failing route(s):\n" . implode("\n", $failMessages) . "\n\nTested: " . count($tested) . ", Skipped: " . count($skipped));
+        }
+
+        $this->assertTrue(true, "Tested " . count($tested) . " PUT/PATCH routes");
+    }
+
+    /**
+     * Test that DELETE routes don't throw 500 errors.
+     * Note: We don't actually delete - just verify route responds.
+     */
+    public function test_all_delete_routes_respond()
+    {
+        $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        $tested = [];
+        $skipped = [];
+        $failed = [];
+
+        $paramResolvers = $this->getParameterResolvers();
+
+        foreach ($routes as $route) {
+            if (!in_array('DELETE', $route->methods())) {
+                continue;
+            }
+
+            $uri = $route->uri();
+
+            // Skip API, livewire, sanctum routes
+            if (str_starts_with($uri, 'api/') || str_starts_with($uri, 'livewire/') || str_starts_with($uri, 'sanctum/')) {
+                continue;
+            }
+
+            // Resolve parameters - use non-existent IDs to avoid actual deletion
+            $resolvedUri = $this->resolveRouteParameters($uri, $paramResolvers);
+            if ($resolvedUri === null) {
+                $skipped[] = $uri . ' (unresolved)';
+                continue;
+            }
+
+            // Replace resolved ID with a very high number that won't exist
+            // This tests the route works without actually deleting data
+            $safeUri = preg_replace('/\/(\d+)(\/|$)/', '/999999999$2', $resolvedUri);
+
+            try {
+                $response = $this->actingAs($this->user)->delete('/' . ltrim($safeUri, '/'));
+                $status = $response->status();
+
+                // Accept: 200, 302 (success/redirect), 404 (not found - expected), 403 (forbidden)
+                if (in_array($status, [200, 302, 301, 404, 403])) {
+                    $tested[] = ['uri' => $safeUri, 'status' => $status];
+                } else {
+                    $failed[] = ['uri' => $safeUri, 'status' => $status, 'original' => $uri];
+                }
+            } catch (\Exception $e) {
+                $failed[] = ['uri' => $safeUri, 'status' => 'exception', 'error' => substr($e->getMessage(), 0, 80), 'original' => $uri];
+            }
+        }
+
+        $this->addToAssertionCount(count($tested));
+
+        if (!empty($failed)) {
+            $failMessages = array_map(fn($f) => "DELETE '{$f['uri']}' returned {$f['status']}" . (isset($f['error']) ? ": {$f['error']}" : ""), $failed);
+            $this->fail("DELETE route discovery found " . count($failed) . " failing route(s):\n" . implode("\n", $failMessages) . "\n\nTested: " . count($tested) . ", Skipped: " . count($skipped));
+        }
+
+        $this->assertTrue(true, "Tested " . count($tested) . " DELETE routes");
+    }
 }

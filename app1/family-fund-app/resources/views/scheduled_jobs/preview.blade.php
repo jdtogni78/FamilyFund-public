@@ -32,7 +32,7 @@
                                 <form action="{{ route('scheduledJobs.run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">
                                     @csrf
                                     <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to run this scheduled job?')">
-                                        <i class="fa fa-play me-1"></i> Run Now
+                                        <i class="fa fa-play me-1"></i> Run
                                     </button>
                                 </form>
                                 <form action="{{ route('scheduledJobs.force-run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">

@@ -5,6 +5,8 @@ namespace App\Repositories;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
 use App\Repositories\BaseRepository;
+use App\Repositories\Traits\AuthorizesQueries;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class TransactionRepository
@@ -14,6 +16,8 @@ use App\Repositories\BaseRepository;
 
 class TransactionRepository extends BaseRepository
 {
+    use AuthorizesQueries;
+
     /**
      * @var array
      */
@@ -45,5 +49,19 @@ class TransactionRepository extends BaseRepository
     public function model()
     {
         return TransactionExt::class;
+    }
+
+    /**
+     * Apply authorization scope to filter transactions.
+     */
+    protected function applyAuthorizationScope(Builder $query): Builder
+    {
+        $authService = $this->getAuthorizationService();
+
+        if (!$authService) {
+            return $query;
+        }
+
+        return $authService->scopeTransactionsQuery($query);
     }
 }

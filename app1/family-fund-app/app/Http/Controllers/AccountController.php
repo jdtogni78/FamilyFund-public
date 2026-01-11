@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
+use App\Models\AccountExt;
 use App\Repositories\AccountRepository;
 use Illuminate\Http\Request;
 use Flash;
@@ -30,7 +31,9 @@ class AccountController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $accounts = $this->accountRepository->all();
+        $this->authorize('viewAny', AccountExt::class);
+
+        $accounts = $this->accountRepository->withAuthorization()->all();
 
         return view('accounts.index')
             ->with('accounts', $accounts);
@@ -43,6 +46,8 @@ class AccountController extends AppBaseController
      */
     public function create()
     {
+        $this->authorize('create', AccountExt::class);
+
         $api = [
             'userMap' => UserExt::userMap(),
             'fundMap' => FundExt::fundMap(),
@@ -60,6 +65,8 @@ class AccountController extends AppBaseController
      */
     public function store(CreateAccountRequest $request)
     {
+        $this->authorize('create', AccountExt::class);
+
         $input = $request->all();
 
         $account = $this->accountRepository->create($input);
@@ -78,13 +85,15 @@ class AccountController extends AppBaseController
      */
     public function show($id)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
 
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('view', $account);
 
         return view('accounts.show')->with('account', $account);
     }
@@ -98,13 +107,15 @@ class AccountController extends AppBaseController
      */
     public function edit($id)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
 
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('update', $account);
 
         $api = [
             'userMap' => UserExt::userMap(),
@@ -126,13 +137,15 @@ class AccountController extends AppBaseController
      */
     public function update($id, UpdateAccountRequest $request)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
 
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('update', $account);
 
         $account = $this->accountRepository->update($request->all(), $id);
 
@@ -152,13 +165,15 @@ class AccountController extends AppBaseController
      */
     public function destroy($id)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
 
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('delete', $account);
 
         $this->accountRepository->delete($id);
 

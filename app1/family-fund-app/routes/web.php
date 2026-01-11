@@ -163,6 +163,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
+
+    // Admin: User Role Management (system-admin only - checked in controller)
+    Route::get('admin/user-roles', 'App\Http\Controllers\WebV1\UserRoleController@index')
+        ->name('admin.user-roles.index');
+    Route::get('admin/user-roles/{id}', 'App\Http\Controllers\WebV1\UserRoleController@show')
+        ->name('admin.user-roles.show');
+    Route::post('admin/user-roles/{id}/assign', 'App\Http\Controllers\WebV1\UserRoleController@assign')
+        ->name('admin.user-roles.assign');
+    Route::post('admin/user-roles/{id}/revoke', 'App\Http\Controllers\WebV1\UserRoleController@revoke')
+        ->name('admin.user-roles.revoke');
 });
 
 require __DIR__.'/auth.php';

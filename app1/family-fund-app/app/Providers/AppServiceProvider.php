@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Knp\Snappy\Pdf;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +30,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Set default password validation rules
+        Password::defaults(function () {
+            return Password::min(8)
+                ->mixedCase()
+                ->numbers()
+                ->symbols();
+        });
     }
 }

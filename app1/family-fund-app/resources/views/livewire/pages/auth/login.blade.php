@@ -15,6 +15,12 @@ $login = function () {
 
     $this->form->authenticate();
 
+    // Check if 2FA verification is required
+    if ($this->form->requiresTwoFactor) {
+        $this->redirect(route('two-factor.challenge'), navigate: true);
+        return;
+    }
+
     Session::regenerate();
 
     $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);

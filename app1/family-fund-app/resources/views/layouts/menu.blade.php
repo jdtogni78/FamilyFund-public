@@ -223,9 +223,25 @@
     </ul>
 </li>
 
-<li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('operations.index') }}">
-        <i class="nav-icon fa fa-cogs"></i>
-        <span>Operations</span>
+@if(auth()->user() && method_exists(auth()->user(), 'isSystemAdmin') && auth()->user()->isSystemAdmin())
+<li class="nav-item nav-dropdown {{ Request::is('admin*') || Request::is('operations*') ? 'active' : '' }}">
+    <a class="nav-link nav-dropdown-toggle" href="#">
+        <i class="nav-icon fa fa-shield-alt"></i>
+        <span>Admin</span>
     </a>
+    <ul class="nav-dropdown-items">
+        <li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('operations.index') }}">
+                <i class="nav-icon fa fa-cogs"></i>
+                <span>Operations</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('admin/user-roles*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.user-roles.index') }}">
+                <i class="nav-icon fa fa-user-shield"></i>
+                <span>User Roles</span>
+            </a>
+        </li>
+    </ul>
 </li>
+@endif

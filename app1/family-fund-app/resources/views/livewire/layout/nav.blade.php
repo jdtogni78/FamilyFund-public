@@ -53,7 +53,23 @@
                 'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
                 'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
             ],
-        ]
+        ],
+        'Admin' => [
+            'icon' => 'fa fa-shield-alt',
+            'items' => [
+                'Operations' => ['route' => 'operations.index', 'icon' => 'fa fa-cogs'],
+                'User Roles' => ['route' => 'admin.user-roles.index', 'icon' => 'fa fa-user-shield'],
+            ],
+            'adminOnly' => true,
+        ],
     ];
+
+    // Filter out admin-only menus for non-admins
+    $user = auth()->user();
+    $isSystemAdmin = $user && method_exists($user, 'isSystemAdmin') && $user->isSystemAdmin();
+    if (!$isSystemAdmin) {
+        $menu = array_filter($menu, fn($item) => empty($item['adminOnly']));
+    }
+
     View::share('menu', $menu);
 @endphp

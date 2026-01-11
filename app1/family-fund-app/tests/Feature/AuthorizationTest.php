@@ -280,6 +280,286 @@ class AuthorizationTest extends TestCase
         $this->assertTrue($this->fundAdmin->canAccessAccount($account));
     }
 
+    // ==================== Additional Authorization Service Tests ====================
+
+    public function test_authorization_service_for_static_method()
+    {
+        $service = AuthorizationService::for($this->systemAdmin);
+        $this->assertTrue($service->canViewAccount($this->account));
+    }
+
+    public function test_authorization_service_scopes_accounts_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $query = AccountExt::query();
+
+        $service->scopeAccountsQuery($query);
+
+        // Null user should see no accounts
+        $this->assertEquals(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_transactions_for_system_admin()
+    {
+        // Create a transaction for testing
+        $transaction = $this->createTestTransaction();
+
+        $service = new AuthorizationService($this->systemAdmin);
+        $query = TransactionExt::query();
+
+        $service->scopeTransactionsQuery($query);
+
+        // System admin should see all transactions
+        $this->assertGreaterThan(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_transactions_for_fund_admin()
+    {
+        $transaction = $this->createTestTransaction();
+
+        $service = new AuthorizationService($this->fundAdmin);
+        $query = TransactionExt::query();
+
+        $service->scopeTransactionsQuery($query);
+
+        // Fund admin should see transactions in their fund
+        $transactions = $query->get();
+        foreach ($transactions as $tx) {
+            $account = AccountExt::find($tx->account_id);
+            $this->assertEquals($this->fund->id, $account->fund_id);
+        }
+    }
+
+    public function test_authorization_service_scopes_transactions_for_beneficiary()
+    {
+        $transaction = $this->createTestTransaction();
+
+        $service = new AuthorizationService($this->beneficiary);
+        $query = TransactionExt::query();
+
+        $service->scopeTransactionsQuery($query);
+
+        // Beneficiary should only see their own account transactions
+        $transactions = $query->get();
+        foreach ($transactions as $tx) {
+            $this->assertEquals($this->account->id, $tx->account_id);
+        }
+    }
+
+    public function test_authorization_service_scopes_transactions_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $query = TransactionExt::query();
+
+        $service->scopeTransactionsQuery($query);
+
+        // Null user should see no transactions
+        $this->assertEquals(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_funds_for_system_admin()
+    {
+        $service = new AuthorizationService($this->systemAdmin);
+        $query = FundExt::query();
+
+        $service->scopeFundsQuery($query);
+
+        // System admin should see all funds
+        $this->assertGreaterThan(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_funds_for_fund_admin()
+    {
+        $service = new AuthorizationService($this->fundAdmin);
+        $query = FundExt::query();
+
+        $service->scopeFundsQuery($query);
+
+        // Fund admin should see only accessible funds
+        $funds = $query->get();
+        $this->assertTrue($funds->pluck('id')->contains($this->fund->id));
+    }
+
+    public function test_authorization_service_scopes_funds_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $query = FundExt::query();
+
+        $service->scopeFundsQuery($query);
+
+        // Null user should see no funds
+        $this->assertEquals(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_funds_for_unassigned_user()
+    {
+        $service = new AuthorizationService($this->unassignedUser);
+        $query = FundExt::query();
+
+        $service->scopeFundsQuery($query);
+
+        // Unassigned user should see no funds
+        $this->assertEquals(0, $query->count());
+    }
+
+    public function test_authorization_service_get_accessible_fund_ids_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $fundIds = $service->getAccessibleFundIds();
+
+        $this->assertEmpty($fundIds['full']);
+        $this->assertEmpty($fundIds['readonly']);
+    }
+
+    public function test_authorization_service_can_view_account_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $this->assertFalse($service->canViewAccount($this->account));
+    }
+
+    public function test_authorization_service_can_modify_account_for_null_user()
+    {
+        $service = new AuthorizationService(null);
+        $this->assertFalse($service->canModifyAccount($this->account));
+    }
+
+    public function test_authorization_service_can_view_transaction()
+    {
+        $transaction = $this->createTestTransaction();
+
+        // System admin can view any transaction
+        $systemAdminService = new AuthorizationService($this->systemAdmin);
+        $this->assertTrue($systemAdminService->canViewTransaction($transaction));
+
+        // Fund admin can view transactions in their fund
+        $fundAdminService = new AuthorizationService($this->fundAdmin);
+        $this->assertTrue($fundAdminService->canViewTransaction($transaction));
+
+        // Beneficiary can view their own account transactions
+        $beneficiaryService = new AuthorizationService($this->beneficiary);
+        $this->assertTrue($beneficiaryService->canViewTransaction($transaction));
+
+        // Null user cannot view transaction
+        $nullService = new AuthorizationService(null);
+        $this->assertFalse($nullService->canViewTransaction($transaction));
+    }
+
+    public function test_authorization_service_can_view_fund()
+    {
+        $fund = FundExt::find($this->fund->id);
+
+        // System admin can view any fund
+        $systemAdminService = new AuthorizationService($this->systemAdmin);
+        $this->assertTrue($systemAdminService->canViewFund($fund));
+
+        // Fund admin can view their fund
+        $fundAdminService = new AuthorizationService($this->fundAdmin);
+        $this->assertTrue($fundAdminService->canViewFund($fund));
+
+        // Beneficiary can view their fund
+        $beneficiaryService = new AuthorizationService($this->beneficiary);
+        $this->assertTrue($beneficiaryService->canViewFund($fund));
+
+        // Null user cannot view fund
+        $nullService = new AuthorizationService(null);
+        $this->assertFalse($nullService->canViewFund($fund));
+    }
+
+    public function test_authorization_service_can_modify_fund()
+    {
+        $fund = FundExt::find($this->fund->id);
+
+        // System admin can modify any fund
+        $systemAdminService = new AuthorizationService($this->systemAdmin);
+        $this->assertTrue($systemAdminService->canModifyFund($fund));
+
+        // Fund admin can modify their fund
+        $fundAdminService = new AuthorizationService($this->fundAdmin);
+        $this->assertTrue($fundAdminService->canModifyFund($fund));
+
+        // Financial manager cannot modify fund
+        $financialManagerService = new AuthorizationService($this->financialManager);
+        $this->assertFalse($financialManagerService->canModifyFund($fund));
+
+        // Null user cannot modify fund
+        $nullService = new AuthorizationService(null);
+        $this->assertFalse($nullService->canModifyFund($fund));
+    }
+
+    // ==================== Additional Transaction Policy Tests ====================
+
+    public function test_transaction_policy_view()
+    {
+        $transaction = $this->createTestTransaction();
+
+        // Use Gate facade to properly invoke before() hook
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('view', $transaction));
+        $this->assertTrue(Gate::forUser($this->fundAdmin)->allows('view', $transaction));
+        $this->assertTrue(Gate::forUser($this->beneficiary)->allows('view', $transaction));
+    }
+
+    public function test_transaction_policy_update()
+    {
+        $transaction = $this->createTestTransaction();
+
+        // Use Gate facade to properly invoke before() hook
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('update', $transaction));
+        $this->assertTrue(Gate::forUser($this->fundAdmin)->allows('update', $transaction));
+        $this->assertFalse(Gate::forUser($this->beneficiary)->allows('update', $transaction));
+    }
+
+    public function test_transaction_policy_delete()
+    {
+        $transaction = $this->createTestTransaction();
+
+        // Use Gate facade to properly invoke before() hook
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('delete', $transaction));
+        $this->assertTrue(Gate::forUser($this->fundAdmin)->allows('delete', $transaction));
+        $this->assertFalse(Gate::forUser($this->beneficiary)->allows('delete', $transaction));
+    }
+
+    public function test_transaction_policy_process()
+    {
+        $transaction = $this->createTestTransaction();
+
+        // Use Gate facade to properly invoke before() hook
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('process', $transaction));
+        $this->assertTrue(Gate::forUser($this->fundAdmin)->allows('process', $transaction));
+        $this->assertTrue(Gate::forUser($this->financialManager)->allows('process', $transaction));
+        $this->assertFalse(Gate::forUser($this->beneficiary)->allows('process', $transaction));
+    }
+
+    // ==================== Additional Fund Policy Tests ====================
+
+    public function test_fund_policy_view_any()
+    {
+        // Use Gate facade to properly invoke before() hook
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('viewAny', FundExt::class));
+        $this->assertTrue(Gate::forUser($this->fundAdmin)->allows('viewAny', FundExt::class));
+        $this->assertTrue(Gate::forUser($this->financialManager)->allows('viewAny', FundExt::class));
+        $this->assertTrue(Gate::forUser($this->beneficiary)->allows('viewAny', FundExt::class));
+    }
+
+    public function test_fund_policy_create()
+    {
+        // Use Gate facade to properly invoke before() hook
+        // Only system admin can create funds
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('create', FundExt::class));
+        $this->assertFalse(Gate::forUser($this->fundAdmin)->allows('create', FundExt::class));
+        $this->assertFalse(Gate::forUser($this->beneficiary)->allows('create', FundExt::class));
+    }
+
+    public function test_fund_policy_delete()
+    {
+        $fund = FundExt::find($this->fund->id);
+
+        // Use Gate facade to properly invoke before() hook
+        // Only system admin can delete funds
+        $this->assertTrue(Gate::forUser($this->systemAdmin)->allows('delete', $fund));
+        $this->assertFalse(Gate::forUser($this->fundAdmin)->allows('delete', $fund));
+        $this->assertFalse(Gate::forUser($this->beneficiary)->allows('delete', $fund));
+    }
+
     // ==================== Helper Methods ====================
 
     private function makeSystemAdmin(User $user): void
@@ -317,5 +597,16 @@ class AuthorizationTest extends TestCase
 
         // Force reload of roles relationship
         $user->load('roles');
+    }
+
+    private function createTestTransaction(): TransactionExt
+    {
+        return TransactionExt::create([
+            'account_id' => $this->account->id,
+            'type' => 'PUR',  // Purchase type (3-char code)
+            'value' => 1000,
+            'timestamp' => now(),
+            'status' => 'S',  // Submitted status (1-char code)
+        ]);
     }
 }

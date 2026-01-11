@@ -46,7 +46,7 @@
     <!-- Entity Selection - Fund (shown when entity_descr is fund_report) -->
     <div class="form-group col-md-6 mb-3" id="fund_select_group">
         <label for="fund_id" class="form-label">
-            <i class="fa fa-landmark me-1"></i> Fund <span class="text-danger">*</span>
+            <i class="fa fa-landmark me-1"></i> Generate Reports For <span class="text-danger">*</span>
         </label>
         <select name="fund_id" id="fund_id" class="form-control form-select">
             <option value="">-- Select Fund --</option>
@@ -56,6 +56,7 @@
                 </option>
             @endforeach
         </select>
+        <small class="text-body-secondary">Select the fund for which reports will be generated</small>
     </div>
 
     <!-- Entity Selection - Fund for Trade Band (shown when entity_descr is trade_band_report) -->

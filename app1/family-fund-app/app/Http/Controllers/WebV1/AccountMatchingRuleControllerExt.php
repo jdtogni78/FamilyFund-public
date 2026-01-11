@@ -15,10 +15,12 @@ use App\Http\Controllers\Traits\MailTrait;
 use App\Mail\AccountMatchingRuleEmail;
 use App\Models\MatchingRuleExt;
 use App\Models\AccountExt;
+use App\Http\Controllers\Traits\AccountSelectorTrait;
 
 class AccountMatchingRuleControllerExt extends AccountMatchingRuleController
 {
     use MailTrait;
+    use AccountSelectorTrait;
 
     /**
      * Show the form for creating a new AccountMatchingRule.
@@ -27,20 +29,19 @@ class AccountMatchingRuleControllerExt extends AccountMatchingRuleController
      */
     public function create()
     {
-        $api = [
-            'mr' => MatchingRuleExt::ruleMap(),
-            'account' => AccountExt::accountMap()
-        ];
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['mr' => MatchingRuleExt::ruleMap()]
+        );
         return view('account_matching_rules.create')->with('api', $api);
     }
 
     public function bulkCreate()
     {
-        $api = [
-            'mr' => MatchingRuleExt::ruleMap(),
-            'account' => AccountExt::accountMap()
-        ];
-        unset($api['account'][null]);
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['mr' => MatchingRuleExt::ruleMap()]
+        );
         return view('account_matching_rules.create_bulk')->with('api', $api);
     }
 

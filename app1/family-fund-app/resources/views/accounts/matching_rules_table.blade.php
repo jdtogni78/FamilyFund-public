@@ -8,7 +8,7 @@
 @endphp
 <div class="table-responsive-sm">
     <table class="table table-hover" id="matching-rules-table">
-        <thead class="table-light">
+        <thead>
         <tr>
             <th style="width: 100px;">Status</th>
             <th>Period</th>
@@ -40,33 +40,29 @@
                     $missed = $missedUsage * ($matchPercent / 100);
                 }
 
-                // Determine status and styling
+                // Determine status and styling (using Bootstrap classes for dark mode)
                 if ($isActive) {
                     $status = 'Active';
-                    $statusColor = '#16a34a';
-                    $statusBg = '#dcfce7';
-                    $rowBg = '#f0fdf4';
-                    $textColor = '#000000';
+                    $badgeClass = 'bg-success text-white';
+                    $rowClass = 'table-success';
+                    $textClass = '';
                     $totalAvailable += ($available - $used);
                 } elseif ($isUpcoming) {
                     $status = 'Upcoming';
-                    $statusColor = '#0891b2';
-                    $statusBg = '#cffafe';
-                    $rowBg = '#ecfeff';
-                    $textColor = '#000000';
+                    $badgeClass = 'bg-info text-white';
+                    $rowClass = 'table-info';
+                    $textClass = '';
                     $totalAvailable += $available;
                 } elseif ($isExpired && $used == 0 && $available > 0) {
                     $status = 'Missed';
-                    $statusColor = '#d97706';
-                    $statusBg = '#fef3c7';
-                    $rowBg = '#fffbeb';
-                    $textColor = '#78716c';
+                    $badgeClass = 'bg-warning text-dark';
+                    $rowClass = 'table-warning';
+                    $textClass = 'text-body-secondary';
                 } else {
                     $status = 'Expired';
-                    $statusColor = '#64748b';
-                    $statusBg = '#f1f5f9';
-                    $rowBg = '#ffffff';
-                    $textColor = '#64748b';
+                    $badgeClass = 'bg-secondary';
+                    $rowClass = '';
+                    $textClass = 'text-body-secondary';
                 }
 
                 // Format period - show date range
@@ -76,25 +72,25 @@
                 $totalGranted += $granted;
                 $totalMissed += $missed;
             @endphp
-            <tr style="background: {{ $rowBg }};">
+            <tr class="{{ $rowClass }}">
                 <td>
-                    <span class="badge" style="background-color: {{ $statusBg }}; color: {{ $statusColor }}; font-weight: 600;">
+                    <span class="badge {{ $badgeClass }}">
                         {{ $status }}
                     </span>
                 </td>
-                <td style="color: {{ $textColor }}; font-weight: {{ $isActive ? '700' : '400' }};">{{ $periodDisplay }}</td>
-                <td class="text-end" style="color: {{ $textColor }};">{{ number_format($matchPercent, 0) }}% up to ${{ number_format($available, 0) }}</td>
-                <td class="text-end" style="color: {{ $textColor }};">${{ number_format($available, 0) }}</td>
-                <td class="text-end" style="color: {{ $textColor }};">${{ number_format($used, 2) }}</td>
+                <td class="{{ $textClass }}" style="font-weight: {{ $isActive ? '700' : '400' }};">{{ $periodDisplay }}</td>
+                <td class="text-end {{ $textClass }}">{{ number_format($matchPercent, 0) }}% up to ${{ number_format($available, 0) }}</td>
+                <td class="text-end {{ $textClass }}">${{ number_format($available, 0) }}</td>
+                <td class="text-end {{ $textClass }}">${{ number_format($used, 2) }}</td>
                 <td class="text-end">
                     @if($missed > 0)
-                        <span style="color: #d97706; font-weight: 500;">${{ number_format($missed, 2) }}</span>
+                        <span class="text-warning fw-medium">${{ number_format($missed, 2) }}</span>
                     @else
-                        <span style="color: {{ $textColor }};">-</span>
+                        <span class="{{ $textClass }}">-</span>
                     @endif
                 </td>
                 <td class="text-end">
-                    <strong style="color: {{ $granted > 0 ? '#16a34a' : $textColor }};">${{ number_format($granted, 2) }}</strong>
+                    <strong class="{{ $granted > 0 ? 'text-success' : $textClass }}">${{ number_format($granted, 2) }}</strong>
                 </td>
             </tr>
         @endforeach
@@ -104,14 +100,14 @@
                 <td colspan="3">
                     Totals
                     @if($totalAvailable > 0)
-                        <span class="badge ms-2" style="background: #10b981; color: white;">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
+                        <span class="badge bg-success ms-2">${{ number_format($totalAvailable, 0) }} AVAILABLE</span>
                     @endif
                 </td>
                 <td class="text-end"></td>
                 <td class="text-end">${{ number_format($totalUsed, 2) }}</td>
                 <td class="text-end">
                     @if($totalMissed > 0)
-                        <span style="color: #fcd34d;">${{ number_format($totalMissed, 2) }}</span>
+                        <span class="text-warning">${{ number_format($totalMissed, 2) }}</span>
                     @else
                         -
                     @endif
@@ -133,7 +129,7 @@
     });
 </script>
 @else
-<div class="text-muted text-center p-4" style="background: #f8fafc; border-radius: 6px;">
+<div class="text-body-secondary text-center p-4 rounded" style="background: var(--bs-tertiary-bg);">
     No matching rules configured.
 </div>
 @endif

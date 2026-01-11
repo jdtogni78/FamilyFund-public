@@ -560,3 +560,24 @@ html.dark .border.rounded.p-3:hover {
 html.dark .text-muted {
     color: #9ca3af !important;
 }
+
+/* Navigation dropdown dark mode */
+html.dark nav [class*="bg-white"] {
+    background-color: #1f2937 !important;
+}
+
+html.dark nav [class*="text-gray-700"] {
+    color: #e5e7eb !important;
+}
+
+html.dark nav [class*="hover:bg-teal-50"]:hover {
+    background-color: rgba(20, 184, 166, 0.2) !important;
+}
+
+html.dark nav [class*="from-teal-50"] {
+    background: linear-gradient(135deg, rgba(20, 78, 74, 0.5) 0%, rgba(22, 78, 99, 0.5) 100%) !important;
+}
+
+html.dark nav [class*="border-gray-100"] {
+    border-color: #374151 !important;
+}

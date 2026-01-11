@@ -112,16 +112,16 @@
 </div>
 @else
 {{-- Web Layout --}}
-<div class="bg-light p-3 rounded">
+<div class="p-3 rounded" style="background: var(--bs-tertiary-bg, #f8f9fa);">
     {{-- Target explanation with 4% rule --}}
     <div class="mb-3 pb-3 border-bottom">
         <strong>Target:</strong>
         @if($isTargetTotal)
-            Reach <strong style="color: #14b8a6;">${{ number_format($finalValue, 0) }}</strong> account value
-            <span class="text-muted">(generating ${{ number_format($finalYield, 0) }}/year at {{ $yieldPct }}% yield)</span>
+            Reach <strong class="text-success">${{ number_format($finalValue, 0) }}</strong> account value
+            <span class="text-body-secondary">(generating ${{ number_format($finalYield, 0) }}/year at {{ $yieldPct }}% yield)</span>
         @else
-            Generate <strong style="color: #14b8a6;">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
-            <span class="text-muted">(requires ${{ number_format($finalValue, 0) }} at {{ $yieldPct }}% yield)</span>
+            Generate <strong class="text-success">${{ number_format($goal->target_amount, 0) }}/year</strong> passive income
+            <span class="text-body-secondary">(requires ${{ number_format($finalValue, 0) }} at {{ $yieldPct }}% yield)</span>
         @endif
         by <strong>{{ $goal->end_dt->format('M Y') }}</strong>
     </div>
@@ -130,24 +130,24 @@
     <div class="row text-center g-3 mb-3">
         {{-- Expected Box --}}
         <div class="col-md-6">
-            <div class="p-3 rounded h-100" style="background: #fef3c7; border-left: 4px solid #d97706;">
-                <small class="text-muted d-block">Expected ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <div class="mb-0" style="color: #d97706; font-size: 1.75rem; font-weight: 700;">${{ number_format($expectedValue, 0) }}</div>
-                <small class="text-muted">${{ number_format($expectedYield, 0) }}/yr yield</small>
+            <div class="p-3 rounded h-100 bg-warning bg-opacity-25 border-start border-warning border-4">
+                <small class="text-body-secondary d-block">Expected ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
+                <div class="mb-0 text-warning" style="font-size: 1.75rem; font-weight: 700;">${{ number_format($expectedValue, 0) }}</div>
+                <small class="text-body-secondary">${{ number_format($expectedYield, 0) }}/yr yield</small>
             </div>
         </div>
         {{-- Current Box --}}
         <div class="col-md-6">
-            <div class="p-3 rounded h-100" style="background: {{ $trackBg }}; border-left: 4px solid {{ $trackBorder }};">
-                <small class="text-muted d-block">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
-                <div class="mb-0" style="color: {{ $trackColor }}; font-size: 1.75rem; font-weight: 700;">${{ number_format($currentValue, 0) }}</div>
-                <small class="text-muted">${{ number_format($currentYield, 0) }}/yr yield</small>
+            <div class="p-3 rounded h-100 {{ $isOnTrack ? 'bg-success' : 'bg-danger' }} bg-opacity-25 border-start border-4 {{ $isOnTrack ? 'border-success' : 'border-danger' }}">
+                <small class="text-body-secondary d-block">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
+                <div class="mb-0 {{ $isOnTrack ? 'text-success' : 'text-danger' }}" style="font-size: 1.75rem; font-weight: 700;">${{ number_format($currentValue, 0) }}</div>
+                <small class="text-body-secondary">${{ number_format($currentYield, 0) }}/yr yield</small>
             </div>
         </div>
     </div>
 
     {{-- On Track Badge with time ahead/behind --}}
-    <div class="alert {{ $isOnTrack ? 'alert-success' : 'alert-danger' }} mb-0 d-flex align-items-center">
+    <div class="alert {{ $isOnTrack ? 'alert-success' : 'alert-warning' }} mb-0 d-flex align-items-center">
         <i class="fa {{ $isOnTrack ? 'fa-check-circle' : 'fa-exclamation-triangle' }} fa-2x me-3"></i>
         <div>
             @if($isOnTrack)

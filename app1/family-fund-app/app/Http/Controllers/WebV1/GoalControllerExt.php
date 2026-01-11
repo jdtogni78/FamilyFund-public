@@ -14,15 +14,20 @@ use App\Models\AccountExt;
 use App\Models\GoalExt;
 use App\Models\Goal;
 use App\Models\AccountGoal;
+use App\Models\Fund;
+use App\Http\Controllers\Traits\AccountSelectorTrait;
 use Illuminate\Support\Facades\Log;
+
 class GoalControllerExt extends GoalController
 {
+    use AccountSelectorTrait;
+
     public function getApi()
     {
-        return [
-            'accountMap' => AccountExt::accountMap(),
-            'targetTypeMap' => GoalExt::targetTypeMap(),
-        ];
+        return array_merge(
+            $this->getAccountSelectorData(),
+            ['targetTypeMap' => GoalExt::targetTypeMap()]
+        );
     }
 
     public function index(Request $request)

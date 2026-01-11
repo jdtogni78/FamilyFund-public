@@ -255,14 +255,17 @@ trait AccountTrait
         $capPct = $cap * 100.0; // Convert to percentage for comparison
 
         // Use previous year's performance for eligibility
-        $prevYear = Carbon::parse($asOf)->subYear()->startOfYear()->format('Y-m-d');
-        $currentValue = $arr['account']['value'] ?? 0;
+        // Keys in yearly_performance are like "2025-01-01 to 2026-01-01"
+        $prevYearStart = Carbon::parse($asOf)->subYear()->startOfYear()->format('Y-m-d');
+        $prevYearEnd = Carbon::parse($asOf)->startOfYear()->format('Y-m-d');
+        $prevYearKey = $prevYearStart . ' to ' . $prevYearEnd;
+        $currentValue = $arr['account']->balances['OWN']->market_value ?? 0;
 
         $perf = $arr['yearly_performance'];
         $disb = 0;
         $perfPct = 0; // Performance is already stored as percentage (e.g., 15.23 for 15.23%)
-        if (array_key_exists($prevYear, $perf)) {
-            $data = $perf[$prevYear];
+        if (array_key_exists($prevYearKey, $perf)) {
+            $data = $perf[$prevYearKey];
             $perfPct = $data['performance']; // Already a percentage
             // Effective rate is min of cap and performance, converted back to decimal
             $effectiveRate = max(0.0, min($capPct, $perfPct)) / 100.0;
@@ -270,7 +273,7 @@ trait AccountTrait
         }
 
         return [
-            'year' => $prevYear,
+            'year' => $prevYearStart,
             'performance' => $perfPct, // Already a percentage
             'limit' => $capPct,
             'value' => $disb

@@ -6,7 +6,7 @@
 
 <div class="table-responsive-sm">
     <table class="table table-hover" id="performance-table-{{ $performance_key }}">
-        <thead class="table-light">
+        <thead>
             <tr>
                 <th>Period</th>
                 <th class="text-end">Performance</th>
@@ -20,12 +20,12 @@
         @foreach($data as $period => $perf)
             @php
                 $perfValue = floatval($perf['performance'] ?? 0);
-                $perfColor = $perfValue >= 0 ? '#16a34a' : '#dc2626';
+                $perfClass = $perfValue >= 0 ? 'text-success' : 'text-danger';
                 $valueChange = floatval($perf['value_change'] ?? 0);
-                $valueChangeColor = $valueChange >= 0 ? '#16a34a' : '#dc2626';
+                $valueChangeClass = $valueChange >= 0 ? 'text-success' : 'text-danger';
                 $isLast = $period === $lastPeriod;
             @endphp
-            <tr class="{{ $isLast ? 'table-primary' : '' }}">
+            <tr class="{{ $isLast ? 'table-info' : '' }}">
                 <td>
                     @if($isLast)
                         <strong>{{ $period }}</strong>
@@ -34,12 +34,12 @@
                     @endif
                 </td>
                 <td class="text-end">
-                    <span style="color: {{ $perfColor }}; font-weight: {{ $isLast ? 'bold' : 'normal' }};">
+                    <span class="{{ $perfClass }}" style="font-weight: {{ $isLast ? 'bold' : 'normal' }};">
                         @if($perfValue >= 0)+@endif{{ number_format($perfValue, 2) }}%
                     </span>
                 </td>
                 <td class="text-end">
-                    <span style="color: {{ $valueChangeColor }};">
+                    <span class="{{ $valueChangeClass }}">
                         @if($valueChange >= 0)+@endif{{ number_format($valueChange, 2) }}%
                     </span>
                 </td>

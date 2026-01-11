@@ -42,6 +42,12 @@
                         <td style="padding: 8px 0; color: #666;">Date</td>
                         <td style="padding: 8px 0; text-align: right;">{{ $transaction->timestamp->format('F j, Y') }}</td>
                     </tr>
+                    @if($transaction->descr)
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">Memo</td>
+                        <td style="padding: 8px 0; text-align: right;">{{ $transaction->descr }}</td>
+                    </tr>
+                    @endif
                 </table>
             </div>
         </div>

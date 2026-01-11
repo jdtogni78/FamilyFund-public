@@ -273,14 +273,23 @@ class SmokeTest extends TestCase
 
     public function test_accounts_edit_renders()
     {
-        $response = $this->actingAs($this->user)->get('/accounts/' . $this->factory->userAccount->id . '/edit');
+        $account = $this->factory->userAccount;
+        $response = $this->actingAs($this->user)->get('/accounts/' . $account->id . '/edit');
         $response->assertStatus(200);
+
+        // Verify form fields are populated with account data
+        $response->assertSee('value="' . $account->code . '"', false);
+        $response->assertSee('value="' . $account->nickname . '"', false);
     }
 
     public function test_funds_edit_renders()
     {
-        $response = $this->actingAs($this->user)->get('/funds/' . $this->factory->fund->id . '/edit');
+        $fund = $this->factory->fund;
+        $response = $this->actingAs($this->user)->get('/funds/' . $fund->id . '/edit');
         $response->assertStatus(200);
+
+        // Verify form fields are populated with fund data
+        $response->assertSee('value="' . $fund->name . '"', false);
     }
 
     // ==================== Other Pages ====================

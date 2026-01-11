@@ -21,10 +21,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\MessageBag;
 use App\Mail\CashDepositMail;
 use App\Mail\DepositAllocationMail;
+use App\Http\Controllers\Traits\AccountSelectorTrait;
 
 class CashDepositControllerExt extends CashDepositController
 {
     use CashDepositTrait;
+    use AccountSelectorTrait;
 
     public function create()
     {
@@ -34,11 +36,13 @@ class CashDepositControllerExt extends CashDepositController
 
     public function getApi()
     {
-        $api = [];
-        $api['fundAccountMap'] = AccountExt::fundAccountMap();
-        $api['accountMap'] = AccountExt::accountMap();
-        $api['statusMap'] = CashDepositExt::statusMap();
-        return $api;
+        return array_merge(
+            $this->getAccountSelectorData(),
+            [
+                'fundAccountMap' => AccountExt::fundAccountMap(),
+                'statusMap' => CashDepositExt::statusMap(),
+            ]
+        );
     }
 
     public function show($id)

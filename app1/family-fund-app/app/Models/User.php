@@ -14,6 +14,13 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
+     * The guard name for Spatie permissions.
+     *
+     * @var string
+     */
+    protected $guard_name = 'web';
+
+    /**
      * Validation rules
      *
      * @var array
@@ -34,7 +41,6 @@ class User extends Authenticatable
         'email',
         'password',
         'person_id',
-        'is_admin',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
@@ -62,19 +68,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Check if user is an application admin.
-     */
-    public function isAdmin(): bool
-    {
-        return $this->is_admin ?? false;
     }
 
     /**
@@ -98,7 +95,7 @@ class User extends Authenticatable
      **/
     public function loginActivities()
     {
-        return $this->hasMany(LoginActivity::class);
+        return $this->hasMany(LoginActivity::class, 'user_id');
     }
 
     /**
@@ -183,8 +180,8 @@ class User extends Authenticatable
         $fullAccess = [];
         $readonlyAccess = [];
 
-        // Get all roles with fund_id
-        $roles = $this->roles()->whereNotNull('fund_id')->get();
+        // Get all roles with fund_id (qualify column to avoid ambiguity with teams)
+        $roles = $this->roles()->whereNotNull('roles.fund_id')->get();
 
         foreach ($roles as $role) {
             $fundId = $role->fund_id;

@@ -30,6 +30,12 @@ class SmokeTest extends TestCase
         $this->factory->createUser();
 
         $this->user = $this->factory->user;
+
+        // Give user system-admin role for smoke tests (fund_id=0 for global access)
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
     }
 
     protected function tearDown(): void
@@ -171,11 +177,7 @@ class SmokeTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_portfolio_reports_index_renders()
-    {
-        $response = $this->actingAs($this->user)->get('/portfolioReports');
-        $response->assertStatus(200);
-    }
+    // Note: portfolioReports route does not exist in web.php
 
     public function test_change_logs_index_renders()
     {
@@ -247,7 +249,8 @@ class SmokeTest extends TestCase
 
     public function test_account_matching_rules_create_bulk_renders()
     {
-        $response = $this->actingAs($this->user)->get('/accountMatchingRules/create_bulk');
+        $account = $this->factory->userAccount;
+        $response = $this->actingAs($this->user)->get('/accountMatchingRules/create_bulk?account=' . $account->id);
         $response->assertStatus(200);
     }
 

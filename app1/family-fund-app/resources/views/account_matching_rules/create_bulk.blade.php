@@ -36,7 +36,7 @@
                                         <label class="col-sm-2 control-label" for="account_ids[]">Select Multiple Accounts:</label>
                                         <div class="col-sm-10">
                                             <select name="account_ids[]" id="account_ids[]" class="form-control" multiple size="8">
-                                                @foreach($api['account'] as $key => $value)
+                                                @foreach($api['accountMap'] as $key => $value)
                                                     <option value="{{ $key }}">{{ $value }}</option>
                                                 @endforeach
                                             </select>

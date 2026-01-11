@@ -184,10 +184,10 @@
         <span>Change Logs</span>
     </a>
 </li> -->
-<li class="nav-item nav-dropdown {{ Request::is('people*') || Request::is('users*') || Request::is('operations*') ? 'active' : '' }}">
+<li class="nav-item nav-dropdown {{ Request::is('people*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
-        <i class="nav-icon fa fa-cog"></i>
-        <span>Admin</span>
+        <i class="nav-icon fa fa-users"></i>
+        <span>People & Users</span>
     </a>
     <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('people*') ? 'active' : '' }}">
@@ -202,13 +202,46 @@
                 <span>Users</span>
             </a>
         </li>
-        @if(auth()->check() && auth()->user()->isAdmin())
+        <!-- <li class="nav-item {{ Request::is('addresses*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('addresses.index') }}">
+                <i class="nav-icon fa fa-map-marker"></i>
+                <span>Addresses</span>
+            </a>
+        </li> -->
+        <!-- <li class="nav-item {{ Request::is('id_documents*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('id_documents.index') }}">
+                <i class="nav-icon fa fa-id-card"></i>
+                <span>Id Documents</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('phones*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('phones.index') }}">
+                <i class="nav-icon fa fa-phone"></i>
+                <span>Phones</span>
+            </a>
+        </li> -->
+    </ul>
+</li>
+
+@if(auth()->user() && method_exists(auth()->user(), 'isSystemAdmin') && auth()->user()->isSystemAdmin())
+<li class="nav-item nav-dropdown {{ Request::is('admin*') || Request::is('operations*') ? 'active' : '' }}">
+    <a class="nav-link nav-dropdown-toggle" href="#">
+        <i class="nav-icon fa fa-shield-alt"></i>
+        <span>Admin</span>
+    </a>
+    <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('operations.index') }}">
-                <i class="nav-icon fa fa-tachometer"></i>
+                <i class="nav-icon fa fa-cogs"></i>
                 <span>Operations</span>
             </a>
         </li>
-        @endif
+        <li class="nav-item {{ Request::is('admin/user-roles*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.user-roles.index') }}">
+                <i class="nav-icon fa fa-user-shield"></i>
+                <span>User Roles</span>
+            </a>
+        </li>
     </ul>
 </li>
+@endif

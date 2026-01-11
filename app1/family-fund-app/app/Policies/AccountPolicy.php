@@ -29,11 +29,9 @@ class AccountPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Users can view accounts if they have any account-related permission
-        return $user->hasAnyPermission([
-            'accounts.view',
-            'accounts.view-own',
-        ]);
+        // Users with any fund role can view accounts (their access is filtered by query scoping)
+        $fundAccess = $user->getAccessibleFundIds();
+        return !empty($fundAccess['full']) || !empty($fundAccess['readonly']);
     }
 
     /**
@@ -60,7 +58,9 @@ class AccountPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('accounts.create');
+        // Users with full access to any fund can create accounts
+        $fundAccess = $user->getAccessibleFundIds();
+        return !empty($fundAccess['full']);
     }
 
     /**

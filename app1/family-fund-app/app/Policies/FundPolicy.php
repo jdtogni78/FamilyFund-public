@@ -28,7 +28,9 @@ class FundPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('funds.view');
+        // Users with any fund role can view funds (their access is filtered by query scoping)
+        $fundAccess = $user->getAccessibleFundIds();
+        return !empty($fundAccess['full']) || !empty($fundAccess['readonly']);
     }
 
     /**

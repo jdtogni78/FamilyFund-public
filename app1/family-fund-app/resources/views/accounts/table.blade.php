@@ -16,14 +16,14 @@
         <tbody>
         @foreach($accounts as $account)
             <tr>
-                <td>{{ $account->id }}</td>
+                <td><a href="{{ route('accounts.show', $account->id) }}" class="text-nowrap"><i class="fa fa-eye fa-fw me-1"></i>{{ $account->id }}</a></td>
                 <td>{{ $account->code }}</td>
                 <td>{{ $account->nickname }}</td>
                 <td>{{ $account->email_cc }}</td>
                 <td>{{ $account->user->id ?? '-' }}</td>
                 <td>{{ $account->user->name ?? '-' }}</td>
-                <td>{{ $account->fund->id ?? '-' }}</td>
-                <td>{{ $account->fund->name ?? '-' }}</td>
+                <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}" class="text-nowrap"><i class="fa fa-eye fa-fw me-1"></i>{{ $account->fund->id }}</a>@else - @endif</td>
+                <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}">{{ $account->fund->name }}</a>@else - @endif</td>
                 <td>
                     <form action="{{ route('accounts.destroy', $account->id) }}" method="POST">
                         @csrf

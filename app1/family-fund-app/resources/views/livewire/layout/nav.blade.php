@@ -47,22 +47,24 @@
                 'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
             ],
         ],
+        'Admin' => [
+            'icon' => 'fa fa-shield-alt',
+            'items' => [
+                'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
+                'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
+                'Operations' => ['route' => 'operations.index', 'icon' => 'fa fa-cogs'],
+                'User Roles' => ['route' => 'admin.user-roles.index', 'icon' => 'fa fa-user-shield'],
+            ],
+            'adminOnly' => true,
+        ],
     ];
 
-    // Admin menu - includes People, Users, and Operations (for admins)
-    $adminItems = [
-        'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
-        'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
-    ];
-
-    if (auth()->check() && auth()->user()->isAdmin()) {
-        $adminItems['Operations'] = ['route' => 'operations.index', 'icon' => 'fa fa-tachometer'];
+    // Filter out admin-only menus for non-admins
+    $user = auth()->user();
+    $isSystemAdmin = $user && method_exists($user, 'isSystemAdmin') && $user->isSystemAdmin();
+    if (!$isSystemAdmin) {
+        $menu = array_filter($menu, fn($item) => empty($item['adminOnly']));
     }
-
-    $menu['Admin'] = [
-        'icon' => 'fa fa-cog',
-        'items' => $adminItems,
-    ];
 
     View::share('menu', $menu);
 @endphp

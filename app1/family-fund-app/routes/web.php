@@ -126,7 +126,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('addresses', App\Http\Controllers\AddressController::class);
     Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
-    Route::resource('assetPrices', App\Http\Controllers\AssetPriceController::class);
+    Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class);
     Route::resource('assets', App\Http\Controllers\AssetController::class);
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
@@ -145,7 +145,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('people', App\Http\Controllers\PersonController::class);
     Route::resource('persons', App\Http\Controllers\PersonController::class);
     Route::resource('phones', App\Http\Controllers\PhoneController::class);
-    Route::resource('portfolioAssets', App\Http\Controllers\PortfolioAssetController::class);
+    Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class);
     Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class);
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
@@ -163,6 +163,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
+
+    // Admin: User Role Management (system-admin only - checked in controller)
+    Route::get('admin/user-roles', 'App\Http\Controllers\WebV1\UserRoleController@index')
+        ->name('admin.user-roles.index');
+    Route::get('admin/user-roles/{id}', 'App\Http\Controllers\WebV1\UserRoleController@show')
+        ->name('admin.user-roles.show');
+    Route::post('admin/user-roles/{id}/assign', 'App\Http\Controllers\WebV1\UserRoleController@assign')
+        ->name('admin.user-roles.assign');
+    Route::post('admin/user-roles/{id}/revoke', 'App\Http\Controllers\WebV1\UserRoleController@revoke')
+        ->name('admin.user-roles.revoke');
 });
 
 require __DIR__.'/auth.php';

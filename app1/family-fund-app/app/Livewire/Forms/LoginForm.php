@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\LoginActivity;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
@@ -22,6 +24,11 @@ class LoginForm extends Form
     public bool $remember = false;
 
     /**
+     * Whether 2FA challenge is required after authentication.
+     */
+    public bool $requiresTwoFactor = false;
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -33,12 +40,37 @@ class LoginForm extends Form
         if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
+            // Record failed login attempt
+            LoginActivity::recordFailed(null);
+
             throw ValidationException::withMessages([
                 'form.email' => trans('auth.failed'),
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // Check if user has 2FA enabled
+        $user = Auth::user();
+        if ($user && $user->hasTwoFactorEnabled()) {
+            // Store user ID for 2FA verification
+            Session::put('two_factor_user_id', $user->id);
+            Session::put('two_factor_remember', $this->remember);
+
+            // Log out the user until 2FA is verified
+            Auth::logout();
+
+            // Record login attempt as 2FA pending
+            LoginActivity::recordTwoFactorPending($user);
+
+            // Set flag for redirect
+            $this->requiresTwoFactor = true;
+
+            return;
+        }
+
+        // Record successful login
+        LoginActivity::recordSuccess($user);
     }
 
     /**

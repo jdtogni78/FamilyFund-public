@@ -60,11 +60,11 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // Create system-admin role (global - no fund_id)
+        // Create system-admin role (global - fund_id=0 indicates global access)
         $systemAdmin = Role::firstOrCreate([
             'name' => 'system-admin',
             'guard_name' => 'web',
-            'fund_id' => null,
+            'fund_id' => 0,
         ]);
         $systemAdmin->syncPermissions(Permission::all());
 

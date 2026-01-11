@@ -28,10 +28,9 @@ class TransactionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyPermission([
-            'transactions.view',
-            'transactions.view-own',
-        ]);
+        // Users with any fund role can view transactions (their access is filtered by query scoping)
+        $fundAccess = $user->getAccessibleFundIds();
+        return !empty($fundAccess['full']) || !empty($fundAccess['readonly']);
     }
 
     /**
@@ -64,7 +63,9 @@ class TransactionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('transactions.create');
+        // Users with full access to any fund can create transactions
+        $fundAccess = $user->getAccessibleFundIds();
+        return !empty($fundAccess['full']);
     }
 
     /**

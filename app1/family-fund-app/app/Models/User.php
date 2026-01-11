@@ -104,14 +104,15 @@ class User extends Authenticatable
     public function isSystemAdmin(): bool
     {
         // System admin role uses fund_id=0 to indicate global access
-        $originalTeamId = getPermissionsTeamId();
-        setPermissionsTeamId(0);
-
-        $isAdmin = $this->hasRole('system-admin');
-
-        setPermissionsTeamId($originalTeamId);
-
-        return $isAdmin;
+        // Query directly to avoid Spatie's team-scoped relationship caching
+        // Check both User and UserExt model types for compatibility
+        return \DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $this->id)
+            ->whereIn('model_has_roles.model_type', [User::class, UserExt::class])
+            ->where('model_has_roles.fund_id', 0)
+            ->where('roles.name', 'system-admin')
+            ->exists();
     }
 
     /**
@@ -123,16 +124,15 @@ class User extends Authenticatable
             return true;
         }
 
-        // Set the team context temporarily
-        $originalTeamId = getPermissionsTeamId();
-        setPermissionsTeamId($fundId);
-
-        $hasRole = $this->hasRole($role);
-
-        // Restore original team context
-        setPermissionsTeamId($originalTeamId);
-
-        return $hasRole;
+        // Query directly to avoid Spatie's team-scoped relationship caching
+        // Check both User and UserExt model types for compatibility
+        return \DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $this->id)
+            ->whereIn('model_has_roles.model_type', [User::class, UserExt::class])
+            ->where('model_has_roles.fund_id', $fundId)
+            ->where('roles.name', $role)
+            ->exists();
     }
 
     /**
@@ -180,10 +180,17 @@ class User extends Authenticatable
         $fullAccess = [];
         $readonlyAccess = [];
 
-        // Get all roles with fund_id (qualify column to avoid ambiguity with teams)
-        $roles = $this->roles()->whereNotNull('roles.fund_id')->get();
+        // Query directly to avoid Spatie's team-scoped relationship and User/UserExt issues
+        $roleAssignments = \DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $this->id)
+            ->whereIn('model_has_roles.model_type', [User::class, UserExt::class])
+            ->whereNotNull('roles.fund_id')
+            ->where('roles.fund_id', '!=', 0)
+            ->select('roles.name', 'roles.fund_id')
+            ->get();
 
-        foreach ($roles as $role) {
+        foreach ($roleAssignments as $role) {
             $fundId = $role->fund_id;
             if (in_array($role->name, ['fund-admin', 'financial-manager'])) {
                 $fullAccess[] = $fundId;

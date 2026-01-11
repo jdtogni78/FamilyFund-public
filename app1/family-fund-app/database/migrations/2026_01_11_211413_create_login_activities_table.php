@@ -13,7 +13,20 @@ return new class extends Migration
     {
         Schema::create('login_activities', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('browser')->nullable();
+            $table->string('browser_version')->nullable();
+            $table->string('platform')->nullable();
+            $table->string('device')->nullable();
+            $table->enum('status', ['success', 'failed', 'two_factor_pending', 'two_factor_failed'])->default('success');
+            $table->string('location')->nullable();
+            $table->timestamp('login_at');
             $table->timestamps();
+
+            $table->index(['user_id', 'login_at']);
+            $table->index('ip_address');
         });
     }
 

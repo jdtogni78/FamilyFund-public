@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Family Fund') }}</title>
-        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-round.png') }}">
         <meta content='width=device-width,
             initial-scale=1,
             maximum-scale=1,

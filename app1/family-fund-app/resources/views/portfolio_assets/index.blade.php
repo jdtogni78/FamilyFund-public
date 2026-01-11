@@ -152,7 +152,7 @@
                     pointHoverRadius: 4,
                     stepped: 'after',
                     fill: false,
-                    spanGaps: false
+                    spanGaps: true
                 };
             });
 

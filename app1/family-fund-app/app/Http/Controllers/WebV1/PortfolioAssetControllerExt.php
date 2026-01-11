@@ -168,26 +168,31 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
 
         $asset = AssetExt::find($assetId);
 
-        // Build timeline with both start and end dates for each position
         $labels = [];
         $data = [];
         $today = now()->format('Y-m-d');
+        $chartEndDate = $endDt ?: $today;
 
         foreach ($positions as $pos) {
             // Add start point
             $labels[] = $pos->start_dt->format('Y-m-d');
             $data[] = (float) $pos->position;
 
-            // Add end point
+            // For closed positions, add end date with same value (stepped chart needs this)
             if ($pos->end_dt && $pos->end_dt->format('Y') !== '9999') {
-                // Closed position - use actual end date
                 $labels[] = $pos->end_dt->format('Y-m-d');
                 $data[] = (float) $pos->position;
-            } else {
-                // Current position - extend to today
-                $labels[] = $today;
-                $data[] = (float) $pos->position;
             }
+        }
+
+        // Add final point at chart end date
+        $lastPos = $positions->last();
+        $labels[] = $chartEndDate;
+        // If position is closed (end_dt not 9999), final value is 0
+        if ($lastPos->end_dt && $lastPos->end_dt->format('Y') !== '9999') {
+            $data[] = 0;
+        } else {
+            $data[] = (float) $lastPos->position;
         }
 
         return [
@@ -235,32 +240,38 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
 
             $positions = $posQuery->get();
             $today = now()->format('Y-m-d');
+            $chartEndDate = $endDt ?: $today;
 
-            // Build data points with both start and end dates
+            // Build data points
             $dataPoints = [];
             foreach ($positions as $pos) {
+                // Add start point
                 $allDates->push($pos->start_dt->format('Y-m-d'));
                 $dataPoints[] = [
                     'x' => $pos->start_dt->format('Y-m-d'),
                     'y' => (float) $pos->position
                 ];
 
-                // Add end point
+                // For closed positions, add end date with same value (stepped chart needs this)
                 if ($pos->end_dt && $pos->end_dt->format('Y') !== '9999') {
-                    // Closed position - use actual end date
                     $allDates->push($pos->end_dt->format('Y-m-d'));
                     $dataPoints[] = [
                         'x' => $pos->end_dt->format('Y-m-d'),
                         'y' => (float) $pos->position
                     ];
-                } else {
-                    // Current position - extend to today
-                    $allDates->push($today);
-                    $dataPoints[] = [
-                        'x' => $today,
-                        'y' => (float) $pos->position
-                    ];
                 }
+            }
+
+            // Add final point at chart end date
+            if ($positions->isNotEmpty()) {
+                $lastPos = $positions->last();
+                $allDates->push($chartEndDate);
+                // If position is closed (end_dt not 9999), final value is 0
+                $finalValue = ($lastPos->end_dt && $lastPos->end_dt->format('Y') !== '9999') ? 0 : (float) $lastPos->position;
+                $dataPoints[] = [
+                    'x' => $chartEndDate,
+                    'y' => $finalValue
+                ];
             }
 
             $color = $colors[$index % count($colors)];
@@ -334,32 +345,38 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
 
             $positions = $posQuery->get();
             $today = now()->format('Y-m-d');
+            $chartEndDate = $endDt ?: $today;
 
-            // Build data points with both start and end dates
+            // Build data points
             $dataPoints = [];
             foreach ($positions as $pos) {
+                // Add start point
                 $allDates->push($pos->start_dt->format('Y-m-d'));
                 $dataPoints[] = [
                     'x' => $pos->start_dt->format('Y-m-d'),
                     'y' => (float) $pos->position
                 ];
 
-                // Add end point
+                // For closed positions, add end date with same value (stepped chart needs this)
                 if ($pos->end_dt && $pos->end_dt->format('Y') !== '9999') {
-                    // Closed position - use actual end date
                     $allDates->push($pos->end_dt->format('Y-m-d'));
                     $dataPoints[] = [
                         'x' => $pos->end_dt->format('Y-m-d'),
                         'y' => (float) $pos->position
                     ];
-                } else {
-                    // Current position - extend to today
-                    $allDates->push($today);
-                    $dataPoints[] = [
-                        'x' => $today,
-                        'y' => (float) $pos->position
-                    ];
                 }
+            }
+
+            // Add final point at chart end date
+            if ($positions->isNotEmpty()) {
+                $lastPos = $positions->last();
+                $allDates->push($chartEndDate);
+                // If position is closed (end_dt not 9999), final value is 0
+                $finalValue = ($lastPos->end_dt && $lastPos->end_dt->format('Y') !== '9999') ? 0 : (float) $lastPos->position;
+                $dataPoints[] = [
+                    'x' => $chartEndDate,
+                    'y' => $finalValue
+                ];
             }
 
             $color = $colors[$index % count($colors)];

@@ -148,7 +148,7 @@
                     backgroundColor: graphColors[index % graphColors.length],
                     borderColor: graphColors[index % graphColors.length],
                     borderWidth: 2,
-                    pointRadius: 2,
+                    pointRadius: 0,
                     pointHoverRadius: 4,
                     tension: 0.1,
                     fill: false,
@@ -238,13 +238,17 @@
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
                         fill: true,
                         tension: 0.1,
-                        pointRadius: 3,
-                        pointHoverRadius: 6
+                        pointRadius: 0,
+                        pointHoverRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
                         legend: {
                             display: false

@@ -71,6 +71,38 @@
                  </div>
              </div>
 
+             <!-- Data Warnings -->
+             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']))
+             <div class="card mb-3 border-warning">
+                 <div class="card-header bg-warning text-dark">
+                     <i class="fa fa-exclamation-triangle me-2"></i>
+                     <strong>Data Warnings</strong>
+                 </div>
+                 <div class="card-body py-2">
+                     @if(!empty($dataWarnings['overlaps']))
+                     <div class="mb-2">
+                         <strong class="text-warning"><i class="fa fa-clone me-1"></i> Overlapping Positions:</strong>
+                         <ul class="mb-0 small">
+                             @foreach($dataWarnings['overlaps'] as $overlap)
+                             <li>{{ $overlap['name'] }}: {{ $overlap['record1'] }} overlaps with {{ $overlap['record2'] }}</li>
+                             @endforeach
+                         </ul>
+                     </div>
+                     @endif
+                     @if(!empty($dataWarnings['gaps']))
+                     <div>
+                         <strong class="text-warning"><i class="fa fa-calendar-times me-1"></i> Position Gaps:</strong>
+                         <ul class="mb-0 small">
+                             @foreach($dataWarnings['gaps'] as $gap)
+                             <li>{{ $gap['name'] }}: {{ $gap['days'] }} days gap from {{ $gap['from'] }} to {{ $gap['to'] }}</li>
+                             @endforeach
+                         </ul>
+                     </div>
+                     @endif
+                 </div>
+             </div>
+             @endif
+
              <!-- Chart (shown when asset or fund with <=8 assets selected) -->
              @if(isset($chartData) && $chartData)
              <div class="card mb-3">
@@ -124,6 +156,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('positionChart').getContext('2d');
         const isMultiAsset = @json($chartData['multiAsset'] ?? false);
+        const issueDates = @json($issueDates ?? []);
+        const issueColor = '#f59e0b'; // Warning/orange color for issues
 
         let chartConfig;
         if (isMultiAsset) {
@@ -142,17 +176,33 @@
                     return dataMap[label] !== undefined ? dataMap[label] : null;
                 });
 
+                const color = graphColors[index % graphColors.length];
+
+                // Create point colors and styles - triangle for issues, circle otherwise
+                const pointColors = labels.map(function(label) {
+                    return issueDates[label] ? issueColor : color;
+                });
+                const pointRadii = labels.map(function(label) {
+                    return issueDates[label] ? 10 : 2;
+                });
+                const pointStyles = labels.map(function(label) {
+                    return issueDates[label] ? 'triangle' : 'circle';
+                });
+
                 return {
                     label: ds.label,
                     data: alignedData,
-                    backgroundColor: graphColors[index % graphColors.length],
-                    borderColor: graphColors[index % graphColors.length],
+                    backgroundColor: color,
+                    borderColor: color,
                     borderWidth: 2,
-                    pointRadius: 2,
+                    pointRadius: pointRadii,
+                    pointStyle: pointStyles,
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: pointColors,
                     pointHoverRadius: 4,
                     stepped: 'after',
                     fill: false,
-                    spanGaps: false
+                    spanGaps: true
                 };
             });
 
@@ -192,6 +242,16 @@
                                 label: function(context) {
                                     if (context.raw === null) return null;
                                     return context.dataset.label + ': ' + context.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4});
+                                },
+                                afterBody: function(context) {
+                                    const date = labels[context[0].dataIndex];
+                                    const issue = issueDates[date];
+                                    if (issue === 'overlap') {
+                                        return '⚠️ OVERLAPPING DATE RANGE';
+                                    } else if (issue === 'gap') {
+                                        return '⚠️ POSITION GAP DETECTED';
+                                    }
+                                    return null;
                                 }
                             }
                         },
@@ -227,18 +287,36 @@
             };
         } else {
             // Single asset chart - step graph for position data
+            const singleLabels = @json($chartData['labels'] ?? []);
+            const singleData = @json($chartData['data'] ?? []);
+            const defaultColor = '#16a34a';
+
+            // Create point colors and styles - triangle for issues, circle otherwise
+            const singlePointColors = singleLabels.map(function(label) {
+                return issueDates[label] ? issueColor : defaultColor;
+            });
+            const singlePointRadii = singleLabels.map(function(label) {
+                return issueDates[label] ? 10 : 3;
+            });
+            const singlePointStyles = singleLabels.map(function(label) {
+                return issueDates[label] ? 'triangle' : 'circle';
+            });
+
             chartConfig = {
                 type: 'line',
                 data: {
-                    labels: @json($chartData['labels'] ?? []),
+                    labels: singleLabels,
                     datasets: [{
                         label: '{{ $chartData['assetName'] ?? 'Position' }}',
-                        data: @json($chartData['data'] ?? []),
-                        borderColor: '#16a34a',
+                        data: singleData,
+                        borderColor: defaultColor,
                         backgroundColor: 'rgba(22, 163, 74, 0.1)',
                         fill: true,
                         stepped: 'after',
-                        pointRadius: 3,
+                        pointRadius: singlePointRadii,
+                        pointStyle: singlePointStyles,
+                        pointBackgroundColor: singlePointColors,
+                        pointBorderColor: singlePointColors,
                         pointHoverRadius: 6
                     }]
                 },
@@ -253,6 +331,16 @@
                             callbacks: {
                                 label: function(context) {
                                     return context.parsed.y.toFixed(4) + ' units';
+                                },
+                                afterBody: function(context) {
+                                    const date = singleLabels[context[0].dataIndex];
+                                    const issue = issueDates[date];
+                                    if (issue === 'overlap') {
+                                        return '⚠️ OVERLAPPING DATE RANGE';
+                                    } else if (issue === 'gap') {
+                                        return '⚠️ POSITION GAP DETECTED';
+                                    }
+                                    return null;
                                 }
                             }
                         },

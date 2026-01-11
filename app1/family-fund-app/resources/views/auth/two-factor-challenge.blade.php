@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Two-Factor Authentication - {{ config('app.name', 'Family Fund') }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-round.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

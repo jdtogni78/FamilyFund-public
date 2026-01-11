@@ -214,6 +214,7 @@
             height: 16px;
             margin-right: 8px;
             vertical-align: middle;
+            object-fit: contain;
         }
 
         /* Section header for table-based layouts */
@@ -256,6 +257,7 @@
             height: 16px;
             margin-right: 8px;
             vertical-align: middle;
+            object-fit: contain;
         }
 
         .card-body {

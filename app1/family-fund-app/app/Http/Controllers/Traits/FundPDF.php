@@ -357,13 +357,17 @@ class FundPDF
         $cashAsset = \App\Models\AssetExt::getCashAsset();
         $cashGroup = $cashAsset->display_group ?? 'Stability';
 
+        // Build lookup of asset groups from database
+        $assetGroups = \App\Models\Asset::pluck('display_group', 'name')->toArray();
+
         // Format portfolios with group data for the chart service
         $portfolios = [];
         foreach ($arr as $tradePortfolio) {
             $groups = ['Growth' => 0, 'Stability' => 0, 'Crypto' => 0, 'Other' => 0];
 
             foreach ($tradePortfolio->items as $item) {
-                $group = $item->group ?? 'Other';
+                // Look up group from asset model by symbol
+                $group = $assetGroups[$item->symbol] ?? 'Other';
                 if (!isset($groups[$group])) {
                     $groups['Other'] += $item->target_share * 100;
                 } else {

@@ -14,6 +14,9 @@
     $cashAsset = \App\Models\AssetExt::getCashAsset();
     $cashGroup = $cashAsset->display_group ?? 'Stability';
 
+    // Build lookup of asset groups from database
+    $assetGroups = \App\Models\Asset::pluck('display_group', 'name')->toArray();
+
     // Build group data for each portfolio
     $portfolioGroupData = [];
     foreach ($portfolioCollection as $tp) {
@@ -21,7 +24,8 @@
         $groups = ['Growth' => 0, 'Stability' => 0, 'Crypto' => 0, 'Other' => 0];
 
         foreach ($items as $item) {
-            $group = $item->group ?? 'Other';
+            // Look up group from asset model by symbol
+            $group = $assetGroups[$item->symbol] ?? 'Other';
             if (!isset($groups[$group])) {
                 $groups['Other'] += $item->target_share * 100;
             } else {

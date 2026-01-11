@@ -1169,7 +1169,7 @@ class QuickChartService
                             'size' => 12,
                             'weight' => 'bold',
                         ],
-                        'formatter' => "function(value, context) { if (value < 5) return ''; return context.dataset.label + '\\n' + value.toFixed(0) + '%'; }",
+                        'formatter' => "function(value, context) { if (value < 5) return ''; return context.dataset.label + ' ' + value.toFixed(0) + '%'; }",
                         'textShadowColor' => 'rgba(0,0,0,0.5)',
                         'textShadowBlur' => 3,
                     ],

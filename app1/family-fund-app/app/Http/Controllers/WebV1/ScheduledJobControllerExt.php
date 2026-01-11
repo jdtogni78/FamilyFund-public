@@ -27,6 +27,16 @@ class ScheduledJobControllerExt extends ScheduledJobController
 {
     use ScheduledJobTrait;
 
+    public function index(Request $request)
+    {
+        $scheduledJobs = ScheduledJobExt::with(['schedule', 'fund', 'portfolio'])
+            ->orderBy('start_dt', 'desc')
+            ->get();
+
+        return view('scheduled_jobs.index')
+            ->with('scheduledJobs', $scheduledJobs);
+    }
+
     public function create()
     {
         return view('scheduled_jobs.create')

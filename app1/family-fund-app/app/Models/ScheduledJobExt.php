@@ -84,4 +84,20 @@ class ScheduledJobExt extends ScheduledJob
         return self::$classMap[$this->entity_descr]::where('scheduled_job_id', $this->id)->get();
     }
 
+    /**
+     * Get the fund if entity_descr is fund_report
+     */
+    public function fund()
+    {
+        return $this->belongsTo(FundExt::class, 'entity_id');
+    }
+
+    /**
+     * Get the portfolio if entity_descr is portfolio_report
+     */
+    public function portfolio()
+    {
+        return $this->belongsTo(Portfolio::class, 'entity_id');
+    }
+
 }

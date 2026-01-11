@@ -76,4 +76,16 @@ class FundReportExtTest extends TestCase
 
         $this->assertFalse($fundReportExt->isAdmin());
     }
+
+    public function test_is_admin_returns_true_for_trading_bands_type()
+    {
+        $fundReport = FundReport::factory()->create([
+            'fund_id' => $this->factory->fund->id,
+            'type' => FundReportExt::TYPE_TRADING_BANDS,
+        ]);
+
+        $fundReportExt = FundReportExt::find($fundReport->id);
+
+        $this->assertTrue($fundReportExt->isAdmin());
+    }
 }

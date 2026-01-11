@@ -62,7 +62,7 @@ class FundReport extends Model
      */
     public static $rules = [
         'fund_id' => 'required',
-        'type' => 'required|in:ALL,ADM',
+        'type' => 'required|in:ALL,ADM,TRADING_BANDS',
         'as_of' => 'required',
         'scheduled_job_id' => 'nullable',
         'updated_at' => 'nullable',

@@ -33,10 +33,12 @@ class FundReportExt extends FundReport
     ];
 
     /**
+     * Returns true if this report should go to fund admin (accounts with no users)
+     * Admin reports (ADM) and Trading Bands reports go to fund admin
      **/
     public function isAdmin(): bool
     {
-        return 'ADM' == $this->type;
+        return $this->type === self::TYPE_ADMIN || $this->type === self::TYPE_TRADING_BANDS;
     }
 
     public function scheduledJobs()

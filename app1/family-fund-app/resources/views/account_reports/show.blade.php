@@ -3,9 +3,9 @@
 @section('content')
      <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="{{ route('accountReports.index') }}">Account Report</a>
+                <a href="{{ route('accountReports.index') }}">Account Reports</a>
             </li>
-            <li class="breadcrumb-item active">Detail</li>
+            <li class="breadcrumb-item active">Report #{{ $accountReport->id }}</li>
      </ol>
      <div class="container-fluid">
           <div class="animated fadeIn">
@@ -13,9 +13,14 @@
                  <div class="row">
                      <div class="col-lg-12">
                          <div class="card">
-                             <div class="card-header">
-                                 <strong>Details</strong>
-                                  <a href="{{ route('accountReports.index') }}" class="btn btn-light">Back</a>
+                             <div class="card-header d-flex justify-content-between align-items-center">
+                                 <div>
+                                     <i class="fa fa-file-alt me-2"></i>
+                                     <strong>Account Report #{{ $accountReport->id }}</strong>
+                                 </div>
+                                 <a href="{{ route('accountReports.index') }}" class="btn btn-sm btn-outline-secondary">
+                                     <i class="fa fa-arrow-left me-1"></i> Back to List
+                                 </a>
                              </div>
                              <div class="card-body">
                                  @include('account_reports.show_fields')

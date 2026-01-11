@@ -18,11 +18,52 @@ use Illuminate\Support\Facades\Log;
 use App\Models\FundReportExt;
 use App\Models\TransactionExt;
 use App\Models\PortfolioReportExt;
+use App\Models\Schedule;
+use App\Models\FundExt;
+use App\Models\Portfolio;
 use Illuminate\Support\MessageBag;
 
 class ScheduledJobControllerExt extends ScheduledJobController
 {
     use ScheduledJobTrait;
+
+    public function create()
+    {
+        return view('scheduled_jobs.create')
+            ->with($this->getFormData());
+    }
+
+    public function edit($id)
+    {
+        $scheduledJob = $this->scheduledJobRepository->find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+            return redirect(route('scheduledJobs.index'));
+        }
+
+        return view('scheduled_jobs.edit')
+            ->with('scheduledJob', $scheduledJob)
+            ->with($this->getFormData());
+    }
+
+    private function getFormData()
+    {
+        $schedules = Schedule::orderBy('descr')->pluck('descr', 'id');
+        $funds = FundExt::orderBy('name')->get()->mapWithKeys(function ($fund) {
+            return [$fund->id => $fund->name];
+        });
+        $portfolios = Portfolio::orderBy('name')->get()->mapWithKeys(function ($portfolio) {
+            return [$portfolio->id => $portfolio->name . ' (Fund: ' . ($portfolio->fund->name ?? 'N/A') . ')'];
+        });
+
+        return [
+            'schedules' => $schedules,
+            'funds' => $funds,
+            'portfolios' => $portfolios,
+            'entityTypes' => ScheduledJobExt::$entityMap,
+        ];
+    }
 
     public function previewScheduledJob($id, $asOf)
     {

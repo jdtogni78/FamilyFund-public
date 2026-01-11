@@ -18,7 +18,7 @@
                             <strong>Create Scheduled Job</strong>
                         </div>
                         <div class="card-body">
-<form method="POST" action="{ route('scheduledJobs.store') }">
+<form method="POST" action="{{ route('scheduledJobs.store') }}">
 @csrf
 
                             @include('scheduled_jobs.fields')

@@ -124,7 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('portfolioAssets', App\Http\Controllers\PortfolioAssetController::class);
     Route::resource('portfolioReports', App\Http\Controllers\WebV1\PortfolioReportControllerExt::class);
     Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
-    Route::resource('scheduledJobs', App\Http\Controllers\ScheduledJobController::class);
+    Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class);
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
     Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');

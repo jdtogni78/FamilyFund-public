@@ -90,13 +90,12 @@ class ScheduledJobControllerExt extends ScheduledJobController
         DB::beginTransaction();
         try {
             list ($data, $error, $shouldRunBy) = $this->scheduleDueJob(new Carbon($asOf), $scheduledJob);
-            if (null !== $error) $errors[] = $error->getMessage();            
+            if (null !== $error) $errors[] = $error->getMessage();
             DB::rollBack();
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
         }
-        DB::commit();
 
         Log::info('Errors: ' . json_encode($errors));
 
@@ -107,6 +106,43 @@ class ScheduledJobControllerExt extends ScheduledJobController
             ->with('asOf', $asOf)
             ->with('shouldRunBy', $shouldRunBy)
             ->withErrors(new MessageBag($errors));
+    }
+
+    public function runScheduledJob($id, $asOf)
+    {
+        $scheduledJob = ScheduledJobExt::find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+            return redirect()->back()->withErrors('Scheduled Job not found');
+        }
+
+        DB::beginTransaction();
+        try {
+            list ($data, $error, $shouldRunBy) = $this->scheduleDueJob(new Carbon($asOf), $scheduledJob);
+
+            if (null !== $error) {
+                DB::rollBack();
+                Flash::error('Job failed: ' . $error->getMessage());
+            } elseif (null === $data) {
+                DB::rollBack();
+                $reason = 'Job not due or no data available.';
+                if ($shouldRunBy['shouldRunBy']->gt(new Carbon($asOf))) {
+                    $reason = 'Job not due until ' . $shouldRunBy['shouldRunBy']->toDateString();
+                }
+                Flash::warning('Job did not run: ' . $reason);
+            } else {
+                DB::commit();
+                Flash::success('Scheduled job executed successfully. Email will be sent via queue.');
+                Log::info('Scheduled job executed: ' . $scheduledJob->id . ', created: ' . get_class($data) . ' #' . $data->id);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Scheduled job failed: ' . $e->getMessage());
+            Flash::error('Job failed: ' . $e->getMessage());
+        }
+
+        return redirect(route('scheduledJobs.show', $id));
     }
 
     private function getChildren(ScheduledJobExt $scheduledJob)

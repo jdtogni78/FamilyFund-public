@@ -94,6 +94,8 @@ Route::middleware('auth')->group(function () {
         ->name('tradePortfolios.do_deposits');
     Route::get('scheduledJobs/{id}/preview/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@previewScheduledJob')
         ->name('scheduledJobs.preview');
+    Route::post('scheduledJobs/{id}/run/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@runScheduledJob')
+        ->name('scheduledJobs.run');
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);

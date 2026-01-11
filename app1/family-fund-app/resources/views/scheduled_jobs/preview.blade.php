@@ -26,9 +26,17 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center">
                             <strong>Scheduled Job Details</strong>
-                            <a href="{{ route('scheduledJobs.index') }}" class="btn btn-light">Back</a>
+                            <div>
+                                <form action="{{ route('scheduledJobs.run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to run this scheduled job?')">
+                                        <i class="fa fa-play me-1"></i> Run Now
+                                    </button>
+                                </form>
+                                <a href="{{ route('scheduledJobs.index') }}" class="btn btn-light">Back</a>
+                            </div>
                         </div>
                         <div class="card-body">
                             @include('scheduled_jobs.table', ['scheduledJobs' => [$scheduledJob]])

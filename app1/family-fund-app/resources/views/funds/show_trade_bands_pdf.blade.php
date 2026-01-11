@@ -12,7 +12,7 @@
     @endphp
 
     <!-- Fund Summary (compact) -->
-    <div class="summary-box" style="padding: 15px 20px; margin-bottom: 20px;">
+    <div class="summary-box" style="padding: 15px 20px; margin-bottom: 12px;">
         <h2 style="margin-bottom: 10px;">{{ $api['name'] }}</h2>
         <div style="display: flex; gap: 30px; font-size: 14px;">
             <span><strong>Total Value:</strong> ${{ number_format($api['summary']['value'], 2) }}</span>
@@ -23,8 +23,8 @@
 
     <!-- Current Allocation Status -->
     @if(!empty($api['allocation_status']['symbols']))
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card" style="margin-bottom: 12px;">
+            <div class="card-header" style="padding: 8px 12px;">
                 <h4 class="card-header-title">
                     <img src="{{ public_path('images/icons/tasks.svg') }}" class="header-icon">Current Allocation Status
                     <span style="font-weight: normal; font-size: 11px; opacity: 0.8; margin-left: 10px;">

@@ -69,10 +69,10 @@
         .header {
             display: table;
             width: 100%;
-            padding: 16px 20px;
+            padding: 12px 16px;
             background: #134e4a;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .header-logo {

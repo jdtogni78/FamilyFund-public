@@ -134,7 +134,7 @@
                                         <span style="background-color: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 4px;">{{ number_format($allocatedPct, 1) }}%</span>
                                     </td>
                                     <td style="text-align: right; color: #ffffff;">
-                                        <span style="font-size: 10px; opacity: 0.9;">{{ number_format($allocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 11px; font-weight: 600;">{{ number_format($allocatedShares, 2) }} shares</span><br>
                                         <span style="font-size: 16px; font-weight: 700;">${{ number_format($allocatedValue, 0) }}</span>
                                     </td>
                                 </tr>
@@ -148,7 +148,7 @@
                                         <span style="background-color: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 4px;">{{ number_format($unallocatedPct, 1) }}%</span>
                                     </td>
                                     <td style="text-align: right; color: #ffffff;">
-                                        <span style="font-size: 10px; opacity: 0.9;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
+                                        <span style="font-size: 11px; font-weight: 600;">{{ number_format($unallocatedShares, 2) }} shares</span><br>
                                         <span style="font-size: 16px; font-weight: 700;">${{ number_format($unallocatedValue, 0) }}</span>
                                     </td>
                                 </tr>

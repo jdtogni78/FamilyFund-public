@@ -21,7 +21,7 @@
 <div class="row">
     <!-- Transaction Summary -->
     <div class="col-md-6 mb-4">
-        <div class="card h-100" style="border-left: 4px solid {{ $isDebit ? '#dc3545' : '#28a745' }};">
+        <div class="card h-100 {{ $isDebit ? 'card-border-debit' : 'card-border-credit' }}">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                     <span class="{{ $tc['class'] }} me-2 text-sm px-3 py-1">

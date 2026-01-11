@@ -699,6 +699,19 @@
     .divider-vertical {
         @apply border-l border-gray-200 dark:border-gray-700 mx-4 h-6;
     }
+
+    /* ========================================
+       Card Border - Debit/Credit indicators
+       ======================================== */
+    .card-border-debit {
+        border-left: 4px solid;
+        @apply border-red-500 dark:border-red-600;
+    }
+
+    .card-border-credit {
+        border-left: 4px solid;
+        @apply border-emerald-500 dark:border-emerald-600;
+    }
 }
 
 @layer utilities {

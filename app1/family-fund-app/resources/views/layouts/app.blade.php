@@ -49,15 +49,14 @@
             '#15803d', '#7e22ce', '#be123c', '#1d4ed8', '#047857', '#a21caf',
         ];
 
-        // Theme colors - fontColor adapts to dark mode (check localStorage directly for early script execution)
-        const isDarkMode = () => localStorage.getItem('darkMode') === 'true';
+        // Theme colors
         const chartTheme = {
             primary: '#2563eb',
             secondary: '#64748b',
             success: '#16a34a',
             warning: '#d97706',
             danger: '#dc2626',
-            get fontColor() { return isDarkMode() ? '#e2e8f0' : '#1e293b'; },
+            fontColor: '#1e293b',
         };
 
         // Format number with thousand separators

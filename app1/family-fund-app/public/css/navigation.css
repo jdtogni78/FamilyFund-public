@@ -581,3 +581,36 @@ html.dark nav [class*="from-teal-50"] {
 html.dark nav [class*="border-gray-100"] {
     border-color: #374151 !important;
 }
+
+/* Dark mode table row colors */
+html.dark .table-success {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+html.dark .table-success td {
+    color: #a7f3d0 !important;
+}
+
+html.dark .table-info {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+html.dark .table-info td {
+    color: #a5f3fc !important;
+}
+
+html.dark .table-warning {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+html.dark .table-warning td {
+    color: #fde68a !important;
+}
+
+html.dark .table-danger {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+html.dark .table-danger td {
+    color: #fecaca !important;
+}

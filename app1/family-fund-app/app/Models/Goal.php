@@ -87,4 +87,12 @@ class Goal extends Model
     {
         return $this->belongsToMany(\App\Models\Account::class, 'account_goals', 'goal_id', 'account_id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function accountGoals()
+    {
+        return $this->hasMany(\App\Models\AccountGoal::class, 'goal_id');
+    }
 }

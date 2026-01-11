@@ -17,10 +17,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\FundReportExt;
 use App\Models\TransactionExt;
-use App\Models\PortfolioReportExt;
+use App\Models\TradeBandReport;
 use App\Models\Schedule;
 use App\Models\FundExt;
-use App\Models\Portfolio;
 use Illuminate\Support\MessageBag;
 
 class ScheduledJobControllerExt extends ScheduledJobController
@@ -63,14 +62,10 @@ class ScheduledJobControllerExt extends ScheduledJobController
         $funds = FundExt::orderBy('name')->get()->mapWithKeys(function ($fund) {
             return [$fund->id => $fund->name];
         });
-        $portfolios = Portfolio::with('fund')->orderBy('source')->get()->mapWithKeys(function ($portfolio) {
-            return [$portfolio->id => $portfolio->source . ' (Fund: ' . ($portfolio->fund->name ?? 'N/A') . ')'];
-        });
 
         return [
             'schedules' => $schedules,
             'funds' => $funds,
-            'portfolios' => $portfolios,
             'entityTypes' => ScheduledJobExt::$entityMap,
         ];
     }
@@ -189,8 +184,8 @@ class ScheduledJobControllerExt extends ScheduledJobController
             $children = TransactionExt::query()
                 ->where('scheduled_job_id', $scheduledJob->id)
                 ->get();
-        } else if ($scheduledJob->entity_descr == ScheduledJobExt::ENTITY_PORTFOLIO_REPORT) {
-            $children = PortfolioReportExt::query()
+        } else if ($scheduledJob->entity_descr == ScheduledJobExt::ENTITY_TRADE_BAND_REPORT) {
+            $children = TradeBandReport::query()
                 ->where('scheduled_job_id', $scheduledJob->id)
                 ->get();
         }

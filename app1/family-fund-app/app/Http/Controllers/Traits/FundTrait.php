@@ -324,29 +324,10 @@ Trait FundTrait
 
     public function sendFundReport($fundReport)
     {
-        // ignore if as_of is high date
-        $isHighDate = $fundReport->as_of->format('Y-m-d') == '9999-12-31';
-        $isAll = $fundReport->type === FundReportExt::TYPE_ALL;
-        $isTradingBands = $fundReport->type === FundReportExt::TYPE_TRADING_BANDS;
-        if ($isTradingBands) {
-            $this->sendTradingBandsEmailReport($fundReport);
-        } else {
-            $this->createAccountReports($fundReport);
-            $this->sendFundEmailReport($fundReport);
-        }   
+        $this->createAccountReports($fundReport);
+        $this->sendFundEmailReport($fundReport);
 
         return $fundReport;
-    }
-
-    protected function sendTradingBandsEmailReport(FundReportExt $fundReport){
-        $fund = $fundReport->fund()->first();
-        $asOf = $fundReport->as_of->format('Y-m-d');
-        $isAdmin = $fundReport->isAdmin();
-
-        $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin);
-        $pdf = new FundPDF();
-        $pdf->createTradeBandsPDF($arr, $isAdmin);
-        $this->fundEmailReport($fundReport, $pdf);
     }
 
     protected function createAccountReports($fundReport)

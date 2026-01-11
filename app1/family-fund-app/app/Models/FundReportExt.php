@@ -16,29 +16,25 @@ class FundReportExt extends FundReport
 {
     const TYPE_ADMIN = 'ADM';
     const TYPE_ALL = 'ALL';
-    const TYPE_TRADING_BANDS = 'TRADING_BANDS';
-    
+
     // typeMap
     public static array $typeMap = [
         self::TYPE_ADMIN => 'Admin',
         self::TYPE_ALL => 'All',
-        self::TYPE_TRADING_BANDS => 'Trading Bands',
     ];
 
     // create email subjects for each type
     public static array $emailSubjects = [
         self::TYPE_ADMIN => 'Fund Admin Report',
         self::TYPE_ALL => 'Fund Report',
-        self::TYPE_TRADING_BANDS => 'Trading Bands Report',
     ];
 
     /**
      * Returns true if this report should go to fund admin (accounts with no users)
-     * Admin reports (ADM) and Trading Bands reports go to fund admin
      **/
     public function isAdmin(): bool
     {
-        return $this->type === self::TYPE_ADMIN || $this->type === self::TYPE_TRADING_BANDS;
+        return $this->type === self::TYPE_ADMIN;
     }
 
     public function scheduledJobs()

@@ -62,6 +62,8 @@
                                 @include('fund_reports.table', ['fundReports' => $children])
                             @elseif($scheduledJob->entity_descr == \App\Models\ScheduledJobExt::ENTITY_TRANSACTION)
                                 @include('transactions.table', ['transactions' => $children])
+                            @elseif($scheduledJob->entity_descr == \App\Models\ScheduledJobExt::ENTITY_TRADE_BAND_REPORT)
+                                @include('trade_band_reports.table', ['tradeBandReports' => $children])
                             @endif
                         </div>
                     </div>

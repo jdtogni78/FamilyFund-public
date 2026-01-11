@@ -58,15 +58,15 @@
         </select>
     </div>
 
-    <!-- Entity Selection - Portfolio (shown when entity_descr is portfolio_report) -->
-    <div class="form-group col-md-6 mb-3" id="portfolio_select_group" style="display: none;">
-        <label for="portfolio_id" class="form-label">
-            <i class="fa fa-briefcase me-1"></i> Portfolio <span class="text-danger">*</span>
+    <!-- Entity Selection - Fund for Trade Band (shown when entity_descr is trade_band_report) -->
+    <div class="form-group col-md-6 mb-3" id="trade_band_fund_select_group" style="display: none;">
+        <label for="trade_band_fund_id" class="form-label">
+            <i class="fa fa-chart-line me-1"></i> Fund (Trading Bands) <span class="text-danger">*</span>
         </label>
-        <select name="portfolio_id" id="portfolio_id" class="form-control form-select">
-            <option value="">-- Select Portfolio --</option>
-            @foreach($portfolios ?? [] as $id => $name)
-                <option value="{{ $id }}" {{ (isset($scheduledJob) && $scheduledJob->entity_id == $id && $scheduledJob->entity_descr == 'portfolio_report') ? 'selected' : '' }}>
+        <select name="trade_band_fund_id" id="trade_band_fund_id" class="form-control form-select">
+            <option value="">-- Select Fund --</option>
+            @foreach($funds ?? [] as $id => $name)
+                <option value="{{ $id }}" {{ (isset($scheduledJob) && $scheduledJob->entity_id == $id && $scheduledJob->entity_descr == 'trade_band_report') ? 'selected' : '' }}>
                     {{ $name }}
                 </option>
             @endforeach
@@ -119,15 +119,15 @@ $(document).ready(function() {
 
         // Hide all entity selects
         $('#fund_select_group').hide();
-        $('#portfolio_select_group').hide();
+        $('#trade_band_fund_select_group').hide();
 
         // Show the appropriate one and update entity_id
         if (entityType === 'fund_report') {
             $('#fund_select_group').show();
             $('#entity_id').val($('#fund_id').val());
-        } else if (entityType === 'portfolio_report') {
-            $('#portfolio_select_group').show();
-            $('#entity_id').val($('#portfolio_id').val());
+        } else if (entityType === 'trade_band_report') {
+            $('#trade_band_fund_select_group').show();
+            $('#entity_id').val($('#trade_band_fund_id').val());
         } else if (entityType === 'transaction') {
             // Transaction might need fund selection too
             $('#fund_select_group').show();
@@ -135,12 +135,12 @@ $(document).ready(function() {
         }
     }
 
-    // Update entity_id when fund/portfolio changes
+    // Update entity_id when fund changes
     $('#fund_id').on('change', function() {
         $('#entity_id').val($(this).val());
     });
 
-    $('#portfolio_id').on('change', function() {
+    $('#trade_band_fund_id').on('change', function() {
         $('#entity_id').val($(this).val());
     });
 

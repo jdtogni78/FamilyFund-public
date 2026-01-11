@@ -38,9 +38,9 @@
                     <a href="{{ route('funds.show', $scheduledJob->entity_id) }}">
                         Fund #{{ $scheduledJob->entity_id }}
                     </a>
-                @elseif($scheduledJob->entity_descr == 'portfolio_report')
-                    <a href="{{ route('portfolios.show', $scheduledJob->entity_id) }}">
-                        Portfolio #{{ $scheduledJob->entity_id }}
+                @elseif($scheduledJob->entity_descr == 'trade_band_report')
+                    <a href="{{ route('funds.show', $scheduledJob->entity_id) }}">
+                        Fund #{{ $scheduledJob->entity_id }} (Trading Bands)
                     </a>
                 @else
                     #{{ $scheduledJob->entity_id }}
@@ -116,7 +116,15 @@
                 return $e->as_of ?? $e->timestamp ?? $e->end_date ?? $e->created_at;
             })->take(10) as $entity)
             <tr>
-                <td>#{{ $entity->id }}</td>
+                <td>
+                    @if($scheduledJob->entity_descr == 'fund_report')
+                        <a href="{{ route('fundReports.show', $entity->id) }}">#{{ $entity->id }}</a>
+                    @elseif($scheduledJob->entity_descr == 'trade_band_report')
+                        <a href="{{ route('tradeBandReports.show', $entity->id) }}">#{{ $entity->id }}</a>
+                    @else
+                        #{{ $entity->id }}
+                    @endif
+                </td>
                 <td>
                     @if(isset($entity->as_of))
                         {{ $entity->as_of->format('M j, Y') }}
@@ -129,7 +137,11 @@
                 <td>{{ $entity->created_at->format('M j, Y g:i A') }}</td>
                 <td>
                     @if($scheduledJob->entity_descr == 'fund_report')
-                        <a href="{{ route('fundReports.show', $entity->id) }}" class="btn btn-sm btn-ghost-success">
+                        <a href="{{ route('fundReports.show', $entity->id) }}" class="btn btn-sm btn-ghost-success" title="View Fund Report">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                    @elseif($scheduledJob->entity_descr == 'trade_band_report')
+                        <a href="{{ route('tradeBandReports.show', $entity->id) }}" class="btn btn-sm btn-ghost-success" title="View Trade Band Report">
                             <i class="fa fa-eye"></i>
                         </a>
                     @endif

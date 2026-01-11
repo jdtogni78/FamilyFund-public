@@ -13,22 +13,22 @@ class ScheduledJobExt extends ScheduledJob
 
     const ENTITY_FUND_REPORT = 'fund_report';
     const ENTITY_TRANSACTION = 'transaction';
-    const ENTITY_PORTFOLIO_REPORT = 'portfolio_report';
+    const ENTITY_TRADE_BAND_REPORT = 'trade_band_report';
 
     public static $entityMap = [
         self::ENTITY_FUND_REPORT => 'Fund Report',
         self::ENTITY_TRANSACTION => 'Transaction',
-        self::ENTITY_PORTFOLIO_REPORT => 'Trading Bands',
+        self::ENTITY_TRADE_BAND_REPORT => 'Trading Bands',
     ];
     private static $fieldMap = [
         self::ENTITY_FUND_REPORT => 'as_of',
         self::ENTITY_TRANSACTION => 'timestamp',
-        self::ENTITY_PORTFOLIO_REPORT => 'end_date',
+        self::ENTITY_TRADE_BAND_REPORT => 'as_of',
     ];
     private static $classMap = [
         self::ENTITY_FUND_REPORT => FundReportExt::class,
         self::ENTITY_TRANSACTION => TransactionExt::class,
-        self::ENTITY_PORTFOLIO_REPORT => PortfolioReportExt::class,
+        self::ENTITY_TRADE_BAND_REPORT => TradeBandReport::class,
     ];
 
     public function shouldRunBy($today)
@@ -93,11 +93,11 @@ class ScheduledJobExt extends ScheduledJob
     }
 
     /**
-     * Get the portfolio if entity_descr is portfolio_report
+     * Get the fund for trade_band_report (entity_id is fund_id)
      */
-    public function portfolio()
+    public function tradeBandFund()
     {
-        return $this->belongsTo(Portfolio::class, 'entity_id');
+        return $this->belongsTo(FundExt::class, 'entity_id');
     }
 
 }

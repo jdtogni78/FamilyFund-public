@@ -41,8 +41,8 @@
                 $entityName = '#' . $scheduledJob->entity_id;
                 if ($scheduledJob->entity_descr == 'fund_report' && $scheduledJob->fund) {
                     $entityName = $scheduledJob->fund->name;
-                } elseif ($scheduledJob->entity_descr == 'portfolio_report' && $scheduledJob->portfolio) {
-                    $entityName = $scheduledJob->portfolio->source;
+                } elseif ($scheduledJob->entity_descr == 'trade_band_report' && $scheduledJob->tradeBandFund) {
+                    $entityName = $scheduledJob->tradeBandFund->name;
                 }
             @endphp
             <tr class="{{ $rowClass }}">

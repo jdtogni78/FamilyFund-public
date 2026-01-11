@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 Trait ScheduledJobTrait
 {
-    use FundTrait, TransactionTrait, PortfolioReportTrait, VerboseTrait;
+    use FundTrait, TransactionTrait, TradeBandReportTrait, VerboseTrait;
     private $handlers = [];
 
     public function setupHandlers()
@@ -18,7 +18,7 @@ Trait ScheduledJobTrait
         // create fund report handler
         $this->handlers[ScheduledJobExt::ENTITY_FUND_REPORT] = 'fundReportScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRANSACTION] = 'transactionScheduleDue';
-        $this->handlers[ScheduledJobExt::ENTITY_PORTFOLIO_REPORT] = 'portfolioReportScheduleDue';
+        $this->handlers[ScheduledJobExt::ENTITY_TRADE_BAND_REPORT] = 'tradeBandReportScheduleDue';
     }
 
     public function scheduleDueJobs($asOf, $entityDescrFilter=null) {

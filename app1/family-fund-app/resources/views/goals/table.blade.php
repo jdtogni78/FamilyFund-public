@@ -25,13 +25,15 @@
                     <td>{{ $goal->target_pct }}</td>
                     <td>{{ $goal->accounts->pluck('nickname')->join(', ') }}</td>
                     <td>
-                        <div class='btn-group'>
-                            <a href="{{ route('goals.show', [$goal->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                            <a href="{{ route('goals.edit', [$goal->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                            <form action="{{ route('goals.destroy', $goal->id) }}" method="DELETE">
+                        <form action="{{ route('goals.destroy', $goal->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <div class='btn-group'>
+                                <a href="{{ route('goals.show', [$goal->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                                <a href="{{ route('goals.edit', [$goal->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                                 <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this goal?')"><i class="fa fa-trash"></i></button>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </td>
                 </tr>
             @endforeach

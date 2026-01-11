@@ -15,7 +15,7 @@
             <th>Max Single Order</th>
             <th>Minimum Order</th>
             <th>Rebalance Period</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
@@ -35,28 +35,29 @@
                 <td>${{ $tradePortfolio->minimum_order }}</td>
                 <td>{{ $tradePortfolio->rebalance_period }} days</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('tradePortfolios.show', [$tradePortfolio->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('tradePortfolios.showRebalance', [
-                            $tradePortfolio->id,
-                            $tradePortfolio->start_dt->toDateString(),
-                            $tradePortfolio->end_dt->gt(\Carbon\Carbon::today())? \Carbon\Carbon::today()->toDateString() : $tradePortfolio->end_dt->toDateString()
-                            ]) }}" class='btn btn-ghost-warning'><i class="fa fa-eye"></i></a>
+                    <form action="{{ route('tradePortfolios.destroy', $tradePortfolio->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('tradePortfolios.show', [$tradePortfolio->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('tradePortfolios.showRebalance', [
+                                $tradePortfolio->id,
+                                $tradePortfolio->start_dt->toDateString(),
+                                $tradePortfolio->end_dt->gt(\Carbon\Carbon::today())? \Carbon\Carbon::today()->toDateString() : $tradePortfolio->end_dt->toDateString()
+                                ]) }}" class='btn btn-ghost-warning'><i class="fa fa-eye"></i></a>
                             @if(\Carbon\Carbon::parse($tradePortfolio->end_dt)->isBefore($asOf ?? \Carbon\Carbon::today()))
-                            {{-- If end_dt is before today, don't display the buttons --}}
+                                {{-- If end_dt is before today, don't display the buttons --}}
                             @else
-                            <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                            <a href="{{ route('tradePortfolios.split', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-code-fork"></i></a>
-                            <form action="{{ route('tradePortfolios.destroy', $tradePortfolio->id) }}" method="DELETE">
-                                @csrf
+                                <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                                <a href="{{ route('tradePortfolios.split', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-code-fork"></i></a>
                                 <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this trade portfolio?')"><i class="fa fa-trash"></i></button>
-                            </form>
-                        @endif
-                        <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
-                        @if($tradePortfolio->tws_token != null)
-                            <a href="{{ route('tradePortfolios.preview_deposits', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-download"></i></a>
-                        @endif
-                    </div>
+                            @endif
+                            <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
+                            @if($tradePortfolio->tws_token != null)
+                                <a href="{{ route('tradePortfolios.preview_deposits', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-download"></i></a>
+                            @endif
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

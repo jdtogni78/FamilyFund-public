@@ -1,5 +1,6 @@
-<form action="{{ route('funds.destroy', $fund->id) }}" method="DELETE">
+<form action="{{ route('funds.destroy', $fund->id) }}" method="POST">
     @csrf
+    @method('DELETE')
     <div class='btn-group'>
         <a href="{{ route('funds.show', [$fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
         <a href="{{ route('funds.show_trade_bands', [$fund->id]) }}" class='btn btn-ghost-success'><i class="fa fa-wave-square"></i></a>

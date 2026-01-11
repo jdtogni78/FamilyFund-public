@@ -19,14 +19,15 @@
                 <td>{{ $user->email_verified_at }}</td>
                 <td>{{ $user->remember_token }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('users.show', [$user->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('users.edit', [$user->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('users.destroy', $user->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('users.destroy', $user->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('users.show', [$user->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('users.edit', [$user->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this user?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

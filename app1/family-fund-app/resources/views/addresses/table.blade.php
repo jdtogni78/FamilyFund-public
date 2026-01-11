@@ -12,7 +12,7 @@
         <th>State</th>
         <th>Zip Code</th>
         <th>Country</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -29,14 +29,15 @@
             <td>{{ $address->zip_code }}</td>
             <td>{{ $address->country }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('addresses.show', [$address->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('addresses.edit', [$address->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('addresses.destroy', $address->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('addresses.destroy', $address->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('addresses.show', [$address->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('addresses.edit', [$address->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this address?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

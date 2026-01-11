@@ -11,7 +11,7 @@
                 <th>Target Percentage</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -27,14 +27,15 @@
                 <td>{{ $accountGoal->goal->start_dt }}</td>
                 <td>{{ $accountGoal->goal->end_dt }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('accountGoals.show', [$accountGoal->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('accountGoals.edit', [$accountGoal->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('accountGoals.destroy', $accountGoal->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('accountGoals.destroy', $accountGoal->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('accountGoals.show', [$accountGoal->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('accountGoals.edit', [$accountGoal->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account goal?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

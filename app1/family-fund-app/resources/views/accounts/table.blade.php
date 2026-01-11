@@ -25,14 +25,15 @@
                 <td>{{ $account->fund->id ?? '-' }}</td>
                 <td>{{ $account->fund->name ?? '-' }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('accounts.show', [$account->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('accounts.edit', [$account->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('accounts.destroy', $account->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('accounts.destroy', $account->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('accounts.show', [$account->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('accounts.edit', [$account->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

@@ -5,7 +5,7 @@
                 <th>Id</th>
                 <th>Name</th>
                 <th class="no_mobile">Goal</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>

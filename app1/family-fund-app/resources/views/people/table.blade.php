@@ -21,14 +21,15 @@
                 <td>{{ optional($person->primaryPhone())->number_format }}</td>
                 <td>{{ optional($person->primaryAddress())->street }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('people.show', [$person->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('people.edit', [$person->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('people.destroy', $person->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('people.destroy', $person->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('people.show', [$person->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('people.edit', [$person->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" onclick="return confirm('Are you sure you want to delete this person?')" class="btn btn-ghost-danger"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

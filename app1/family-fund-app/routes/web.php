@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
         ->name('transactions.preview_pending');
     Route::post('transactions/process_pending/{id}', 'App\Http\Controllers\WebV1\TransactionControllerExt@processPending')
         ->name('transactions.process_pending');
+    Route::post('transactions/process_all_pending', 'App\Http\Controllers\WebV1\TransactionControllerExt@processAllPending')
+        ->name('transactions.process_all_pending');
     Route::get('transactions/{id}/clone', 'App\Http\Controllers\WebV1\TransactionControllerExt@clone')
         ->name('transactions.clone');
     Route::get('transactions/{id}/resend-email', 'App\Http\Controllers\WebV1\TransactionControllerExt@resendEmail')
@@ -98,6 +100,24 @@ Route::middleware('auth')->group(function () {
         ->name('scheduledJobs.run');
     Route::post('scheduledJobs/{id}/force-run/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@forceRunScheduledJob')
         ->name('scheduledJobs.force-run');
+
+    // Operations Dashboard (admin only - checked in controller)
+    Route::get('operations', 'App\Http\Controllers\WebV1\OperationsController@index')
+        ->name('operations.index');
+    Route::post('operations/run-due-jobs', 'App\Http\Controllers\WebV1\OperationsController@runDueJobs')
+        ->name('operations.run_due_jobs');
+    Route::post('operations/process-pending', 'App\Http\Controllers\WebV1\OperationsController@processPending')
+        ->name('operations.process_pending');
+    Route::post('operations/queue/start', 'App\Http\Controllers\WebV1\OperationsController@startQueue')
+        ->name('operations.queue_start');
+    Route::post('operations/queue/stop', 'App\Http\Controllers\WebV1\OperationsController@stopQueue')
+        ->name('operations.queue_stop');
+    Route::post('operations/queue/retry/{uuid}', 'App\Http\Controllers\WebV1\OperationsController@retryFailedJob')
+        ->name('operations.queue_retry');
+    Route::post('operations/queue/retry-all', 'App\Http\Controllers\WebV1\OperationsController@retryAllFailedJobs')
+        ->name('operations.queue_retry_all');
+    Route::post('operations/queue/flush', 'App\Http\Controllers\WebV1\OperationsController@flushFailedJobs')
+        ->name('operations.queue_flush');
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);

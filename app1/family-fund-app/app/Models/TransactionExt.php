@@ -163,7 +163,7 @@ class TransactionExt extends Transaction
         if (!isset($timestamp)) {
             throw new Exception("Cannot process transaction without timestamp");
         }
-        if ($timestamp->gt(Carbon::today())) {
+        if ($timestamp->gt(Carbon::now())) {
             Log::warning("Keep pending state as transaction is in the future: " . $timestamp);
             return;
         }

@@ -223,3 +223,9 @@
     </ul>
 </li>
 
+<li class="nav-item {{ Request::is('operations*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('operations.index') }}">
+        <i class="nav-icon fa fa-cogs"></i>
+        <span>Operations</span>
+    </a>
+</li>

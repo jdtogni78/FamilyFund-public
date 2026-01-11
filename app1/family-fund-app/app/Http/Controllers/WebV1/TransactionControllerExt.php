@@ -157,6 +157,56 @@ class TransactionControllerExt extends TransactionController
     }
 
     /**
+     * Process all pending transactions in chronological order.
+     *
+     * @return Response
+     */
+    public function processAllPending()
+    {
+        $transactions = TransactionExt::where('status', TransactionExt::STATUS_PENDING)
+            ->orderBy('timestamp')
+            ->orderBy('id')
+            ->get();
+
+        if ($transactions->isEmpty()) {
+            Flash::info('No pending transactions to process.');
+            return redirect(route('transactions.index'));
+        }
+
+        $processed = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($transactions as $transaction) {
+            try {
+                DB::beginTransaction();
+                $result = $transaction->processPending();
+                if ($result && $result['transaction']->status == TransactionExt::STATUS_CLEARED) {
+                    DB::commit();
+                    $processed++;
+                } else {
+                    DB::rollBack();
+                    $skipped++;
+                }
+            } catch (Exception $e) {
+                DB::rollBack();
+                $errors[] = "ID {$transaction->id}: " . $e->getMessage();
+                Log::error("Error processing pending transaction {$transaction->id}: " . $e->getMessage());
+            }
+        }
+
+        if (count($errors) > 0) {
+            Flash::warning("Processed: $processed, Skipped: $skipped, Errors: " . count($errors) . ". " . implode('; ', array_slice($errors, 0, 3)));
+        } elseif ($skipped > 0) {
+            Flash::success("Processed $processed transaction(s). Skipped $skipped (future-dated).");
+        } else {
+            Flash::success("Successfully processed $processed transaction(s).");
+        }
+
+        return redirect(route('transactions.index'));
+    }
+
+    /**
      * Show the form for editing the specified Transaction.
      *
      * @param int $id

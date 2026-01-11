@@ -184,9 +184,18 @@
                     </div>
                     @endif
                     @if($transaction->scheduled_job_id)
+                    @php
+                        $sj = $transaction->scheduledJob;
+                    @endphp
                     <div class="col-md-4">
                         <div class="text-muted small">Scheduled Job</div>
                         <a href="{{ route('scheduledJobs.show', $transaction->scheduled_job_id) }}">#{{ $transaction->scheduled_job_id }}</a>
+                        @if($sj)
+                            <span class="badge bg-primary ms-1">{{ \App\Models\ScheduledJobExt::$entityMap[$sj->entity_descr] ?? $sj->entity_descr }}</span>
+                            @if($sj->schedule)
+                                <br><small class="text-muted">{{ $sj->schedule->descr }}</small>
+                            @endif
+                        @endif
                     </div>
                     @endif
                 </div>

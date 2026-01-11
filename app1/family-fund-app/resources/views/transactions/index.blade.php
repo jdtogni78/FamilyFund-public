@@ -17,6 +17,17 @@
                                  <span class="badge bg-primary ms-2">{{ $transactions->count() }}</span>
                              </div>
                              <div>
+                                 @php
+                                     $pendingCount = $transactions->where('status', 'P')->count();
+                                 @endphp
+                                 @if($pendingCount > 0)
+                                 <form action="{{ route('transactions.process_all_pending') }}" method="POST" class="d-inline" onsubmit="return confirm('Process {{ $pendingCount }} pending transaction(s)?');">
+                                     @csrf
+                                     <button type="submit" class="btn btn-sm btn-warning me-1">
+                                         <i class="fa fa-play me-1"></i> Process Pending ({{ $pendingCount }})
+                                     </button>
+                                 </form>
+                                 @endif
                                  <a href="{{ route('transactions.create_bulk') }}" class="btn btn-sm btn-outline-primary me-1">
                                      <i class="fa fa-users me-1"></i> Bulk
                                  </a>

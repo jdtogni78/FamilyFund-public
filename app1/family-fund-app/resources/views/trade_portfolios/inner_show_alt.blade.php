@@ -92,11 +92,11 @@
                     <div class="small text-center">
                         <div class="text-muted">{{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}</div>
                         <div class="mt-1 d-flex flex-wrap justify-content-center" style="gap: 4px;">
-                            <span class="badge" style="background: #0ea5e9; color: white;">Cash {{ $tp->cash_target * 100 }}%</span>
-                            <span class="badge" style="background: #64748b; color: white;">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
-                            <span class="badge" style="background: #16a34a; color: white;">Min ${{ number_format($tp->minimum_order, 0) }}</span>
-                            <span class="badge" style="background: #7c3aed; color: white;">Max {{ $tp->max_single_order * 100 }}%</span>
-                            <span class="badge" style="background: #dc2626; color: white;">Rebal {{ $tp->rebalance_period }}d</span>
+                            <span class="badge badge-cyan">Cash {{ $tp->cash_target * 100 }}%</span>
+                            <span class="badge badge-gray">Reserve {{ $tp->cash_reserve_target * 100 }}%</span>
+                            <span class="badge badge-success">Min ${{ number_format($tp->minimum_order, 0) }}</span>
+                            <span class="badge badge-purple">Max {{ $tp->max_single_order * 100 }}%</span>
+                            <span class="badge badge-danger">Rebal {{ $tp->rebalance_period }}d</span>
                         </div>
                     </div>
                 </div>

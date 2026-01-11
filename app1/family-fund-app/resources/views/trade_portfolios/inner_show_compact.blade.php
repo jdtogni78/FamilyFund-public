@@ -104,7 +104,7 @@
                     @if($isMatch)
                         <i class="fa fa-check-circle ml-1" style="color: #16a34a;"></i>
                     @else
-                        <span class="badge ml-1" style="background: #dc2626; color: white;">{{ number_format($actualPct, 1) }}%</span>
+                        <span class="badge badge-danger ml-1">{{ number_format($actualPct, 1) }}%</span>
                     @endif
                 </div>
             </div>

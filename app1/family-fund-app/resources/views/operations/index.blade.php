@@ -158,16 +158,19 @@
                 </div>
             </div>
 
-            {{-- Failed Queue Jobs --}}
+            {{-- Queue Jobs --}}
             <div class="row mb-4">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>
-                                <i class="fa fa-exclamation-triangle me-2 text-danger"></i>
-                                <strong>Failed Queue Jobs</strong>
+                                <i class="fa fa-tasks me-2"></i>
+                                <strong>Queue Jobs</strong>
+                                @if($pendingJobsCount > 0)
+                                    <span class="badge bg-warning text-dark ms-2">{{ $pendingJobsCount }} pending</span>
+                                @endif
                                 @if($failedJobsCount > 0)
-                                    <span class="badge bg-danger ms-2">{{ $failedJobsCount }}</span>
+                                    <span class="badge bg-danger ms-1">{{ $failedJobsCount }} failed</span>
                                 @endif
                             </div>
                             @if($failedJobsCount > 0)
@@ -175,50 +178,113 @@
                                 <form action="{{ route('operations.queue_retry_all') }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-primary" onclick="return confirm('Retry all {{ $failedJobsCount }} failed job(s)?')">
-                                        <i class="fa fa-redo me-1"></i> Retry All
+                                        <i class="fa fa-redo me-1"></i> Retry All Failed
                                     </button>
                                 </form>
                                 <form action="{{ route('operations.queue_flush') }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete all {{ $failedJobsCount }} failed job(s)? This cannot be undone.')">
-                                        <i class="fa fa-trash me-1"></i> Flush All
+                                        <i class="fa fa-trash me-1"></i> Flush All Failed
                                     </button>
                                 </form>
                             </div>
                             @endif
                         </div>
                         <div class="card-body">
-                            @if($failedJobs->isEmpty())
-                                <p class="text-muted text-center mb-0"><i class="fa fa-check-circle me-1 text-success"></i> No failed jobs</p>
+                            {{-- Filters --}}
+                            <form method="GET" action="{{ route('operations.index') }}" class="row g-3 mb-3">
+                                <div class="col-auto">
+                                    <label class="visually-hidden" for="queue_status">Status</label>
+                                    <select name="queue_status" id="queue_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="all" {{ $queueFilter === 'all' ? 'selected' : '' }}>All Status</option>
+                                        <option value="pending" {{ $queueFilter === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="failed" {{ $queueFilter === 'failed' ? 'selected' : '' }}>Failed</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label class="visually-hidden" for="job_type">Job Type</label>
+                                    <select name="job_type" id="job_type" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="all" {{ $jobTypeFilter === 'all' ? 'selected' : '' }}>All Types</option>
+                                        @foreach($jobTypes as $type)
+                                            <option value="{{ $type }}" {{ $jobTypeFilter === $type ? 'selected' : '' }}>{{ class_basename($type) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @if($queueFilter !== 'all' || $jobTypeFilter !== 'all')
+                                <div class="col-auto">
+                                    <a href="{{ route('operations.index') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa fa-times me-1"></i> Clear Filters
+                                    </a>
+                                </div>
+                                @endif
+                            </form>
+
+                            @if($queueJobs->isEmpty())
+                                <p class="text-muted text-center mb-0"><i class="fa fa-check-circle me-1 text-success"></i> No jobs found</p>
                             @else
                             <div class="table-responsive">
                                 <table class="table table-striped table-sm">
                                     <thead>
                                         <tr>
-                                            <th>Failed At</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
                                             <th>Job</th>
-                                            <th>Error</th>
+                                            <th>Queue</th>
+                                            <th>Details</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($failedJobs as $job)
+                                        @foreach($queueJobs as $job)
                                         <tr>
-                                            <td>{{ \Carbon\Carbon::parse($job->failed_at)->format('Y-m-d H:i') }}</td>
-                                            <td><code>{{ $job->job_name }}</code></td>
-                                            <td><small class="text-danger">{{ $job->exception }}</small></td>
                                             <td>
+                                                @if($job->failed_at)
+                                                    {{ $job->failed_at->format('Y-m-d H:i') }}
+                                                @elseif($job->created_at)
+                                                    {{ $job->created_at->format('Y-m-d H:i') }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($job->status === 'failed')
+                                                    <span class="badge bg-danger">Failed</span>
+                                                @else
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                @endif
+                                            </td>
+                                            <td><code>{{ class_basename($job->job_name) }}</code></td>
+                                            <td><small>{{ $job->queue }}</small></td>
+                                            <td>
+                                                @if($job->status === 'failed' && $job->exception)
+                                                    <small class="text-danger" title="{{ $job->exception }}">{{ \Str::limit($job->exception, 100) }}</small>
+                                                @elseif($job->attempts)
+                                                    <small class="text-muted">Attempts: {{ $job->attempts }}</small>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($job->status === 'failed' && $job->uuid)
                                                 <form action="{{ route('operations.queue_retry', $job->uuid) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-ghost-primary btn-sm" title="Retry">
                                                         <i class="fa fa-redo"></i>
                                                     </button>
                                                 </form>
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {{-- Pagination --}}
+                            <div class="d-flex justify-content-center mt-3">
+                                {{ $queueJobsPaginator->links() }}
                             </div>
                             @endif
                         </div>

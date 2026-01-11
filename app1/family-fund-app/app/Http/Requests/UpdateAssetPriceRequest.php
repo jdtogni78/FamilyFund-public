@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\API\CashValidator;
+use App\Http\Controllers\Traits\CashValidator;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\AssetPrice;
 

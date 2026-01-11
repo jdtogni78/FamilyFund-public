@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogQueueJobCompletion;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Knp\Snappy\Pdf;
@@ -37,5 +39,8 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->symbols();
         });
+
+        // Register queue job event subscriber
+        Event::subscribe(LogQueueJobCompletion::class);
     }
 }

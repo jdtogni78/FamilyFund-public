@@ -1,5 +1,6 @@
-<form action="{{ route('portfolios.destroy', $portfolio->id) }}" method="DELETE">
+<form action="{{ route('portfolios.destroy', $portfolio->id) }}" method="POST" class="d-inline-block">
     @csrf
+    @method('DELETE')
     <div class='btn-group'>
         <a href="{{ route('portfolios.show', [$portfolio->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
         <a href="{{ route('portfolios.edit', [$portfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>

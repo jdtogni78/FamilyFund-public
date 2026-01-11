@@ -26,6 +26,14 @@ class SendPortfolioReport implements ShouldQueue
     }
 
     /**
+     * Get the display name for the queued job.
+     */
+    public function displayName(): string
+    {
+        return 'Send Trade Bands Report';
+    }
+
+    /**
      * Execute the job.
      */
     public function handle(): void

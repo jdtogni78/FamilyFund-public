@@ -47,16 +47,11 @@
                 'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
             ],
         ],
-        'People & Users' => [
-            'icon' => 'fa fa-users',
-            'items' => [
-                'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
-                'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
-            ],
-        ],
         'Admin' => [
             'icon' => 'fa fa-shield-alt',
             'items' => [
+                'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
+                'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
                 'Operations' => ['route' => 'operations.index', 'icon' => 'fa fa-cogs'],
                 'User Roles' => ['route' => 'admin.user-roles.index', 'icon' => 'fa fa-user-shield'],
             ],

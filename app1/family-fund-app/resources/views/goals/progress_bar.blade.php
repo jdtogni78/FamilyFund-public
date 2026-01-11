@@ -10,7 +10,7 @@
         <span class="text-muted">
             <i class="fa fa-clock me-1"></i> Expected Progress
         </span>
-        <span class="badge" style="background-color: #d97706;">{{ number_format($expectedPct, 1) }}%</span>
+        <span class="badge-warning">{{ number_format($expectedPct, 1) }}%</span>
     </div>
     <div class="progress mb-3" style="height: 20px;">
         <div class="progress-bar" role="progressbar"
@@ -27,7 +27,7 @@
         <span class="text-muted">
             <i class="fa fa-chart-line me-1"></i> Current Progress
         </span>
-        <span class="badge" style="background-color: {{ $isOnTrack ? '#16a34a' : '#dc2626' }};">{{ number_format($currentPct, 1) }}%</span>
+        <span class="{{ $isOnTrack ? 'badge-success' : 'badge-danger' }}">{{ number_format($currentPct, 1) }}%</span>
     </div>
     <div class="progress" style="height: 20px;">
         <div class="progress-bar" role="progressbar"

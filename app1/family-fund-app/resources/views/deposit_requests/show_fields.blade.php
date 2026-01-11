@@ -3,13 +3,13 @@
     $cashDeposit = $depositRequest->cashDeposit;
     $transaction = $depositRequest->transaction;
 
-    $statusColors = [
-        'PEN' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
-        'APP' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490'],
-        'REJ' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c'],
-        'COM' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
+    $statusClasses = [
+        'PEN' => 'badge-dr-pending',
+        'APP' => 'badge-dr-approved',
+        'REJ' => 'badge-dr-rejected',
+        'COM' => 'badge-dr-completed',
     ];
-    $sc = $statusColors[$depositRequest->status] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'];
+    $sc = $statusClasses[$depositRequest->status] ?? 'badge-gray';
 @endphp
 
 <div class="row">
@@ -63,7 +63,7 @@
         <div class="form-group mb-3">
             <label class="text-body-secondary"><i class="fa fa-info-circle me-1"></i> Status:</label>
             <p class="mb-0">
-                <span class="badge" style="background: {{ $sc['bg'] }}; color: {{ $sc['text'] }}; border: 1px solid {{ $sc['border'] }}; font-size: 14px; padding: 6px 12px;">
+                <span class="{{ $sc }} text-sm px-3 py-1">
                     {{ $depositRequest->status_string() }}
                 </span>
             </p>
@@ -94,7 +94,7 @@
                     <a href="{{ route('transactions.show', $transaction->id) }}">
                         #{{ $transaction->id }}
                     </a>
-                    <span class="badge ms-1" style="background: {{ $transaction->value >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                    <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
                 @elseif($depositRequest->transaction_id)

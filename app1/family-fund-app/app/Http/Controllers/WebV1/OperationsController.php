@@ -28,7 +28,7 @@ class OperationsController extends AppBaseController
     /**
      * Check if current user is admin (user ID 1 or in ADMIN_EMAILS env)
      */
-    private function isAdmin(): bool
+    public static function isAdmin(): bool
     {
         $user = auth()->user();
         if (!$user) return false;
@@ -36,15 +36,16 @@ class OperationsController extends AppBaseController
         // User ID 1 is always admin
         if ($user->id === 1) return true;
 
-        // Check env for additional admin emails
-        $adminEmails = explode(',', env('ADMIN_EMAILS', ''));
-        return in_array($user->email, $adminEmails);
+        // Check env for additional admin emails (default includes app owner)
+        $defaultAdmins = 'admin@dev.familyfund.local';
+        $adminEmails = explode(',', env('ADMIN_EMAILS', $defaultAdmins));
+        return in_array($user->email, array_map('trim', $adminEmails));
     }
 
     /**
      * Operations dashboard
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!$this->isAdmin()) {
             Flash::error('Access denied. Admin only.');
@@ -69,21 +70,21 @@ class OperationsController extends AppBaseController
         // Pending counts
         $pendingTransactions = TransactionExt::where('status', TransactionExt::STATUS_PENDING)->count();
 
-        // Failed jobs
-        $failedJobs = DB::table('failed_jobs')
-            ->orderByDesc('failed_at')
-            ->limit(20)
-            ->get()
-            ->map(function ($job) {
-                $payload = json_decode($job->payload, true);
-                return (object)[
-                    'id' => $job->id,
-                    'uuid' => $job->uuid,
-                    'job_name' => $payload['displayName'] ?? 'Unknown',
-                    'failed_at' => $job->failed_at,
-                    'exception' => \Str::limit($job->exception, 200),
-                ];
-            });
+        // Queue jobs with filters
+        $queueFilter = $request->get('queue_status', 'all');
+        $jobTypeFilter = $request->get('job_type', 'all');
+        $perPage = 15;
+
+        // Get all queue jobs (pending + failed)
+        $queueJobsData = $this->getQueueJobs($queueFilter, $jobTypeFilter, $perPage, $request->get('page', 1));
+        $queueJobs = $queueJobsData['jobs'];
+        $queueJobsPaginator = $queueJobsData['paginator'];
+
+        // Get unique job types for filter dropdown
+        $jobTypes = $this->getJobTypes();
+
+        // Counts for badges
+        $pendingJobsCount = DB::table('jobs')->count();
         $failedJobsCount = DB::table('failed_jobs')->count();
 
         // Queue worker status
@@ -98,11 +99,106 @@ class OperationsController extends AppBaseController
         return view('operations.index', compact(
             'scheduledJobs',
             'pendingTransactions',
-            'failedJobs',
+            'queueJobs',
+            'queueJobsPaginator',
+            'jobTypes',
+            'queueFilter',
+            'jobTypeFilter',
+            'pendingJobsCount',
             'failedJobsCount',
             'queueRunning',
             'operationLogs'
         ));
+    }
+
+    /**
+     * Get queue jobs with filters and pagination
+     */
+    private function getQueueJobs(string $statusFilter, string $typeFilter, int $perPage, int $page): array
+    {
+        $allJobs = collect();
+
+        // Get pending jobs
+        if ($statusFilter === 'all' || $statusFilter === 'pending') {
+            $pendingJobs = DB::table('jobs')->get()->map(function ($job) {
+                $payload = json_decode($job->payload, true);
+                return (object)[
+                    'id' => $job->id,
+                    'uuid' => null,
+                    'job_name' => $payload['displayName'] ?? 'Unknown',
+                    'status' => 'pending',
+                    'queue' => $job->queue,
+                    'attempts' => $job->attempts,
+                    'created_at' => Carbon::createFromTimestamp($job->created_at),
+                    'failed_at' => null,
+                    'exception' => null,
+                ];
+            });
+            $allJobs = $allJobs->concat($pendingJobs);
+        }
+
+        // Get failed jobs
+        if ($statusFilter === 'all' || $statusFilter === 'failed') {
+            $failedJobs = DB::table('failed_jobs')->get()->map(function ($job) {
+                $payload = json_decode($job->payload, true);
+                return (object)[
+                    'id' => $job->id,
+                    'uuid' => $job->uuid,
+                    'job_name' => $payload['displayName'] ?? 'Unknown',
+                    'status' => 'failed',
+                    'queue' => $job->queue,
+                    'attempts' => null,
+                    'created_at' => null,
+                    'failed_at' => Carbon::parse($job->failed_at),
+                    'exception' => \Str::limit($job->exception, 300),
+                ];
+            });
+            $allJobs = $allJobs->concat($failedJobs);
+        }
+
+        // Filter by job type
+        if ($typeFilter !== 'all') {
+            $allJobs = $allJobs->filter(fn($job) => $job->job_name === $typeFilter);
+        }
+
+        // Sort by date (failed_at or created_at, most recent first)
+        $allJobs = $allJobs->sortByDesc(fn($job) => $job->failed_at ?? $job->created_at);
+
+        // Paginate
+        $total = $allJobs->count();
+        $jobs = $allJobs->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $jobs,
+            $total,
+            $perPage,
+            $page,
+            ['path' => route('operations.index'), 'query' => request()->query()]
+        );
+
+        return ['jobs' => $jobs, 'paginator' => $paginator];
+    }
+
+    /**
+     * Get unique job types from both tables
+     */
+    private function getJobTypes(): array
+    {
+        $types = collect();
+
+        // From pending jobs
+        DB::table('jobs')->get()->each(function ($job) use (&$types) {
+            $payload = json_decode($job->payload, true);
+            $types->push($payload['displayName'] ?? 'Unknown');
+        });
+
+        // From failed jobs
+        DB::table('failed_jobs')->get()->each(function ($job) use (&$types) {
+            $payload = json_decode($job->payload, true);
+            $types->push($payload['displayName'] ?? 'Unknown');
+        });
+
+        return $types->unique()->sort()->values()->toArray();
     }
 
     /**

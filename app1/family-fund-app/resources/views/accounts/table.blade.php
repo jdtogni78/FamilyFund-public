@@ -16,23 +16,24 @@
         <tbody>
         @foreach($accounts as $account)
             <tr>
-                <td>{{ $account->id }}</td>
+                <td><a href="{{ route('accounts.show', $account->id) }}" class="text-nowrap"><i class="fa fa-eye fa-fw me-1"></i>{{ $account->id }}</a></td>
                 <td>{{ $account->code }}</td>
                 <td>{{ $account->nickname }}</td>
                 <td>{{ $account->email_cc }}</td>
                 <td>{{ $account->user->id ?? '-' }}</td>
                 <td>{{ $account->user->name ?? '-' }}</td>
-                <td>{{ $account->fund->id ?? '-' }}</td>
-                <td>{{ $account->fund->name ?? '-' }}</td>
+                <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}" class="text-nowrap"><i class="fa fa-eye fa-fw me-1"></i>{{ $account->fund->id }}</a>@else - @endif</td>
+                <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}">{{ $account->fund->name }}</a>@else - @endif</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('accounts.show', [$account->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('accounts.edit', [$account->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('accounts.destroy', $account->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('accounts.destroy', $account->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('accounts.show', [$account->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('accounts.edit', [$account->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

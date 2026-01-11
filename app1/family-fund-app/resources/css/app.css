@@ -322,6 +322,124 @@
         @apply badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
     }
 
+    .badge-purple {
+        @apply badge bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300;
+    }
+
+    .badge-blue {
+        @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+    }
+
+    /* Transaction type badges - with border styling */
+    .badge-tx-purchase {
+        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
+        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+    }
+
+    .badge-tx-initial {
+        @apply badge bg-teal-50 text-teal-700 border border-teal-500;
+        @apply dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-600;
+    }
+
+    .badge-tx-sale {
+        @apply badge bg-red-50 text-red-700 border border-red-500;
+        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+    }
+
+    .badge-tx-matching {
+        @apply badge bg-purple-50 text-purple-700 border border-purple-500;
+        @apply dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-600;
+    }
+
+    .badge-tx-borrow {
+        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
+        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+    }
+
+    .badge-tx-repay {
+        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
+        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+    }
+
+    /* Transaction status badges */
+    .badge-status-pending {
+        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
+        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+    }
+
+    .badge-status-cleared {
+        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
+        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+    }
+
+    .badge-status-scheduled {
+        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
+        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+    }
+
+    /* Positive/negative value badges */
+    .badge-positive {
+        @apply badge bg-emerald-500 text-white;
+        @apply dark:bg-emerald-600;
+    }
+
+    .badge-negative {
+        @apply badge bg-red-500 text-white;
+        @apply dark:bg-red-600;
+    }
+
+    /* Large value badge */
+    .badge-value-lg {
+        @apply text-2xl px-4 py-2 font-bold;
+    }
+
+    /* Deposit request status badges */
+    .badge-dr-pending {
+        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
+        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+    }
+
+    .badge-dr-approved {
+        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
+        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+    }
+
+    .badge-dr-rejected {
+        @apply badge bg-red-50 text-red-700 border border-red-500;
+        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+    }
+
+    .badge-dr-completed {
+        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
+        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+    }
+
+    /* Cash deposit status badges */
+    .badge-cd-pending {
+        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
+        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+    }
+
+    .badge-cd-deposited {
+        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
+        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+    }
+
+    .badge-cd-allocated {
+        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
+        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+    }
+
+    .badge-cd-completed {
+        @apply badge bg-purple-50 text-purple-700 border border-purple-500;
+        @apply dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-600;
+    }
+
+    .badge-cd-cancelled {
+        @apply badge bg-red-50 text-red-700 border border-red-500;
+        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+    }
+
     /* ========================================
        Alerts
        ======================================== */
@@ -580,6 +698,19 @@
 
     .divider-vertical {
         @apply border-l border-gray-200 dark:border-gray-700 mx-4 h-6;
+    }
+
+    /* ========================================
+       Card Border - Debit/Credit indicators
+       ======================================== */
+    .card-border-debit {
+        border-left: 4px solid;
+        @apply border-red-500 dark:border-red-600;
+    }
+
+    .card-border-credit {
+        border-left: 4px solid;
+        @apply border-emerald-500 dark:border-emerald-600;
     }
 }
 

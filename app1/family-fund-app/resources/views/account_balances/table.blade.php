@@ -29,14 +29,15 @@
                 <td>{{ $accountBalance->start_dt->format('Y-m-d') }}</td>
                 <td>{{ $accountBalance->end_dt->format('Y-m-d') }}</td>
                 <td>
-                    <div class='btn-group'>
-                        <a href="{{ route('accountBalances.show', [$accountBalance->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('accountBalances.edit', [$accountBalance->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('accountBalances.destroy', $accountBalance->id) }}" method="DELETE">
-                            @csrf
+                    <form action="{{ route('accountBalances.destroy', $accountBalance->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class='btn-group'>
+                            <a href="{{ route('accountBalances.show', [$accountBalance->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('accountBalances.edit', [$accountBalance->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this account balance?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         @endforeach

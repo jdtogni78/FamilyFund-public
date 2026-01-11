@@ -2,35 +2,49 @@
     <table class="table table-striped" id="portfolioAssets-table">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>Portfolio Id</th>
-                <th>Fund Name</th>
-                <th>Asset Id</th>
-                <th>Asset Name</th>
+                <th>Fund</th>
+                <th>Asset</th>
                 <th>Position</th>
-                <th>Start Dt</th>
-                <th>End Dt</th>
+                <th>Start Date</th>
+                <th>End Date</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
         @foreach($portfolioAssets as $portfolioAsset)
             <tr>
-                <td>{{ $portfolioAsset->id }}</td>
-                <td>{{ $portfolioAsset->portfolio_id }}</td>
-                <td>{{ $portfolioAsset->portfolio()->first()->fund()->first()->name }}</td>
-                <td>{{ $portfolioAsset->asset_id }}</td>
-                <td>{{ $portfolioAsset->asset()->first()->name }}</td>
-                <td>{{ $portfolioAsset->position }}</td>
-                <td>{{ $portfolioAsset->start_dt }}</td>
-                <td>{{ $portfolioAsset->end_dt }}</td>
+                <td>
+                    @if($portfolioAsset->portfolio && $portfolioAsset->portfolio->fund)
+                        <a href="{{ route('portfolioAssets.index', ['portfolio_id' => $portfolioAsset->portfolio_id]) }}">
+                            {{ $portfolioAsset->portfolio->fund->name }}
+                        </a>
+                    @else
+                        Portfolio #{{ $portfolioAsset->portfolio_id }}
+                    @endif
+                </td>
+                <td>
+                    <a href="{{ route('portfolioAssets.index', ['asset_id' => $portfolioAsset->asset_id]) }}">
+                        {{ $portfolioAsset->asset->name ?? 'Unknown' }}
+                    </a>
+                    <span class="badge bg-info text-white ms-1">{{ $portfolioAsset->asset->type ?? '-' }}</span>
+                </td>
+                <td class="text-end">{{ number_format($portfolioAsset->position, 4) }}</td>
+                <td>{{ $portfolioAsset->start_dt?->format('Y-m-d') }}</td>
+                <td>
+                    @if($portfolioAsset->end_dt && $portfolioAsset->end_dt->format('Y') === '9999')
+                        <span class="badge bg-success">Current</span>
+                    @else
+                        {{ $portfolioAsset->end_dt?->format('Y-m-d') }}
+                    @endif
+                </td>
                 <td>
                     <div class='btn-group'>
-                        <a href="{{ route('portfolioAssets.show', [$portfolioAsset->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                        <a href="{{ route('portfolioAssets.edit', [$portfolioAsset->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                        <form action="{{ route('portfolioAssets.destroy', $portfolioAsset->id) }}" method="DELETE">
+                        <a href="{{ route('portfolioAssets.show', [$portfolioAsset->id]) }}" class='btn btn-ghost-success' title="View"><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('portfolioAssets.edit', [$portfolioAsset->id]) }}" class='btn btn-ghost-info' title="Edit"><i class="fa fa-edit"></i></a>
+                        <form action="{{ route('portfolioAssets.destroy', $portfolioAsset->id) }}" method="POST" style="display:inline;">
                             @csrf
-                            <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this portfolio asset?')"><i class="fa fa-trash"></i></button>
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-ghost-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this portfolio asset?')"><i class="fa fa-trash"></i></button>
                         </form>
                     </div>
                 </td>
@@ -40,10 +54,8 @@
     </table>
 </div>
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#portfolioAssets-table').DataTable();
-    });
-</script>
-@endpush
+@if($portfolioAssets instanceof \Illuminate\Pagination\LengthAwarePaginator)
+<div class="d-flex justify-content-center mt-3">
+    {{ $portfolioAssets->appends(request()->query())->links() }}
+</div>
+@endif

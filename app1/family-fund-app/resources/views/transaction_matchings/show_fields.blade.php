@@ -31,7 +31,7 @@
                     <a href="{{ route('transactions.show', $transaction->id) }}">
                         #{{ $transaction->id }}
                     </a>
-                    <span class="badge ms-1" style="background: {{ $transaction->value >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                    <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
                     @if($transaction->account)
@@ -56,7 +56,7 @@
                     <a href="{{ route('transactions.show', $refTransaction->id) }}">
                         #{{ $refTransaction->id }}
                     </a>
-                    <span class="badge ms-1" style="background: {{ $refTransaction->value >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                    <span class="{{ $refTransaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($refTransaction->value), 2) }}
                     </span>
                     @if($refTransaction->account)

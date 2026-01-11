@@ -1,33 +1,33 @@
 @php
     $isDebit = $transaction->value < 0;
-    $typeColors = [
-        'PUR' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Purchase'],
-        'INI' => ['bg' => '#ccfbf1', 'border' => '#0d9488', 'text' => '#0f766e', 'label' => 'Initial'],
-        'SAL' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Sale'],
-        'MAT' => ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7c3aed', 'label' => 'Matching'],
-        'BOR' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Borrow'],
-        'REP' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Repay'],
+    $typeClasses = [
+        'PUR' => ['class' => 'badge-tx-purchase', 'label' => 'Purchase'],
+        'INI' => ['class' => 'badge-tx-initial', 'label' => 'Initial'],
+        'SAL' => ['class' => 'badge-tx-sale', 'label' => 'Sale'],
+        'MAT' => ['class' => 'badge-tx-matching', 'label' => 'Matching'],
+        'BOR' => ['class' => 'badge-tx-borrow', 'label' => 'Borrow'],
+        'REP' => ['class' => 'badge-tx-repay', 'label' => 'Repay'],
     ];
-    $tc = $typeColors[$transaction->type] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->type];
+    $tc = $typeClasses[$transaction->type] ?? ['class' => 'badge-gray', 'label' => $transaction->type];
 
-    $statusColors = [
-        'P' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Pending'],
-        'C' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Cleared'],
-        'S' => ['bg' => '#cffafe', 'border' => '#0891b2', 'text' => '#0e7490', 'label' => 'Scheduled'],
+    $statusClasses = [
+        'P' => ['class' => 'badge-status-pending', 'label' => 'Pending'],
+        'C' => ['class' => 'badge-status-cleared', 'label' => 'Cleared'],
+        'S' => ['class' => 'badge-status-scheduled', 'label' => 'Scheduled'],
     ];
-    $sc = $statusColors[$transaction->status] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $transaction->status];
+    $sc = $statusClasses[$transaction->status] ?? ['class' => 'badge-gray', 'label' => $transaction->status];
 @endphp
 
 <div class="row">
     <!-- Transaction Summary -->
     <div class="col-md-6 mb-4">
-        <div class="card h-100" style="border-left: 4px solid {{ $isDebit ? '#dc3545' : '#28a745' }};">
+        <div class="card h-100 {{ $isDebit ? 'card-border-debit' : 'card-border-credit' }}">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
-                    <span class="badge me-2" style="background: {{ $tc['bg'] }}; color: {{ $tc['text'] }}; border: 1px solid {{ $tc['border'] }}; font-size: 14px; padding: 6px 12px;">
+                    <span class="{{ $tc['class'] }} me-2 text-sm px-3 py-1">
                         {{ $tc['label'] }}
                     </span>
-                    <span class="badge" style="background: {{ $sc['bg'] }}; color: {{ $sc['text'] }}; border: 1px solid {{ $sc['border'] }}; font-size: 14px; padding: 6px 12px;">
+                    <span class="{{ $sc['class'] }} text-sm px-3 py-1">
                         {{ $sc['label'] }}
                     </span>
                 </div>
@@ -36,7 +36,7 @@
             <div class="card-body">
                 <!-- Amount -->
                 <div class="text-center mb-4">
-                    <span class="badge fs-3 px-4 py-2" style="background-color: {{ $isDebit ? '#dc3545' : '#28a745' }}; color: white;">
+                    <span class="{{ $isDebit ? 'badge-negative' : 'badge-positive' }} badge-value-lg">
                         {{ $isDebit ? '-' : '+' }}${{ number_format(abs($transaction->value), 2) }}
                     </span>
                 </div>
@@ -49,7 +49,7 @@
                     </div>
                     <div class="col-6 mb-3">
                         <div class="text-muted small text-uppercase">Shares</div>
-                        <div class="fs-5 fw-bold" style="color: {{ $transaction->shares >= 0 ? '#28a745' : '#dc3545' }};">
+                        <div class="fs-5 fw-bold {{ $transaction->shares >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                             {{ $transaction->shares >= 0 ? '+' : '' }}{{ number_format($transaction->shares, 4) }}
                         </div>
                     </div>
@@ -137,17 +137,17 @@
                         <div class="small text-muted">shares</div>
                     </div>
                     <div class="mx-4">
-                        <i class="fa fa-long-arrow-right fa-2x" style="color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};"></i>
+                        <i class="fa fa-long-arrow-right fa-2x {{ $delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}"></i>
                     </div>
                     <div class="text-center px-4">
                         <div class="text-muted small text-uppercase">After</div>
-                        <div class="fs-3 fw-bold" style="color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">
+                        <div class="fs-3 fw-bold {{ $delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                             {{ number_format($balance->shares, 4) }}
                         </div>
                         <div class="small fw-bold">shares</div>
                     </div>
                     <div class="ms-4">
-                        <span class="badge fs-5 px-3 py-2" style="background-color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }}; color: white;">
+                        <span class="{{ $delta >= 0 ? 'badge-positive' : 'badge-negative' }} text-lg px-3 py-2">
                             {{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 4) }}
                         </span>
                     </div>

@@ -1,6 +1,8 @@
 <x-app-layout>
+
+@section('content')
     <ol class="breadcrumb">
-        <li class="breadcrumb-item">Funds</li>
+        <li class="breadcrumb-item">Trade Band Reports</li>
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
@@ -10,13 +12,13 @@
                      <div class="card">
                          <div class="card-header">
                              <i class="fa fa-align-justify"></i>
-                             Funds
-                             <a class="pull-right" href="{{ route('funds.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
+                             Trade Band Reports
+                             <a class="pull-right" href="{{ route('tradeBandReports.create') }}"><i class="fa fa-plus-square fa-lg"></i></a>
                          </div>
                          <div class="card-body">
-                             @include('funds.table')
+                             @include('trade_band_reports.table')
                               <div class="pull-right mr-3">
-                                     
+
                               </div>
                          </div>
                      </div>
@@ -25,4 +27,3 @@
          </div>
     </div>
 </x-app-layout>
-

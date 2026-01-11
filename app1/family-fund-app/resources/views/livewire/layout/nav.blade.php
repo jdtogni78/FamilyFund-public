@@ -42,6 +42,7 @@
             'items' => [
                 'Fund Reports' => ['route' => 'fundReports.index', 'icon' => 'fa fa-file-text-o'],
                 'Account Reports' => ['route' => 'accountReports.index', 'icon' => 'fa fa-file-text-o'],
+                'Trade Band Reports' => ['route' => 'tradeBandReports.index', 'icon' => 'fa fa-file-text-o'],
                 'Schedules' => ['route' => 'schedules.index', 'icon' => 'fa fa-calendar'],
                 'Scheduled Jobs' => ['route' => 'scheduledJobs.index', 'icon' => 'fa fa-clock-o'],
             ],

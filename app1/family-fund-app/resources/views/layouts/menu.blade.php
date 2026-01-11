@@ -157,6 +157,12 @@
                 <span>Account Reports</span>
             </a>
         </li>
+        <li class="nav-item {{ Request::is('tradeBandReports*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('tradeBandReports.index') }}">
+                <i class="nav-icon fa fa-file-text-o"></i>
+                <span>Trade Band Reports</span>
+            </a>
+        </li>
         <li class="nav-item {{ Request::is('schedules*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('schedules.index') }}">
                 <i class="nav-icon fa fa-calendar"></i>

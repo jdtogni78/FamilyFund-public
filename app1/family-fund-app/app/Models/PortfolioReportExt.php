@@ -10,7 +10,7 @@ use Carbon\Carbon;
  */
 class PortfolioReportExt extends PortfolioReport
 {
-    public static string $emailSubject = 'Portfolio Rebalance Report';
+    public static string $emailSubject = 'Trading Bands Report';
 
     // Report types
     const TYPE_CUSTOM = 'custom';

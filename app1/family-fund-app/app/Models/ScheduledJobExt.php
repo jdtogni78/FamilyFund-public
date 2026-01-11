@@ -18,7 +18,7 @@ class ScheduledJobExt extends ScheduledJob
     public static $entityMap = [
         self::ENTITY_FUND_REPORT => 'Fund Report',
         self::ENTITY_TRANSACTION => 'Transaction',
-        self::ENTITY_PORTFOLIO_REPORT => 'Portfolio Rebalance Report',
+        self::ENTITY_PORTFOLIO_REPORT => 'Trading Bands',
     ];
     private static $fieldMap = [
         self::ENTITY_FUND_REPORT => 'as_of',

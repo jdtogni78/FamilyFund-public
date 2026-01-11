@@ -7,7 +7,13 @@
 <!-- As Of Field -->
 <div class="form-group">
     <label for="as_of">As Of:</label>
-    <p>{{ $tradeBandReport->as_of->format('Y-m-d') }}</p>
+    <p>
+        @if($tradeBandReport->as_of && $tradeBandReport->as_of->format('Y') !== '9999')
+            {{ $tradeBandReport->as_of->format('Y-m-d') }}
+        @else
+            <span class="text-muted">Not set</span>
+        @endif
+    </p>
 </div>
 
 <!-- Scheduled Job Id Field -->

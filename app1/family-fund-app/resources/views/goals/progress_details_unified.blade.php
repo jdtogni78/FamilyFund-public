@@ -112,7 +112,7 @@
 </div>
 @else
 {{-- Web Layout --}}
-<div class="p-3 rounded" style="background: var(--bs-tertiary-bg, #f8f9fa);">
+<div class="p-3 rounded goals-progress-container" style="background: var(--bs-tertiary-bg, #f8f9fa);">
     {{-- Target explanation with 4% rule --}}
     <div class="mb-3 pb-3 border-bottom">
         <strong>Target:</strong>

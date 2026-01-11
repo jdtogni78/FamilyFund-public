@@ -614,3 +614,54 @@ html.dark .table-danger {
 html.dark .table-danger td {
     color: #fecaca !important;
 }
+
+/* Dark mode goals progress section */
+html.dark .bg-warning.bg-opacity-25 {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+html.dark .bg-success.bg-opacity-25 {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+html.dark .bg-danger.bg-opacity-25 {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+html.dark .alert-success {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border-color: #10b981 !important;
+    color: #a7f3d0 !important;
+}
+
+html.dark .alert-warning {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    border-color: #f59e0b !important;
+    color: #fde68a !important;
+}
+
+html.dark .alert-danger {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border-color: #ef4444 !important;
+    color: #fecaca !important;
+}
+
+html.dark .alert-info {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+    border-color: #06b6d4 !important;
+    color: #a5f3fc !important;
+}
+
+/* Dark mode text-warning for value display */
+html.dark .text-warning {
+    color: #fbbf24 !important;
+}
+
+/* Dark mode tertiary background */
+html.dark [style*="--bs-tertiary-bg"] {
+    background-color: #1f2937 !important;
+}
+
+html.dark .goals-progress-container {
+    background-color: #1f2937 !important;
+}

@@ -210,35 +210,31 @@
 
         .card-header-icon,
         .header-icon {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: auto;
             margin-right: 8px;
             vertical-align: middle;
-            object-fit: contain;
         }
 
         /* Generic icon classes for all SVG icons */
         .icon {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: auto;
             vertical-align: middle;
-            object-fit: contain;
         }
 
         .icon-sm {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: auto;
             vertical-align: middle;
             margin-right: 3px;
-            object-fit: contain;
         }
 
         .icon-md {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: auto;
             vertical-align: middle;
             margin-right: 6px;
-            object-fit: contain;
         }
 
         /* Section header for table-based layouts */
@@ -275,14 +271,7 @@
             border-left: 4px solid #14b8a6;
         }
 
-        /* Icon in headers */
-        .header-icon {
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            vertical-align: middle;
-            object-fit: contain;
-        }
+        /* Icon in headers - duplicate removed, see above */
 
         .card-body {
             padding: 16px;

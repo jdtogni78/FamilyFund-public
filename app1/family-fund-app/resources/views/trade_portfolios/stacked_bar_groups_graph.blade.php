@@ -195,7 +195,7 @@ $(document).ready(function() {
                         textShadowBlur: 3,
                         formatter: function(value, context) {
                             if (value < 8) return '';
-                            return value.toFixed(0) + '%';
+                            return value.toFixed(1) + '%';
                         },
                         anchor: 'center',
                         align: 'center'

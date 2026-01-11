@@ -62,14 +62,19 @@
         return strcmp($a, $b);
     });
 
-    $portfolioCount = $tradePortfolios->count();
-    $colWidth = floor(100 / $portfolioCount);
+    // Chunk portfolios into rows of max 3
+    $portfolioChunks = $tradePortfolios->chunk(3);
 @endphp
 
 {{-- Portfolio Comparison Table --}}
-<table width="100%" cellspacing="8" cellpadding="0">
+@foreach($portfolioChunks as $chunkIndex => $chunk)
+@php
+    $portfolioCount = $chunk->count();
+    $colWidth = floor(100 / $portfolioCount);
+@endphp
+<table width="100%" cellspacing="8" cellpadding="0" @if($chunkIndex > 0) style="margin-top: 16px;" @endif>
     <tr>
-        @foreach($tradePortfolios as $tp)
+        @foreach($chunk as $tp)
             @php
                 $asOfDate = $asOf ?? $api['asOf'] ?? $api['as_of'] ?? now()->format('Y-m-d');
             @endphp
@@ -188,4 +193,5 @@
         @endforeach
     </tr>
 </table>
+@endforeach
 @endif

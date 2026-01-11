@@ -2,6 +2,12 @@
     use App\Models\ScheduledJobExt;
 @endphp
 
+<style>
+    .form-select, .form-control {
+        font-size: 0.875rem;
+    }
+</style>
+
 <div class="row">
     <!-- Schedule Field -->
     <div class="form-group col-md-6 mb-3">

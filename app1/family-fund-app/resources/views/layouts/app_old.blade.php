@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{{config('app.name')}}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <meta content='width=device-width,
  initial-scale=1,
  maximum-scale=1,

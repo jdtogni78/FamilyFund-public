@@ -53,8 +53,8 @@ class ScheduledJobControllerExt extends ScheduledJobController
         $funds = FundExt::orderBy('name')->get()->mapWithKeys(function ($fund) {
             return [$fund->id => $fund->name];
         });
-        $portfolios = Portfolio::orderBy('name')->get()->mapWithKeys(function ($portfolio) {
-            return [$portfolio->id => $portfolio->name . ' (Fund: ' . ($portfolio->fund->name ?? 'N/A') . ')'];
+        $portfolios = Portfolio::with('fund')->orderBy('source')->get()->mapWithKeys(function ($portfolio) {
+            return [$portfolio->id => $portfolio->source . ' (Fund: ' . ($portfolio->fund->name ?? 'N/A') . ')'];
         });
 
         return [

@@ -582,37 +582,62 @@ html.dark nav [class*="border-gray-100"] {
     border-color: #374151 !important;
 }
 
-/* Dark mode table row colors */
-html.dark .table-success {
+/* Dark mode table row colors - high specificity */
+html.dark .table-success,
+html.dark .table-success > td,
+html.dark .table-success > th,
+html.dark tr.table-success,
+html.dark tr.table-success td {
     background-color: rgba(16, 185, 129, 0.15) !important;
-}
-
-html.dark .table-success td {
     color: #a7f3d0 !important;
 }
 
-html.dark .table-info {
+html.dark .table-info,
+html.dark .table-info > td,
+html.dark .table-info > th,
+html.dark tr.table-info,
+html.dark tr.table-info td {
     background-color: rgba(6, 182, 212, 0.15) !important;
-}
-
-html.dark .table-info td {
     color: #a5f3fc !important;
 }
 
-html.dark .table-warning {
+html.dark .table-warning,
+html.dark .table-warning > td,
+html.dark .table-warning > th,
+html.dark tr.table-warning,
+html.dark tr.table-warning td {
     background-color: rgba(245, 158, 11, 0.15) !important;
-}
-
-html.dark .table-warning td {
     color: #fde68a !important;
 }
 
-html.dark .table-danger {
+html.dark .table-danger,
+html.dark .table-danger > td,
+html.dark .table-danger > th,
+html.dark tr.table-danger,
+html.dark tr.table-danger td {
     background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #fecaca !important;
 }
 
-html.dark .table-danger td {
-    color: #fecaca !important;
+/* Dark mode table footer */
+html.dark .table tfoot tr,
+html.dark .table tfoot td {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+    border-color: #374151 !important;
+}
+
+html.dark .table-total-row,
+html.dark .table-total-row td {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+}
+
+/* Dark mode table borders */
+html.dark .table,
+html.dark .table td,
+html.dark .table th {
+    border-color: #374151 !important;
 }
 
 /* Dark mode goals progress section */

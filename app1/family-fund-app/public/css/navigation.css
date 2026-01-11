@@ -698,3 +698,13 @@ html.dark .goals-summary-row {
 html.dark .bg-secondary.bg-opacity-10 {
     background-color: rgba(107, 114, 128, 0.15) !important;
 }
+
+/* Dark mode page header */
+html.dark header .text-gray-800,
+html.dark .text-gray-800 {
+    color: #e5e7eb !important;
+}
+
+html.dark header h2 {
+    color: #e5e7eb !important;
+}

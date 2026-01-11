@@ -12,6 +12,17 @@
 - [x] Login screen title color
 - [x] Badge contrast (bg-primary instead of bg-secondary)
 - [x] Index page headers (26 pages) - standardized layout with icons, badges, buttons
+- [x] Form fields (30 fields.blade.php files) - standardized two-column layout with icons, helper text
+
+**Form Fields Standardized (30 forms):**
+All create/edit forms now follow consistent pattern:
+- Font size 0.875rem for form controls
+- Two-column responsive layout (col-md-6)
+- Icons in labels with FontAwesome
+- Helper text with text-body-secondary
+- Section dividers (hr.my-3)
+- Required field markers (*)
+- Styled submit/cancel buttons with icons
 
 **Index Pages Standardized:**
 | Entity | Icon | Variable |
@@ -357,3 +368,100 @@ When light mode styles need preserving but dark mode needs different colors:
 - Always include spacing: `me-1` or `me-2` after icon before text
 - Use `me-2` for header icons (before title)
 - Use `me-1` for button icons (before button text)
+
+---
+
+## Dropdown Fields Reference
+
+Fields with predefined values should use `<select>` dropdowns instead of free text inputs. Use the `*Ext` model's static map methods to get labels.
+
+### Transaction
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | PUR, INI, SAL, MAT, BOR, REP | `TransactionExt::$typeMap` |
+| `status` | P, C, S | `TransactionExt::$statusMap` |
+| `flags` | A, C, U, null | `TransactionExt::$flagsMap` |
+
+### Cash Deposit
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `status` | PEN, DEP, ALL, COM, CAN | `CashDepositExt::statusMap()` |
+
+### Deposit Request
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `status` | PEN, APP, REJ, COM | `DepositRequestExt::statusMap()` |
+
+### Fund Report
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | ALL, ADM, TRADING_BANDS | `FundReportExt::$typeMap` |
+
+### Account Report
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | ALL | `AccountReportExt::$typeMap` |
+
+### Schedule
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | DOM, DOW, DOQ, DOY | `ScheduleExt::$typeMap` |
+
+### Scheduled Job
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `entity_descr` | fund_report, trade_band_report, transaction | `ScheduledJobExt::$entityMap` |
+
+### Trade Portfolio
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `mode` | STD, MAX | (inline: Standard, Maximum) |
+
+### Trade Portfolio Item
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | STK, FUND, CRYPTO, OTHER | `TradePortfolioItemExt::typeMap()` |
+
+### Goal
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `target_type` | TOTAL, 4PCT | `GoalExt::targetTypeMap()` |
+
+### ID Document
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | CPF, RG, CNH, Passport, SSN, other | (inline labels) |
+
+### Address
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | home, work, other | (inline: Home, Work, Other) |
+
+### Phone
+| Field | Values | Label Source |
+|-------|--------|--------------|
+| `type` | mobile, home, work, other | (inline: Mobile, Home, Work, Other) |
+
+### Example Implementation
+```php
+// In controller - pass map to view
+public function create()
+{
+    return view('transactions.create', [
+        'typeMap' => TransactionExt::$typeMap,
+        'statusMap' => TransactionExt::$statusMap,
+    ]);
+}
+```
+
+```html
+<!-- In blade template -->
+<select name="type" class="form-control form-select" required>
+    <option value="">-- Select Type --</option>
+    @foreach($typeMap as $value => $label)
+        <option value="{{ $value }}" {{ old('type') == $value ? 'selected' : '' }}>
+            {{ $label }}
+        </option>
+    @endforeach
+</select>
+```

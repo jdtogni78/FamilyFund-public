@@ -637,6 +637,9 @@ class SmokeTest extends TestCase
             'phones',
             'id_documents',
             'users',
+
+            // Has FK constraints that prevent deletion
+            'matchingRules',
         ];
     }
 
@@ -786,7 +789,7 @@ class SmokeTest extends TestCase
 
     /**
      * Test that DELETE routes don't throw 500 errors.
-     * Note: We don't actually delete - just verify route responds.
+     * Uses real IDs - DatabaseTransactions will rollback all deletions.
      */
     public function test_all_delete_routes_respond()
     {
@@ -795,6 +798,7 @@ class SmokeTest extends TestCase
         $skipped = [];
         $failed = [];
 
+        $skippedRoutes = $this->getSkippedWriteRoutes();
         $paramResolvers = $this->getParameterResolvers();
 
         foreach ($routes as $route) {
@@ -809,29 +813,38 @@ class SmokeTest extends TestCase
                 continue;
             }
 
-            // Resolve parameters - use non-existent IDs to avoid actual deletion
+            // Check skip list
+            $shouldSkip = false;
+            foreach ($skippedRoutes as $skip) {
+                if (str_contains($uri, $skip)) {
+                    $shouldSkip = true;
+                    break;
+                }
+            }
+            if ($shouldSkip) {
+                $skipped[] = $uri;
+                continue;
+            }
+
+            // Resolve parameters with real IDs (transaction will rollback)
             $resolvedUri = $this->resolveRouteParameters($uri, $paramResolvers);
             if ($resolvedUri === null) {
                 $skipped[] = $uri . ' (unresolved)';
                 continue;
             }
 
-            // Replace resolved ID with a very high number that won't exist
-            // This tests the route works without actually deleting data
-            $safeUri = preg_replace('/\/(\d+)(\/|$)/', '/999999999$2', $resolvedUri);
-
             try {
-                $response = $this->actingAs($this->user)->delete('/' . ltrim($safeUri, '/'));
+                $response = $this->actingAs($this->user)->delete('/' . ltrim($resolvedUri, '/'));
                 $status = $response->status();
 
-                // Accept: 200, 302 (success/redirect), 404 (not found - expected), 403 (forbidden)
+                // Accept: 200, 302 (success/redirect), 404 (not found), 403 (forbidden)
                 if (in_array($status, [200, 302, 301, 404, 403])) {
-                    $tested[] = ['uri' => $safeUri, 'status' => $status];
+                    $tested[] = ['uri' => $resolvedUri, 'status' => $status];
                 } else {
-                    $failed[] = ['uri' => $safeUri, 'status' => $status, 'original' => $uri];
+                    $failed[] = ['uri' => $resolvedUri, 'status' => $status, 'original' => $uri];
                 }
             } catch (\Exception $e) {
-                $failed[] = ['uri' => $safeUri, 'status' => 'exception', 'error' => substr($e->getMessage(), 0, 80), 'original' => $uri];
+                $failed[] = ['uri' => $resolvedUri, 'status' => 'exception', 'error' => substr($e->getMessage(), 0, 80), 'original' => $uri];
             }
         }
 

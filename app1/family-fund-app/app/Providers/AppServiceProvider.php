@@ -6,6 +6,8 @@ use App\Listeners\LogQueueJobCompletion;
 use App\Listeners\LogSentEmail;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Knp\Snappy\Pdf;
@@ -47,5 +49,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Log all sent emails to filesystem
         Event::listen(MessageSent::class, LogSentEmail::class);
+
+        // Decrypt mail password if encrypted version is set
+        if ($encrypted = env('MAIL_PASSWORD_ENCRYPTED')) {
+            try {
+                Config::set('mail.mailers.smtp.password', Crypt::decryptString($encrypted));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to decrypt MAIL_PASSWORD_ENCRYPTED - using MAIL_PASSWORD instead: ' . $e->getMessage());
+            }
+        }
     }
 }

@@ -464,11 +464,17 @@ Trait FundTrait
         return $fundReport;
     }
 
-    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?FundReportExt
+    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf, bool $skipDataCheck = false): ?FundReportExt
     {
         $shouldRunByDate = Carbon::parse($shouldRunBy);
+
+        if ($skipDataCheck) {
+            Log::info('Skipping data check for fund report schedule: ' . $job->id);
+            return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
+        }
+
         $dayOfWeek = $shouldRunByDate->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
-        
+
         // Calculate lookback days based on day of week
         $lookbackDays = 2; // Base lookback for holidays
         // if today, or yesterday or 2 days ago falls on a weekend, add days
@@ -477,9 +483,9 @@ Trait FundTrait
         } elseif ($dayOfWeek == 6) {
             $lookbackDays += 1;
         }
-        
+
         $lookbackDate = $shouldRunByDate->copy()->subDays($lookbackDays);
-        $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l') 
+        $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l')
             . ') to ' . $shouldRunByDate->format('Y-m-d') . ' (' . $shouldRunByDate->format('l') . ')';
         Log::info('Checking if got assets between '.$period.' (lookback: '.$lookbackDays.' days)');
         $hasNewAssets = AssetPrice::query()

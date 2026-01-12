@@ -115,4 +115,24 @@ class FundReportControllerExt extends FundReportController
         return redirect(route('fundReports.index'));
     }
 
+    public function resend($id)
+    {
+        $fundReport = FundReportExt::find($id);
+
+        if (empty($fundReport)) {
+            Flash::error('Fund Report not found');
+            return redirect(route('fundReports.index'));
+        }
+
+        if ($fundReport->as_of->format('Y-m-d') === '9999-12-31') {
+            Flash::error('Cannot resend a template');
+            return redirect(route('fundReports.index'));
+        }
+
+        SendFundReport::dispatch($fundReport);
+        Flash::success('Report #' . $id . ' queued for resending.');
+
+        return redirect(route('fundReports.index'));
+    }
+
 }

@@ -50,7 +50,7 @@ trait TransactionTrait
         return $api;
     }
 
-    protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): TransactionExt {
+    protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf, bool $skipDataCheck = false): TransactionExt {
         // get transaction from repo
         $tran = TransactionExt::find($schedule->entity_id);
         /** @var TransactionExt $newTran */

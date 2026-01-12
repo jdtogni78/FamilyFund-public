@@ -9,7 +9,7 @@
             <th>End Date</th>
             <th>Scheduled Job Id</th>
             <th>Created At</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>

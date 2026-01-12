@@ -96,7 +96,7 @@ trait TradeBandReportTrait
         return $tradeBandReport;
     }
 
-    protected function tradeBandReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?TradeBandReport
+    protected function tradeBandReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf, bool $skipDataCheck = false): ?TradeBandReport
     {
         // entity_id is the TradeBandReport template ID
         $templateReport = TradeBandReport::find($job->entity_id);

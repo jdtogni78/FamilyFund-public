@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTradeBandReportRequest;
 use App\Http\Requests\UpdateTradeBandReportRequest;
+use App\Jobs\SendTradeBandReport;
+use App\Models\TradeBandReport;
 use App\Repositories\TradeBandReportRepository;
 use App\Models\FundExt;
 use Illuminate\Http\Request;
@@ -146,5 +148,28 @@ class TradeBandReportController extends AppBaseController
             'id' => $tradeBandReport->fund_id,
             'as_of' => $tradeBandReport->as_of->format('Y-m-d')
         ]));
+    }
+
+    /**
+     * Resend the specified TradeBandReport via email.
+     */
+    public function resend($id)
+    {
+        $tradeBandReport = TradeBandReport::find($id);
+
+        if (empty($tradeBandReport)) {
+            Flash::error('Trade Band Report not found');
+            return redirect(route('tradeBandReports.index'));
+        }
+
+        if ($tradeBandReport->as_of->format('Y') === '9999') {
+            Flash::error('Cannot resend a template');
+            return redirect(route('tradeBandReports.index'));
+        }
+
+        SendTradeBandReport::dispatch($tradeBandReport);
+        Flash::success('Trade Band Report #' . $id . ' queued for resending.');
+
+        return redirect(route('tradeBandReports.index'));
     }
 }

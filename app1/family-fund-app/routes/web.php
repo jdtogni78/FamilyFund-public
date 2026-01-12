@@ -133,6 +133,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
+    Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
+        ->name('fundReports.resend');
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
@@ -153,6 +155,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
     Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');
+    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\TradeBandReportController@resend')
+        ->name('tradeBandReports.resend');
     Route::resource('tradeBandReports', App\Http\Controllers\TradeBandReportController::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);

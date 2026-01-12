@@ -7,7 +7,7 @@
             <th>As Of</th>
             <th>Scheduled Job Id</th>
             <th>Created At</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
@@ -29,6 +29,10 @@
                         <a href="{{ route('tradeBandReports.show', [$tradeBandReport->id]) }}" class='btn btn-ghost-success' title="View Details"><i class="fa fa-eye"></i></a>
                         @if($tradeBandReport->as_of && $tradeBandReport->as_of->format('Y') !== '9999')
                             <a href="{{ route('tradeBandReports.viewPdf', [$tradeBandReport->id]) }}" class='btn btn-ghost-primary' title="View PDF"><i class="fa fa-file-pdf"></i></a>
+                            <form action="{{ route('tradeBandReports.resend', $tradeBandReport->id) }}" method="POST" style="display:inline">
+                                @csrf
+                                <button type="submit" class="btn btn-ghost-warning" title="Resend email" onclick="return confirm('Resend this report via email?')"><i class="fa fa-paper-plane"></i></button>
+                            </form>
                         @else
                             <button class='btn btn-ghost-secondary' disabled title="No valid date for PDF"><i class="fa fa-file-pdf"></i></button>
                         @endif

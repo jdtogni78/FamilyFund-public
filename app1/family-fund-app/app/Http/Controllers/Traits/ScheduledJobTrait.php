@@ -66,22 +66,22 @@ Trait ScheduledJobTrait
         return [null, null, $shouldRunBy];
     }
 
-    private function scheduleDue($shouldRunByDate, ScheduledJob $schedule, Carbon $asOf): ?Model
+    private function scheduleDue($shouldRunByDate, ScheduledJob $schedule, Carbon $asOf, bool $skipDataCheck = false): ?Model
     {
         $this->setupHandlers();
         $func = $this->handlers[$schedule->entity_descr];
-        return $this->$func($shouldRunByDate, $schedule, $asOf);
+        return $this->$func($shouldRunByDate, $schedule, $asOf, $skipDataCheck);
     }
 
     /**
-     * Force run a scheduled job, bypassing the schedule check
+     * Force run a scheduled job, bypassing the schedule check and optionally the data check
      */
-    public function forceRunJob(Carbon $asOf, ScheduledJob $schedule): array
+    public function forceRunJob(Carbon $asOf, ScheduledJob $schedule, bool $skipDataCheck = false): array
     {
-        Log::info('Force running scheduled job: ' . $schedule->id);
+        Log::info('Force running scheduled job: ' . $schedule->id . ($skipDataCheck ? ' (skipping data check)' : ''));
 
         try {
-            $model = $this->scheduleDue($asOf, $schedule, $asOf);
+            $model = $this->scheduleDue($asOf, $schedule, $asOf, $skipDataCheck);
             if ($model !== null) {
                 Log::info('Force run scheduled job ' . $schedule->id . ' succeeded');
                 return [$model, null];

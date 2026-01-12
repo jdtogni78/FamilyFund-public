@@ -41,6 +41,13 @@
                                         <i class="fa fa-forward me-1"></i> Force Run
                                     </button>
                                 </form>
+                                <form action="{{ route('scheduledJobs.force-run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <input type="hidden" name="skip_data_check" value="1">
+                                    <button type="submit" class="btn btn-warning" onclick="return confirm('This will create a report even without new data. Are you sure?')">
+                                        <i class="fa fa-bolt me-1"></i> Force (No Data Check)
+                                    </button>
+                                </form>
                                 <a href="{{ route('scheduledJobs.index') }}" class="btn btn-light">Back</a>
                             </div>
                         </div>

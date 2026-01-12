@@ -9,7 +9,7 @@
                 <th>Type</th>
                 <th>As Of</th>
                 <th>Created</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>

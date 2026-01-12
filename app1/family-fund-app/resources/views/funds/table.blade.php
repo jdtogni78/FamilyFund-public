@@ -20,3 +20,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#funds-table').DataTable();
+    });
+</script>

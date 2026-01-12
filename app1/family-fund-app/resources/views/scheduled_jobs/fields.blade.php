@@ -111,8 +111,13 @@
         <label for="end_dt" class="form-label">
             <i class="fa fa-stop me-1"></i> End Date <span class="text-danger">*</span>
         </label>
-        <input type="date" name="end_dt" id="end_dt" class="form-control"
-               value="{{ isset($scheduledJob) ? $scheduledJob->end_dt->format('Y-m-d') : now()->addYears(10)->format('Y-m-d') }}" required>
+        <div class="input-group">
+            <input type="date" name="end_dt" id="end_dt" class="form-control"
+                   value="{{ isset($scheduledJob) ? $scheduledJob->end_dt->format('Y-m-d') : now()->addYears(10)->format('Y-m-d') }}" required>
+            <button type="button" class="btn btn-outline-secondary" id="set_never_end" title="Set to never expire">
+                <i class="fa fa-infinity"></i> Never
+            </button>
+        </div>
         <small class="text-body-secondary">When should this scheduled job expire</small>
     </div>
 </div>
@@ -171,6 +176,11 @@ $(document).ready(function() {
 
     // Initialize on page load
     updateEntityFields();
+
+    // Set end date to "never" (9999-12-31)
+    $('#set_never_end').on('click', function() {
+        $('#end_dt').val('9999-12-31');
+    });
 });
 </script>
 @endpush

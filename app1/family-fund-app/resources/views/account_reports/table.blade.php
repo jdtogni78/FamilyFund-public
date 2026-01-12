@@ -66,3 +66,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#accountReports-table').DataTable();
+    });
+</script>

@@ -64,3 +64,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#tradePortfolios-table').DataTable();
+    });
+</script>

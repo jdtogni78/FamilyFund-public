@@ -45,3 +45,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#tradeBandReports-table').DataTable();
+    });
+</script>

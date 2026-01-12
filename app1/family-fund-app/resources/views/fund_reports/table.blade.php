@@ -41,3 +41,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#fundReports-table').DataTable();
+    });
+</script>

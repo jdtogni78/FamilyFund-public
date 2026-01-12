@@ -44,3 +44,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#addresses-table').DataTable();
+    });
+</script>

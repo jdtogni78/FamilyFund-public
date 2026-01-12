@@ -22,3 +22,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#portfolios-table').DataTable();
+    });
+</script>

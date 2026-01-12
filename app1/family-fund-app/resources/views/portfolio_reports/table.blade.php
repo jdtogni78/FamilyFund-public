@@ -47,3 +47,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#portfolioReports-table').DataTable();
+    });
+</script>

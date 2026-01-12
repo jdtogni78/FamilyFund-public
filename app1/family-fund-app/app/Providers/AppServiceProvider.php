@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Listeners\LogQueueJobCompletion;
+use App\Listeners\LogSentEmail;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -42,5 +44,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Register queue job event subscriber
         Event::subscribe(LogQueueJobCompletion::class);
+
+        // Log all sent emails to filesystem
+        Event::listen(MessageSent::class, LogSentEmail::class);
     }
 }

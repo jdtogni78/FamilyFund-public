@@ -441,7 +441,10 @@ Trait FundTrait
         $fundReport = FundReportExt::create($input);
         $this->validateReportEmails($fundReport);
         $fundReport->save();
-        SendFundReport::dispatch($fundReport);
+        // Only dispatch if not a template (9999-12-31)
+        if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendFundReport::dispatch($fundReport);
+        }
         return $fundReport;
     }
 

@@ -79,9 +79,8 @@ class FundReportControllerExt extends FundReportController
     {
         try {
             $fundReport = $this->createFundReport($request->all());
-            // Only send if not a template (9999-12-31)
+            // createFundReport handles dispatch for non-templates
             if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
-                SendFundReport::dispatch($fundReport);
                 Flash::success('Report created and queued for sending.');
             } else {
                 Flash::success('Template saved successfully.');
@@ -105,7 +104,13 @@ class FundReportControllerExt extends FundReportController
         }
 
         $fundReport = $this->fundReportRepository->update($request->all(), $id);
-        SendFundReport::dispatch($fundReport);
+        // Only dispatch if not a template (9999-12-31)
+        if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendFundReport::dispatch($fundReport);
+            Flash::success('Report updated and queued for sending.');
+        } else {
+            Flash::success('Template updated successfully.');
+        }
 
         return redirect(route('fundReports.index'));
     }

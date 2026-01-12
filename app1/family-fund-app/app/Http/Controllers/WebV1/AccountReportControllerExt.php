@@ -66,7 +66,13 @@ class AccountReportControllerExt extends AccountReportController
         }
 
         $accountReport = $this->accountReportRepository->update($request->all(), $id);
-        SendAccountReport::dispatch($accountReport);
+        // Only dispatch if not a template (9999-12-31)
+        if ($accountReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendAccountReport::dispatch($accountReport);
+            Flash::success('Report updated and queued for sending.');
+        } else {
+            Flash::success('Template updated successfully.');
+        }
 
         return redirect(route('accountReports.index'));
     }

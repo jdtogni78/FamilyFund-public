@@ -89,7 +89,10 @@ trait TradeBandReportTrait
     {
         $tradeBandReportRepo = App::make(TradeBandReportRepository::class);
         $tradeBandReport = $tradeBandReportRepo->create($input);
-        SendTradeBandReport::dispatch($tradeBandReport);
+        // Only dispatch if not a template (as_of is null for templates)
+        if ($tradeBandReport->as_of !== null) {
+            SendTradeBandReport::dispatch($tradeBandReport);
+        }
         return $tradeBandReport;
     }
 

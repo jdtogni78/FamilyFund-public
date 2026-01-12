@@ -65,7 +65,15 @@
                     </small>
                 </td>
                 <td>
-                    <span class="badge bg-primary">{{ ScheduledJobExt::$entityMap[$scheduledJob->entity_descr] ?? $scheduledJob->entity_descr }}</span>
+                    @php
+                        $entityColors = [
+                            'fund_report' => 'bg-primary',
+                            'trade_band_report' => 'bg-success',
+                            'transaction' => 'bg-warning text-dark',
+                        ];
+                        $entityColor = $entityColors[$scheduledJob->entity_descr] ?? 'bg-secondary';
+                    @endphp
+                    <span class="badge {{ $entityColor }}">{{ ScheduledJobExt::$entityMap[$scheduledJob->entity_descr] ?? $scheduledJob->entity_descr }}</span>
                     <br>
                     <small>{{ $entityName }}</small>
                 </td>

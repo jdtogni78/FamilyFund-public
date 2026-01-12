@@ -146,6 +146,55 @@
                 </div>
             </div>
 
+            {{-- Email Logs --}}
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fa fa-envelope-open me-2"></i>
+                            <strong>Recent Email Logs</strong>
+                            <span class="badge bg-secondary ms-2">{{ count($emailLogs) }}</span>
+                        </div>
+                        <div class="card-body">
+                            @if(empty($emailLogs))
+                                <p class="text-muted text-center mb-0">No email logs found</p>
+                            @else
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Subject</th>
+                                            <th>To</th>
+                                            <th>From</th>
+                                            <th>Attachments</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($emailLogs as $log)
+                                        <tr>
+                                            <td><small>{{ $log['timestamp'] ? \Carbon\Carbon::parse($log['timestamp'])->format('Y-m-d H:i:s') : '-' }}</small></td>
+                                            <td>{{ \Str::limit($log['subject'], 50) }}</td>
+                                            <td><small>{{ $log['to'] }}</small></td>
+                                            <td><small>{{ $log['from'] }}</small></td>
+                                            <td>
+                                                @if($log['attachments'] > 0)
+                                                    <span class="badge bg-info">{{ $log['attachments'] }}</span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Scheduled Jobs Status --}}
             <div class="row mb-4">
                 <div class="col-lg-12">

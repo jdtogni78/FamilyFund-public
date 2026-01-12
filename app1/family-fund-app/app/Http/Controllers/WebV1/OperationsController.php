@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Laracasts\Flash\Flash;
 
 class OperationsController extends AppBaseController
@@ -100,6 +101,9 @@ class OperationsController extends AppBaseController
         // Email configuration
         $emailConfig = $this->getEmailConfig();
 
+        // Email logs
+        $emailLogs = $this->getRecentEmailLogs(25);
+
         return view('operations.index', compact(
             'scheduledJobs',
             'pendingTransactions',
@@ -112,7 +116,8 @@ class OperationsController extends AppBaseController
             'failedJobsCount',
             'queueRunning',
             'operationLogs',
-            'emailConfig'
+            'emailConfig',
+            'emailLogs'
         ));
     }
 
@@ -535,6 +540,64 @@ class OperationsController extends AppBaseController
             'from_name' => config('mail.from.name'),
             'admin_address' => env('MAIL_ADMIN_ADDRESS', '(not set)'),
         ];
+    }
+
+    /**
+     * Get recent email logs from storage
+     */
+    private function getRecentEmailLogs(int $limit = 25): array
+    {
+        $logs = [];
+        $basePath = 'emails';
+
+        try {
+            // Get all year directories
+            $years = Storage::disk('local')->directories($basePath);
+            rsort($years); // Most recent first
+
+            foreach ($years as $yearDir) {
+                $months = Storage::disk('local')->directories($yearDir);
+                rsort($months);
+
+                foreach ($months as $monthDir) {
+                    $files = Storage::disk('local')->files($monthDir);
+                    rsort($files); // Most recent files first
+
+                    foreach ($files as $file) {
+                        if (count($logs) >= $limit) break 3;
+
+                        $content = Storage::disk('local')->get($file);
+                        $data = json_decode($content, true);
+
+                        if ($data) {
+                            $logs[] = [
+                                'file' => basename($file),
+                                'timestamp' => $data['timestamp'] ?? null,
+                                'subject' => $data['subject'] ?? '(no subject)',
+                                'to' => $this->formatEmailAddresses($data['to'] ?? []),
+                                'from' => $this->formatEmailAddresses($data['from'] ?? []),
+                                'attachments' => count($data['attachments'] ?? []),
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to read email logs: ' . $e->getMessage());
+        }
+
+        return $logs;
+    }
+
+    /**
+     * Format email addresses for display
+     */
+    private function formatEmailAddresses(array $addresses): string
+    {
+        return collect($addresses)
+            ->map(fn($a) => $a['email'] ?? '')
+            ->filter()
+            ->implode(', ');
     }
 
     /**

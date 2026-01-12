@@ -31,7 +31,7 @@
                 <i class="fa fa-calendar-alt me-1"></i> Template
             </button>
         </div>
-        <small class="text-body-secondary">Leave empty or click "Template" to create a scheduling template</small>
+        <small class="text-body-secondary">Click "Template" to set date to 9999-12-31 for scheduling templates</small>
     </div>
 </div>
 
@@ -49,7 +49,7 @@
 
     // Template button functionality
     function updateTemplateState() {
-        const isTemplate = $('#as_of').val() === '';
+        const isTemplate = $('#as_of').val() === '9999-12-31';
         const $btn = $('button[type="submit"]');
         if (isTemplate) {
             $btn.html('<i class="fa fa-save me-1"></i> Save Template');
@@ -60,7 +60,7 @@
         }
     }
     $('#makeTemplate').click(function() {
-        $('#as_of').val('');
+        $('#as_of').val('9999-12-31');
         updateTemplateState();
     });
     $('#as_of').on('change dp.change', updateTemplateState);

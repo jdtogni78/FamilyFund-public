@@ -81,16 +81,16 @@ class TradeBandReport extends Model
      */
     public function isTemplate(): bool
     {
-        return $this->as_of === null;
+        return $this->as_of && $this->as_of->format('Y-m-d') === '9999-12-31';
     }
 
     /**
-     * Get all trade band report templates (as_of is null)
+     * Get all trade band report templates (as_of = 9999-12-31)
      */
     public static function templates()
     {
         return static::with('fund')
-            ->whereNull('as_of')
+            ->where('as_of', '9999-12-31')
             ->orderBy('fund_id')
             ->get();
     }

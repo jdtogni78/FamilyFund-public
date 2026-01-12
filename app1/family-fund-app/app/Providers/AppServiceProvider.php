@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         // Decrypt mail password if encrypted version is set
         if ($encrypted = env('MAIL_PASSWORD_ENCRYPTED')) {
             try {
-                Config::set('mail.mailers.smtp.password', Crypt::decryptString($encrypted));
+                Config::set('mail.mailers.smtp.password', Crypt::decrypt($encrypted));
             } catch (\Exception $e) {
                 \Log::warning('Failed to decrypt MAIL_PASSWORD_ENCRYPTED - using MAIL_PASSWORD instead: ' . $e->getMessage());
             }

@@ -4,7 +4,13 @@
 
 <style>
     .form-select, .form-control {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+    }
+    .form-label {
+        font-size: 0.85rem;
+    }
+    .text-body-secondary {
+        font-size: 0.75rem;
     }
 </style>
 

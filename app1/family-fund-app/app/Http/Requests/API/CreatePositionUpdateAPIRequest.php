@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\API;
 
-use App\Models\PositionUpdateExt;
-
 class CreatePositionUpdateAPIRequest extends BaseAPIRequest
 {
     /**
@@ -23,6 +21,14 @@ class CreatePositionUpdateAPIRequest extends BaseAPIRequest
      */
     public function rules()
     {
-        return PositionUpdateExt::$rules;
+        return [
+            'source' => 'required|string|max:30|exists:portfolios,source',
+            'timestamp' => 'required',
+            'symbols' => 'required|array|min:1',
+            'symbols.*.name' => 'required|string',
+            'symbols.*.type' => 'required|string',
+            'symbols.*.position' => 'required|numeric|gt:0|lt:9999999999999.9991',
+            'symbols.*.price' => 'prohibited',
+        ];
     }
 }

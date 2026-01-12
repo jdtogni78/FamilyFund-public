@@ -24,6 +24,12 @@
                                 @endif
                             </div>
                             <div>
+                                <form action="{{ route('fundReports.resend', $fundReport->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Resend this report email?')">
+                                        <i class="fa fa-paper-plane me-1"></i> Resend
+                                    </button>
+                                </form>
                                 <a href="{{ route('fundReports.edit', $fundReport->id) }}" class="btn btn-sm btn-primary">
                                     <i class="fa fa-edit me-1"></i> Edit
                                 </a>

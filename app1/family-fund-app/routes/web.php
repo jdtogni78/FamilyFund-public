@@ -118,6 +118,8 @@ Route::middleware('auth')->group(function () {
         ->name('operations.queue_retry_all');
     Route::post('operations/queue/flush', 'App\Http\Controllers\WebV1\OperationsController@flushFailedJobs')
         ->name('operations.queue_flush');
+    Route::post('operations/send-test-email', 'App\Http\Controllers\WebV1\OperationsController@sendTestEmail')
+        ->name('operations.send_test_email');
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);

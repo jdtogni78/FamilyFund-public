@@ -32,6 +32,7 @@ class OperationLog extends Model
     const OP_QUEUE_FLUSH = 'queue_flush';
     const OP_QUEUE_JOB_COMPLETED = 'queue_job_completed';
     const OP_QUEUE_JOB_FAILED = 'queue_job_failed';
+    const OP_SEND_TEST_EMAIL = 'send_test_email';
 
     public static array $operationMap = [
         self::OP_RUN_DUE_JOBS => 'Run Due Scheduled Jobs',
@@ -43,6 +44,7 @@ class OperationLog extends Model
         self::OP_QUEUE_FLUSH => 'Flush Failed Jobs',
         self::OP_QUEUE_JOB_COMPLETED => 'Queue Job Completed',
         self::OP_QUEUE_JOB_FAILED => 'Queue Job Failed',
+        self::OP_SEND_TEST_EMAIL => 'Send Test Email',
     ];
 
     public function user(): BelongsTo

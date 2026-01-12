@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Laracasts\Flash\Flash;
 
 class OperationsController extends AppBaseController
@@ -96,6 +97,9 @@ class OperationsController extends AppBaseController
             ->limit(50)
             ->get();
 
+        // Email configuration
+        $emailConfig = $this->getEmailConfig();
+
         return view('operations.index', compact(
             'scheduledJobs',
             'pendingTransactions',
@@ -107,7 +111,8 @@ class OperationsController extends AppBaseController
             'pendingJobsCount',
             'failedJobsCount',
             'queueRunning',
-            'operationLogs'
+            'operationLogs',
+            'emailConfig'
         ));
     }
 
@@ -513,5 +518,68 @@ class OperationsController extends AppBaseController
 
         $pid = (int) file_get_contents($this->queuePidFile);
         return $pid > 0 ? $pid : null;
+    }
+
+    /**
+     * Get email configuration for display
+     */
+    private function getEmailConfig(): array
+    {
+        return [
+            'mailer' => config('mail.default'),
+            'host' => config('mail.mailers.smtp.host'),
+            'port' => config('mail.mailers.smtp.port'),
+            'encryption' => config('mail.mailers.smtp.encryption') ?: 'none',
+            'username' => config('mail.mailers.smtp.username') ?: '(not set)',
+            'from_address' => config('mail.from.address'),
+            'from_name' => config('mail.from.name'),
+            'admin_address' => env('MAIL_ADMIN_ADDRESS', '(not set)'),
+        ];
+    }
+
+    /**
+     * Send a test email
+     */
+    public function sendTestEmail(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $to = $request->input('email');
+
+        try {
+            Mail::raw(
+                "This is a test email from Family Fund.\n\n" .
+                "Environment: " . config('app.env') . "\n" .
+                "Sent at: " . now()->format('Y-m-d H:i:s') . "\n" .
+                "Mailer: " . config('mail.default') . "\n" .
+                "Host: " . config('mail.mailers.smtp.host') . ":" . config('mail.mailers.smtp.port'),
+                function ($message) use ($to) {
+                    $message->to($to)
+                        ->subject('Family Fund - Test Email');
+                }
+            );
+
+            OperationLog::log(
+                OperationLog::OP_SEND_TEST_EMAIL,
+                OperationLog::RESULT_SUCCESS,
+                "Test email sent to $to"
+            );
+            Flash::success("Test email sent to $to");
+        } catch (\Exception $e) {
+            OperationLog::log(
+                OperationLog::OP_SEND_TEST_EMAIL,
+                OperationLog::RESULT_ERROR,
+                "Failed to send test email to $to: " . $e->getMessage()
+            );
+            Flash::error("Failed to send test email: " . $e->getMessage());
+        }
+
+        return redirect(route('operations.index'));
     }
 }

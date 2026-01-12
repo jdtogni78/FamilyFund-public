@@ -81,6 +81,71 @@
                 </div>
             </div>
 
+            {{-- Email Configuration --}}
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fa fa-envelope me-2"></i>
+                            <strong>Email Configuration</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" style="width: 140px;">Mailer:</td>
+                                            <td><code>{{ $emailConfig['mailer'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">SMTP Host:</td>
+                                            <td><code>{{ $emailConfig['host'] }}:{{ $emailConfig['port'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Encryption:</td>
+                                            <td><code>{{ $emailConfig['encryption'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Username:</td>
+                                            <td><code>{{ $emailConfig['username'] }}</code></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" style="width: 140px;">From Address:</td>
+                                            <td><code>{{ $emailConfig['from_address'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">From Name:</td>
+                                            <td><code>{{ $emailConfig['from_name'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Admin Email:</td>
+                                            <td><code>{{ $emailConfig['admin_address'] }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Send Test:</td>
+                                            <td>
+                                                <form action="{{ route('operations.send_test_email') }}" method="POST" class="d-flex gap-2">
+                                                    @csrf
+                                                    <input type="email" name="email" class="form-control form-control-sm" style="width: 200px;"
+                                                           placeholder="recipient@example.com" value="{{ auth()->user()->email }}" required>
+                                                    <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Send test email?')">
+                                                        <i class="fa fa-paper-plane me-1"></i> Send
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Scheduled Jobs Status --}}
             <div class="row mb-4">
                 <div class="col-lg-12">

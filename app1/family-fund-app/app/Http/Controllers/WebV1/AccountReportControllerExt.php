@@ -9,7 +9,9 @@ use App\Jobs\SendAccountReport;
 use App\Models\Account;
 use App\Models\AccountReport;
 use App\Models\AccountReportExt;
+use App\Models\Fund;
 use App\Repositories\AccountReportRepository;
+use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Response;
 
@@ -18,6 +20,54 @@ class AccountReportControllerExt extends AccountReportController
     public function __construct(AccountReportRepository $accountReportRepository)
     {
         parent::__construct($accountReportRepository);
+    }
+
+    public function index(Request $request)
+    {
+        // Get filter values
+        $fundId = $request->get('fund_id');
+        $accountId = $request->get('account_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        // Get filter options first (fresh queries)
+        $funds = Fund::query()->orderBy('name')->pluck('name', 'id');
+        $accounts = Account::query()
+            ->with('fund')
+            ->orderBy('nickname')
+            ->get()
+            ->mapWithKeys(fn($a) => [$a->id => $a->nickname . ' (' . ($a->fund->name ?? 'No Fund') . ')']);
+
+        // Build account reports query with filters
+        $query = AccountReportExt::query()->with(['account.fund', 'account.user']);
+
+        if ($fundId) {
+            $query->whereHas('account', fn($q) => $q->where('fund_id', $fundId));
+        }
+
+        if ($accountId) {
+            $query->where('account_id', $accountId);
+        }
+
+        if ($dateFrom) {
+            $query->where('as_of', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->where('as_of', '<=', $dateTo);
+        }
+
+        $accountReports = $query->orderBy('as_of', 'desc')->get();
+
+        return view('account_reports.index', compact(
+            'accountReports',
+            'funds',
+            'accounts',
+            'fundId',
+            'accountId',
+            'dateFrom',
+            'dateTo'
+        ));
     }
 
     public function create()

@@ -10,7 +10,7 @@
 
             {{-- Quick Actions --}}
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-primary">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-calendar-check me-2"></i>Scheduled Jobs</h5>
@@ -24,7 +24,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-warning">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-clock me-2"></i>Pending Transactions</h5>
@@ -50,7 +50,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-{{ $queueRunning ? 'success' : 'secondary' }}">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-cogs me-2"></i>Queue Worker</h5>
@@ -79,117 +79,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {{-- Email Configuration --}}
-            <div class="row mb-4">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fa fa-envelope me-2"></i>
-                            <strong>Email Configuration</strong>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <table class="table table-sm table-borderless mb-0">
-                                        <tr>
-                                            <td class="text-muted" style="width: 140px;">Mailer:</td>
-                                            <td><code>{{ $emailConfig['mailer'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">SMTP Host:</td>
-                                            <td><code>{{ $emailConfig['host'] }}:{{ $emailConfig['port'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Encryption:</td>
-                                            <td><code>{{ $emailConfig['encryption'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Username:</td>
-                                            <td><code>{{ $emailConfig['username'] }}</code></td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-6">
-                                    <table class="table table-sm table-borderless mb-0">
-                                        <tr>
-                                            <td class="text-muted" style="width: 140px;">From Address:</td>
-                                            <td><code>{{ $emailConfig['from_address'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">From Name:</td>
-                                            <td><code>{{ $emailConfig['from_name'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Admin Email:</td>
-                                            <td><code>{{ $emailConfig['admin_address'] }}</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Send Test:</td>
-                                            <td>
-                                                <form action="{{ route('operations.send_test_email') }}" method="POST" class="d-flex gap-2">
-                                                    @csrf
-                                                    <input type="email" name="email" class="form-control form-control-sm" style="width: 200px;"
-                                                           placeholder="recipient@example.com" value="{{ auth()->user()->email }}" required>
-                                                    <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Send test email?')">
-                                                        <i class="fa fa-paper-plane me-1"></i> Send
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Email Logs --}}
-            <div class="row mb-4">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fa fa-envelope-open me-2"></i>
-                            <strong>Recent Email Logs</strong>
-                            <span class="badge bg-secondary ms-2">{{ count($emailLogs) }}</span>
-                        </div>
-                        <div class="card-body">
-                            @if(empty($emailLogs))
-                                <p class="text-muted text-center mb-0">No email logs found</p>
-                            @else
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Timestamp</th>
-                                            <th>Subject</th>
-                                            <th>To</th>
-                                            <th>From</th>
-                                            <th>Attachments</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($emailLogs as $log)
-                                        <tr>
-                                            <td><small>{{ $log['timestamp'] ? \Carbon\Carbon::parse($log['timestamp'])->format('Y-m-d H:i:s') : '-' }}</small></td>
-                                            <td>{{ \Str::limit($log['subject'], 50) }}</td>
-                                            <td><small>{{ $log['to'] }}</small></td>
-                                            <td><small>{{ $log['from'] }}</small></td>
-                                            <td>
-                                                @if($log['attachments'] > 0)
-                                                    <span class="badge bg-info">{{ $log['attachments'] }}</span>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            @endif
+                <div class="col-md-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><i class="fa fa-envelope me-2"></i>Email</h5>
+                            <p class="card-text text-muted">View email config & logs</p>
+                            <a href="{{ route('emails.index') }}" class="btn btn-info">
+                                <i class="fa fa-arrow-right me-1"></i> View Emails
+                            </a>
                         </div>
                     </div>
                 </div>

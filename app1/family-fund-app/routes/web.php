@@ -121,6 +121,14 @@ Route::middleware('auth')->group(function () {
     Route::post('operations/send-test-email', 'App\Http\Controllers\WebV1\OperationsController@sendTestEmail')
         ->name('operations.send_test_email');
 
+    // Email Operations (admin only - checked in controller)
+    Route::get('emails', 'App\Http\Controllers\WebV1\EmailController@index')
+        ->name('emails.index');
+    Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
+        ->name('emails.show');
+    Route::post('emails/send-test', 'App\Http\Controllers\WebV1\EmailController@sendTest')
+        ->name('emails.send_test');
+
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);

@@ -128,6 +128,9 @@ Route::middleware('auth')->group(function () {
         ->name('emails.show');
     Route::post('emails/send-test', 'App\Http\Controllers\WebV1\EmailController@sendTest')
         ->name('emails.send_test');
+    Route::get('emails/attachment/{hash}/{filename}', 'App\Http\Controllers\WebV1\EmailController@downloadAttachment')
+        ->name('emails.attachment')
+        ->where('hash', '[a-f0-9]{32}');
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);

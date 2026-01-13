@@ -64,11 +64,20 @@
                                     <td class="text-muted"><strong>Attachments:</strong></td>
                                     <td>
                                         @foreach($email['attachments'] as $attachment)
-                                            <span class="badge bg-secondary me-1">
-                                                <i class="fa fa-paperclip me-1"></i>
-                                                {{ $attachment['filename'] }}
-                                                <small>({{ number_format($attachment['size'] / 1024, 1) }} KB)</small>
-                                            </span>
+                                            @if(!empty($attachment['hash']))
+                                                <a href="{{ route('emails.attachment', ['hash' => $attachment['hash'], 'filename' => $attachment['filename']]) }}"
+                                                   class="badge bg-primary text-decoration-none me-1" title="Download">
+                                                    <i class="fa fa-download me-1"></i>
+                                                    {{ $attachment['filename'] }}
+                                                    <small>({{ number_format($attachment['size'] / 1024, 1) }} KB)</small>
+                                                </a>
+                                            @else
+                                                <span class="badge bg-secondary me-1" title="Attachment not stored">
+                                                    <i class="fa fa-paperclip me-1"></i>
+                                                    {{ $attachment['filename'] }}
+                                                    <small>({{ number_format($attachment['size'] / 1024, 1) }} KB)</small>
+                                                </span>
+                                            @endif
                                         @endforeach
                                     </td>
                                 </tr>
@@ -79,12 +88,11 @@
                             <hr>
                             <div class="mt-3">
                                 @if(!empty($email['html_body']))
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <iframe srcdoc="{{ htmlspecialchars($email['html_body']) }}"
-                                                    style="width: 100%; min-height: 400px; border: none;"
-                                                    sandbox="allow-same-origin"></iframe>
-                                        </div>
+                                    <div class="email-preview" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0;">
+                                        <iframe id="email-frame" srcdoc="{{ $email['html_body'] }}"
+                                                style="width: 100%; min-height: 500px; border: none;"
+                                                sandbox="allow-same-origin"
+                                                onload="this.style.height = this.contentWindow.document.body.scrollHeight + 40 + 'px'"></iframe>
                                     </div>
                                 @elseif(!empty($email['text_body']))
                                     <div class="card bg-light">

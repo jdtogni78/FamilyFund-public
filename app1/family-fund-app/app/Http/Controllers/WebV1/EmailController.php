@@ -128,6 +128,47 @@ class EmailController extends AppBaseController
     }
 
     /**
+     * Download an email attachment
+     */
+    public function downloadAttachment(Request $request, string $hash, string $filename)
+    {
+        if (!OperationsController::isAdmin()) {
+            Flash::error('Access denied. Admin only.');
+            return redirect('/');
+        }
+
+        // Sanitize hash - must be valid MD5 (32 hex chars)
+        if (!preg_match('/^[a-f0-9]{32}$/i', $hash)) {
+            Flash::error('Invalid attachment reference.');
+            return redirect(route('emails.index'));
+        }
+
+        // Find the attachment file by hash
+        $attachmentsPath = 'emails/attachments';
+        $files = Storage::disk('local')->files($attachmentsPath);
+
+        $matchedFile = null;
+        foreach ($files as $file) {
+            if (str_starts_with(basename($file), $hash . '.')) {
+                $matchedFile = $file;
+                break;
+            }
+        }
+
+        if (!$matchedFile || !Storage::disk('local')->exists($matchedFile)) {
+            Flash::error('Attachment not found.');
+            return redirect(route('emails.index'));
+        }
+
+        $content = Storage::disk('local')->get($matchedFile);
+        $mimeType = Storage::disk('local')->mimeType($matchedFile);
+
+        return response($content)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
      * Get email configuration for display
      */
     private function getEmailConfig(): array

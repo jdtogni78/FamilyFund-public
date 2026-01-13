@@ -8,6 +8,7 @@ use Symfony\Component\Mime\Email;
 class EmailLogService
 {
     protected string $basePath = 'emails';
+    protected string $attachmentsPath = 'emails/attachments';
 
     public function log(Email $email): string
     {
@@ -26,7 +27,7 @@ class EmailLogService
             'subject' => $email->getSubject(),
             'text_body' => $email->getTextBody(),
             'html_body' => $email->getHtmlBody(),
-            'attachments' => $this->formatAttachments($email),
+            'attachments' => $this->saveAndFormatAttachments($email),
         ];
 
         Storage::disk('local')->put(
@@ -51,18 +52,56 @@ class EmailLogService
         }, $addresses);
     }
 
-    protected function formatAttachments(Email $email): array
+    protected function saveAndFormatAttachments(Email $email): array
     {
         $attachments = [];
 
         foreach ($email->getAttachments() as $attachment) {
+            $content = $attachment->getBody();
+            $hash = md5($content);
+            $extension = $this->getExtensionFromContentType($attachment->getContentType(), $attachment->getFilename());
+            $storedFilename = $hash . '.' . $extension;
+            $storedPath = $this->attachmentsPath . '/' . $storedFilename;
+
+            // Only store if not already exists (deduplication)
+            if (!Storage::disk('local')->exists($storedPath)) {
+                Storage::disk('local')->put($storedPath, $content);
+            }
+
             $attachments[] = [
                 'filename' => $attachment->getFilename(),
                 'content_type' => $attachment->getContentType(),
-                'size' => strlen($attachment->getBody()),
+                'size' => strlen($content),
+                'hash' => $hash,
+                'stored_filename' => $storedFilename,
             ];
         }
 
         return $attachments;
+    }
+
+    protected function getExtensionFromContentType(string $contentType, string $filename): string
+    {
+        // Try to get extension from original filename first
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        if ($ext) {
+            return strtolower($ext);
+        }
+
+        // Fall back to content type mapping
+        $map = [
+            'application/pdf' => 'pdf',
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/gif' => 'gif',
+            'text/plain' => 'txt',
+            'text/html' => 'html',
+            'text/csv' => 'csv',
+            'application/zip' => 'zip',
+            'application/json' => 'json',
+            'application/xml' => 'xml',
+        ];
+
+        return $map[$contentType] ?? 'bin';
     }
 }

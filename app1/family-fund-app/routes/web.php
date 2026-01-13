@@ -132,10 +132,6 @@ Route::middleware('auth')->group(function () {
     Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
         ->name('emails.show');
 
-    // Config Settings (admin only - checked in controller)
-    Route::resource('configSettings', App\Http\Controllers\WebV1\ConfigSettingController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
-
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);

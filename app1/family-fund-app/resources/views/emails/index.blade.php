@@ -104,11 +104,19 @@
                                            value="{{ $emailDateTo }}" title="To date">
                                 </div>
                                 <div class="col-auto">
+                                    <label class="visually-hidden" for="per_page">Per Page</label>
+                                    <select name="per_page" id="per_page" class="form-control form-control-sm" title="Records per page">
+                                        @foreach([20, 50, 100, 200] as $opt)
+                                            <option value="{{ $opt }}" {{ $emailPerPage == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-auto">
                                     <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="fa fa-search me-1"></i> Search
                                     </button>
                                 </div>
-                                @if($emailSearch || $emailDateFrom || $emailDateTo)
+                                @if($emailSearch || $emailDateFrom || $emailDateTo || $emailPerPage != 20)
                                 <div class="col-auto">
                                     <a href="{{ route('emails.index') }}" class="btn btn-sm btn-outline-secondary">
                                         <i class="fa fa-times me-1"></i> Clear

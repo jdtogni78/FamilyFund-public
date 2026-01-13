@@ -31,9 +31,10 @@ class EmailController extends AppBaseController
         $emailDateFrom = $request->get('date_from', '');
         $emailDateTo = $request->get('date_to', '');
         $page = (int) $request->get('page', 1);
-        $perPage = 20;
+        $emailPerPage = (int) $request->get('per_page', 20);
+        $emailPerPage = in_array($emailPerPage, [20, 50, 100, 200]) ? $emailPerPage : 20;
 
-        $emailLogsData = $this->getEmailLogs($emailSearch, $emailDateFrom, $emailDateTo, $page, $perPage);
+        $emailLogsData = $this->getEmailLogs($emailSearch, $emailDateFrom, $emailDateTo, $page, $emailPerPage);
         $emailLogs = $emailLogsData['logs'];
         $emailLogsPaginator = $emailLogsData['paginator'];
         $emailLogsTotal = $emailLogsData['total'];
@@ -45,7 +46,8 @@ class EmailController extends AppBaseController
             'emailLogsTotal',
             'emailSearch',
             'emailDateFrom',
-            'emailDateTo'
+            'emailDateTo',
+            'emailPerPage'
         ));
     }
 
@@ -223,6 +225,7 @@ class EmailController extends AppBaseController
                     'search' => $search,
                     'date_from' => $dateFrom,
                     'date_to' => $dateTo,
+                    'per_page' => $perPage != 20 ? $perPage : null,
                 ]),
             ]
         );

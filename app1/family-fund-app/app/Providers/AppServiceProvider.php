@@ -6,6 +6,7 @@ use App\Listeners\LogQueueJobCompletion;
 use App\Listeners\LogSentEmail;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\ServiceProvider;
@@ -36,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Use Bootstrap 5 pagination styling
+        Paginator::useBootstrapFive();
+
         // Set default password validation rules
         Password::defaults(function () {
             return Password::min(8)

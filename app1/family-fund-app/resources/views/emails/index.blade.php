@@ -121,7 +121,7 @@
                                 <p class="text-muted text-center mb-0">No email logs found</p>
                             @else
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover table-sm">
+                                <table class="table table-striped table-hover table-sm" id="emailLogs-table">
                                     <thead>
                                         <tr>
                                             <th>Timestamp</th>
@@ -161,6 +161,17 @@
                             <div class="d-flex justify-content-center mt-3">
                                 {{ $emailLogsPaginator->links() }}
                             </div>
+
+                            <script>
+                                $(document).ready(function() {
+                                    $('#emailLogs-table').DataTable({
+                                        order: [[0, 'desc']],
+                                        paging: false,
+                                        searching: false,
+                                        info: false
+                                    });
+                                });
+                            </script>
                             @endif
                         </div>
                     </div>

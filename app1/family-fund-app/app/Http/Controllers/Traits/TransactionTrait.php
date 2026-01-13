@@ -74,20 +74,46 @@ trait TransactionTrait
     }
 
     protected function getPreviewData($transaction_data) {
+        // Collect all available matching rules (applied + skipped)
+        $availableMatching = [];
+
         if (isset($transaction_data['matches'])) {
-            foreach ($transaction_data['matches'] as $key => $match) {
-                // Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
-                // must access fields to load
-                Log::info('TransactionTrait::getPreviewData: match: ' . json_encode($match));
-                $matchTran = TransactionExt::find($match->id);
+            foreach ($transaction_data['matches'] as $key => $matchData) {
+                // Handle new format: array with 'transaction', 'rule', 'remaining'
+                $matchTran = $matchData['transaction'] ?? $matchData;
+                $rule = $matchData['rule'] ?? null;
+                $remaining = $matchData['remaining'] ?? 0;
+
+                // Load relations
+                Log::info('TransactionTrait::getPreviewData: match: ' . json_encode($matchTran));
+                $matchTran = TransactionExt::find($matchTran->id);
                 $matchTran->cashDeposit?->id;
                 $matchTran->depositRequest?->id;
                 $matchTran->referenceTransactionMatching?->id;
                 $matchTran->account?->id;
                 $matchTran->balance?->previousBalance?->id;
                 $transaction_data['matches'][$key] = $matchTran;
+
+                // Track remaining on applied rule
+                if ($rule && $remaining > 0 && $rule->date_end >= now()) {
+                    $availableMatching[] = [
+                        'rule' => $rule,
+                        'remaining' => $remaining,
+                    ];
+                }
             }
         }
+
+        // Add skipped rules with remaining capacity
+        if (isset($transaction_data['skippedRules'])) {
+            foreach ($transaction_data['skippedRules'] as $skipped) {
+                if (($skipped['remaining'] ?? 0) > 0 && $skipped['rule']->date_end >= now()) {
+                    $availableMatching[] = $skipped;
+                }
+            }
+        }
+
+        $transaction_data['availableMatching'] = $availableMatching;
 
         $transaction = $transaction_data['transaction'];
         
@@ -111,16 +137,25 @@ trait TransactionTrait
         $transaction_data['transaction'] = $transaction;
 
         // Fund shares source data (for purchase/sale visualization)
+        // Include matching contributions in the total shares impact
         $fund = $account->fund;
         $timestamp = $transaction->timestamp;
         $fundSharesAfter = $fund->unallocatedShares($timestamp);
-        // Before = After + shares transferred to account (or - shares returned from account)
-        $fundSharesBefore = $fundSharesAfter + $transaction->shares;
+
+        // Calculate total shares including matching contributions
+        $totalShares = $transaction->shares;
+        $matches = $transaction_data['matches'] ?? [];
+        foreach ($matches as $match) {
+            $totalShares += $match->shares ?? 0;
+        }
+
+        // Before = After + total shares transferred to account
+        $fundSharesBefore = $fundSharesAfter + $totalShares;
         $transaction_data['fundShares'] = [
             'fund_name' => $fund->name,
             'before' => $fundSharesBefore,
             'after' => $fundSharesAfter,
-            'change' => -$transaction->shares, // Negative for purchase (fund loses), positive for sale
+            'change' => -$totalShares, // Negative for purchase (fund loses), positive for sale
         ];
 
         return $transaction_data;

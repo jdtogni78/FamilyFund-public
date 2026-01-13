@@ -125,11 +125,77 @@
                 </div>
             </div>
 
-            <!-- Fund Shares Source Card (Admin Only) -->
-            @if(isset($api1['fundShares']) && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'claude@test.local']))
-            @php($fundShares = $api1['fundShares'])
-            @php($fundChange = $fundShares['change'])
+            <!-- Matching Transactions -->
+            @if(null !== $api1['matches'] && count($api1['matches']) > 0)
+            <div class="card mb-4" style="border-color: #9333ea;">
+                <div class="card-header" style="background-color: #9333ea; color: white;">
+                    <i class="fa fa-gift me-2" style="color: white;"></i>
+                    <strong>Matching Contributions</strong>
+                </div>
+                <div class="card-body">
+                    @foreach($api1['matches'] as $matchTrans)
+                    @php($matchBalance = $matchTrans->balance)
+                    <div class="row align-items-center {{ !$loop->last ? 'border-bottom pb-3 mb-3' : '' }}">
+                        <div class="col-md-4">
+                            <div class="fw-bold">{{ $matchTrans->descr }}</div>
+                            <div class="fs-5" style="color: #9333ea;">+${{ number_format($matchTrans->value, 2) }}</div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <span class="badge text-white" style="background-color: #9333ea;">+{{ number_format($matchTrans->shares, 4) }} shares</span>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-end">
+                                <div class="text-center me-2">
+                                    <div class="text-muted">{{ number_format($matchBalance->previousBalance?->shares ?? 0, 2) }}</div>
+                                    <div class="text-muted small">shares</div>
+                                </div>
+                                <i class="fa fa-arrow-right mx-2" style="color: #9333ea;"></i>
+                                <div class="text-center">
+                                    <div class="fw-bold" style="color: #9333ea;">{{ number_format($matchBalance->shares, 2) }}</div>
+                                    <div class="text-muted small">shares</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+
+                    <!-- Skipped Matching Rules (only show active/non-expired) -->
+                    @php($activeSkipped = collect($api1['skippedRules'] ?? [])->filter(fn($s) => $s['rule']->date_end >= now()))
+                    @if($activeSkipped->count() > 0)
+                    <hr class="my-3">
+                    <div class="text-muted small mb-2">
+                        <i class="fa fa-info-circle me-1"></i>Other matching rules (not applied):
+                    </div>
+                    @foreach($activeSkipped as $skipped)
+                    <div class="d-flex justify-content-between align-items-center py-1 {{ !$loop->last ? 'border-bottom' : '' }}">
+                        <div>
+                            <span class="text-muted">{{ $skipped['rule']->name }}</span>
+                            <span class="badge bg-secondary ms-2">{{ $skipped['rule']->match_percent }}%</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small">Expires: {{ $skipped['rule']->date_end->format('M j, Y') }}</span>
+                            <span class="badge bg-light text-muted ms-2">{{ $skipped['reason'] }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            <!-- Fund Shares Source + Projected Account Value (side by side) -->
+            @php($hasFundShares = isset($api1['fundShares']) && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'claude@test.local']))
+            @php($hasProjectedValue = isset($api1['shares_today']))
+            @if($hasFundShares || $hasProjectedValue)
+            @php($fundShares = $api1['fundShares'] ?? null)
+            @php($fundChange = $fundShares['change'] ?? 0)
+            @php($depositShares = $transaction->shares)
+            @php($matchingShares = $fundShares ? abs($fundChange) - $depositShares : 0)
+            @php($depositValue = abs($transaction->value))
+            @php($matchingValue = $matchingShares > 0 ? $matchingShares * $api1['share_value_today'] : 0)
             <div class="row">
+                <!-- Fund Shares Source Card -->
+                @if($hasFundShares)
                 <div class="col-md-6 mb-4">
                     <div class="card h-100 border-{{ $fundChange >= 0 ? 'success' : 'warning' }}">
                         <div class="card-header bg-{{ $fundChange >= 0 ? 'success' : 'warning' }} text-{{ $fundChange >= 0 ? 'white' : 'dark' }}">
@@ -138,7 +204,7 @@
                             <span class="float-end">{{ $fundShares['fund_name'] }}</span>
                         </div>
                         <div class="card-body">
-                            <!-- Change Badge at Top -->
+                            <!-- Total Change Badge -->
                             <div class="text-center mb-3">
                                 <span class="badge bg-{{ $fundChange >= 0 ? 'success' : 'warning' }} text-{{ $fundChange >= 0 ? 'white' : 'dark' }} fs-5 px-4 py-2">
                                     <i class="fa fa-{{ $fundChange >= 0 ? 'plus' : 'minus' }} me-1"></i>
@@ -146,11 +212,25 @@
                                 </span>
                             </div>
 
+                            <!-- Breakdown: Deposit + Matching -->
+                            @if($matchingShares > 0)
+                            <div class="d-flex justify-content-center gap-3 mb-3">
+                                <div class="text-center">
+                                    <div class="text-muted small">Deposit</div>
+                                    <span class="badge bg-success text-white">{{ number_format($depositShares, 4) }}</span>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-muted small">Matching</div>
+                                    <span class="badge text-white" style="background-color: #9333ea;">{{ number_format($matchingShares, 4) }}</span>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Before/After Flow -->
                             <div class="d-flex align-items-center justify-content-center mb-3">
                                 <div class="text-center px-3">
                                     <div class="text-muted small text-uppercase">Before</div>
-                                    <div class="fs-3 text-muted">{{ number_format($fundShares['before'], 4) }}</div>
+                                    <div class="fs-4 text-muted">{{ number_format($fundShares['before'], 4) }}</div>
                                     <div class="small text-muted">unallocated</div>
                                 </div>
                                 <div class="mx-3">
@@ -158,7 +238,7 @@
                                 </div>
                                 <div class="text-center px-3">
                                     <div class="text-muted small text-uppercase">After</div>
-                                    <div class="fs-3 fw-bold text-{{ $fundChange >= 0 ? 'success' : 'warning' }}">
+                                    <div class="fs-4 fw-bold text-{{ $fundChange >= 0 ? 'success' : 'warning' }}">
                                         {{ number_format($fundShares['after'], 4) }}
                                     </div>
                                     <div class="small fw-bold">unallocated</div>
@@ -176,47 +256,13 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            @endif
+                @endif
 
-            <!-- Matching Transactions -->
-            @if(null !== $api1['matches'] && count($api1['matches']) > 0)
-            <div class="card mb-4 border-purple">
-                <div class="card-header" style="background-color: #9333ea; color: white;">
-                    <i class="fa fa-gift me-2"></i>
-                    <strong>Matching Contributions</strong>
-                </div>
-                <div class="card-body">
-                    @foreach($api1['matches'] as $matchTrans)
-                    @php($matchBalance = $matchTrans->balance)
-                    <div class="row align-items-center {{ !$loop->last ? 'border-bottom pb-3 mb-3' : '' }}">
-                        <div class="col-md-4">
-                            <div class="fw-bold">{{ $matchTrans->descr }}</div>
-                            <div class="text-success fs-5">+${{ number_format($matchTrans->value, 2) }}</div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <span class="badge bg-success">+{{ number_format($matchTrans->shares, 4) }} shares</span>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center justify-content-end">
-                                <span class="text-muted me-2">{{ number_format($matchBalance->previousBalance?->shares ?? 0, 2) }}</span>
-                                <i class="fa fa-arrow-right text-success mx-2"></i>
-                                <span class="fw-bold text-success">{{ number_format($matchBalance->shares, 2) }}</span>
-                            </div>
-                            <div class="text-muted small text-end">{{ $matchBalance->account->nickname }}</div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            <!-- Projected Account Value Card -->
-            @isset($api1['shares_today'])
-            @php($prevShares = $balance->previousBalance?->shares ?? 0)
-            @php($prevValue = $prevShares * $api1['share_value_today'])
-            @php($valueDelta = $api1['value_today'] - $prevValue)
-            <div class="row">
+                <!-- Projected Account Value Card -->
+                @if($hasProjectedValue)
+                @php($prevShares = $balance->previousBalance?->shares ?? 0)
+                @php($prevValue = $prevShares * $api1['share_value_today'])
+                @php($valueDelta = $api1['value_today'] - $prevValue)
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header bg-light">
@@ -232,18 +278,32 @@
                                 </span>
                             </div>
 
+                            <!-- Breakdown: Deposit + Matching -->
+                            @if($matchingValue > 0)
+                            <div class="d-flex justify-content-center gap-3 mb-3">
+                                <div class="text-center">
+                                    <div class="text-muted small">Deposit</div>
+                                    <span class="badge bg-success text-white">${{ number_format($depositValue, 2) }}</span>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-muted small">Matching</div>
+                                    <span class="badge text-white" style="background-color: #9333ea;">${{ number_format($matchingValue, 2) }}</span>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Before/After Value -->
-                            <div class="d-flex justify-content-around text-center">
-                                <div>
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <div class="text-center px-3">
                                     <div class="text-muted small text-uppercase">Before</div>
-                                    <div class="fs-5 text-muted">${{ number_format($prevValue, 2) }}</div>
+                                    <div class="fs-4 text-muted">${{ number_format($prevValue, 2) }}</div>
                                 </div>
-                                <div>
-                                    <i class="fa fa-long-arrow-right fa-lg text-{{ $valueDelta >= 0 ? 'success' : 'danger' }}"></i>
+                                <div class="mx-3">
+                                    <i class="fa fa-long-arrow-right fa-2x text-{{ $valueDelta >= 0 ? 'success' : 'danger' }}"></i>
                                 </div>
-                                <div>
+                                <div class="text-center px-3">
                                     <div class="text-muted small text-uppercase">After</div>
-                                    <div class="fs-5 fw-bold text-{{ $valueDelta >= 0 ? 'success' : 'danger' }}">${{ number_format($api1['value_today'], 2) }}</div>
+                                    <div class="fs-4 fw-bold text-{{ $valueDelta >= 0 ? 'success' : 'danger' }}">${{ number_format($api1['value_today'], 2) }}</div>
                                 </div>
                             </div>
 
@@ -255,8 +315,9 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
-            @endisset
+            @endif
 
             <!-- Fund Cash Position -->
             @if(null !== $api1['fundCash'])

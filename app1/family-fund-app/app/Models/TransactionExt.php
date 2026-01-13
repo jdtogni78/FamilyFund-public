@@ -265,8 +265,11 @@ class TransactionExt extends Transaction
         $createMatch = !($isFundAccount || $noMatch);
         Log::debug("Create Match: '" . $createMatch . "' '" . $isFundAccount . "' '" . $noMatch . "'");
         $matches = [];
+        $skippedRules = [];
         if ($createMatch) {
-            $matches = $this->createMatching($account, $verbose, $shareValue, $allShares, $fundAvailableShares, $acctAvailableShares);
+            $matchingResult = $this->createMatching($account, $verbose, $shareValue, $allShares, $fundAvailableShares, $acctAvailableShares);
+            $matches = $matchingResult['matches'];
+            $skippedRules = $matchingResult['skipped'];
         }
 
         $this->status = TransactionExt::STATUS_CLEARED;
@@ -275,6 +278,7 @@ class TransactionExt extends Transaction
             'transaction' => $this,
             'fundCash' => $fundCash,
             'matches' => $matches,
+            'skippedRules' => $skippedRules,
             'shareValue' => $shareValue,
         ];
     }
@@ -369,15 +373,54 @@ class TransactionExt extends Transaction
 
         $input['type'] = 'MAT';
         $descr = "Match transaction $this->id";
-        $ret = [];
-        foreach ($account->accountMatchingRules()->get() as $amr) {
+        $ret = [
+            'matches' => [],
+            'skipped' => [],
+        ];
+
+        // Track remaining value to match - expiring rules get priority
+        $remainingValueToMatch = $this->value;
+
+        // Get matching rules ordered by expiring first (date_end asc, then id)
+        $orderedRules = $account->accountMatchingRules()
+            ->join('matching_rules', 'account_matching_rules.matching_rule_id', '=', 'matching_rules.id')
+            ->orderBy('matching_rules.date_end', 'asc')
+            ->orderBy('matching_rules.id', 'asc')
+            ->select('account_matching_rules.*')
+            ->get();
+
+        foreach ($orderedRules as $amr) {
+            $mr = $amr->matchingRule()->first();
+
+            // Calculate remaining capacity for this rule
+            $used = $amr->getMatchConsideredAsOf($this->timestamp, false);
+            $possible = $mr->dollar_range_end - $mr->dollar_range_start;
+            $remainingCapacity = max(0, $possible - $used);
+
+            // Stop if no remaining value to match
+            if ($remainingValueToMatch <= 0) {
+                $this->debug("No remaining value to match, skipping remaining rules");
+                // Track skipped rules with remaining capacity (only if rule has capacity and is active)
+                if ($remainingCapacity > 0 && $amr->isInPeriod($this->timestamp, false)) {
+                    $ret['skipped'][] = [
+                        'rule' => $mr,
+                        'remaining' => $remainingCapacity,
+                        'reason' => 'Deposit fully matched by earlier-expiring rule',
+                    ];
+                }
+                continue;
+            }
+
             $matchValue = $amr->match($this);
             if ($verbose) {
                 $this->debug("AMR " . json_encode($amr) . " " . $matchValue);
                 $this->debug("MR " . json_encode($amr->matchingRule()->get()));
             }
             if ($matchValue > 0) {
-                $mr = $amr->matchingRule()->first();
+                // Cap match to remaining value (older rules have priority)
+                $matchValue = min($matchValue, $remainingValueToMatch);
+                $remainingValueToMatch -= $matchValue;
+
                 $input['value'] = $matchValue;
                 $input['status'] = TransactionExt::STATUS_CLEARED;
                 $input['shares'] = $matchValue / $shareValue;
@@ -387,7 +430,7 @@ class TransactionExt extends Transaction
                     throw new Exception("Fund does not have enough shares ($fundAvailableShares) to support purchase of ($allShares)");
                 }
 
-                $this->debug("MATCHTRAN " . json_encode($input));
+                $this->debug("MATCHTRAN " . json_encode($input) . " remaining: $remainingValueToMatch");
                 /** @var TransactionExt $matchTran */
                 $matchTran = TransactionExt::create($input);
                 $matchTran->verbose = $this->verbose;
@@ -402,8 +445,16 @@ class TransactionExt extends Transaction
 
                 $shareValue = $account->fund->shareValueAsOf($matchTran->timestamp);
 
-                $ret[] = $matchTran;
+                // Calculate remaining capacity AFTER this match
+                $remainingAfterMatch = max(0, $remainingCapacity - $matchValue);
+
+                $ret['matches'][] = [
+                    'transaction' => $matchTran,
+                    'rule' => $mr,
+                    'remaining' => $remainingAfterMatch,
+                ];
             }
+            // Don't add exhausted or out-of-period rules to skipped list
         }
         return $ret;
     }

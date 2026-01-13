@@ -24,8 +24,13 @@
     </div>
     <div class="col-md-4 d-flex flex-column">
         <label for="timestamp" class="form-label text-muted small text-uppercase mb-1">Transaction Date</label>
-        <input type="date" name="timestamp" value="{{ $defaultTimestamp }}"
-               class="form-control" id="timestamp" required>
+        <div class="input-group">
+            <input type="date" name="timestamp" value="{{ $defaultTimestamp }}"
+                   class="form-control" id="timestamp" required>
+            <button type="button" class="btn btn-outline-secondary" id="todayBtn" title="Set to today">
+                Today
+            </button>
+        </div>
     </div>
 </div>
 

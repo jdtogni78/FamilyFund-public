@@ -149,6 +149,11 @@
         updateAccountInfo();
     });
 
+    $("#todayBtn").click(function() {
+        var today = new Date().toISOString().split('T')[0];
+        $('#timestamp').val(today).trigger('change');
+    });
+
     $("#value").on('input change', function() {
         updateSharesCalculation();
     });

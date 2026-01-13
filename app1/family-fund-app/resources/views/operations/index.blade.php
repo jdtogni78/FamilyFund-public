@@ -92,6 +92,21 @@
                 </div>
             </div>
 
+            {{-- Admin Tools --}}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-secondary">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><i class="fa fa-cog me-2"></i>Config Settings</h5>
+                            <p class="card-text text-muted">Manage application settings</p>
+                            <a href="{{ route('configSettings.index') }}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-right me-1"></i> View Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Scheduled Jobs Status --}}
             <div class="row mb-4">
                 <div class="col-lg-12">

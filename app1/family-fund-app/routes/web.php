@@ -124,13 +124,17 @@ Route::middleware('auth')->group(function () {
     // Email Operations (admin only - checked in controller)
     Route::get('emails', 'App\Http\Controllers\WebV1\EmailController@index')
         ->name('emails.index');
-    Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
-        ->name('emails.show');
     Route::post('emails/send-test', 'App\Http\Controllers\WebV1\EmailController@sendTest')
         ->name('emails.send_test');
     Route::get('emails/attachment/{hash}/{filename}', 'App\Http\Controllers\WebV1\EmailController@downloadAttachment')
         ->name('emails.attachment')
         ->where('hash', '[a-f0-9]{32}');
+    Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
+        ->name('emails.show');
+
+    // Config Settings (admin only - checked in controller)
+    Route::resource('configSettings', App\Http\Controllers\WebV1\ConfigSettingController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 
     Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);

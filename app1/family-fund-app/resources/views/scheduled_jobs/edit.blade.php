@@ -18,10 +18,10 @@
                               <strong>Edit Scheduled Job</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['scheduledJobs.update', $scheduledJob->id]') }" >
-
+<form method="POST" action="{{ route('scheduledJobs.update', $scheduledJob->id) }}">
+                              @csrf
+                              @method('PATCH')
                               @include('scheduled_jobs.fields')
-
 </form>
                             </div>
                         </div>

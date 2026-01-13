@@ -66,10 +66,10 @@
                                         @foreach($email['attachments'] as $attachment)
                                             @if(!empty($attachment['hash']))
                                                 <a href="{{ route('emails.attachment', ['hash' => $attachment['hash'], 'filename' => $attachment['filename']]) }}"
-                                                   class="badge bg-primary text-decoration-none me-1" title="Download">
-                                                    <i class="fa fa-download me-1"></i>
+                                                   class="btn btn-sm btn-success text-decoration-none me-1" title="Open in new tab" target="_blank">
+                                                    <i class="fa fa-external-link me-1"></i>
                                                     {{ $attachment['filename'] }}
-                                                    <small>({{ number_format($attachment['size'] / 1024, 1) }} KB)</small>
+                                                    ({{ number_format($attachment['size'] / 1024, 1) }} KB)
                                                 </a>
                                             @else
                                                 <span class="badge bg-secondary me-1" title="Attachment not stored">

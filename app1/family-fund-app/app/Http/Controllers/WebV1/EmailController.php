@@ -165,7 +165,7 @@ class EmailController extends AppBaseController
 
         return response($content)
             ->header('Content-Type', $mimeType)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 
     /**

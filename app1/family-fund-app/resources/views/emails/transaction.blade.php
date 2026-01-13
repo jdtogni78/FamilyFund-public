@@ -56,7 +56,7 @@
         @if($balance)
         <div class="card mb-3">
             <div class="card-header" style="background-color: #f8f9fa; padding: 12px 16px;">
-                <strong>Balance Change</strong>
+                <strong>Changes</strong>
             </div>
             <div class="card-body" style="padding: 16px;">
                 @php($delta = $balance->shares - ($balance->previousBalance?->shares ?? 0))
@@ -72,45 +72,48 @@
                     <!-- Before/After Flow -->
                     <div style="display: inline-block; text-align: center; padding: 0 24px;">
                         <div style="color: #999; font-size: 12px; text-transform: uppercase;">Before</div>
-                        <div style="font-size: 24px; color: #999;">{{ number_format($prevShares, 4) }}</div>
-                        <div style="font-size: 16px; color: #999;">${{ number_format($prevValue, 2) }}</div>
+                        <div style="font-size: 24px; color: #999;">${{ number_format($prevValue, 2) }}</div>
+                        <div style="font-size: 14px; color: #999;">{{ number_format($prevShares, 4) }} shares</div>
                     </div>
                     <span style="font-size: 24px; color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">&#8594;</span>
                     <div style="display: inline-block; text-align: center; padding: 0 24px;">
                         <div style="color: #999; font-size: 12px; text-transform: uppercase;">After</div>
-                        <div style="font-size: 24px; font-weight: bold; color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">{{ number_format($afterShares, 4) }}</div>
-                        <div style="font-size: 16px; font-weight: bold; color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">${{ number_format($newValue, 2) }}</div>
+                        <div style="font-size: 24px; font-weight: bold; color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">${{ number_format($newValue, 2) }}</div>
+                        <div style="font-size: 14px; font-weight: bold; color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }};">{{ number_format($afterShares, 4) }} shares</div>
                     </div>
 
                     <!-- Delta Badges -->
                     @php($hasMatching = isset($api['matches']) && count($api['matches']) > 0)
                     @php($matchingShares = $hasMatching ? collect($api['matches'])->sum('shares') : 0)
                     @php($matchingValue = $hasMatching ? collect($api['matches'])->sum('value') : 0)
+                    @php($depositValue = $transaction->value)
                     <div style="margin-top: 12px;">
                         @if($hasMatching)
-                        <!-- Deposit badge (green) - $delta is the deposit, not combined -->
-                        <span style="background-color: #28a745; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-right: 16px;">
-                            +{{ number_format($delta, 4) }} shares
+                        <!-- Dollar badges (big, on top) -->
+                        <span style="background-color: #28a745; color: white; padding: 8px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; margin-right: 16px;">
+                            +${{ number_format($depositValue, 2) }}
                         </span>
-                        <!-- Matching badge (purple) -->
-                        <span style="background-color: #9333ea; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px;">
-                            +{{ number_format($matchingShares, 4) }} shares
+                        <span style="background-color: #9333ea; color: white; padding: 8px 20px; border-radius: 20px; font-size: 16px; font-weight: bold;">
+                            +${{ number_format($matchingValue, 2) }}
                         </span>
-                        <div style="margin-top: 12px;">
-                            <span style="background-color: #28a745; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-right: 16px;">
-                                +${{ number_format($valueDelta, 2) }}
+                        <!-- Shares badges (smaller, below) -->
+                        <div style="margin-top: 10px;">
+                            <span style="background-color: #28a745; color: white; padding: 4px 14px; border-radius: 16px; font-size: 13px; margin-right: 16px;">
+                                +{{ number_format($delta, 4) }} shares
                             </span>
-                            <span style="background-color: #9333ea; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px;">
-                                +${{ number_format($matchingValue, 2) }}
+                            <span style="background-color: #9333ea; color: white; padding: 4px 14px; border-radius: 16px; font-size: 13px;">
+                                +{{ number_format($matchingShares, 4) }} shares
                             </span>
                         </div>
                         @else
-                        <span style="background-color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }}; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-right: 8px;">
-                            {{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 4) }} shares
-                        </span>
-                        <span style="background-color: {{ $valueDelta >= 0 ? '#28a745' : '#dc3545' }}; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px;">
+                        <span style="background-color: {{ $valueDelta >= 0 ? '#28a745' : '#dc3545' }}; color: white; padding: 8px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; margin-right: 8px;">
                             {{ $valueDelta >= 0 ? '+' : '-' }}${{ number_format(abs($valueDelta), 2) }}
                         </span>
+                        <div style="margin-top: 10px;">
+                            <span style="background-color: {{ $delta >= 0 ? '#28a745' : '#dc3545' }}; color: white; padding: 4px 14px; border-radius: 16px; font-size: 13px;">
+                                {{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 4) }} shares
+                            </span>
+                        </div>
                         @endif
                     </div>
 
@@ -177,14 +180,9 @@
             </div>
             <div class="card-body" style="padding: 16px;">
                 @foreach($api['matches'] as $matchTrans)
-                @php($matchBalance = $matchTrans->balance)
                 <div style="{{ !$loop->last ? 'border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;' : '' }}">
                     <div style="font-weight: bold;">{{ $matchTrans->descr }}</div>
                     <div style="color: #9333ea; font-size: 18px;">+${{ number_format($matchTrans->value, 2) }}</div>
-                    <div style="color: #666; font-size: 14px;">
-                        {{ $matchBalance->account->nickname }}:
-                        {{ number_format($matchBalance->previousBalance?->shares ?? 0, 4) }} &#8594; {{ number_format($matchBalance->shares, 4) }} shares
-                    </div>
                 </div>
                 @endforeach
 

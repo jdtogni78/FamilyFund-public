@@ -194,8 +194,11 @@ class EmailController extends AppBaseController
         $basePath = 'emails';
 
         try {
-            // Get all year directories
-            $years = Storage::disk('local')->directories($basePath);
+            // Get all year directories (filter out non-year dirs like 'attachments')
+            $years = collect(Storage::disk('local')->directories($basePath))
+                ->filter(fn($dir) => preg_match('/\d{4}$/', $dir))
+                ->values()
+                ->toArray();
             rsort($years); // Most recent first
 
             foreach ($years as $yearDir) {

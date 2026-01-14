@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AssetChangeLogRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AssetChangeLogRepositoryTest extends TestCase
         parent::setUp();
         $this->assetChangeLogRepo = \App::make(AssetChangeLogRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AssetChangeLogRepositoryTest extends TestCase
         $this->assertNotNull(AssetChangeLog::find($createdAssetChangeLog['id']), 'AssetChangeLog with given id must be in DB');
         $this->assertModelData($assetChangeLog, $createdAssetChangeLog);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();
@@ -50,10 +41,6 @@ class AssetChangeLogRepositoryTest extends TestCase
         $dbAssetChangeLog = $dbAssetChangeLog->toArray();
         $this->assertModelData($assetChangeLog->toArray(), $dbAssetChangeLog);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();
@@ -65,10 +52,6 @@ class AssetChangeLogRepositoryTest extends TestCase
         $dbAssetChangeLog = $this->assetChangeLogRepo->find($assetChangeLog->id);
         $this->assertModelData($fakeAssetChangeLog, $dbAssetChangeLog->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_asset_change_log()
     {
         $assetChangeLog = AssetChangeLog::factory()->create();

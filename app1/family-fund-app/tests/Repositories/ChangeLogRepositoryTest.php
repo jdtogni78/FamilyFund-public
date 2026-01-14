@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class ChangeLogRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class ChangeLogRepositoryTest extends TestCase
         parent::setUp();
         $this->changeLogRepo = \App::make(ChangeLogRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_change_log()
     {
         $changeLog = ChangeLog::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class ChangeLogRepositoryTest extends TestCase
         $this->assertNotNull(ChangeLog::find($createdChangeLog['id']), 'ChangeLog with given id must be in DB');
         $this->assertModelData($changeLog, $createdChangeLog);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_change_log()
     {
         $changeLog = ChangeLog::factory()->create();
@@ -50,10 +41,6 @@ class ChangeLogRepositoryTest extends TestCase
         $dbChangeLog = $dbChangeLog->toArray();
         $this->assertModelData($changeLog->toArray(), $dbChangeLog);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_change_log()
     {
         $changeLog = ChangeLog::factory()->create();
@@ -65,10 +52,6 @@ class ChangeLogRepositoryTest extends TestCase
         $dbChangeLog = $this->changeLogRepo->find($changeLog->id);
         $this->assertModelData($fakeChangeLog, $dbChangeLog->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_change_log()
     {
         $changeLog = ChangeLog::factory()->create();

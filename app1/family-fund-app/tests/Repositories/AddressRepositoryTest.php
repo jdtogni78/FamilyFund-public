@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AddressRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AddressRepositoryTest extends TestCase
         parent::setUp();
         $this->addressRepo = \App::make(AddressRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_address()
     {
         $address = Address::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AddressRepositoryTest extends TestCase
         $this->assertNotNull(Address::find($createdAddress['id']), 'Address with given id must be in DB');
         $this->assertModelData($address, $createdAddress);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_address()
     {
         $address = Address::factory()->create();
@@ -50,10 +41,6 @@ class AddressRepositoryTest extends TestCase
         $dbAddress = $dbAddress->toArray();
         $this->assertModelData($address->toArray(), $dbAddress);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_address()
     {
         $address = Address::factory()->create();
@@ -65,10 +52,6 @@ class AddressRepositoryTest extends TestCase
         $dbAddress = $this->addressRepo->find($address->id);
         $this->assertModelData($fakeAddress, $dbAddress->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_address()
     {
         $address = Address::factory()->create();

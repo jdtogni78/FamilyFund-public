@@ -92,7 +92,7 @@
                 </div>
             </div>
 
-            {{-- Admin Tools --}}
+            {{-- Admin Tools - TODO: Add configSettings route when feature is implemented
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="card border-secondary">
@@ -106,6 +106,7 @@
                     </div>
                 </div>
             </div>
+            --}}
 
             {{-- Scheduled Jobs Status --}}
             <div class="row mb-4">

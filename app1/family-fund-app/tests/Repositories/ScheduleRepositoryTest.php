@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class ScheduleRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class ScheduleRepositoryTest extends TestCase
         parent::setUp();
         $this->scheduleRepo = \App::make(ScheduleRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_schedule()
     {
         $schedule = Schedule::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class ScheduleRepositoryTest extends TestCase
         $this->assertNotNull(Schedule::find($createdSchedule['id']), 'Schedule with given id must be in DB');
         $this->assertModelData($schedule, $createdSchedule);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_schedule()
     {
         $schedule = Schedule::factory()->create();
@@ -50,10 +41,6 @@ class ScheduleRepositoryTest extends TestCase
         $dbSchedule = $dbSchedule->toArray();
         $this->assertModelData($schedule->toArray(), $dbSchedule);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_schedule()
     {
         $schedule = Schedule::factory()->create();
@@ -65,10 +52,6 @@ class ScheduleRepositoryTest extends TestCase
         $dbSchedule = $this->scheduleRepo->find($schedule->id);
         $this->assertModelData($fakeSchedule, $dbSchedule->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_schedule()
     {
         $schedule = Schedule::factory()->create();

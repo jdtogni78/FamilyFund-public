@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class FundRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class FundRepositoryTest extends TestCase
         parent::setUp();
         $this->fundRepo = \App::make(FundRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_fund()
     {
         $fund = Fund::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class FundRepositoryTest extends TestCase
         $this->assertNotNull(Fund::find($createdFund['id']), 'Fund with given id must be in DB');
         $this->assertModelData($fund, $createdFund);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_fund()
     {
         $fund = Fund::factory()->create();
@@ -50,10 +41,6 @@ class FundRepositoryTest extends TestCase
         $dbFund = $dbFund->toArray();
         $this->assertModelData($fund->toArray(), $dbFund);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_fund()
     {
         $fund = Fund::factory()->create();
@@ -65,10 +52,6 @@ class FundRepositoryTest extends TestCase
         $dbFund = $this->fundRepo->find($fund->id);
         $this->assertModelData($fakeFund, $dbFund->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_fund()
     {
         $fund = Fund::factory()->create();

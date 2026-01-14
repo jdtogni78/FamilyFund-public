@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class TransactionRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class TransactionRepositoryTest extends TestCase
         parent::setUp();
         $this->transactionRepo = \App::make(TransactionRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_transaction()
     {
         $transaction = Transaction::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class TransactionRepositoryTest extends TestCase
         $this->assertNotNull(Transaction::find($createdTransaction['id']), 'Transaction with given id must be in DB');
         $this->assertModelData($transaction, $createdTransaction);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_transaction()
     {
         $transaction = Transaction::factory()->create();
@@ -50,10 +41,6 @@ class TransactionRepositoryTest extends TestCase
         $dbTransaction = $dbTransaction->toArray();
         $this->assertModelData($transaction->toArray(), $dbTransaction);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_transaction()
     {
         $transaction = Transaction::factory()->create();
@@ -65,10 +52,6 @@ class TransactionRepositoryTest extends TestCase
         $dbTransaction = $this->transactionRepo->find($transaction->id);
         $this->assertModelData($fakeTransaction, $dbTransaction->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_transaction()
     {
         $transaction = Transaction::factory()->create();

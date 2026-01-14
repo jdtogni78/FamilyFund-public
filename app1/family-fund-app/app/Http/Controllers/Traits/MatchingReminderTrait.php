@@ -6,7 +6,7 @@ use App\Mail\MatchingExpirationReminderEmail;
 use App\Models\MatchingReminderLog;
 use App\Models\MatchingRule;
 use App\Models\ScheduledJob;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 trait MatchingReminderTrait

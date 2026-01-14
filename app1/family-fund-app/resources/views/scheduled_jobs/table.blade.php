@@ -50,6 +50,8 @@
                     $typeName = \App\Models\TransactionExt::$typeMap[$tran->type] ?? $tran->type;
                     $accountName = $tran->account->nickname ?? 'Acct#' . $tran->account_id;
                     $entityName = $accountName . ' - ' . $typeName . ' - $' . number_format($tran->value, 0);
+                } elseif ($scheduledJob->entity_descr == 'matching_reminder') {
+                    $entityName = 'Expiring rules (45 days)';
                 }
             @endphp
             <tr class="{{ $rowClass }}">
@@ -70,6 +72,7 @@
                             'fund_report' => 'bg-primary',
                             'trade_band_report' => 'bg-success',
                             'transaction' => 'bg-warning text-dark',
+                            'matching_reminder' => 'bg-purple',
                         ];
                         $entityColor = $entityColors[$scheduledJob->entity_descr] ?? 'bg-secondary';
                     @endphp

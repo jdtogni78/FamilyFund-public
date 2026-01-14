@@ -14,21 +14,25 @@ class ScheduledJobExt extends ScheduledJob
     const ENTITY_FUND_REPORT = 'fund_report';
     const ENTITY_TRANSACTION = 'transaction';
     const ENTITY_TRADE_BAND_REPORT = 'trade_band_report';
+    const ENTITY_MATCHING_REMINDER = 'matching_reminder';
 
     public static $entityMap = [
         self::ENTITY_FUND_REPORT => 'Fund Report',
         self::ENTITY_TRANSACTION => 'Transaction',
         self::ENTITY_TRADE_BAND_REPORT => 'Trading Bands',
+        self::ENTITY_MATCHING_REMINDER => 'Matching Reminder',
     ];
     private static $fieldMap = [
         self::ENTITY_FUND_REPORT => 'as_of',
         self::ENTITY_TRANSACTION => 'timestamp',
         self::ENTITY_TRADE_BAND_REPORT => 'as_of',
+        self::ENTITY_MATCHING_REMINDER => 'sent_at',
     ];
     private static $classMap = [
         self::ENTITY_FUND_REPORT => FundReportExt::class,
         self::ENTITY_TRANSACTION => TransactionExt::class,
         self::ENTITY_TRADE_BAND_REPORT => TradeBandReport::class,
+        self::ENTITY_MATCHING_REMINDER => MatchingReminderLog::class,
     ];
 
     public function shouldRunBy($today)

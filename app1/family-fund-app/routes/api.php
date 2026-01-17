@@ -53,6 +53,7 @@ Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv
 
 Route::post('schedule_jobs', 'App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt@scheduleJobs');
 
+Route::post('funds/setup', 'App\Http\Controllers\APIv1\FundAPIControllerExt@storeWithSetup')->name('api.funds.setup');
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class)->names('api.funds');
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class)->names('api.accounts');
 Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class)->names('api.portfolios');

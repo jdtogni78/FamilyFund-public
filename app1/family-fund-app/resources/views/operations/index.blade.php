@@ -92,6 +92,75 @@
                 </div>
             </div>
 
+            {{-- Asset Price Gaps --}}
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card border-{{ $gapInfo['hasGaps'] ? 'warning' : 'success' }}">
+                        <div class="card-header bg-{{ $gapInfo['hasGaps'] ? 'warning' : 'success' }} text-{{ $gapInfo['hasGaps'] ? 'dark' : 'white' }}">
+                            <i class="fa fa-chart-line me-2"></i>
+                            <strong>Asset Price Gaps (Last {{ $gapInfo['lookbackDays'] }} Days)</strong>
+                            @if($gapInfo['hasGaps'])
+                                <span class="badge bg-dark ms-2">{{ $gapInfo['count'] }} gap(s) detected</span>
+                            @else
+                                <span class="badge bg-light text-dark ms-2"><i class="fa fa-check me-1"></i>No gaps</span>
+                            @endif
+                        </div>
+                        <div class="card-body">
+                            @if($gapInfo['hasGaps'])
+                                <div class="alert alert-warning mb-3">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    <strong>{{ $gapInfo['count'] }} trading day(s) are missing asset price data.</strong>
+                                    <div class="mt-2 small">
+                                        Missing dates:
+                                        <span class="badge bg-dark ms-1">{{ implode(', ', array_slice($gapInfo['dates'], 0, 10)) }}</span>
+                                        @if(count($gapInfo['dates']) > 10)
+                                            <span class="text-muted">... and {{ count($gapInfo['dates']) - 10 }} more</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="fa fa-eye me-2"></i>View Gaps</h6>
+                                        <p class="small text-muted mb-2">View detailed gap information in the Asset Prices page</p>
+                                        <a href="{{ route('assetPrices.index') }}" class="btn btn-sm btn-info">
+                                            <i class="fa fa-arrow-right me-1"></i> View Asset Prices
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fa fa-terminal me-2"></i>Backfill Command</h6>
+                                        <p class="small text-muted mb-2">Run this command on the DSTrader server to backfill gaps:</p>
+                                        <div class="bg-dark text-light p-2 rounded font-monospace small">
+                                            <code class="text-light">
+                                                # For each missing date:<br>
+                                                cd /dstrader/prod<br>
+                                                java -cp DSTrader.jar com.dotstar.dstrader.AssetReportRun \<br>
+                                                &nbsp;&nbsp;history price API prod YYYY-MM-DD YYYY-MM-DD
+                                            </code>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-secondary" onclick="copyBackfillCommand()">
+                                                <i class="fa fa-copy me-1"></i> Copy Command Template
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 small text-muted">
+                                    <strong>Automated Gap Detection:</strong> This check runs automatically every time you load the Operations page.
+                                    Scheduled job failures due to missing data will also trigger email alerts with backfill instructions.
+                                </div>
+                            @else
+                                <div class="alert alert-success mb-0">
+                                    <i class="fa fa-check-circle me-2"></i>
+                                    All trading days in the last {{ $gapInfo['lookbackDays'] }} days have asset price data.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Admin Tools - TODO: Add configSettings route when feature is implemented
             <div class="row mb-4">
                 <div class="col-md-3">
@@ -371,4 +440,22 @@
 
         </div>
     </div>
+
+@push('scripts')
+<script>
+function copyBackfillCommand() {
+    const command = `# For each missing date (replace YYYY-MM-DD with actual date):
+cd /dstrader/prod
+java -cp DSTrader.jar com.dotstar.dstrader.AssetReportRun history price API prod YYYY-MM-DD YYYY-MM-DD`;
+
+    navigator.clipboard.writeText(command).then(function() {
+        alert('Backfill command template copied to clipboard!');
+    }, function(err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy command. Please copy manually from the display.');
+    });
+}
+</script>
+@endpush
+
 </x-app-layout>

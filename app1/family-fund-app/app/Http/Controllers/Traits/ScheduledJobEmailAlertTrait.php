@@ -105,9 +105,14 @@ trait ScheduledJobEmailAlertTrait
 
         if ($job->entity_descr === ScheduledJobExt::ENTITY_FUND_REPORT) {
             if (strpos($reason, 'No data') !== false) {
-                $actions[] = "1. Check asset price gaps: GET /api/asset_prices/gaps?days=7";
-                $actions[] = "2. Backfill missing asset prices using DSTrader history mode";
-                $actions[] = "3. Re-run the job after data is populated";
+                // Extract fund from job entity_id
+                $fund = Fund::find($job->entity_id);
+                $fundFilter = $fund ? "?fund_id={$fund->id}" : "";
+
+                $actions[] = "1. View asset price gaps in UI: " . config('app.url') . "/assetPrices{$fundFilter}";
+                $actions[] = "   (Look for yellow \"Data Warnings\" banner showing gaps)";
+                $actions[] = "2. Check gaps API: GET " . config('app.url') . "/api/asset_prices/gaps?days=7";
+                $actions[] = "3. Go to Operations page to backfill gaps: " . config('app.url') . "/operations";
                 $actions[] = "4. Or force-run with skip_data_check=true if report is urgently needed";
             }
         }

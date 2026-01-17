@@ -59,6 +59,6 @@ class ScheduledJobFailureMail extends Mailable
         $subject = "[FamilyFund][{$severity}] Scheduled Job Failed: {$this->entityType} - {$this->entityName}";
 
         return $this->subject($subject)
-            ->text('emails.scheduled_job_failure');
+            ->view('emails.scheduled_job_failure');
     }
 }

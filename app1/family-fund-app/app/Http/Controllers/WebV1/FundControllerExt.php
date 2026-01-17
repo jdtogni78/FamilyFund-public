@@ -5,6 +5,7 @@ namespace App\Http\Controllers\WebV1;
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
 use App\Repositories\FundRepository;
+use App\Repositories\TransactionRepository;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
@@ -17,9 +18,9 @@ class FundControllerExt extends FundController
     use FundTrait;
     use ChartBaseTrait;
 
-    public function __construct(FundRepository $fundRepo)
+    public function __construct(FundRepository $fundRepo, TransactionRepository $transactionRepo)
     {
-        parent::__construct($fundRepo);
+        parent::__construct($fundRepo, $transactionRepo);
     }
 
     /**

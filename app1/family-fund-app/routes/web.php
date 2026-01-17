@@ -147,6 +147,10 @@ Route::middleware('auth')->group(function () {
     Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
         ->name('fundReports.resend');
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
+    Route::get('funds/create-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@createWithSetup')
+        ->name('funds.createWithSetup');
+    Route::post('funds/store-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@storeWithSetup')
+        ->name('funds.storeWithSetup');
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
     Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);

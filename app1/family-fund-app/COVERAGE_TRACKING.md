@@ -77,14 +77,31 @@ All remaining files - Total: 493 uncovered lines across 26 files
    - Added comprehensive negative tests (10 tests)
    - Covered: CRUD operations, preview, bulk operations, validation, error handling
 
+3. **FundPDF** - 28.1% → 44.21% (20 tests, all passing)
+   - Added 20 comprehensive PDF generation tests
+   - Covered: findTradePortfolioItem(), graph generation methods (shares, assets, accounts, forecast, portfolios)
+   - Edge case tests (empty data, missing keys, non-portfolio symbols)
+   - Integration tests with multiple accounts and goal progress
+
+4. **AssetPriceControllerExt** - 42.5% → 96.73% (19 tests, all passing)
+   - Added filtering tests (single asset, multiple assets, fund, date range)
+   - Sorting tests (by asset name, price, type)
+   - Chart data generation tests (single, multi-asset, fund assets)
+   - Create/edit form tests
+   - Comprehensive negative tests
+
+5. **ScheduledJobControllerExt** - 24.6% → 52.73% (8 tests passing)
+   - Added index listing tests
+   - Create/edit/show form tests
+   - Preview/run/force-run scheduled job tests
+   - Negative tests (invalid IDs, redirects)
+
 ### 🔄 In Progress
 - None
 
 ### 📋 Next Up
-1. FundPDF (174 uncovered lines)
-2. AssetPriceControllerExt (88 uncovered lines)
-3. ScheduledJobControllerExt (83 uncovered lines)
-4. PersonController (55 uncovered lines)
+1. PersonController (55 uncovered lines)
+2. Remaining LOW priority files
 
 ## Strategy
 

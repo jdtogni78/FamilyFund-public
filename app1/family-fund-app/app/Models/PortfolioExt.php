@@ -35,7 +35,7 @@ class PortfolioExt extends Portfolio
         $tradePortfolioAssetsRepo = \App::make(TradePortfolioRepository::class);
         $query = $tradePortfolioAssetsRepo->makeModel()->newQuery()
             ->where('portfolio_id', $this->id)
-            ->whereDate('end_dt', '>', $start)
+            ->whereDate('end_dt', '>=', $start)
             ->whereDate('start_dt', '<=', $end);
 
         $tradePortfolios = $query->get();

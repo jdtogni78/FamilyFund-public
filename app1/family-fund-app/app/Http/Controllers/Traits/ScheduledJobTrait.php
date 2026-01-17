@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 Trait ScheduledJobTrait
 {
-    use FundTrait, TransactionTrait, TradeBandReportTrait, MatchingReminderTrait, HolidaysSyncTrait, VerboseTrait;
+    use FundTrait, TransactionTrait, TradeBandReportTrait, MatchingReminderTrait, HolidaysSyncTrait, VerboseTrait, ScheduledJobEmailAlertTrait;
     private $handlers = [];
 
     public function setupHandlers()
@@ -49,7 +49,7 @@ Trait ScheduledJobTrait
         // $schedule->verbose = true;
         $shouldRunBy = $schedule->shouldRunBy($asOf);
         $shouldRunByDate = $shouldRunBy['shouldRunBy'];
-        
+
         // if should run by is greater than asof, skip, otherwise report as due
         if ($shouldRunByDate->lte($asOf)) {
             try {
@@ -57,9 +57,51 @@ Trait ScheduledJobTrait
                 if ($model !== null) {
                     Log::info('Scheduled job ' . $schedule->id . ' is due, adding to list');
                     return [$model, null, $shouldRunBy];
+                } else {
+                    // SOFT FAILURE: Handler returned null (e.g., missing data, template not found)
+                    $daysOverdue = $shouldRunByDate->diffInDays($asOf);
+                    $reason = "Scheduled job returned null (possible causes: missing data, missing template, or insufficient conditions to execute)";
+
+                    Log::warning("Scheduled job {$schedule->id} soft failure: {$reason}. Days overdue: {$daysOverdue}");
+
+                    // Send email alert for soft failure
+                    $this->sendScheduledJobFailureAlert(
+                        $schedule,
+                        $asOf,
+                        $reason,
+                        null, // no exception
+                        [
+                            'should_run_by' => $shouldRunByDate->toDateString(),
+                            'days_overdue' => $daysOverdue,
+                            'failure_type' => 'soft_failure',
+                        ]
+                    );
+
+                    // Create a "soft error" exception for tracking
+                    $softError = new \Exception($reason);
+                    return [null, $softError, $shouldRunBy];
                 }
             } catch (\Exception $e) {
                 report($e);
+
+                // Send email alert for exception
+                $daysOverdue = $shouldRunByDate->diffInDays($asOf);
+                $reason = "Scheduled job threw exception: " . $e->getMessage();
+
+                Log::error("Scheduled job {$schedule->id} exception: {$reason}. Days overdue: {$daysOverdue}");
+
+                $this->sendScheduledJobFailureAlert(
+                    $schedule,
+                    $asOf,
+                    $reason,
+                    $e,
+                    [
+                        'should_run_by' => $shouldRunByDate->toDateString(),
+                        'days_overdue' => $daysOverdue,
+                        'failure_type' => 'exception',
+                    ]
+                );
+
                 return [null, $e, $shouldRunBy];
             }
         } else {

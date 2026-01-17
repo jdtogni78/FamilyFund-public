@@ -166,7 +166,17 @@ All remaining files - Total: 493 uncovered lines across 26 files
     - Added by repository owner during session
     - Email alerts for scheduled job failures
 
-**Total: 29 files improved, 201+ tests added**
+**Session 4 (Jan 17 - Final Push):**
+
+30. **AccountReportController** - 42.42% → 54.55%! (7 tests, all passing)
+    - Pushed over 50% target!
+    - Added show and destroy positive path tests
+
+31. **TransactionController** - 45.71% (7 tests, all passing)
+    - Added show and destroy tests
+    - Still approaching 50%
+
+**Total: 31 files improved, 209+ tests added**
 
 ### 🔄 In Progress
 - None

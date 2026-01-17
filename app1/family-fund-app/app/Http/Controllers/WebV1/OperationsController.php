@@ -11,7 +11,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Laracasts\Flash\Flash;
@@ -98,9 +97,6 @@ class OperationsController extends AppBaseController
             ->limit(50)
             ->get();
 
-        // Check for asset price gaps
-        $gapInfo = $this->checkAssetPriceGaps();
-
         return view('operations.index', compact(
             'scheduledJobs',
             'pendingTransactions',
@@ -112,39 +108,8 @@ class OperationsController extends AppBaseController
             'pendingJobsCount',
             'failedJobsCount',
             'queueRunning',
-            'operationLogs',
-            'gapInfo'
+            'operationLogs'
         ));
-    }
-
-    /**
-     * Check for asset price gaps via API
-     */
-    private function checkAssetPriceGaps(): array
-    {
-        try {
-            $lookbackDays = 30;
-            $response = \Http::get(config('app.url') . "/api/asset_prices/gaps?days={$lookbackDays}&exchange=NYSE");
-
-            if ($response->successful()) {
-                $data = $response->json();
-                return [
-                    'hasGaps' => $data['missing_count'] > 0,
-                    'count' => $data['missing_count'],
-                    'dates' => $data['missing_dates'] ?? [],
-                    'lookbackDays' => $lookbackDays,
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning("Failed to check asset price gaps: " . $e->getMessage());
-        }
-
-        return [
-            'hasGaps' => false,
-            'count' => 0,
-            'dates' => [],
-            'lookbackDays' => 30,
-        ];
     }
 
     /**

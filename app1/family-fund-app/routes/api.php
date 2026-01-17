@@ -36,6 +36,7 @@ Route::get('account_matching/{account_id}/as_of/{as_of}', [AccountAPIControllerE
 Route::get('portfolios/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\PortfolioAPIControllerExt@showAsOf');
 //Route::post('portfolios/{code}/assets_update', [PortfolioAPIControllerExt::class, 'assetsUpdate']);
 Route::post('asset_prices_bulk_update', [AssetPriceAPIControllerExt::class, 'bulkStore']);
+Route::get('asset_prices/gaps', [AssetPriceAPIControllerExt::class, 'gaps']);
 Route::post('portfolio_assets_bulk_update', [PortfolioAssetAPIControllerExt::class, 'bulkStore']);
 
 Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\FundAPIControllerExt@showAsOf');
@@ -88,3 +89,11 @@ Route::resource('id_documents', App\Http\Controllers\API\IdDocumentAPIController
 
 
 Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class)->names('api.phones');
+
+// Exchange Holiday API
+Route::get('/exchange_holidays/{exchange}/{year}',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'index']);
+Route::post('/exchange_holidays/sync',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'sync']);
+Route::get('/exchange_holidays/status',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'status']);

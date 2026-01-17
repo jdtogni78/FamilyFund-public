@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 Trait ScheduledJobTrait
 {
-    use FundTrait, TransactionTrait, TradeBandReportTrait, MatchingReminderTrait, VerboseTrait;
+    use FundTrait, TransactionTrait, TradeBandReportTrait, MatchingReminderTrait, HolidaysSyncTrait, VerboseTrait;
     private $handlers = [];
 
     public function setupHandlers()
@@ -19,6 +19,7 @@ Trait ScheduledJobTrait
         $this->handlers[ScheduledJobExt::ENTITY_TRANSACTION] = 'transactionScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRADE_BAND_REPORT] = 'tradeBandReportScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_MATCHING_REMINDER] = 'matchingReminderScheduleDue';
+        $this->handlers[ScheduledJobExt::ENTITY_HOLIDAYS_SYNC] = 'holidaysSyncScheduleDue';
     }
 
     public function scheduleDueJobs($asOf, $entityDescrFilter=null) {

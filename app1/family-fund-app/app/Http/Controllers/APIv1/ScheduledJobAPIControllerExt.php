@@ -28,8 +28,10 @@ class ScheduledJobAPIControllerExt extends ScheduledJobAPIController
 
     public function scheduleJobs(Request $request)
     {
-        $asOf = $request->input('as_of', Carbon::now());
-        list ($ret, $errors) = $this->scheduleDueJobs($asOf);
+        $asOfInput = $request->input('as_of', Carbon::now());
+        $asOf = $asOfInput instanceof Carbon ? $asOfInput : Carbon::parse($asOfInput);
+        $entityDescrFilter = $request->input('entity_descr', null);
+        list ($ret, $errors) = $this->scheduleDueJobs($asOf, $entityDescrFilter);
         if (count($errors) > 0) {
             return $this->sendError('Errors scheduling jobs: ' . implode(', ', $errors));
         }

@@ -26,9 +26,11 @@ class HolidaysSyncTraitTest extends TestCase
     {
         parent::setUp();
 
-        // Create anonymous class that uses the trait
+        // Create anonymous class that uses the trait and exposes the method as public
         $this->traitObject = new class {
-            use HolidaysSyncTrait;
+            use HolidaysSyncTrait {
+                holidaysSyncScheduleDue as public;
+            }
         };
     }
 

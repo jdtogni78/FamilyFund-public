@@ -241,6 +241,7 @@ class ScheduledHolidaySyncTest extends TestCase
     {
         // Arrange: Create multiple logs
         $schedule = ScheduleExt::create([
+            'descr' => 'Test Schedule',
             'type' => ScheduleExt::TYPE_DAY_OF_MONTH,
             'value' => '1',
         ]);

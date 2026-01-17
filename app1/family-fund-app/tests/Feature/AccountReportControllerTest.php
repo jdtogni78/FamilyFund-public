@@ -50,6 +50,18 @@ class AccountReportControllerTest extends TestCase
         $response->assertViewIs('account_reports.create');
     }
 
+    public function test_show_displays_account_report()
+    {
+        $accountReport = AccountReport::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('accountReports.show', $accountReport->id));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('account_reports.show');
+        $response->assertViewHas('accountReport');
+    }
+
     public function test_show_redirects_for_invalid_id()
     {
         $response = $this->actingAs($this->user)
@@ -63,6 +75,17 @@ class AccountReportControllerTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->get(route('accountReports.edit', 99999));
+
+        $response->assertRedirect(route('accountReports.index'));
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_destroy_handles_account_report()
+    {
+        $accountReport = AccountReport::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('accountReports.destroy', $accountReport->id));
 
         $response->assertRedirect(route('accountReports.index'));
         $response->assertSessionHas('flash_notification');

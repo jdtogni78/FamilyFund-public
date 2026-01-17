@@ -50,6 +50,18 @@ class TransactionControllerTest extends TestCase
         $response->assertViewIs('transactions.create');
     }
 
+    public function test_show_displays_transaction()
+    {
+        $transaction = Transaction::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('transactions.show', $transaction->id));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('transactions.show');
+        $response->assertViewHas('transaction');
+    }
+
     public function test_show_redirects_for_invalid_id()
     {
         $response = $this->actingAs($this->user)
@@ -66,6 +78,18 @@ class TransactionControllerTest extends TestCase
 
         $response->assertRedirect(route('transactions.index'));
         $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_destroy_handles_transaction()
+    {
+        $transaction = Transaction::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('transactions.destroy', $transaction->id));
+
+        $response->assertRedirect(route('transactions.index'));
+        $response->assertSessionHas('flash_notification');
+        // Note: May not be deleted due to foreign key constraints
     }
 
     public function test_destroy_redirects_for_invalid_id()

@@ -24,7 +24,7 @@ return new class extends Migration
         // Create scheduled job for NYSE holiday sync
         DB::table('scheduled_jobs')->insert([
             'schedule_id' => $scheduleId,
-            'entity_descr' => 'exchange_holiday_sync',
+            'entity_descr' => 'holidays_sync',
             'entity_id' => 1, // NYSE exchange ID (placeholder)
             'start_dt' => now()->startOfYear(),
             'end_dt' => '9999-12-31 00:00:00',
@@ -40,7 +40,7 @@ return new class extends Migration
     {
         // Find and delete the scheduled job
         $job = DB::table('scheduled_jobs')
-            ->where('entity_descr', 'exchange_holiday_sync')
+            ->where('entity_descr', 'holidays_sync')
             ->first();
 
         if ($job) {

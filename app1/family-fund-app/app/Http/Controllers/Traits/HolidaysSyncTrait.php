@@ -20,25 +20,42 @@ trait HolidaysSyncTrait
         // Get exchange from job config (default to NYSE)
         // Could extend to use entity_id to reference an exchange config table in future
         $exchange = 'NYSE';
-        $year = $asOf->year;
 
-        Log::info("Running holiday sync for $exchange $year (job: {$job->id})");
+        // Sync multiple years: previous year, current year, and next 2 years
+        $startYear = $asOf->year - 1;
+        $endYear = $asOf->year + 2;
+
+        Log::info("Running holiday sync for $exchange $startYear-$endYear (job: {$job->id})");
+
+        $totalRecords = 0;
+        $source = 'unknown';
 
         try {
-            // Execute the sync via service
             $syncService = app(HolidaySyncService::class);
-            $result = $syncService->syncHolidays($exchange, $year);
+
+            // Sync each year
+            for ($year = $startYear; $year <= $endYear; $year++) {
+                try {
+                    $result = $syncService->syncHolidays($exchange, $year);
+                    $totalRecords += $result['records_added'] ?? 0;
+                    $source = $result['source'] ?? $source;
+                    Log::info("Holiday sync for $year: {$result['records_added']} records");
+                } catch (\Exception $e) {
+                    Log::warning("Holiday sync failed for $exchange $year: " . $e->getMessage());
+                    // Continue with next year even if one fails
+                }
+            }
 
             // Log the execution
             $log = HolidaysSyncLog::create([
                 'scheduled_job_id' => $job->id,
                 'exchange' => $exchange,
                 'synced_at' => $asOf,
-                'records_synced' => $result['records_added'] ?? 0,
-                'source' => $result['source'] ?? 'unknown',
+                'records_synced' => $totalRecords,
+                'source' => $source,
             ]);
 
-            Log::info("Holiday sync completed: {$log->records_synced} records from {$log->source}");
+            Log::info("Holiday sync completed: {$log->records_synced} total records from {$log->source}");
 
             return $log;
         } catch (\Exception $e) {

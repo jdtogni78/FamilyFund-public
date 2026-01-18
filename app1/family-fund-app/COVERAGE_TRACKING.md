@@ -196,7 +196,25 @@ All remaining files - Total: 493 uncovered lines across 26 files
 39. **AssetPriceController** - 20.9% → improved! (9 tests, all passing)
     - Includes filtering test for name parameter
 
-**Total: 39 files improved, 267+ tests added**
+**Session 6 (Jan 18 - Continuation of Worst Coverage First):**
+
+40. **PersonController** - 23.6% → improved (5 tests, all passing)
+    - Partial coverage (create/edit skipped due to view syntax errors)
+
+41. **CashDepositControllerExt** - 27.3% → improved! (5 tests, all passing)
+    - Index, create, show, edit with API data
+    - Assign deposit requests functionality
+
+42. **UserController** - 32.4% → improved! (8 tests, all passing)
+    - Full CRUD operations
+
+43. **TradePortfolioController** - 44.1% → 50%+! (3 tests, all passing)
+44. **DepositRequestController** - 45.5% → 50%+! (3 tests, all passing)
+45. **TradePortfolioItemController** - 47.1% → 50%+! (2 tests, all passing)
+46. **AssetController** - 48.5% → 50%+! (2 tests, all passing)
+47. **AccountBalanceController** - 48.5% → 50%+! (2 tests, all passing)
+
+**Total: 47 files improved, 306+ tests added**
 
 ### 🔄 In Progress
 - None

@@ -11,6 +11,20 @@
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')
 
+            {{-- Data Staleness Warning Banner --}}
+            @if(isset($api['data_staleness']) && $api['data_staleness']['is_stale'])
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border: 2px solid #f59e0b; background: #fffbeb;">
+                <i class="fa fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: #d97706;"></i>
+                <div class="flex-grow-1">
+                    <strong style="color: #92400e;">Data Warning:</strong>
+                    <span style="color: #78350f;">{{ $api['data_staleness']['message'] ?? 'Portfolio data may be stale' }}</span>
+                </div>
+                <span class="badge" style="background: #f59e0b; color: #fff; font-size: 0.75rem; padding: 6px 12px;">
+                    {{ $api['data_staleness']['trading_days_stale'] }} TRADING DAY{{ $api['data_staleness']['trading_days_stale'] > 1 ? 'S' : '' }} DELAYED
+                </span>
+            </div>
+            @endif
+
             {{-- Fund Highlights Card --}}
             @php
                 $totalValueRaw = $api['portfolio']['total_value'] ?? 0;

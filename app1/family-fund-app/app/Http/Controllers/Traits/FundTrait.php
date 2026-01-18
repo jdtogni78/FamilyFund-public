@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Mail;
 
 Trait FundTrait
 {
-    use PerformanceTrait, MailTrait;
+    use PerformanceTrait, MailTrait, DetectsDataIssuesTrait;
     protected $err = [];
     protected $msgs = [];
     private $noEmailMessage = "The following accounts have no email: ";
@@ -319,6 +319,10 @@ Trait FundTrait
         }
 
         $arr['asOf'] = $asOf;
+
+        // Add data staleness info for display warning banner
+        $arr['data_staleness'] = $this->calculateDataStaleness($asOf);
+
         return $arr;
     }
 
@@ -341,6 +345,15 @@ Trait FundTrait
                 $users = $account->user()->get();
                 Log::info("* sending report to acct ".$account->nickname);
                 if (count($users) == 1) {
+                    // Check if account report already exists for this account/as_of to prevent duplicates on retry
+                    $existing = AccountReport::where('account_id', $account->id)
+                        ->where('as_of', $fundReport->as_of)
+                        ->where('type', $fundReport->type)
+                        ->first();
+                    if ($existing) {
+                        Log::info("  -> skipping, report already exists (id: {$existing->id})");
+                        continue;
+                    }
                     $accountReport = AccountReport::create([
                         'account_id' => $account->id,
                         'type' => $fundReport->type,
@@ -473,11 +486,12 @@ Trait FundTrait
             return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
         }
 
-        $dayOfWeek = $shouldRunByDate->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+        // Load exchange holidays for calculating trading days
+        $holidays = $this->loadExchangeHolidays('NYSE', $shouldRunByDate->copy()->subDays(14), $asOf);
 
-        // Calculate lookback days based on day of week
-        $lookbackDays = 2; // Base lookback for holidays
-        // if today, or yesterday or 2 days ago falls on a weekend, add days
+        // Check for recent data in the lookback window (calendar-based for simplicity)
+        $dayOfWeek = $shouldRunByDate->dayOfWeek;
+        $lookbackDays = 2;
         if (in_array($dayOfWeek, [0, 1, 2])) {
             $lookbackDays += 2;
         } elseif ($dayOfWeek == 6) {
@@ -488,6 +502,7 @@ Trait FundTrait
         $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l')
             . ') to ' . $shouldRunByDate->format('Y-m-d') . ' (' . $shouldRunByDate->format('l') . ')';
         Log::info('Checking if got assets between '.$period.' (lookback: '.$lookbackDays.' days)');
+
         $hasNewAssets = AssetPrice::query()
             ->whereBetween('start_dt', [$lookbackDate, $shouldRunBy])
             ->limit(1)
@@ -495,19 +510,38 @@ Trait FundTrait
 
         if ($hasNewAssets > 0) {
             Log::info('Creating fund report for schedule: ' . $job->id);
-            $report = $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
-            return $report;
-        } else {
-            $msg = 'No data for fund report schedule ' . $job->id . ' between ' . $period . '. Lookback: ' . $lookbackDays . ' days';
-            // if today is past 4 days of the schedule, error
-            $diff = $shouldRunByDate->diffInDays($asOf);
-            if ($diff > 4) {
-                throw new Exception($msg . ' (' . $diff . ' days past due date)');
-            } else {
-                Log::warning($msg);
-            }
+            return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
         }
-        return null;
+
+        // No data in lookback window - find the most recent asset price
+        $latestPrice = AssetPrice::query()
+            ->where('start_dt', '<=', $shouldRunBy)
+            ->orderBy('start_dt', 'desc')
+            ->first();
+
+        if (!$latestPrice) {
+            $msg = 'No asset price data found before ' . $shouldRunBy;
+            Log::error($msg);
+            throw new Exception($msg);
+        }
+
+        $latestPriceDate = Carbon::parse($latestPrice->start_dt);
+
+        // Calculate trading days between latest price and report date
+        $tradingDaysStale = $this->calculateTradingDays($latestPriceDate, $shouldRunByDate, $holidays);
+
+        Log::info("Latest price date: {$latestPriceDate->format('Y-m-d')}, Report date: {$shouldRunByDate->format('Y-m-d')}, Trading days stale: {$tradingDaysStale}");
+
+        // Fail if data is more than 5 trading days stale
+        if ($tradingDaysStale > 5) {
+            $msg = "No recent data for fund report schedule {$job->id}. Latest price: {$latestPriceDate->format('Y-m-d')} ({$tradingDaysStale} trading days stale)";
+            Log::error($msg);
+            throw new Exception($msg);
+        }
+
+        // Data is stale but within tolerance - proceed with warning
+        Log::warning("Creating fund report with stale data ({$tradingDaysStale} trading days). Latest price: {$latestPriceDate->format('Y-m-d')}");
+        return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
     }
 
     protected function sendFundEmailReport($fundReport): void
@@ -521,6 +555,55 @@ Trait FundTrait
         $pdf->createFundPDF($arr, $isAdmin);
 
         $this->fundEmailReport($fundReport, $pdf);
+    }
+
+    /**
+     * Calculate data staleness for a given as-of date.
+     *
+     * @param string $asOf The as-of date (Y-m-d format)
+     * @return array Data staleness info: latest_price_date, trading_days_stale, is_stale
+     */
+    protected function calculateDataStaleness(string $asOf): array
+    {
+        $asOfDate = Carbon::parse($asOf);
+
+        // Find the most recent asset price on or before the as-of date
+        $latestPrice = AssetPrice::query()
+            ->where('start_dt', '<=', $asOf)
+            ->orderBy('start_dt', 'desc')
+            ->first();
+
+        if (!$latestPrice) {
+            return [
+                'latest_price_date' => null,
+                'trading_days_stale' => null,
+                'is_stale' => true,
+                'message' => 'No asset price data available',
+            ];
+        }
+
+        $latestPriceDate = Carbon::parse($latestPrice->start_dt);
+
+        // Load exchange holidays
+        $holidays = $this->loadExchangeHolidays('NYSE', $latestPriceDate, $asOfDate);
+
+        // Calculate trading days between latest price and as-of date
+        $tradingDaysStale = $this->calculateTradingDays($latestPriceDate, $asOfDate, $holidays);
+
+        // Data is considered stale if there's any missing trading day
+        $isStale = $tradingDaysStale > 0;
+
+        $result = [
+            'latest_price_date' => $latestPriceDate->format('Y-m-d'),
+            'trading_days_stale' => $tradingDaysStale,
+            'is_stale' => $isStale,
+        ];
+
+        if ($isStale) {
+            $result['message'] = "Portfolio data as of {$latestPriceDate->format('M j, Y')} ({$tradingDaysStale} trading day" . ($tradingDaysStale > 1 ? 's' : '') . " before report date)";
+        }
+
+        return $result;
     }
 
     private function createGroupMonthlyPerformanceResponse($fund, $asOf, $arr)

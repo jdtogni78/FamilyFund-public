@@ -3,6 +3,32 @@
 @section('report-type', isset($api['admin']) ? 'Admin Fund Report' : 'Fund Report')
 
 @section('content')
+    {{-- Data Staleness Warning Banner --}}
+    @if(isset($api['data_staleness']) && $api['data_staleness']['is_stale'])
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 2px solid #f59e0b; border-radius: 6px; overflow: hidden; background: #fffbeb;">
+        <tr>
+            <td style="padding: 12px 16px;">
+                <table width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td width="32" style="vertical-align: middle;">
+                            <span style="font-size: 20px;">⚠️</span>
+                        </td>
+                        <td style="vertical-align: middle; padding-left: 8px;">
+                            <span style="color: #92400e; font-weight: 600; font-size: 13px;">Data Warning:</span>
+                            <span style="color: #78350f; font-size: 12px;">{{ $api['data_staleness']['message'] ?? 'Portfolio data may be stale' }}</span>
+                        </td>
+                        <td style="text-align: right; vertical-align: middle;">
+                            <span style="background: #f59e0b; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">
+                                {{ $api['data_staleness']['trading_days_stale'] }} TRADING DAY{{ $api['data_staleness']['trading_days_stale'] > 1 ? 'S' : '' }} DELAYED
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    @endif
+
     @php
         $totalShares = $api['summary']['shares'];
         $shareValue = $api['summary']['share_value'];

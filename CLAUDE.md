@@ -24,13 +24,8 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 docker exec familyfund composer install
 npm install && npm run dev   # run from app1/family-fund-app/
 
-# Testing
-php artisan test                              # All tests
-php artisan test --testsuite=Feature          # Feature tests
-php artisan test --testsuite=APIs             # API endpoint tests
-php artisan test --testsuite=Repositories     # Repository tests
-php artisan test --testsuite=GoldenData       # Golden dataset tests
-php artisan test --filter=TransactionTest     # Single test file
+# Testing (IMPORTANT: must run in Docker - database not accessible from host)
+docker exec familyfund php artisan test  # See Testing section below for more options
 
 # Database
 php artisan migrate
@@ -74,6 +69,8 @@ php artisan queue:listen
 
 ## Testing
 
+**IMPORTANT:** Tests must run in Docker (`docker exec familyfund php artisan test`) - database is not accessible from host.
+
 **Current Status (2026-01-10):** 288 passing (all pass with exclusions)
 
 Tests organized in `tests/`:
@@ -84,7 +81,7 @@ Tests organized in `tests/`:
 - `DataFactory.php` - Test data generation
 
 ```bash
-# Run tests in Docker
+# Run tests in Docker (REQUIRED - do not run locally)
 docker exec familyfund php artisan test
 docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor  # Skip problematic tests
 docker exec familyfund php artisan test --filter=TransactionTest    # Single test

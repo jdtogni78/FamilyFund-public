@@ -73,15 +73,23 @@
 
              <!-- Data Warnings -->
              @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']) || !empty($dataWarnings['longSpans']))
-             <div class="card mb-3 border-warning">
-                 <div class="card-header bg-warning text-dark">
-                     <i class="fa fa-exclamation-triangle me-2"></i>
-                     <strong>Data Warnings</strong>
+             <style>
+                 #data-warnings-header { background: #fffbeb !important; border-bottom: 1px solid #f59e0b !important; }
+                 .dark #data-warnings-header { background: #78350f !important; border-bottom: 1px solid #f59e0b !important; }
+                 .dark #data-warnings-header strong { color: #fef3c7 !important; }
+                 .dark #data-warnings-header i { color: #fbbf24 !important; }
+                 .dark .data-warnings-body { background: #451a03 !important; }
+                 .dark .data-warnings-body strong { color: #fbbf24 !important; }
+             </style>
+             <div class="card mb-3" style="border: 2px solid #f59e0b;">
+                 <div id="data-warnings-header" class="card-header">
+                     <i class="fa fa-exclamation-triangle me-2" style="color: #d97706;"></i>
+                     <strong style="color: #d97706;">Data Warnings</strong>
                  </div>
-                 <div class="card-body py-2">
+                 <div class="card-body py-2 data-warnings-body" style="max-height: 200px; overflow-y: auto;">
                      @if(!empty($dataWarnings['overlaps']))
                      <div class="mb-2">
-                         <strong class="text-warning"><i class="fa fa-clone me-1"></i> Overlapping Price Ranges:</strong>
+                         <strong style="color: #d97706;"><i class="fa fa-clone me-1" style="color: #d97706;"></i> Overlapping Price Ranges:</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['overlaps'] as $overlap)
                              <li>{{ $overlap['name'] }}: {{ $overlap['record1'] }} overlaps with {{ $overlap['record2'] }}</li>
@@ -91,7 +99,7 @@
                      @endif
                      @if(!empty($dataWarnings['longSpans']))
                      <div class="mb-2">
-                         <strong class="text-warning"><i class="fa fa-calendar-plus me-1"></i> Days Without New Data:</strong>
+                         <strong style="color: #d97706;"><i class="fa fa-calendar-plus me-1"></i> Days Without New Data:</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['longSpans'] as $span)
                              <li>
@@ -105,7 +113,7 @@
                      @endif
                      @if(!empty($dataWarnings['gaps']))
                      <div>
-                         <strong class="text-warning"><i class="fa fa-calendar-times me-1"></i> Data Gaps (Missing Trading Days):</strong>
+                         <strong style="color: #d97706;"><i class="fa fa-calendar-times me-1"></i> Data Gaps (Missing Trading Days):</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['gaps'] as $gap)
                              <li>

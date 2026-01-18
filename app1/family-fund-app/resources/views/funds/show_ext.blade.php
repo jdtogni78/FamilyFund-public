@@ -13,11 +13,20 @@
 
             {{-- Data Staleness Warning Banner --}}
             @if(isset($api['data_staleness']) && $api['data_staleness']['is_stale'])
-            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border: 2px solid #f59e0b; background: #fffbeb;">
+            <style>
+                #data-staleness-warning { border: 2px solid #f59e0b; background: #fffbeb; }
+                #data-staleness-warning strong { color: #d97706; }
+                #data-staleness-warning span.warning-text { color: #78350f; }
+                .dark #data-staleness-warning { background: #451a03; }
+                .dark #data-staleness-warning strong { color: #fbbf24; }
+                .dark #data-staleness-warning span.warning-text { color: #fef3c7; }
+                .dark #data-staleness-warning i { color: #fbbf24; }
+            </style>
+            <div id="data-staleness-warning" class="alert d-flex align-items-center mb-4" role="alert">
                 <i class="fa fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: #d97706;"></i>
                 <div class="flex-grow-1">
-                    <strong style="color: #92400e;">Data Warning:</strong>
-                    <span style="color: #78350f;">{{ $api['data_staleness']['message'] ?? 'Portfolio data may be stale' }}</span>
+                    <strong>Data Warning:</strong>
+                    <span class="warning-text">{{ $api['data_staleness']['message'] ?? 'Portfolio data may be stale' }}</span>
                 </div>
                 <span class="badge" style="background: #f59e0b; color: #fff; font-size: 0.75rem; padding: 6px 12px;">
                     {{ $api['data_staleness']['trading_days_stale'] }} TRADING DAY{{ $api['data_staleness']['trading_days_stale'] > 1 ? 'S' : '' }} DELAYED
@@ -84,7 +93,7 @@
                                 @if(isset($api['admin']) && $accountsCount > 0)
                                 <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
-                                    <div class="text-uppercase small" style="color: #92400e;">
+                                    <div class="text-uppercase small" style="color: #d97706;">
                                         Accounts <span class="badge badge-warning">ADMIN</span>
                                     </div>
                                 </div>

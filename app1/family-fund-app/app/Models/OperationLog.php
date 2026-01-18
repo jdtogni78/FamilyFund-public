@@ -67,4 +67,37 @@ class OperationLog extends Model
             'details' => $details,
         ]);
     }
+
+    /**
+     * Check if a job has already completed successfully for a given model.
+     *
+     * @param string $jobClass The job class name (e.g., 'App\Jobs\SendAccountReport')
+     * @param string $modelClass The model class name (e.g., 'App\Models\AccountReport')
+     * @param int $modelId The model ID
+     * @return bool True if job already completed for this model
+     */
+    public static function jobCompletedForModel(string $jobClass, string $modelClass, int $modelId): bool
+    {
+        return self::where('operation', self::OP_QUEUE_JOB_COMPLETED)
+            ->where('result', self::RESULT_SUCCESS)
+            ->whereJsonContains('details->job_name', $jobClass)
+            ->whereJsonContains('details->model_class', $modelClass)
+            ->whereRaw("JSON_EXTRACT(details, '$.model_id') = ?", [$modelId])
+            ->exists();
+    }
+
+    /**
+     * Clear job completion records for a model (to allow resending).
+     *
+     * @param string $modelClass The model class name
+     * @param int $modelId The model ID
+     * @return int Number of records deleted
+     */
+    public static function clearJobCompletionForModel(string $modelClass, int $modelId): int
+    {
+        return self::where('operation', self::OP_QUEUE_JOB_COMPLETED)
+            ->whereJsonContains('details->model_class', $modelClass)
+            ->whereRaw("JSON_EXTRACT(details, '$.model_id') = ?", [$modelId])
+            ->delete();
+    }
 }

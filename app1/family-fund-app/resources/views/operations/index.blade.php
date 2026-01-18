@@ -340,6 +340,7 @@
                                             <th>Operation</th>
                                             <th>Result</th>
                                             <th>Message</th>
+                                            <th>Model</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -358,6 +359,16 @@
                                                 @endif
                                             </td>
                                             <td><small>{{ $log->message }}</small></td>
+                                            <td>
+                                                @if($log->details && isset($log->details['model_class']) && isset($log->details['model_id']))
+                                                    <small class="text-muted">
+                                                        {{ class_basename($log->details['model_class']) }}
+                                                        #{{ $log->details['model_id'] }}
+                                                    </small>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                         </tr>
                                         @endforeach
                                     </tbody>

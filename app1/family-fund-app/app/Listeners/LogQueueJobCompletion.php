@@ -9,12 +9,38 @@ use Illuminate\Queue\Events\JobFailed;
 class LogQueueJobCompletion
 {
     /**
+     * Extract model class and ID from serialized job command.
+     */
+    protected function extractModelInfo(array $payload): array
+    {
+        $info = ['model_class' => null, 'model_id' => null];
+
+        $command = $payload['data']['command'] ?? null;
+        if (!$command) {
+            return $info;
+        }
+
+        // Extract model class from ModelIdentifier
+        if (preg_match('/ModelIdentifier[^}]+s:5:"class";s:\d+:"([^"]+)"/', $command, $matches)) {
+            $info['model_class'] = $matches[1];
+        }
+
+        // Extract model ID
+        if (preg_match('/ModelIdentifier[^}]+s:2:"id";i:(\d+)/', $command, $matches)) {
+            $info['model_id'] = (int) $matches[1];
+        }
+
+        return $info;
+    }
+
+    /**
      * Handle successful job completion.
      */
     public function handleJobProcessed(JobProcessed $event): void
     {
         $payload = $event->job->payload();
         $jobName = $payload['displayName'] ?? 'Unknown';
+        $modelInfo = $this->extractModelInfo($payload);
 
         OperationLog::create([
             'user_id' => null, // Queue jobs run without user context
@@ -25,6 +51,8 @@ class LogQueueJobCompletion
                 'job_name' => $jobName,
                 'queue' => $event->job->getQueue(),
                 'connection' => $event->connectionName,
+                'model_class' => $modelInfo['model_class'],
+                'model_id' => $modelInfo['model_id'],
             ],
         ]);
     }
@@ -36,6 +64,7 @@ class LogQueueJobCompletion
     {
         $payload = $event->job->payload();
         $jobName = $payload['displayName'] ?? 'Unknown';
+        $modelInfo = $this->extractModelInfo($payload);
 
         OperationLog::create([
             'user_id' => null,
@@ -47,6 +76,8 @@ class LogQueueJobCompletion
                 'queue' => $event->job->getQueue(),
                 'connection' => $event->connectionName,
                 'exception' => $event->exception->getMessage(),
+                'model_class' => $modelInfo['model_class'],
+                'model_id' => $modelInfo['model_id'],
             ],
         ]);
     }

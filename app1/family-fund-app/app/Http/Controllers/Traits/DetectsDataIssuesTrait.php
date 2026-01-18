@@ -102,6 +102,11 @@ trait DetectsDataIssuesTrait
             }
         }
 
+        // Sort all warnings by date descending (newest first)
+        usort($overlaps, fn($a, $b) => strcmp($b['record1'] ?? '', $a['record1'] ?? ''));
+        usort($gaps, fn($a, $b) => strcmp($b['from'] ?? '', $a['from'] ?? ''));
+        usort($longSpans, fn($a, $b) => strcmp($b['from'] ?? '', $a['from'] ?? ''));
+
         return [
             'overlaps' => $overlaps,
             'gaps' => $gaps,

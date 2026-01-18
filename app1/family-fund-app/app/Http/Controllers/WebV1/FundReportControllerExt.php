@@ -6,9 +6,13 @@ use App\Http\Controllers\FundReportController;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
+use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
+use App\Models\AccountReport;
 use App\Models\Fund;
+use App\Models\FundReport;
 use App\Models\FundReportExt;
+use App\Models\OperationLog;
 use App\Repositories\FundReportRepository;
 use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
@@ -42,7 +46,33 @@ class FundReportControllerExt extends FundReportController
             return redirect(route('fundReports.index'));
         }
 
-        return view('fund_reports.show')->with('fundReport', $fundReport);
+        // Check email status from OperationLog
+        $emailStatus = [
+            'fundEmailSent' => OperationLog::jobCompletedForModel(
+                SendFundReport::class,
+                FundReport::class,
+                $fundReport->id
+            ),
+            'accountReports' => [],
+        ];
+
+        // Get related account reports and their status
+        $accountReports = AccountReport::where('as_of', $fundReport->as_of)->get();
+        foreach ($accountReports as $ar) {
+            $emailStatus['accountReports'][] = [
+                'id' => $ar->id,
+                'account' => $ar->account->nickname ?? 'N/A',
+                'sent' => OperationLog::jobCompletedForModel(
+                    SendAccountReport::class,
+                    AccountReport::class,
+                    $ar->id
+                ),
+            ];
+        }
+
+        return view('fund_reports.show')
+            ->with('fundReport', $fundReport)
+            ->with('emailStatus', $emailStatus);
     }
 
     public function create()
@@ -129,10 +159,25 @@ class FundReportControllerExt extends FundReportController
             return redirect(route('fundReports.index'));
         }
 
-        SendFundReport::dispatch($fundReport);
-        Flash::success('Report #' . $id . ' queued for resending.');
+        // Clear completion records to allow resending
+        $fundCleared = OperationLog::clearJobCompletionForModel(FundReport::class, $fundReport->id);
 
-        return redirect(route('fundReports.index'));
+        // Also clear related account reports
+        $accountCleared = 0;
+        $accountReports = AccountReport::where('as_of', $fundReport->as_of)->get();
+        foreach ($accountReports as $ar) {
+            $accountCleared += OperationLog::clearJobCompletionForModel(AccountReport::class, $ar->id);
+        }
+
+        SendFundReport::dispatch($fundReport);
+
+        $msg = "Report #{$id} queued for resending.";
+        if ($fundCleared > 0 || $accountCleared > 0) {
+            $msg .= " Cleared {$fundCleared} fund + {$accountCleared} account completion record(s).";
+        }
+        Flash::success($msg);
+
+        return redirect(route('fundReports.show', $id));
     }
 
 }

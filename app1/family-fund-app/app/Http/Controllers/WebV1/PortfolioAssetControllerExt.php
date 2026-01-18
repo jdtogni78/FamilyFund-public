@@ -149,7 +149,7 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
 
     /**
      * Get asset map with type information for dropdowns.
-     * Optionally filtered by fund.
+     * Optionally filtered by fund. Shows fund abbreviation when no fund filter.
      */
     protected function getAssetMapWithType($fundId = null)
     {
@@ -162,13 +162,35 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
             })->distinct()->pluck('asset_id');
 
             $assets = AssetExt::whereIn('id', $assetIds)->orderBy('name')->get();
+
+            foreach ($assets as $asset) {
+                $map[$asset->id] = $asset->name . ' (' . $asset->type . ')';
+            }
         } else {
+            // No fund filter - show fund abbreviation for each asset
             $assets = AssetExt::orderBy('name')->get();
+
+            // Get fund associations for all assets
+            $assetFunds = PortfolioAsset::with('portfolio.fund')
+                ->distinct('asset_id')
+                ->get()
+                ->groupBy('asset_id')
+                ->map(function ($items) {
+                    return $items->map(fn($pa) => $pa->portfolio->fund->name ?? null)
+                        ->filter()
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                });
+
+            foreach ($assets as $asset) {
+                $funds = $assetFunds->get($asset->id, []);
+                $fundStr = !empty($funds) ? ' [' . implode(', ', $funds) . ']' : '';
+                $map[$asset->id] = $asset->name . ' (' . $asset->type . ')' . $fundStr;
+            }
         }
 
-        foreach ($assets as $asset) {
-            $map[$asset->id] = $asset->name . ' (' . $asset->type . ')';
-        }
         return $map;
     }
 

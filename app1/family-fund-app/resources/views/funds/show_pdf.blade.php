@@ -68,16 +68,15 @@
             }
         }
 
-        // All-time growth (compound)
-        $allTimeGrowth = 0;
-        if (!empty($yearlyPerf)) {
-            $compound = 1.0;
-            foreach ($yearlyPerf as $y => $data) {
-                $perf = ($data['performance'] ?? 0) / 100;
-                $compound *= (1 + $perf);
+        // All-time growth: (current value - total deposits) / total deposits
+        // This is the correct formula (not compounded yearly returns)
+        $totalDeposits = 0;
+        foreach ($api['transactions'] ?? [] as $trans) {
+            if ($trans->value > 0) {
+                $totalDeposits += $trans->value;
             }
-            $allTimeGrowth = ($compound - 1) * 100;
         }
+        $allTimeGrowth = $totalDeposits > 0 ? (($totalValue - $totalDeposits) / $totalDeposits) * 100 : 0;
 
         $accountsCount = count($api['balances'] ?? []);
         $asOf = $api['as_of'] ?? date('Y-m-d');

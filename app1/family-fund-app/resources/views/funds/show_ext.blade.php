@@ -44,6 +44,16 @@
                 $totalValue = '$' . number_format($totalValueRaw, 0);
                 $sharePrice = $api['summary']['share_value'] ?? 0;
                 $accountsCount = count($api['balances'] ?? []);
+
+                // Calculate true all-time return for fund: (current value - total deposits) / total deposits
+                // This is the correct formula (not compounded yearly returns)
+                $totalDeposits = 0;
+                foreach ($api['transactions'] ?? [] as $trans) {
+                    if ($trans->value > 0) {
+                        $totalDeposits += $trans->value;
+                    }
+                }
+                $allTimeReturn = $totalDeposits > 0 ? (($totalValueRaw - $totalDeposits) / $totalDeposits) * 100 : 0;
             @endphp
             <div class="row mb-4" id="section-details">
                 <div class="col">
@@ -89,7 +99,7 @@
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
-                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'showBorder' => isset($api['admin']) && $accountsCount > 0])
+                                @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'allTimeOverride' => $allTimeReturn, 'showBorder' => isset($api['admin']) && $accountsCount > 0])
                                 @if(isset($api['admin']) && $accountsCount > 0)
                                 <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>

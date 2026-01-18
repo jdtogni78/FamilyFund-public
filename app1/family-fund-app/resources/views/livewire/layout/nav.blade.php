@@ -53,6 +53,7 @@
                 'People' => ['route' => 'people.index', 'icon' => 'fa fa-users'],
                 'Users' => ['route' => 'users.index', 'icon' => 'fa fa-user'],
                 'Operations' => ['route' => 'operations.index', 'icon' => 'fa fa-cogs'],
+                'Exchange Holidays' => ['route' => 'exchange-holidays.index', 'icon' => 'fa fa-calendar-times'],
                 'Email' => ['route' => 'emails.index', 'icon' => 'fa fa-envelope'],
                 'User Roles' => ['route' => 'admin.user-roles.index', 'icon' => 'fa fa-user-shield'],
             ],

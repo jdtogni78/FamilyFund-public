@@ -26,6 +26,7 @@ All commands run from `app1/` (NOT `app1/family-fund-app/`):
 # IMPORTANT: Always use these scripts, never run docker compose directly!
 # FamilyFund:
 ssh dstrader "cd ~/dev/dstrader-docker && ./server/dev/run_familyfund.sh prod"
+# Wake prod server (if sleeping): /Users/dtogni/dev/dstrader-docker/local/wake_spirit.sh
 # DStrader (auto-runs weekdays 12:33 PM via cron, or manually):
 ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && ./start_dstrader.sh restart prod -d"
 # Env vars: DSTRADER_DONT_EXECUTE_ORDERS=1, DSTRADER_DONT_RUN_STRATEGY=1, DSTRADER_DONT_VALIDATE_TRADING_HOURS=1, DSTRADER_KEEP_RUNNING=1

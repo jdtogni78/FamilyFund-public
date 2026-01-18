@@ -121,6 +121,14 @@ Route::middleware('auth')->group(function () {
     Route::post('operations/send-test-email', 'App\Http\Controllers\WebV1\OperationsController@sendTestEmail')
         ->name('operations.send_test_email');
 
+    // Exchange Holidays (admin only - checked in controller)
+    Route::get('exchange-holidays', 'App\Http\Controllers\WebV1\ExchangeHolidayController@index')
+        ->name('exchange-holidays.index');
+    Route::post('exchange-holidays/sync', 'App\Http\Controllers\WebV1\ExchangeHolidayController@sync')
+        ->name('exchange-holidays.sync');
+    Route::post('exchange-holidays/seed', 'App\Http\Controllers\WebV1\ExchangeHolidayController@seed')
+        ->name('exchange-holidays.seed');
+
     // Email Operations (admin only - checked in controller)
     Route::get('emails', 'App\Http\Controllers\WebV1\EmailController@index')
         ->name('emails.index');

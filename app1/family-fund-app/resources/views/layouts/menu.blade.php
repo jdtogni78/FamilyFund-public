@@ -224,7 +224,7 @@
 </li>
 
 @if(auth()->user() && method_exists(auth()->user(), 'isSystemAdmin') && auth()->user()->isSystemAdmin())
-<li class="nav-item nav-dropdown {{ Request::is('admin*') || Request::is('operations*') ? 'active' : '' }}">
+<li class="nav-item nav-dropdown {{ Request::is('admin*') || Request::is('operations*') || Request::is('exchange-holidays*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-shield-alt"></i>
         <span>Admin</span>
@@ -234,6 +234,12 @@
             <a class="nav-link" href="{{ route('operations.index') }}">
                 <i class="nav-icon fa fa-cogs"></i>
                 <span>Operations</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('exchange-holidays*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('exchange-holidays.index') }}">
+                <i class="nav-icon fa fa-calendar-times"></i>
+                <span>Exchange Holidays</span>
             </a>
         </li>
         <li class="nav-item {{ Request::is('admin/user-roles*') ? 'active' : '' }}">

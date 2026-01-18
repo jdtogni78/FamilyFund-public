@@ -264,12 +264,15 @@
                                 afterBody: function(context) {
                                     const date = labels[context[0].dataIndex];
                                     const issue = issueDates[date];
-                                    if (issue === 'overlap') {
+                                    if (!issue) return null;
+                                    const days = issue.days || 0;
+                                    const dayText = days + ' trading day' + (days !== 1 ? 's' : '');
+                                    if (issue.type === 'overlap') {
                                         return '⚠️ OVERLAPPING DATE RANGE';
-                                    } else if (issue === 'gap') {
-                                        return '⚠️ DATA GAP DETECTED';
-                                    } else if (issue === 'long_span') {
-                                        return '⚠️ DAYS WITHOUT NEW DATA';
+                                    } else if (issue.type === 'gap') {
+                                        return '⚠️ ' + dayText + ' gap (missing data)';
+                                    } else if (issue.type === 'long_span') {
+                                        return '⚠️ ' + dayText + ' without new data';
                                     }
                                     return null;
                                 }
@@ -359,12 +362,15 @@
                                 afterBody: function(context) {
                                     const date = singleLabels[context[0].dataIndex];
                                     const issue = issueDates[date];
-                                    if (issue === 'overlap') {
+                                    if (!issue) return null;
+                                    const days = issue.days || 0;
+                                    const dayText = days + ' trading day' + (days !== 1 ? 's' : '');
+                                    if (issue.type === 'overlap') {
                                         return '⚠️ OVERLAPPING DATE RANGE';
-                                    } else if (issue === 'gap') {
-                                        return '⚠️ DATA GAP DETECTED';
-                                    } else if (issue === 'long_span') {
-                                        return '⚠️ DAYS WITHOUT NEW DATA';
+                                    } else if (issue.type === 'gap') {
+                                        return '⚠️ ' + dayText + ' gap (missing data)';
+                                    } else if (issue.type === 'long_span') {
+                                        return '⚠️ ' + dayText + ' without new data';
                                     }
                                     return null;
                                 }

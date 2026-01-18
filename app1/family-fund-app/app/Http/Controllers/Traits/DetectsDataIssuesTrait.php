@@ -170,7 +170,7 @@ trait DetectsDataIssuesTrait
 
     /**
      * Collect dates with issues for chart visualization.
-     * Returns array of dates that have overlaps or gaps.
+     * Returns array of dates with issue details (type, days count).
      */
     protected function collectIssueDates(array $dataWarnings): array
     {
@@ -180,30 +180,32 @@ trait DetectsDataIssuesTrait
         foreach ($dataWarnings['overlaps'] ?? [] as $overlap) {
             // Extract dates from "YYYY-MM-DD to YYYY-MM-DD" format
             if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $overlap['record1'], $m)) {
-                $dates[$m[1]] = 'overlap';
+                $dates[$m[1]] = ['type' => 'overlap'];
             }
             if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $overlap['record2'], $m)) {
-                $dates[$m[1]] = 'overlap';
+                $dates[$m[1]] = ['type' => 'overlap'];
             }
         }
 
         // Collect dates from gaps
         foreach ($dataWarnings['gaps'] ?? [] as $gap) {
+            $gapInfo = ['type' => 'gap', 'days' => $gap['days'] ?? 0];
             if (!empty($gap['from'])) {
-                $dates[$gap['from']] = 'gap';
+                $dates[$gap['from']] = $gapInfo;
             }
             if (!empty($gap['to'])) {
-                $dates[$gap['to']] = 'gap';
+                $dates[$gap['to']] = $gapInfo;
             }
         }
 
         // Collect dates from long spans (days without new data)
         foreach ($dataWarnings['longSpans'] ?? [] as $span) {
+            $spanInfo = ['type' => 'long_span', 'days' => $span['days'] ?? 0];
             if (!empty($span['from'])) {
-                $dates[$span['from']] = 'long_span';
+                $dates[$span['from']] = $spanInfo;
             }
             if (!empty($span['to'])) {
-                $dates[$span['to']] = 'long_span';
+                $dates[$span['to']] = $spanInfo;
             }
         }
 

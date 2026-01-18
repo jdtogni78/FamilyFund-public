@@ -19,6 +19,14 @@ Family Fund is a Laravel 11 financial fund management system for tracking fund s
 All commands run from `app1/` (NOT `app1/family-fund-app/`):
 
 ```bash
+# Deployment
+/Users/dtogni/dev/dstrader-docker/local/deploy_ff.sh  # Deploy FamilyFund to prod (REDACTED_PROD_HOST)
+
+# DStrader - Auto-runs weekdays 12:33 PM via cron, or manually:
+ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && ./start_dstrader.sh restart prod -d"
+# Env vars: DSTRADER_DONT_EXECUTE_ORDERS=1, DSTRADER_DONT_RUN_STRATEGY=1, DSTRADER_DONT_VALIDATE_TRADING_HOURS=1
+ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && DSTRADER_DONT_VALIDATE_TRADING_HOURS=1 ./start_dstrader.sh restart prod -d"
+
 # Development (run from app1/)
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 docker exec familyfund composer install

@@ -84,4 +84,22 @@ class AssetExt extends Asset
         }
         return $assetPrices;
     }
+
+    /**
+     * Find all price records that start AFTER the given timestamp.
+     * Used by BulkStoreTrait to find future records when backfilling gaps.
+     *
+     * @param \DateTime|string $timestamp The timestamp to search after
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function pricesStartingAfter($timestamp)
+    {
+        $assetPricesRepo = \App::make(AssetPriceRepository::class);
+        $query = $assetPricesRepo->makeModel()->newQuery();
+        $query->where('asset_id', $this->id)
+            ->where('start_dt', '>', $timestamp)
+            ->orderBy('start_dt', 'asc');
+
+        return $query->get();
+    }
 }

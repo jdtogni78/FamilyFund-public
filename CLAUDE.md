@@ -27,6 +27,12 @@ ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && ./start_dstrader.sh r
 # Env vars: DSTRADER_DONT_EXECUTE_ORDERS=1, DSTRADER_DONT_RUN_STRATEGY=1, DSTRADER_DONT_VALIDATE_TRADING_HOURS=1
 ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && DSTRADER_DONT_VALIDATE_TRADING_HOURS=1 ./start_dstrader.sh restart prod -d"
 
+# DStrader Prod Logs (on dstrader server REDACTED_PROD_HOST):
+# ~/dev/dstrader-docker/dstrader/prod/logs/dstrader*.log  - Main dstrader logs
+# ~/dev/dstrader-docker/dstrader/prod/logs/tws*.log       - TWS/IB Gateway logs
+# ~/dev/dstrader-docker/dstrader/prod/logs/run_report*.log - Report generation logs
+ssh dstrader "tail -100 ~/dev/dstrader-docker/dstrader/prod/logs/dstrader.log"  # View recent logs
+
 # Development (run from app1/)
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 docker exec familyfund composer install

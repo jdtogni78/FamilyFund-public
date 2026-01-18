@@ -31,6 +31,16 @@ trait BulkStoreTrait
         $source = $input['source'];
 
         foreach ($symbols as $symbol) {
+            // Skip invalid prices (zero or negative) - indicates failed data fetch
+            if ($field === 'price' && isset($symbol['price'])) {
+                $price = floatval($symbol['price']);
+                if ($price <= 0) {
+                    $name = $symbol['name'] ?? 'unknown';
+                    Log::warning("Skipping {$name} - invalid price: {$price}");
+                    continue;
+                }
+            }
+
             $symbol['source'] = $source;
             $input = array_intersect_key($symbol, array_flip((new AssetExt())->fillable));
             if ($this->verbose) Log::debug("input: " . json_encode($input));

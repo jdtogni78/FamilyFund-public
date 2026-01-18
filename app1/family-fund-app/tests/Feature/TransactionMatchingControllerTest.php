@@ -7,6 +7,10 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
+/**
+ * Tests for TransactionMatchingController
+ * Target: Push from 48.5% to 50%+
+ */
 class TransactionMatchingControllerTest extends TestCase
 {
     use DatabaseTransactions;
@@ -27,21 +31,24 @@ class TransactionMatchingControllerTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_destroy_handles_transaction_matching()
+    public function test_show_displays_transaction_matching()
     {
-        $matching = TransactionMatching::factory()->create();
+        $transactionMatching = TransactionMatching::factory()->create();
 
         $response = $this->actingAs($this->user)
-            ->delete(route('transactionMatchings.destroy', $matching->id));
+            ->get(route('transactionMatchings.show', $transactionMatching->id));
 
-        $response->assertRedirect(route('transactionMatchings.index'));
-        // Note: Record may not be deleted due to foreign key constraints
+        $response->assertStatus(200);
+        $response->assertViewIs('transaction_matchings.show');
+        $response->assertViewHas('transactionMatching');
     }
 
-    public function test_destroy_redirects_for_invalid_id()
+    public function test_destroy_handles_transaction_matching()
     {
+        $transactionMatching = TransactionMatching::factory()->create();
+
         $response = $this->actingAs($this->user)
-            ->delete(route('transactionMatchings.destroy', 99999));
+            ->delete(route('transactionMatchings.destroy', $transactionMatching->id));
 
         $response->assertRedirect(route('transactionMatchings.index'));
         $response->assertSessionHas('flash_notification');

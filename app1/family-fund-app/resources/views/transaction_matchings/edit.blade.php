@@ -18,7 +18,9 @@
                               <strong>Edit Transaction Matching</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['transactionMatchings.update', $transactionMatching->id]') }" >
+<form method="POST" action="{{ route('transactionMatchings.update', $transactionMatching->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('transaction_matchings.fields')
 

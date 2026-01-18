@@ -33,11 +33,15 @@
             @php
                 $isOverlapping = in_array($assetPrice->id, $dataWarnings['overlappingIds'] ?? []);
                 $hasGap = in_array($assetPrice->id, $dataWarnings['gapIds'] ?? []);
+                $hasLongSpan = in_array($assetPrice->id, $dataWarnings['longSpanIds'] ?? []);
             @endphp
-            <tr class="{{ ($isOverlapping || $hasGap) ? 'table-warning' : '' }}">
+            <tr class="{{ ($isOverlapping || $hasGap || $hasLongSpan) ? 'table-warning' : '' }}">
                 <td>
                     @if($isOverlapping)
                         <i class="fa fa-clone text-warning me-1" title="Overlapping date range"></i>
+                    @endif
+                    @if($hasLongSpan)
+                        <i class="fa fa-calendar-plus text-warning me-1" title="Days without new data"></i>
                     @endif
                     @if($hasGap)
                         <i class="fa fa-calendar-times text-warning me-1" title="Adjacent to data gap"></i>

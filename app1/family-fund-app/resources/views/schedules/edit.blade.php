@@ -18,7 +18,9 @@
                               <strong>Edit Schedule</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['schedules.update', $schedule->id]') }" >
+<form method="POST" action="{{ route('schedules.update', $schedule->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('schedules.fields')
 

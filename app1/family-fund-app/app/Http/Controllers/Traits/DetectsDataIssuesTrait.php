@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Traits;
 
+use App\Models\ExchangeHoliday;
+use Carbon\Carbon;
+
 trait DetectsDataIssuesTrait
 {
     /**
@@ -10,18 +13,26 @@ trait DetectsDataIssuesTrait
      * @param \Illuminate\Support\Collection $records Collection of records with start_dt, end_dt
      * @param string $groupByField Field to group records by (e.g., 'asset_id')
      * @param string $nameField Relationship to get display name (e.g., 'asset')
-     * @param int $gapThreshold Minimum days to flag as gap (default 1)
+     * @param int $gapThreshold Minimum trading days to flag as gap (default 1)
+     * @param string $exchangeCode Exchange to use for holiday calendar (default 'NYSE')
      */
-    protected function detectDataIssues($records, string $groupByField = 'asset_id', string $nameField = 'asset', int $gapThreshold = 1): array
+    protected function detectDataIssues($records, string $groupByField = 'asset_id', string $nameField = 'asset', int $gapThreshold = 1, string $exchangeCode = 'NYSE'): array
     {
         $overlaps = [];
         $gaps = [];
+        $longSpans = [];
         $overlappingIds = [];
         $gapIds = [];
+        $longSpanIds = [];
 
         if ($records->isEmpty()) {
-            return compact('overlaps', 'gaps', 'overlappingIds', 'gapIds');
+            return compact('overlaps', 'gaps', 'longSpans', 'overlappingIds', 'gapIds', 'longSpanIds');
         }
+
+        // Load exchange holidays for the date range covered by records
+        $minDate = $records->min('start_dt');
+        $maxDate = $records->max('end_dt');
+        $holidays = $this->loadExchangeHolidays($exchangeCode, $minDate, $maxDate);
 
         // Group by the specified field
         $grouped = $records->groupBy($groupByField);
@@ -32,6 +43,22 @@ trait DetectsDataIssuesTrait
 
             for ($i = 0; $i < count($sorted); $i++) {
                 $current = $sorted[$i];
+
+                // Check if single record spans multiple trading days (days without new data)
+                if ($current->end_dt && $current->end_dt->format('Y') !== '9999') {
+                    $spanTradingDays = $this->calculateTradingDays($current->start_dt, $current->end_dt, $holidays);
+
+                    if ($spanTradingDays > 1) {
+                        $longSpans[] = [
+                            'name' => $displayName,
+                            'from' => $current->start_dt->format('Y-m-d'),
+                            'to' => $current->end_dt->format('Y-m-d'),
+                            'days' => $spanTradingDays,
+                            'calendar_days' => $current->start_dt->diffInDays($current->end_dt),
+                        ];
+                        $longSpanIds[$current->id] = true;
+                    }
+                }
 
                 // Check for overlaps/duplicates with subsequent records
                 for ($j = $i + 1; $j < count($sorted); $j++) {
@@ -56,14 +83,16 @@ trait DetectsDataIssuesTrait
 
                     // Only check gap if current record has a real end date
                     if ($current->end_dt && $current->end_dt->format('Y') !== '9999') {
-                        $gapDays = $current->end_dt->diffInDays($next->start_dt);
+                        // Calculate trading days between records (excluding weekends and holidays)
+                        $tradingDays = $this->calculateTradingDays($current->end_dt, $next->start_dt, $holidays);
 
-                        if ($gapDays > $gapThreshold) {
+                        if ($tradingDays > $gapThreshold) {
                             $gaps[] = [
                                 'name' => $displayName,
                                 'from' => $current->end_dt->format('Y-m-d'),
                                 'to' => $next->start_dt->format('Y-m-d'),
-                                'days' => $gapDays,
+                                'days' => $tradingDays,
+                                'calendar_days' => $current->end_dt->diffInDays($next->start_dt),
                             ];
                             $gapIds[$current->id] = true;
                             $gapIds[$next->id] = true;
@@ -76,9 +105,67 @@ trait DetectsDataIssuesTrait
         return [
             'overlaps' => $overlaps,
             'gaps' => $gaps,
+            'longSpans' => $longSpans,
             'overlappingIds' => array_keys($overlappingIds),
             'gapIds' => array_keys($gapIds),
+            'longSpanIds' => array_keys($longSpanIds),
         ];
+    }
+
+    /**
+     * Load exchange holidays for a date range.
+     *
+     * @param string $exchangeCode Exchange code (e.g., 'NYSE')
+     * @param \Carbon\Carbon|string|null $minDate Start of date range
+     * @param \Carbon\Carbon|string|null $maxDate End of date range
+     * @return array Array of holiday dates as strings (Y-m-d)
+     */
+    protected function loadExchangeHolidays(string $exchangeCode, $minDate = null, $maxDate = null): array
+    {
+        $query = ExchangeHoliday::active()->forExchange($exchangeCode);
+
+        if ($minDate) {
+            $query->where('holiday_date', '>=', $minDate);
+        }
+
+        if ($maxDate) {
+            // Filter out far-future dates (9999-12-31)
+            $maxDateCarbon = Carbon::parse($maxDate);
+            if ($maxDateCarbon->year < 9999) {
+                $query->where('holiday_date', '<=', $maxDate);
+            }
+        }
+
+        return $query->pluck('holiday_date')
+            ->map(fn($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->toArray();
+    }
+
+    /**
+     * Calculate trading days between two dates, excluding weekends and holidays.
+     *
+     * @param \Carbon\Carbon $startDate Start date (exclusive)
+     * @param \Carbon\Carbon $endDate End date (exclusive)
+     * @param array $holidays Array of holiday dates as strings (Y-m-d)
+     * @return int Number of trading days
+     */
+    protected function calculateTradingDays(Carbon $startDate, Carbon $endDate, array $holidays): int
+    {
+        $tradingDays = 0;
+        $current = $startDate->copy()->addDay();
+
+        while ($current < $endDate) {
+            // Skip weekends (Saturday = 6, Sunday = 0)
+            if (!$current->isWeekend()) {
+                // Skip holidays
+                if (!in_array($current->format('Y-m-d'), $holidays)) {
+                    $tradingDays++;
+                }
+            }
+            $current->addDay();
+        }
+
+        return $tradingDays;
     }
 
     /**
@@ -107,6 +194,16 @@ trait DetectsDataIssuesTrait
             }
             if (!empty($gap['to'])) {
                 $dates[$gap['to']] = 'gap';
+            }
+        }
+
+        // Collect dates from long spans (days without new data)
+        foreach ($dataWarnings['longSpans'] ?? [] as $span) {
+            if (!empty($span['from'])) {
+                $dates[$span['from']] = 'long_span';
+            }
+            if (!empty($span['to'])) {
+                $dates[$span['to']] = 'long_span';
             }
         }
 

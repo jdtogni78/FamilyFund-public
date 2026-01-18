@@ -18,7 +18,9 @@
                               <strong>Edit Portfolio Asset</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['portfolioAssets.update', $portfolioAsset->id]') }" >
+<form method="POST" action="{{ route('portfolioAssets.update', $portfolioAsset->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('portfolio_assets.fields')
 

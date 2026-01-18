@@ -72,7 +72,7 @@
              </div>
 
              <!-- Data Warnings -->
-             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']))
+             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']) || !empty($dataWarnings['longSpans']))
              <div class="card mb-3 border-warning">
                  <div class="card-header bg-warning text-dark">
                      <i class="fa fa-exclamation-triangle me-2"></i>
@@ -89,12 +89,30 @@
                          </ul>
                      </div>
                      @endif
+                     @if(!empty($dataWarnings['longSpans']))
+                     <div class="mb-2">
+                         <strong class="text-warning"><i class="fa fa-calendar-plus me-1"></i> Days Without New Data:</strong>
+                         <ul class="mb-0 small">
+                             @foreach($dataWarnings['longSpans'] as $span)
+                             <li>
+                                 {{ $span['name'] }}: <strong>{{ $span['days'] }} trading day{{ $span['days'] > 1 ? 's' : '' }}</strong> without new data
+                                 <span class="text-muted">({{ $span['calendar_days'] }} calendar days)</span>
+                                 from {{ $span['from'] }} to {{ $span['to'] }}
+                             </li>
+                             @endforeach
+                         </ul>
+                     </div>
+                     @endif
                      @if(!empty($dataWarnings['gaps']))
                      <div>
-                         <strong class="text-warning"><i class="fa fa-calendar-times me-1"></i> Data Gaps:</strong>
+                         <strong class="text-warning"><i class="fa fa-calendar-times me-1"></i> Data Gaps (Missing Trading Days):</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['gaps'] as $gap)
-                             <li>{{ $gap['name'] }}: {{ $gap['days'] }} days gap from {{ $gap['from'] }} to {{ $gap['to'] }}</li>
+                             <li>
+                                 {{ $gap['name'] }}: <strong>{{ $gap['days'] }} trading day{{ $gap['days'] > 1 ? 's' : '' }}</strong> missing
+                                 <span class="text-muted">({{ $gap['calendar_days'] }} calendar days)</span>
+                                 from {{ $gap['from'] }} to {{ $gap['to'] }}
+                             </li>
                              @endforeach
                          </ul>
                      </div>
@@ -250,6 +268,8 @@
                                         return '⚠️ OVERLAPPING DATE RANGE';
                                     } else if (issue === 'gap') {
                                         return '⚠️ DATA GAP DETECTED';
+                                    } else if (issue === 'long_span') {
+                                        return '⚠️ DAYS WITHOUT NEW DATA';
                                     }
                                     return null;
                                 }
@@ -343,6 +363,8 @@
                                         return '⚠️ OVERLAPPING DATE RANGE';
                                     } else if (issue === 'gap') {
                                         return '⚠️ DATA GAP DETECTED';
+                                    } else if (issue === 'long_span') {
+                                        return '⚠️ DAYS WITHOUT NEW DATA';
                                     }
                                     return null;
                                 }

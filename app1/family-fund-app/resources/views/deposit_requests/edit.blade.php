@@ -18,7 +18,9 @@
                               <strong>Edit Deposit Request</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['depositRequests.update', $depositRequest->id]') }" >
+<form method="POST" action="{{ route('depositRequests.update', $depositRequest->id) }}">
+                                  @csrf
+                                  @method('PATCH')
                               @php($isEdit = true)
                               @include('deposit_requests.fields', ['isEdit' => $isEdit])
 

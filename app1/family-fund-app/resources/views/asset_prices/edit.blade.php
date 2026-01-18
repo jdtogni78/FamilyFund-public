@@ -18,7 +18,9 @@
                               <strong>Edit Asset Price</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['assetPrices.update', $assetPrice->id]') }" >
+<form method="POST" action="{{ route('assetPrices.update', $assetPrice->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('asset_prices.fields')
 

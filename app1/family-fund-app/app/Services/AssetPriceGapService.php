@@ -15,18 +15,18 @@ class AssetPriceGapService
      *
      * @param int $lookbackDays Number of days to check (default 30)
      * @param string $exchange Exchange code (default 'NYSE')
-     * @return array Missing dates as array of date strings
+     * @return array Array with 'missing_dates' and 'days_without_new_data'
      */
     public function findGaps(int $lookbackDays = 30, string $exchange = 'NYSE'): array
     {
-        // 1. Get dates with data from database
-        $datesWithData = $this->getDatesWithData($lookbackDays);
+        // 1. Get dates with NEW data from database (each date should have its own record)
+        $datesWithNewData = $this->getDatesWithNewData($lookbackDays);
 
         // 2. Get expected trading days (exclude weekends/holidays)
         $expectedDates = $this->getExpectedTradingDays($lookbackDays, $exchange);
 
         // 3. Find missing = expected - actual
-        $missingDates = array_diff($expectedDates, $datesWithData);
+        $missingDates = array_diff($expectedDates, $datesWithNewData);
 
         // 4. Sort and return as array values (re-index)
         sort($missingDates);
@@ -35,15 +35,18 @@ class AssetPriceGapService
     }
 
     /**
-     * Query database for dates that have asset price records
+     * Query database for dates that have NEW asset price records.
+     * Only counts dates where a record STARTS on that date, not dates
+     * covered by older records spanning multiple days.
      *
      * @param int $lookbackDays
      * @return array Array of date strings (Y-m-d format)
      */
-    private function getDatesWithData(int $lookbackDays): array
+    private function getDatesWithNewData(int $lookbackDays): array
     {
         $cutoffDate = Carbon::now()->subDays($lookbackDays)->startOfDay();
 
+        // Get distinct start_dt dates - these are dates with NEW data
         $dates = DB::table('asset_prices')
             ->select(DB::raw('DISTINCT DATE(start_dt) as price_date'))
             ->where('start_dt', '>=', $cutoffDate)

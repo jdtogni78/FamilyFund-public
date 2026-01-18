@@ -18,7 +18,9 @@
                             <strong>Edit Transaction</strong>
                         </div>
                         <div class="card-body">
-<form method="patch" action="{ route('['route' => ['transactions.update', $transaction->id]') }" >
+<form method="POST" action="{{ route('transactions.update', $transaction->id) }}">
+                                @csrf
+                                @method('PATCH')
                             @include('transactions.edit_fields')
 </form>
                         </div>

@@ -31,7 +31,9 @@
                                 <strong>Split Trade Portfolio</strong>
                             </div>
                             <div class="card-body">
-<form method="patch" action="{ route('['route' => ['tradePortfolios.split', $tradePortfolio->id]') }" >
+<form method="POST" action="{{ route('tradePortfolios.split', $tradePortfolio->id) }}">
+                                    @csrf
+                                    @method('PATCH')
                                 @include('trade_portfolios.split_fields')
 </form>
                             </div>

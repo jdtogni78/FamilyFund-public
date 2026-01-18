@@ -1,6 +1,4 @@
 <x-app-layout>
-
-@section('content')
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{!! route('exchange-holidays.index') !!}">Exchange Holidays</a>
@@ -186,6 +184,4 @@
 
         </div>
     </div>
-@endsection
-
 </x-app-layout>

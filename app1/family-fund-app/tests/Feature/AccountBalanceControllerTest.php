@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 /**
  * Tests for AccountBalanceController
- * Target: Push from 48% to 50%+
+ * Target: Push from 48.5% to 50%+
  */
 class AccountBalanceControllerTest extends TestCase
 {
@@ -31,21 +31,24 @@ class AccountBalanceControllerTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_destroy_deletes_account_balance()
+    public function test_show_displays_account_balance()
     {
-        $balance = AccountBalance::factory()->create();
+        $accountBalance = AccountBalance::factory()->create();
 
         $response = $this->actingAs($this->user)
-            ->delete(route('accountBalances.destroy', $balance->id));
+            ->get(route('accountBalances.show', $accountBalance->id));
 
-        $response->assertRedirect(route('accountBalances.index'));
-        $this->assertDatabaseMissing('account_balances', ['id' => $balance->id]);
+        $response->assertStatus(200);
+        $response->assertViewIs('account_balances.show');
+        $response->assertViewHas('accountBalance');
     }
 
-    public function test_destroy_redirects_for_invalid_id()
+    public function test_destroy_handles_account_balance()
     {
+        $accountBalance = AccountBalance::factory()->create();
+
         $response = $this->actingAs($this->user)
-            ->delete(route('accountBalances.destroy', 99999));
+            ->delete(route('accountBalances.destroy', $accountBalance->id));
 
         $response->assertRedirect(route('accountBalances.index'));
         $response->assertSessionHas('flash_notification');

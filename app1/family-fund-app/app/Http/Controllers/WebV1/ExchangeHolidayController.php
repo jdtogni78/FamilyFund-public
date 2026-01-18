@@ -64,22 +64,4 @@ class ExchangeHolidayController extends Controller
         return redirect()->route('exchange-holidays.index')
             ->with('success', 'Holiday sync initiated (manual seeding required for now)');
     }
-
-    /**
-     * Run seeder to populate holidays
-     */
-    public function seed(Request $request): RedirectResponse
-    {
-        try {
-            \Artisan::call('db:seed', ['--class' => 'NYSEHolidaysSeeder']);
-
-            $output = \Artisan::output();
-
-            return redirect()->route('exchange-holidays.index')
-                ->with('success', 'NYSE holidays seeded successfully');
-        } catch (\Exception $e) {
-            return redirect()->route('exchange-holidays.index')
-                ->with('error', 'Failed to seed holidays: ' . $e->getMessage());
-        }
-    }
 }

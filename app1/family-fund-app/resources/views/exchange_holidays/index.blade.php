@@ -11,7 +11,7 @@
 
             {{-- Stats Cards --}}
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card border-primary">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-calendar-alt me-2"></i>Total Holidays</h5>
@@ -20,7 +20,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card border-success">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-calendar-check me-2"></i>Current Year</h5>
@@ -29,26 +29,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card border-info">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-chart-line me-2"></i>Viewing</h5>
                             <h2 class="mb-0">{{ $holidays->count() }}</h2>
                             <p class="text-muted small mb-0">{{ $exchange }} {{ $year }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-warning">
-                        <div class="card-body text-center">
-                            <h5 class="card-title"><i class="fa fa-sync me-2"></i>Actions</h5>
-                            <form action="{{ route('exchange-holidays.seed') }}" method="POST" class="d-inline me-2">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-success"
-                                        onclick="return confirm('Seed NYSE 2025-2026 holidays?')">
-                                    <i class="fa fa-database me-1"></i> Seed Holidays
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -109,7 +95,7 @@
                             <i class="fa fa-exclamation-triangle me-2"></i>
                             <strong>No holidays found for {{ $exchange }} {{ $year }}</strong>
                             <p class="mb-0 mt-2">
-                                Click the "Seed Holidays" button above to populate NYSE holidays for 2025-2026.
+                                Holiday data is automatically synced via scheduled jobs.
                             </p>
                         </div>
                     @else
@@ -175,9 +161,9 @@
                         Exchange holidays are used by the gap detection system to identify non-trading days and exclude them from missing price data queries.
                     </p>
                     <ul class="mb-0">
-                        <li><strong>Seed Holidays:</strong> Manually populate NYSE holidays for 2025-2026</li>
+                        <li><strong>Automatic Sync:</strong> Holidays are synchronized quarterly via scheduled jobs</li>
                         <li><strong>Gap Detection:</strong> Automatically uses these holidays to filter weekends and holidays from missing dates</li>
-                        <li><strong>Future Sync:</strong> Will support automatic sync from external sources (NYSE.com, TradingHours.com API)</li>
+                        <li><strong>Data Sources:</strong> Synced from external sources (NYSE.com, TradingHours.com API)</li>
                     </ul>
                 </div>
             </div>

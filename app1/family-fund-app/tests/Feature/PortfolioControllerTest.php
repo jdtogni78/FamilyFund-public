@@ -35,7 +35,7 @@ class PortfolioControllerTest extends TestCase
             ->delete(route('portfolios.destroy', $portfolio->id));
 
         $response->assertRedirect(route('portfolios.index'));
-        $this->assertDatabaseMissing('portfolios', ['id' => $portfolio->id]);
+        $this->assertSoftDeleted('portfolios', ['id' => $portfolio->id]);
     }
 
     public function test_destroy_redirects_for_invalid_id()

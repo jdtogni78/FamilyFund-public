@@ -75,9 +75,15 @@ $logout = function (Logout $logout) {
             <!-- Right: User Menu & Dark Mode Toggle -->
             <div class="flex items-center space-x-2">
                 <!-- Environment Badge -->
-                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ app()->environment('production') ? 'bg-emerald-400/20 text-emerald-100' : 'bg-amber-400/20 text-amber-100' }}">
-                    {{ strtoupper(app()->environment()) }}
-                </span>
+                @if(app()->environment('production'))
+                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white">PRODUCTION</span>
+                @elseif(app()->environment('stage'))
+                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">STAGE</span>
+                @elseif(app()->environment('dev'))
+                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-500 text-white">DEV</span>
+                @else
+                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500 text-white">{{ strtoupper(app()->environment()) }}</span>
+                @endif
 
                 <!-- Dark Mode Toggle -->
                 <button

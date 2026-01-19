@@ -17,6 +17,12 @@ docker-compose -f docker-compose.yml -f docker-compose.${MYENV}.yml up
 
 docker-compose exec familyfund composer install
 
+* Build frontend assets (from app1/family-fund-app/):
+
+cd app1/family-fund-app && npm install && npm run build
+
+Note: Must rebuild after changing Blade templates with new Tailwind classes (Tailwind purges unused classes).
+
 * First time setup database / reimport full db
 
 docker-compose exec familyfund php artisan migrate:fresh

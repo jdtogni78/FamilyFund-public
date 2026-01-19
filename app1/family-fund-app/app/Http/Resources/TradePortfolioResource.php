@@ -17,6 +17,7 @@ class TradePortfolioResource extends JsonResource
         return [
             'id' => $this->id,
             'account_name' => $this->account_name,
+            'nickname' => $this->portfolio?->fund?->name,
             'portfolio_id' => $this->portfolio_id,
             'tws_query_id' => $this->tws_query_id,
             'tws_token' => $this->tws_token,

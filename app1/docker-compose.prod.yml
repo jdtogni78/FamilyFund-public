@@ -16,6 +16,6 @@ services:
       - DB_DATABASE=familyfund_prod
       - DB_USERNAME=famfun_prod
       - DB_PASSWORD=4321
-      - APP_ENV=stage
+      - APP_ENV=production
     ports:
       - 3001:8000

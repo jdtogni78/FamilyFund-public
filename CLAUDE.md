@@ -173,15 +173,7 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 - Quarterly reports generated via queue jobs
 - PDF reports use wkhtmltopdf (installed in container)
 - Email testing via MailHog in development
-
-## Agent Identification
-
-Register in `.claude-agents` file per global instructions. See `~/.claude/CLAUDE.md` for details.
-
-**Agent Name Map:**
-| Session ID | Name | Purpose |
-|------------|------|---------|
-| (your-session-id) | claude1 | (brief description) |
+- **Frontend assets**: Run `npm install && npm run build` from `app1/family-fund-app/` after changing Blade templates with new Tailwind classes (Tailwind purges unused classes)
 
 ## Claude Testing
 
@@ -194,3 +186,7 @@ Dev-only auto-login route (local environment only):
 GET /dev-login/{redirect?}
 ```
 Example: `curl -L http://localhost:3000/dev-login/accounts/8` to auto-login and access account 8.
+
+# Misc
+
+* FamilyFund .env should be a link to .env.<ENV>

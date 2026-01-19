@@ -16,6 +16,6 @@ services:
       - DB_DATABASE=familyfund_dev
       - DB_USERNAME=root
       - DB_PASSWORD=123456
-      - APP_ENV=local
+      - APP_ENV=dev
     ports:
       - 3000:8000

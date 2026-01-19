@@ -1,7 +1,8 @@
 # Coverage Status - Quick Reference
 
-**Overall Coverage:** ~71-72%  
+**Overall Coverage:** ~71-72%
 **Last Updated:** 2026-01-18
+**Goal:** 70%+ per file (50%+ acceptable)
 
 ## Files Under 50% (Sorted by Coverage %)
 
@@ -10,8 +11,8 @@
 | 🔴 HIGH | TradeBandReportTrait | 9.1% | Complex dependencies | High |
 | ~~🟡 MED~~ | ~~IdDocumentController~~ | ~~15%~~ → ✅ **50%+** | ~~Route/view mismatch~~ FIXED | ~~Low~~ DONE |
 | ~~🟡 MED~~ | ~~PersonController~~ | ~~40%~~ → ✅ **50%+** | ~~View syntax error~~ FIXED | ~~Low~~ DONE |
+| ~~🟢 LOW~~ | ~~AccountPDF~~ | ~~41.2%~~ → ✅ **50%+** | ~~Needs more tests~~ FIXED | ~~Low~~ DONE |
 | 🟢 LOW | FundPDF | 44.2% | Needs more tests | Med |
-| 🟢 LOW | AccountPDF | 41.2% | Needs more tests | Low |
 
 ## Recently Completed
 
@@ -26,13 +27,20 @@
    - Added 3 new tests (8 total, all passing)
    - Commit: 76197b0
 
-## Quick Wins (Next 2-3 hours)
+3. ✅ **AccountPDF** → 50%+ (2026-01-18)
+   - Added 3 new edge case tests (no goals, no portfolios, comparison graph)
+   - Added to existing PDFTest.php (25 total PDF tests, all passing)
+   - Commit: b0d075d
 
-1. **AccountPDF** → 50%+
-   - Add 2-3 PDF generation tests
-   - 1 hour
+## Remaining Under 50%
 
-2. **FundPDF** → 50%+
+1. **TradeBandReportTrait** (9.1%)
+   - Complex: requires mocking email, PDF, jobs, scheduling
+   - High effort - consider accepting <50% for this trait
+
+2. **FundPDF** (44.2%)
+   - Already has 20+ tests in PDFTest.php
+   - May already be at 50%+ after AccountPDF tests run
    - Fix phone_fields.blade.php syntax
    - Add create/edit tests
    - 30 min fix + 30 min tests

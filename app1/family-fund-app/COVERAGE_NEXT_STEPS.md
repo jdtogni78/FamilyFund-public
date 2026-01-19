@@ -102,11 +102,11 @@ public function test_pdf_method_name()
 
 ## Coverage Goals
 
-**Target:** Maintain 50%+ coverage for all testable controllers
+**Target:** 70%+ coverage per file (50%+ acceptable)
 
 **Realistic Exceptions:**
-- Complex traits with heavy dependencies (accept 30-40%)
-- Pure integration classes (accept 40-50%)
+- Complex traits with heavy dependencies (TradeBandReportTrait at 9.1% - accept 30-40%)
+- Pure integration classes with extensive external dependencies
 
 ## Quick Commands
 

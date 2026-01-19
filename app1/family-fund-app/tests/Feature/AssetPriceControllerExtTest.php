@@ -178,12 +178,12 @@ class AssetPriceControllerExtTest extends TestCase
         AssetPrice::factory()->create([
             'asset_id' => $sortTestAsset->id,
             'price' => 200,
-            'start_dt' => '2023-01-01',
+            'start_dt' => now()->subMonths(2)->format('Y-m-d'),
         ]);
         AssetPrice::factory()->create([
             'asset_id' => $sortTestAsset->id,
             'price' => 100,
-            'start_dt' => '2023-02-01',
+            'start_dt' => now()->subMonths(1)->format('Y-m-d'),
         ]);
 
         $response = $this->actingAs($this->user)
@@ -205,12 +205,12 @@ class AssetPriceControllerExtTest extends TestCase
         AssetPrice::factory()->create([
             'asset_id' => $this->asset->id,
             'price' => 100,
-            'start_dt' => '2023-01-01',
+            'start_dt' => now()->subMonths(2)->format('Y-m-d'),
         ]);
         AssetPrice::factory()->create([
             'asset_id' => $this->asset->id,
             'price' => 110,
-            'start_dt' => '2023-02-01',
+            'start_dt' => now()->subMonths(1)->format('Y-m-d'),
         ]);
 
         $response = $this->actingAs($this->user)

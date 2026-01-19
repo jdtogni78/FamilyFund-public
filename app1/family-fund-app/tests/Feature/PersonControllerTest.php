@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 /**
  * Tests for PersonController
- * Target: Push from 23.6% to 50%+
+ * Target: Push from 50% to 70%+
  */
 class PersonControllerTest extends TestCase
 {
@@ -110,5 +110,72 @@ class PersonControllerTest extends TestCase
 
         $response->assertRedirect(route('people.index'));
         $response->assertSessionHas('flash_notification');
+    }
+
+    // ==================== Additional Tests for 70% Coverage ====================
+
+    public function test_index_displays_multiple_people()
+    {
+        \App\Models\Person::factory()->count(5)->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.index'));
+
+        $response->assertStatus(200);
+        $people = $response->viewData('people');
+        $this->assertGreaterThanOrEqual(5, $people->count());
+    }
+
+    public function test_show_displays_correct_person_data()
+    {
+        $person = \App\Models\Person::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.show', $person->id));
+
+        $viewPerson = $response->viewData('person');
+        $this->assertEquals($person->id, $viewPerson->id);
+        $this->assertEquals($person->first_name, $viewPerson->first_name);
+    }
+
+    public function test_edit_displays_correct_person_data()
+    {
+        $person = \App\Models\Person::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.edit', $person->id));
+
+        $viewPerson = $response->viewData('person');
+        $this->assertEquals($person->id, $viewPerson->id);
+    }
+
+    public function test_create_displays_view()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('people.create'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('people.create');
+    }
+
+    public function test_show_has_person_data_in_view()
+    {
+        $person = \App\Models\Person::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.show', $person->id));
+
+        $response->assertSee($person->first_name);
+        $response->assertSee($person->last_name);
+    }
+
+    public function test_edit_has_person_data_in_view()
+    {
+        $person = \App\Models\Person::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.edit', $person->id));
+
+        $response->assertSee($person->first_name);
     }
 }

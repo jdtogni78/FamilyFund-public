@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 /**
  * Tests for IdDocumentController
- * Target: Push from 12.1% to 50%+
+ * Target: Push from 50% to 70%+
  */
 class IdDocumentControllerTest extends TestCase
 {
@@ -136,5 +136,91 @@ class IdDocumentControllerTest extends TestCase
             ->delete(route('id_documents.destroy', 99999));
 
         $response->assertRedirect(route('id_documents.index'));
+    }
+
+    // ==================== Additional Tests for 70% Coverage ====================
+
+    public function test_index_displays_multiple_id_documents()
+    {
+        IdDocument::factory()->count(3)->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('id_documents.index'));
+
+        $response->assertStatus(200);
+        $idDocuments = $response->viewData('idDocuments');
+        $this->assertGreaterThanOrEqual(3, $idDocuments->count());
+    }
+
+    public function test_store_validates_required_fields()
+    {
+        $response = $this->actingAs($this->user)
+            ->post(route('id_documents.store'), []);
+
+        $response->assertSessionHasErrors(['person_id', 'number']);
+    }
+
+    public function test_store_shows_success_flash_message()
+    {
+        $idDocument = IdDocument::factory()->make();
+
+        $response = $this->actingAs($this->user)
+            ->post(route('id_documents.store'), $idDocument->toArray());
+
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_show_displays_correct_id_document_data()
+    {
+        $idDocument = IdDocument::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('id_documents.show', $idDocument->id));
+
+        $viewIdDocument = $response->viewData('idDocument');
+        $this->assertEquals($idDocument->id, $viewIdDocument->id);
+        $this->assertEquals($idDocument->number, $viewIdDocument->number);
+    }
+
+    public function test_edit_displays_correct_id_document_data()
+    {
+        $idDocument = IdDocument::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('id_documents.edit', $idDocument->id));
+
+        $viewIdDocument = $response->viewData('idDocument');
+        $this->assertEquals($idDocument->id, $viewIdDocument->id);
+    }
+
+    public function test_update_redirects_when_invalid_id()
+    {
+        $updatedData = IdDocument::factory()->make();
+
+        $response = $this->actingAs($this->user)
+            ->patch(route('id_documents.update', 99999), $updatedData->toArray());
+
+        $response->assertRedirect(route('id_documents.index'));
+    }
+
+    public function test_update_shows_success_flash_message()
+    {
+        $idDocument = IdDocument::factory()->create();
+        $updatedData = IdDocument::factory()->make();
+
+        $response = $this->actingAs($this->user)
+            ->patch(route('id_documents.update', $idDocument->id), $updatedData->toArray());
+
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_destroy_shows_success_flash_message()
+    {
+        $idDocument = IdDocument::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('id_documents.destroy', $idDocument->id));
+
+        $response->assertSessionHas('flash_notification');
     }
 }

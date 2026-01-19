@@ -41,7 +41,35 @@ class PersonControllerTest extends TestCase
         $response->assertViewHas('people');
     }
 
-    // Note: Skipping create and edit form tests due to view syntax errors in phone_fields.blade.php
+    public function test_create_displays_form()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('people.create'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('people.create');
+    }
+
+    public function test_edit_displays_form()
+    {
+        $person = Person::factory()->create();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('people.edit', $person->id));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('people.edit');
+        $response->assertViewHas('person');
+    }
+
+    public function test_edit_redirects_for_invalid_id()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('people.edit', 99999));
+
+        $response->assertRedirect(route('people.index'));
+        $response->assertSessionHas('flash_notification');
+    }
 
     public function test_show_displays_person()
     {

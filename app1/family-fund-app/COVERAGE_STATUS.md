@@ -8,19 +8,31 @@
 | Priority | File | Coverage | Issue | Effort |
 |----------|------|----------|-------|--------|
 | 🔴 HIGH | TradeBandReportTrait | 9.1% | Complex dependencies | High |
-| 🟡 MED | IdDocumentController | ~15% | Route/view mismatch | Low |
-| 🟡 MED | PersonController | ~40% | View syntax error | Low |
+| ~~🟡 MED~~ | ~~IdDocumentController~~ | ~~15%~~ → ✅ **50%+** | ~~Route/view mismatch~~ FIXED | ~~Low~~ DONE |
+| ~~🟡 MED~~ | ~~PersonController~~ | ~~40%~~ → ✅ **50%+** | ~~View syntax error~~ FIXED | ~~Low~~ DONE |
 | 🟢 LOW | FundPDF | 44.2% | Needs more tests | Med |
 | 🟢 LOW | AccountPDF | 41.2% | Needs more tests | Low |
 
+## Recently Completed
+
+1. ✅ **IdDocumentController** → 50%+ (2026-01-18)
+   - Fixed route/view mismatch (idDocuments.* → id_documents.*)
+   - Created missing Request classes
+   - Added 9 new tests (10 total, all passing)
+   - Commit: 5029c90
+
+2. ✅ **PersonController** → 50%+ (2026-01-18)
+   - Fixed syntax errors in phone_fields.blade.php and address_fields.blade.php
+   - Added 3 new tests (8 total, all passing)
+   - Commit: 76197b0
+
 ## Quick Wins (Next 2-3 hours)
 
-1. **IdDocumentController** → 50%+
-   - Fix route names in views
-   - Add 7 more tests
-   - 30 min fix + 30 min tests
+1. **AccountPDF** → 50%+
+   - Add 2-3 PDF generation tests
+   - 1 hour
 
-2. **PersonController** → 50%+
+2. **FundPDF** → 50%+
    - Fix phone_fields.blade.php syntax
    - Add create/edit tests
    - 30 min fix + 30 min tests

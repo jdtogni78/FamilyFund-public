@@ -15,12 +15,12 @@
             <td>{{ $idDocument->type }}</td>
             <td>{{ $idDocument->number }}</td>
                 <td>
-                    <form action="{{ route('idDocuments.destroy', $idDocument->id) }}" method="POST">
+                    <form action="{{ route('id_documents.destroy', $idDocument->id) }}" method="POST">
                         @csrf
                         @method('DELETE')
                         <div class='btn-group'>
-                            <a href="{{ route('idDocuments.show', [$idDocument->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                            <a href="{{ route('idDocuments.edit', [$idDocument->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                            <a href="{{ route('id_documents.show', [$idDocument->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('id_documents.edit', [$idDocument->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this id document?')"><i class="fa fa-trash"></i></button>
                         </div>
                     </form>

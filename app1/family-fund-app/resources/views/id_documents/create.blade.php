@@ -3,7 +3,7 @@
 @section('content')
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
-         <a href="{!! route('idDocuments.index') !!}">Id Document</a>
+         <a href="{!! route('id_documents.index') !!}">Id Document</a>
       </li>
       <li class="breadcrumb-item active">Create</li>
     </ol>
@@ -18,7 +18,7 @@
                                 <strong>Create Id Document</strong>
                             </div>
                             <div class="card-body">
-                                <form action="{{ route('idDocuments.store') }}" method="POST">
+                                <form action="{{ route('id_documents.store') }}" method="POST">
                                     @csrf
                                     @include('id_documents.fields')
                                 </form>

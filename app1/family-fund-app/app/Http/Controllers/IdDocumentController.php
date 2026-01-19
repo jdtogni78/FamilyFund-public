@@ -60,7 +60,7 @@ class IdDocumentController extends AppBaseController
 
         Flash::success('Id Document saved successfully.');
 
-        return redirect(route('idDocuments.index'));
+        return redirect(route('id_documents.index'));
     }
 
     /**
@@ -77,7 +77,7 @@ class IdDocumentController extends AppBaseController
         if (empty($idDocument)) {
             Flash::error('Id Document not found');
 
-            return redirect(route('idDocuments.index'));
+            return redirect(route('id_documents.index'));
         }
 
         return view('id_documents.show')->with('idDocument', $idDocument);
@@ -97,7 +97,7 @@ class IdDocumentController extends AppBaseController
         if (empty($idDocument)) {
             Flash::error('Id Document not found');
 
-            return redirect(route('idDocuments.index'));
+            return redirect(route('id_documents.index'));
         }
 
         return view('id_documents.edit')->with('idDocument', $idDocument);
@@ -118,14 +118,14 @@ class IdDocumentController extends AppBaseController
         if (empty($idDocument)) {
             Flash::error('Id Document not found');
 
-            return redirect(route('idDocuments.index'));
+            return redirect(route('id_documents.index'));
         }
 
         $idDocument = $this->idDocumentRepository->update($request->all(), $id);
 
         Flash::success('Id Document updated successfully.');
 
-        return redirect(route('idDocuments.index'));
+        return redirect(route('id_documents.index'));
     }
 
     /**
@@ -144,13 +144,13 @@ class IdDocumentController extends AppBaseController
         if (empty($idDocument)) {
             Flash::error('Id Document not found');
 
-            return redirect(route('idDocuments.index'));
+            return redirect(route('id_documents.index'));
         }
 
         $this->idDocumentRepository->delete($id);
 
         Flash::success('Id Document deleted successfully.');
 
-        return redirect(route('idDocuments.index'));
+        return redirect(route('id_documents.index'));
     }
 }

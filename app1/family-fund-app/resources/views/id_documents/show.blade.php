@@ -3,7 +3,7 @@
 @section('content')
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{{ route('idDocuments.index') }}">ID Documents</a>
+            <a href="{{ route('id_documents.index') }}">ID Documents</a>
         </li>
         <li class="breadcrumb-item active">Document #{{ $idDocument->id }}</li>
     </ol>
@@ -24,10 +24,10 @@
                                 @endif
                             </div>
                             <div>
-                                <a href="{{ route('idDocuments.edit', $idDocument->id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('id_documents.edit', $idDocument->id) }}" class="btn btn-sm btn-primary">
                                     <i class="fa fa-edit me-1"></i> Edit
                                 </a>
-                                <a href="{{ route('idDocuments.index') }}" class="btn btn-sm btn-secondary">
+                                <a href="{{ route('id_documents.index') }}" class="btn btn-sm btn-secondary">
                                     <i class="fa fa-arrow-left me-1"></i> Back
                                 </a>
                             </div>

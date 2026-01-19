@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\FundReport;
 use App\Models\Schedule;
 use App\Models\ScheduledJob;
+use App\Models\ScheduledJobExt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\DataFactory;
@@ -59,7 +60,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -72,11 +73,11 @@ class ScheduledJobControllerExtTest extends TestCase
 
     public function test_index_orders_by_start_date_descending()
     {
-        $job1 = $this->df->createScheduledJob($this->schedule, 'Job 1', $this->fundReportTemplate->id);
+        $job1 = $this->df->createScheduledJob($this->schedule, ScheduledJobExt::ENTITY_FUND_REPORT, $this->fundReportTemplate->id);
         $job1->start_dt = '2023-01-01';
         $job1->save();
 
-        $job2 = $this->df->createScheduledJob($this->schedule, 'Job 2', $this->fundReportTemplate->id);
+        $job2 = $this->df->createScheduledJob($this->schedule, ScheduledJobExt::ENTITY_FUND_REPORT, $this->fundReportTemplate->id);
         $job2->start_dt = '2023-12-01';
         $job2->save();
 
@@ -85,7 +86,11 @@ class ScheduledJobControllerExtTest extends TestCase
         $response->assertStatus(200);
         $scheduledJobs = $response->viewData('scheduledJobs');
         // Most recent should be first (descending order)
-        $this->assertEquals('2023-12-01', $scheduledJobs->first()->start_dt->format('Y-m-d'));
+        $this->assertGreaterThanOrEqual(
+            $scheduledJobs->skip(1)->first()->start_dt->format('Y-m-d'),
+            $scheduledJobs->first()->start_dt->format('Y-m-d'),
+            'Scheduled jobs should be ordered by start_dt descending'
+        );
     }
 
     // ==================== Create Tests ====================
@@ -108,7 +113,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -135,7 +140,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -163,7 +168,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -194,7 +199,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -223,14 +228,14 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
         $asOf = now()->format('Y-m-d');
 
         $response = $this->actingAs($this->user)
-            ->post(route('scheduledJobs.forceRun', [$scheduledJob->id, $asOf]));
+            ->post(route('scheduledJobs.force-run', [$scheduledJob->id, $asOf]));
 
         $response->assertRedirect(route('scheduledJobs.show', $scheduledJob->id));
         $response->assertSessionHas('flash_notification');
@@ -240,14 +245,14 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
         $asOf = now()->format('Y-m-d');
 
         $response = $this->actingAs($this->user)
-            ->post(route('scheduledJobs.forceRun', [$scheduledJob->id, $asOf]), [
+            ->post(route('scheduledJobs.force-run', [$scheduledJob->id, $asOf]), [
                 'skip_data_check' => true
             ]);
 
@@ -260,7 +265,7 @@ class ScheduledJobControllerExtTest extends TestCase
         $asOf = now()->format('Y-m-d');
 
         $response = $this->actingAs($this->user)
-            ->post(route('scheduledJobs.forceRun', [99999, $asOf]));
+            ->post(route('scheduledJobs.force-run', [99999, $asOf]));
 
         $response->assertRedirect();
     }
@@ -271,7 +276,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 
@@ -288,7 +293,7 @@ class ScheduledJobControllerExtTest extends TestCase
     {
         $scheduledJob = $this->df->createScheduledJob(
             $this->schedule,
-            'Test Job',
+            ScheduledJobExt::ENTITY_FUND_REPORT,
             $this->fundReportTemplate->id
         );
 

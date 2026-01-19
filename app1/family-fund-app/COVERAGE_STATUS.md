@@ -12,7 +12,7 @@
 | ~~🟡 MED~~ | ~~IdDocumentController~~ | ~~15%~~ → ✅ **50%+** | ~~Route/view mismatch~~ FIXED | ~~Low~~ DONE |
 | ~~🟡 MED~~ | ~~PersonController~~ | ~~40%~~ → ✅ **50%+** | ~~View syntax error~~ FIXED | ~~Low~~ DONE |
 | ~~🟢 LOW~~ | ~~AccountPDF~~ | ~~41.2%~~ → ✅ **50%+** | ~~Needs more tests~~ FIXED | ~~Low~~ DONE |
-| 🟢 LOW | FundPDF | 44.2% | Needs more tests | Med |
+| ~~🟢 LOW~~ | ~~FundPDF~~ | ~~44.2%~~ → ✅ **50%+** | ~~Needs more tests~~ FIXED | ~~Med~~ DONE |
 
 ## Recently Completed
 
@@ -32,16 +32,17 @@
    - Added to existing PDFTest.php (25 total PDF tests, all passing)
    - Commit: b0d075d
 
+4. ✅ **FundPDF** → 50%+ (2026-01-18)
+   - Added 4 new tests (trade bands PDF, trade bands graph, portfolios edge cases)
+   - Total: 29 PDF tests (all passing, 47 assertions)
+   - Commit: 2c0a383
+
 ## Remaining Under 50%
 
 1. **TradeBandReportTrait** (9.1%)
    - Complex: requires mocking email, PDF, jobs, scheduling
    - High effort - consider accepting <50% for this trait
    - **Recommendation**: Consider refactoring to extract testable logic from I/O operations
-
-2. **FundPDF** (44.2%)
-   - Already has 20+ tests in PDFTest.php
-   - May already be at 50%+ after AccountPDF tests run
 
 ## Testing Philosophy
 

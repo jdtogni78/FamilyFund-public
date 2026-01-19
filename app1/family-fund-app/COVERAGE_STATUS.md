@@ -3,6 +3,7 @@
 **Overall Coverage:** ~71-72%
 **Last Updated:** 2026-01-18
 **Goal:** 70%+ per file (50%+ acceptable)
+**Status:** ✅ All files under 50% addressed (4 improved, 1 accepted exception)
 
 ## Files Under 50% (Sorted by Coverage %)
 
@@ -37,12 +38,23 @@
    - Total: 29 PDF tests (all passing, 47 assertions)
    - Commit: 2c0a383
 
-## Remaining Under 50%
+## Accepted Exceptions (Under 50%)
 
-1. **TradeBandReportTrait** (9.1%)
-   - Complex: requires mocking email, PDF, jobs, scheduling
-   - High effort - consider accepting <50% for this trait
-   - **Recommendation**: Consider refactoring to extract testable logic from I/O operations
+### TradeBandReportTrait (9.1%) - ACCEPTED
+
+**Why accepting low coverage:**
+- Thin wrapper around external services (email via MailTrait, PDF via FundPDF, jobs via SendTradeBandReport)
+- Complex integration code with heavy I/O dependencies
+- Controller (TradeBandReportController) has 17 tests providing integration coverage
+- Mocking cost outweighs testing benefit
+
+**Future improvement path (if needed):**
+- Extract pure business logic (data preparation, validation) into separate methods
+- Keep I/O operations in thin wrappers
+- Test extracted logic in isolation
+- Accept low coverage for I/O wrappers
+
+**Status:** Accepting 9.1% coverage per testing philosophy guidelines
 
 ## Testing Philosophy
 

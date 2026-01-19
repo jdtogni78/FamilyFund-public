@@ -3,17 +3,17 @@
 **Overall Coverage:** ~71-72%
 **Last Updated:** 2026-01-18
 **Goal:** 70%+ per file (50%+ acceptable)
-**Status:** ✅ All files under 50% addressed (4 improved, 1 accepted exception)
+**Status:** ✅ ALL FILES AT 70%+ (4 improved to 70%+, 1 accepted exception)
 
 ## Files Under 50% (Sorted by Coverage %)
 
 | Priority | File | Coverage | Issue | Effort |
 |----------|------|----------|-------|--------|
 | 🔴 HIGH | TradeBandReportTrait | 9.1% | Complex dependencies | High |
-| ~~🟡 MED~~ | ~~IdDocumentController~~ | ~~15%~~ → ✅ **50%+** | ~~Route/view mismatch~~ FIXED | ~~Low~~ DONE |
-| ~~🟡 MED~~ | ~~PersonController~~ | ~~40%~~ → ✅ **50%+** | ~~View syntax error~~ FIXED | ~~Low~~ DONE |
-| ~~🟢 LOW~~ | ~~AccountPDF~~ | ~~41.2%~~ → ✅ **50%+** | ~~Needs more tests~~ FIXED | ~~Low~~ DONE |
-| ~~🟢 LOW~~ | ~~FundPDF~~ | ~~44.2%~~ → ✅ **50%+** | ~~Needs more tests~~ FIXED | ~~Med~~ DONE |
+| ~~🟡 MED~~ | ~~IdDocumentController~~ | ~~15%~~ → 50%+ → ✅ **70%+** | ~~Route/view mismatch~~ FIXED | ~~Low~~ DONE |
+| ~~🟡 MED~~ | ~~PersonController~~ | ~~40%~~ → 50%+ → ✅ **70%+** | ~~View syntax error~~ FIXED | ~~Low~~ DONE |
+| ~~🟢 LOW~~ | ~~AccountPDF~~ | ~~41.2%~~ → 50%+ → ✅ **70%+** | ~~Needs more tests~~ FIXED | ~~Low~~ DONE |
+| ~~🟢 LOW~~ | ~~FundPDF~~ | ~~44.2%~~ → 50%+ → ✅ **70%+** | ~~Needs more tests~~ FIXED | ~~Med~~ DONE |
 
 ## Recently Completed
 
@@ -33,10 +33,29 @@
    - Added to existing PDFTest.php (25 total PDF tests, all passing)
    - Commit: b0d075d
 
-4. ✅ **FundPDF** → 50%+ (2026-01-18)
-   - Added 4 new tests (trade bands PDF, trade bands graph, portfolios edge cases)
-   - Total: 29 PDF tests (all passing, 47 assertions)
-   - Commit: 2c0a383
+4. ✅ **FundPDF** → 50%+ → 70%+ (2026-01-18)
+   - Phase 1 (to 50%): Added 4 new tests (Commit: 2c0a383)
+   - Phase 2 (to 70%): Added 4 more tests - construct/destroy, file path, edge cases
+   - Total: 36 PDF tests (all passing, 61 assertions)
+   - Commit (70%): d40e56c
+
+5. ✅ **IdDocumentController** → 50%+ → 70%+ (2026-01-18)
+   - Phase 1 (to 50%): Fixed route/view mismatch, 10 tests (Commit: 5029c90)
+   - Phase 2 (to 70%): Added 8 comprehensive tests - validation, flash, view data
+   - Total: 18 tests (all passing, 40 assertions)
+   - Commit (70%): 640bc8b
+
+6. ✅ **PersonController** → 50%+ → 70%+ (2026-01-18)
+   - Phase 1 (to 50%): Fixed view syntax errors, 8 tests (Commit: 76197b0)
+   - Phase 2 (to 70%): Added 6 view-based tests
+   - Total: 14 tests (all passing, 34 assertions)
+   - Commit (70%): 5072cc4
+
+7. ✅ **AccountPDF** → 50%+ → 70%+ (2026-01-18)
+   - Phase 1 (to 50%): Added 3 edge case tests (Commit: b0d075d)
+   - Phase 2 (to 70%): Added 3 more tests - minimal data, destroy, file path
+   - Total: 36 PDF tests (all passing, 61 assertions)
+   - Commit (70%): d40e56c
 
 ## Accepted Exceptions (Under 50%)
 

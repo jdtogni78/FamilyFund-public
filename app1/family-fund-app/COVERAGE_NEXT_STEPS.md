@@ -108,6 +108,66 @@ public function test_pdf_method_name()
 - Complex traits with heavy dependencies (TradeBandReportTrait at 9.1% - accept 30-40%)
 - Pure integration classes with extensive external dependencies
 
+## Testing Philosophy
+
+**For difficult-to-test files:** Before accepting low coverage, consider refactoring for testability.
+
+### Refactoring Strategies
+
+When encountering hard-to-test code:
+
+1. **Separate Concerns**
+   - Extract business logic from I/O operations (email, files, databases, jobs)
+   - Pure functions are easy to test
+   - Side effects should be in thin, isolated layers
+
+2. **Dependency Injection**
+   - Inject external services rather than instantiating them
+   - Allows mocking in tests
+   - Makes dependencies explicit
+
+3. **Break Down Complexity**
+   - Large methods with multiple responsibilities are hard to test
+   - Split into smaller, single-purpose methods
+   - Each small method is easier to test in isolation
+
+4. **Example: TradeBandReportTrait**
+
+   Current structure (hard to test):
+   ```
+   sendTradeBandReport() {
+     - Generate PDF
+     - Query database
+     - Send email
+     - Log results
+   }
+   ```
+
+   Refactored structure (easier to test):
+   ```
+   // Easy to test - pure function
+   prepareReportData(fund, asOf) { ... }
+
+   // Easy to test - returns data structure
+   buildEmailRecipients(fund) { ... }
+
+   // Thin wrapper - integration test or accept low coverage
+   sendReport(data, recipients) { ... }
+   ```
+
+### When to Refactor vs Accept Low Coverage
+
+**Refactor when:**
+- Code will change frequently
+- Contains critical business logic
+- Low coverage masks real bugs
+
+**Accept low coverage when:**
+- Thin wrappers around external libraries
+- Framework integration code
+- Legacy code scheduled for replacement
+- Refactoring cost > benefit
+
 ## Quick Commands
 
 ```bash

@@ -37,10 +37,25 @@
 1. **TradeBandReportTrait** (9.1%)
    - Complex: requires mocking email, PDF, jobs, scheduling
    - High effort - consider accepting <50% for this trait
+   - **Recommendation**: Consider refactoring to extract testable logic from I/O operations
 
 2. **FundPDF** (44.2%)
    - Already has 20+ tests in PDFTest.php
    - May already be at 50%+ after AccountPDF tests run
+
+## Testing Philosophy
+
+**For difficult-to-test files:** Consider refactoring for testability before accepting low coverage.
+
+Common refactoring patterns:
+- Extract business logic from I/O operations (email, file, database)
+- Use dependency injection for external services
+- Separate data transformation from side effects
+- Break complex methods into smaller, testable units
+
+Example: TradeBandReportTrait could be split into:
+- Pure functions for data preparation (easy to test)
+- Thin wrappers for email/PDF/jobs (accept lower coverage or use integration tests)
    - Fix phone_fields.blade.php syntax
    - Add create/edit tests
    - 30 min fix + 30 min tests

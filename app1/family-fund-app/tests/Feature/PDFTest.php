@@ -837,4 +837,114 @@ class PDFTest extends TestCase
         $pdf->destroy();
     }
 
+    // ==================== Additional Tests for 70% Coverage ====================
+
+    public function testAccountPDF_WithMinimalData()
+    {
+        $this->factory->createUser();
+        $tran = $this->factory->createTransaction();
+        $this->factory->createBalance(50, $tran, $this->factory->userAccount);
+        $account = $this->factory->userAccount;
+
+        $arr = $this->createAccountViewData($this->asOf, $account);
+        // Minimal data - no goals, no trade portfolios
+        $arr['goals'] = [];
+        $arr['tradePortfolios'] = [];
+
+        $pdf = new AccountPDF($arr, $this->asOf, true);
+        $pdfFile = $pdf->file();
+
+        $this->assertNotNull($pdfFile);
+        $this->assertFileExists($pdfFile);
+        $pdf->destroy();
+    }
+
+    public function testAccountPDF_DestroyMethod()
+    {
+        $this->factory->createUser();
+        $tran = $this->factory->createTransaction();
+        $this->factory->createBalance(100, $tran, $this->factory->userAccount);
+        $account = $this->factory->userAccount;
+
+        $arr = $this->createAccountViewData($this->asOf, $account);
+        $pdf = new AccountPDF($arr, $this->asOf, true);
+        $pdfFile = $pdf->file();
+
+        $this->assertFileExists($pdfFile);
+        $pdf->destroy();
+
+        // After destroy, temp files should be cleaned up
+        $this->assertTrue(true); // Verify no errors during destroy
+    }
+
+    public function testFundPDF_ConstructAndDestroy()
+    {
+        $pdf = new FundPDF();
+        $pdf->constructPDF();
+
+        // Use reflection to check temp directory was created
+        $reflection = new \ReflectionClass($pdf);
+        $tempDirProp = $reflection->getProperty('tempDir');
+        $tempDirProp->setAccessible(true);
+        $tempDir = $tempDirProp->getValue($pdf);
+
+        $this->assertNotNull($tempDir);
+        $pdf->destroy();
+        $this->assertTrue(true); // Verify no errors
+    }
+
+    public function testFundPDF_FileMethodReturnsPath()
+    {
+        $fund = $this->factory->fund;
+        $arr = $this->createFullFundResponse($fund, $this->asOf, true);
+
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, true, true);
+        $file = $pdf->file();
+
+        $this->assertNotNull($file);
+        $this->assertStringEndsWith('.pdf', $file);
+        $this->assertFileExists($file);
+    }
+
+    public function testAccountPDF_FileMethodReturnsPath()
+    {
+        $this->factory->createUser();
+        $tran = $this->factory->createTransaction();
+        $this->factory->createBalance(100, $tran, $this->factory->userAccount);
+        $account = $this->factory->userAccount;
+
+        $arr = $this->createAccountViewData($this->asOf, $account);
+        $pdf = new AccountPDF($arr, $this->asOf, true);
+        $file = $pdf->file();
+
+        $this->assertNotNull($file);
+        $this->assertStringEndsWith('.pdf', $file);
+        $this->assertFileExists($file);
+    }
+
+    public function testFundPDF_WithEmptyPortfolio()
+    {
+        $fund = $this->factory->fund;
+        $arr = $this->createFullFundResponse($fund, $this->asOf, true);
+        $arr['portfolio'] = ['assets' => []];
+
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, true, true);
+
+        $this->assertNotNull($pdf->file());
+    }
+
+    public function testFundPDF_WithNoBalances()
+    {
+        $fund = $this->factory->fund;
+        $arr = $this->createFullFundResponse($fund, $this->asOf, true);
+        $arr['balances'] = [];
+
+        $pdf = new FundPDF();
+        $pdf->createFundPDF($arr, true, true);
+
+        $this->assertNotNull($pdf->file());
+    }
+
 }

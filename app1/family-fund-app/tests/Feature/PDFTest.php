@@ -725,4 +725,116 @@ class PDFTest extends TestCase
         $this->assertTrue(true); // Verify no errors occurred
     }
 
+    // ==================== FundPDF Additional Tests ====================
+
+    public function testFundPDF_CreateTradeBandsPDF()
+    {
+        $fund = $this->factory->fund;
+        $arr = $this->createFundResponseTradeBands($fund, $this->asOf, true);
+
+        $pdf = new FundPDF();
+        $pdf->createTradeBandsPDF($arr, true, true);
+        $pdfFile = $pdf->file();
+
+        $this->assertNotNull($pdfFile);
+        $this->assertFileExists($pdfFile);
+    }
+
+    public function testFundPDF_CreateTradeBandsGraph_WithMultipleAssets()
+    {
+        $pdf = new FundPDF();
+        $pdf->constructPDF();
+
+        $reflection = new \ReflectionClass($pdf);
+        $tempDirProp = $reflection->getProperty('tempDir');
+        $tempDirProp->setAccessible(true);
+        $tempDir = $tempDirProp->getValue($pdf);
+
+        $filesProp = $reflection->getProperty('files');
+        $filesProp->setAccessible(true);
+
+        $arr = [
+            'tradePortfolios' => [
+                [
+                    'start_dt' => '2022-01-01',
+                    'end_dt' => '2022-12-31',
+                    'items' => [
+                        ['symbol' => 'AAPL', 'target_share' => 0.5, 'deviation_trigger' => 0.05],
+                        ['symbol' => 'GOOGL', 'target_share' => 0.3, 'deviation_trigger' => 0.05],
+                    ]
+                ]
+            ],
+            'asset_monthly_bands' => [
+                'AAPL' => [
+                    '2022-06-01' => ['value' => 10000, 'shares' => 100],
+                    '2022-07-01' => ['value' => 11000, 'shares' => 110],
+                ],
+                'GOOGL' => [
+                    '2022-06-01' => ['value' => 5000, 'shares' => 50],
+                    '2022-07-01' => ['value' => 5500, 'shares' => 55],
+                ],
+            ]
+        ];
+
+        $pdf->createTradeBandsGraph($arr, $tempDir);
+
+        $files = $filesProp->getValue($pdf);
+        $this->assertArrayHasKey('trade_bands_AAPL.png', $files);
+        $this->assertArrayHasKey('trade_bands_GOOGL.png', $files);
+
+        $pdf->destroy();
+    }
+
+    public function testFundPDF_CreateTradePortfoliosGraph_SkipsWhenNoPortfolios()
+    {
+        $pdf = new FundPDF();
+        $pdf->constructPDF();
+
+        $reflection = new \ReflectionClass($pdf);
+        $tempDirProp = $reflection->getProperty('tempDir');
+        $tempDirProp->setAccessible(true);
+        $tempDir = $tempDirProp->getValue($pdf);
+
+        $filesProp = $reflection->getProperty('files');
+        $filesProp->setAccessible(true);
+
+        $arr = [
+            'tradePortfolios' => []
+        ];
+
+        $pdf->createTradePortfoliosGraph($arr, $tempDir);
+
+        $files = $filesProp->getValue($pdf);
+        // Should not create file when no portfolios
+        $this->assertArrayNotHasKey('trade_portfolios_1.png', $files);
+
+        $pdf->destroy();
+    }
+
+    public function testFundPDF_CreateTradePortfoliosGroupGraph_SkipsWhenNoPortfolios()
+    {
+        $pdf = new FundPDF();
+        $pdf->constructPDF();
+
+        $reflection = new \ReflectionClass($pdf);
+        $tempDirProp = $reflection->getProperty('tempDir');
+        $tempDirProp->setAccessible(true);
+        $tempDir = $tempDirProp->getValue($pdf);
+
+        $filesProp = $reflection->getProperty('files');
+        $filesProp->setAccessible(true);
+
+        $arr = [
+            'tradePortfolios' => []
+        ];
+
+        $pdf->createTradePortfoliosGroupGraph($arr, $tempDir);
+
+        $files = $filesProp->getValue($pdf);
+        // Should not create file when no portfolios
+        $this->assertArrayNotHasKey('trade_portfolios_group1.png', $files);
+
+        $pdf->destroy();
+    }
+
 }

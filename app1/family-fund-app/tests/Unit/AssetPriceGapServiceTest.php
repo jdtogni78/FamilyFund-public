@@ -18,6 +18,11 @@ class AssetPriceGapServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Clear existing asset price data to ensure clean test state
+        // This is necessary because the service queries ALL asset prices, not filtered by asset
+        \DB::table('asset_prices')->delete();
+
         $this->gapService = new AssetPriceGapService();
     }
 
@@ -26,21 +31,20 @@ class AssetPriceGapServiceTest extends TestCase
      */
     public function test_findGaps_returns_empty_when_no_gaps(): void
     {
-        // Create asset prices for last 7 trading days (excluding weekends)
-        $date = Carbon::now()->startOfDay();
-        $daysCreated = 0;
+        // Create asset prices for all trading days in the last 7 calendar days
+        // Service checks last N calendar days, so we need data for all trading days in that range
         $daysToCheck = 7;
+        $startDate = Carbon::now()->subDays($daysToCheck - 1)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
 
-        while ($daysCreated < $daysToCheck) {
-            $date = $date->subDay();
-            if ($date->isWeekend()) {
-                continue;
+        $date = $startDate->copy();
+        while ($date <= $endDate) {
+            if (!$date->isWeekend()) {
+                AssetPrice::factory()->create([
+                    'start_dt' => $date->format('Y-m-d H:i:s'),
+                ]);
             }
-
-            AssetPrice::factory()->create([
-                'start_dt' => $date->format('Y-m-d H:i:s'),
-            ]);
-            $daysCreated++;
+            $date->addDay();
         }
 
         $result = $this->gapService->findGaps($daysToCheck, 'NYSE');

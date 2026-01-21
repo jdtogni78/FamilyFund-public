@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Traits\TransactionTrait;
 use App\Models\AccountExt;
+use App\Models\Asset;
+use App\Models\AssetPrice;
 use App\Models\TransactionExt;
 use App\Repositories\TransactionRepository;
 use Carbon\Carbon;
@@ -36,6 +38,23 @@ class TransactionPreviewCalculationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Create CASH asset required by DataFactory
+        $cashAsset = Asset::factory()->create([
+            'name' => 'CASH',
+            'type' => 'CSH',
+            'source' => 'MANUAL',
+            'display_group' => 'Cash',
+        ]);
+
+        // Create AssetPrice for CASH (always 1.0)
+        AssetPrice::factory()->create([
+            'asset_id' => $cashAsset->id,
+            'price' => 1.0,
+            'start_dt' => '2020-01-01',
+            'end_dt' => '9999-12-31',
+        ]);
+
         $this->factory = new DataFactory();
         $this->transactionRepository = app(TransactionRepository::class);
     }
@@ -454,12 +473,12 @@ class TransactionPreviewCalculationTest extends TestCase
         $this->factory->createFund(1000, 1000, $this->fundDate);
         $this->factory->createUser();
 
-        // Rule 1: expires 2022-12-31, 100% up to $100
-        $this->factory->createMatchingRule(dollar_end: 100, match: 100, start: $this->fundDate, end: '2022-12-31');
+        // Rule 1: expires sooner (2026-12-31), 100% up to $100
+        $this->factory->createMatchingRule(dollar_end: 100, match: 100, start: $this->fundDate, end: '2026-12-31');
         $this->factory->createAccountMatching();
 
-        // Rule 2: expires 2023-12-31, 100% up to $200
-        $this->factory->createMatchingRule(dollar_end: 200, match: 100, start: $this->fundDate, end: '2023-12-31');
+        // Rule 2: expires later (2027-12-31), 100% up to $200
+        $this->factory->createMatchingRule(dollar_end: 200, match: 100, start: $this->fundDate, end: '2027-12-31');
         $this->factory->createAccountMatching();
 
         $account = $this->factory->userAccount;
@@ -485,8 +504,8 @@ class TransactionPreviewCalculationTest extends TestCase
         $this->assertCount(1, $matches, "Should have one matching from expiring-first rule");
 
         // Verify availableMatching shows remaining from BOTH rules:
-        // - First rule: $100 - $50 = $50 remaining
-        // - Second rule: $200 remaining (not used, but still available)
+        // - First rule (expires 2026-12-31): $100 - $50 = $50 remaining
+        // - Second rule (expires 2027-12-31): $200 remaining (not used, but still available)
         $this->assertArrayHasKey('availableMatching', $api);
         $this->assertCount(2, $api['availableMatching'], "Should show remaining from both rules");
 

@@ -163,4 +163,26 @@ class Transaction extends Model
     {
         return $this->hasOne(\App\Models\AccountBalance::class, 'transaction_id');
     }
+
+    /**
+     * Accessor for 'amount' - alias for 'value' field
+     * This provides backward compatibility with tests and other code
+     *
+     * @return float|null
+     */
+    public function getAmountAttribute()
+    {
+        return $this->value;
+    }
+
+    /**
+     * Accessor for 'description' - alias for 'descr' field
+     * This provides backward compatibility with tests and other code
+     *
+     * @return string|null
+     */
+    public function getDescriptionAttribute()
+    {
+        return $this->descr;
+    }
 }

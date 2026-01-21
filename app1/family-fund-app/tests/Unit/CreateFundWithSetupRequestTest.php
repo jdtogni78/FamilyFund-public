@@ -282,7 +282,7 @@ class CreateFundWithSetupRequestTest extends TestCase
         $validator = $this->validate([
             'name' => 'Test Fund',
             'portfolio_source' => 'TEST_SOURCE',
-            'initial_shares' => 9999999999999.9992, // Exceeds maximum
+            'initial_shares' => 10000000000000, // Exceeds maximum
         ]);
 
         $this->assertTrue($validator->fails());
@@ -294,7 +294,7 @@ class CreateFundWithSetupRequestTest extends TestCase
         $validator = $this->validate([
             'name' => 'Test Fund',
             'portfolio_source' => 'TEST_SOURCE',
-            'initial_shares' => 9999999999999.9991, // Maximum valid
+            'initial_shares' => 9999999999999.9, // Maximum valid (PHP/Laravel can validate this)
         ]);
 
         $this->assertFalse($validator->errors()->has('initial_shares'));

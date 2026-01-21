@@ -23,11 +23,27 @@ trait TransactionTrait
         }
         $this->debug('TransactionTrait::createTransaction: ' . json_encode($input));
 
-        $transaction_data = null;
-        DB::beginTransaction();
+        // Check if we're already in a transaction (called from setupFund, etc.)
+        $inTransaction = DB::transactionLevel() > 0;
+
+        if (!$inTransaction) {
+            // Not in a transaction - we need to manage it ourselves
+            DB::beginTransaction();
+        }
+
         $transaction = $this->transactionRepository->create($input);
         $transaction_data = $this->processTransaction($transaction, $dry_run);
-        DB::commit();
+
+        if (!$inTransaction) {
+            // We started the transaction, so we manage commit/rollback
+            if ($dry_run) {
+                DB::rollBack();
+            } else {
+                DB::commit();
+            }
+        }
+        // If we're nested, the outer transaction will handle commit/rollback
+
         return $transaction_data;
     }
 
@@ -38,7 +54,7 @@ trait TransactionTrait
             $api = $this->getPreviewData($transaction_data);
             if ($dry_run) {
                 Flash::success('Transaction preview ready.');
-                DB::rollBack();
+                // Rollback handled by createTransaction()
             } else {
                 Flash::success('Transaction processed successfully.');
                 $this->sendTransactionConfirmation($api);

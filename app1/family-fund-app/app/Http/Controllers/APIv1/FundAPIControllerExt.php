@@ -182,11 +182,10 @@ class FundAPIControllerExt extends AppBaseController
                 $response['transaction'] = [
                     'id' => $setupData['transaction']->id,
                     'account_id' => $setupData['transaction']->account_id,
-                    'fund_id' => $setupData['transaction']->fund_id,
                     'type' => $setupData['transaction']->type,
-                    'amount' => $setupData['transaction']->amount,
+                    'amount' => $setupData['transaction']->value,
                     'shares' => $setupData['transaction']->shares,
-                    'description' => $setupData['transaction']->description,
+                    'description' => $setupData['transaction']->descr,
                     'timestamp' => $setupData['transaction']->timestamp,
                 ];
 

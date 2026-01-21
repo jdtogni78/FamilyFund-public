@@ -41,6 +41,14 @@ class FundSetupSequentialTest extends TestCase
     {
         parent::setUp();
 
+        // Create required CASH asset for transaction processing
+        \App\Models\Asset::factory()->create([
+            'name' => 'CASH',
+            'type' => 'CSH',
+            'source' => 'SYSTEM',
+            'display_group' => 'Cash',
+        ]);
+
         // DataFactory only used to create test user
         $this->df = new DataFactory();
         $this->df->createUser();
@@ -199,7 +207,7 @@ class FundSetupSequentialTest extends TestCase
                 'preview' => 0,
             ]);
 
-        $fund = Fund::where('name', 'Sequential Transaction Fund')->first();
+        $fund = FundExt::where('name', 'Sequential Transaction Fund')->first();
         $account = $fund->account();
 
         // Create additional transactions
@@ -314,7 +322,8 @@ class FundSetupSequentialTest extends TestCase
             ['Standard Fund', 1000, 1000.00, 1.00],
             ['High Value Fund', 100, 10000.00, 100.00],
             ['Fractional Fund', 0.5, 50.00, 100.00],
-            ['Precision Fund', 123.45678901, 1234.56, 10.00],
+            // Note: shares column is decimal(19, 4), so max 4 decimal places
+            ['Precision Fund', 123.4568, 1234.56, 9.9993],
         ];
 
         foreach ($scenarios as [$name, $shares, $value, $expectedPrice]) {
@@ -328,14 +337,15 @@ class FundSetupSequentialTest extends TestCase
                     'preview' => 0,
                 ]);
 
-            $fund = Fund::where('name', $name)->first();
+            $fund = FundExt::where('name', $name)->first();
             $account = $fund->account();
             $balance = AccountBalance::where('account_id', $account->id)->first();
 
             $this->assertNotNull($balance);
             $this->assertEquals($value, $balance->balance);
             $this->assertEquals($shares, $balance->shares);
-            $this->assertEquals($expectedPrice, $balance->share_value, "Share price mismatch for $name");
+            // Use delta for floating-point comparison due to precision (shares column is decimal(19,4))
+            $this->assertEqualsWithDelta($expectedPrice, $balance->share_value, 0.001, "Share price mismatch for $name");
         }
     }
 

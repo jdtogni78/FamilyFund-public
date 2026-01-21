@@ -102,4 +102,43 @@ class AccountBalance extends Model
     {
         return $this->belongsTo(\App\Models\AccountBalance::class, 'previous_balance_id');
     }
+
+    /**
+     * Get the share value (price per share) at the time of this balance
+     *
+     * @return float|null
+     */
+    public function getShareValueAttribute()
+    {
+        if (!$this->transaction) {
+            return null;
+        }
+
+        // For initial transactions, calculate share value from the transaction itself
+        if ($this->transaction->type === 'INI' && $this->shares > 0) {
+            return $this->transaction->value / $this->shares;
+        }
+
+        $account = $this->account;
+        if (!$account || !$account->fund) {
+            return null;
+        }
+
+        return $account->fund->shareValueAsOf($this->transaction->timestamp);
+    }
+
+    /**
+     * Get the total balance (shares * share_value) at the time of this balance
+     *
+     * @return float|null
+     */
+    public function getBalanceAttribute()
+    {
+        $shareValue = $this->share_value;
+        if ($shareValue === null) {
+            return null;
+        }
+
+        return $this->shares * $shareValue;
+    }
 }

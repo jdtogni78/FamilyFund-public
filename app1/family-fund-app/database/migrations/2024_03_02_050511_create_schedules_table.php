@@ -14,7 +14,7 @@ class CreateSchedulesTable extends Migration
      */
     public function up()
     {
-        DB::raw("alter table report_schedules rename schedules");
+        DB::statement("ALTER TABLE report_schedules RENAME TO schedules");
     }
 
     /**
@@ -24,6 +24,6 @@ class CreateSchedulesTable extends Migration
      */
     public function down()
     {
-        DB::raw("alter table schedules rename report_schedules");
+        DB::statement("ALTER TABLE schedules RENAME TO report_schedules");
     }
 }

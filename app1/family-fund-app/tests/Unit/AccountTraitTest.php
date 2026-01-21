@@ -125,12 +125,17 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02;
         $this->traitObject->setPerfObject($account);
 
-        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01 to 2022-01-01'
         $asOf = '2022-06-01';
+
+        // Create account object with balances structure
+        $accountData = new \stdClass();
+        $accountData->balances = ['OWN' => (object)['market_value' => 10000]];
+
         $arr = [
-            'account' => ['value' => 10000],
+            'account' => $accountData,
             'yearly_performance' => [
-                '2021-01-01' => [
+                '2021-01-01 to 2022-01-01' => [
                     'value' => 10000,
                     'performance' => 10, // 10% return (stored as percentage)
                 ],
@@ -153,12 +158,17 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02; // 2% cap
         $this->traitObject->setPerfObject($account);
 
-        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01 to 2022-01-01'
         $asOf = '2022-06-01';
+
+        // Create account object with balances structure
+        $accountData = new \stdClass();
+        $accountData->balances = ['OWN' => (object)['market_value' => 10000]];
+
         $arr = [
-            'account' => ['value' => 10000],
+            'account' => $accountData,
             'yearly_performance' => [
-                '2021-01-01' => [
+                '2021-01-01 to 2022-01-01' => [
                     'value' => 10000,
                     'performance' => 10, // 10% return, but cap is 2% (stored as percentage)
                 ],
@@ -177,12 +187,17 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = 0.02;
         $this->traitObject->setPerfObject($account);
 
-        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01 to 2022-01-01'
         $asOf = '2022-06-01';
+
+        // Create account object with balances structure
+        $accountData = new \stdClass();
+        $accountData->balances = ['OWN' => (object)['market_value' => 10000]];
+
         $arr = [
-            'account' => ['value' => 10000],
+            'account' => $accountData,
             'yearly_performance' => [
-                '2021-01-01' => [
+                '2021-01-01 to 2022-01-01' => [
                     'value' => 10000,
                     'performance' => -5, // -5% return (stored as percentage)
                 ],
@@ -201,12 +216,17 @@ class AccountTraitTest extends TestCase
         $account->disbursement_cap = null; // No cap set
         $this->traitObject->setPerfObject($account);
 
-        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01'
+        // Method looks at previous year: for asOf='2022-06-01', it checks '2021-01-01 to 2022-01-01'
         $asOf = '2022-06-01';
+
+        // Create account object with balances structure
+        $accountData = new \stdClass();
+        $accountData->balances = ['OWN' => (object)['market_value' => 10000]];
+
         $arr = [
-            'account' => ['value' => 10000],
+            'account' => $accountData,
             'yearly_performance' => [
-                '2021-01-01' => [
+                '2021-01-01 to 2022-01-01' => [
                     'value' => 10000,
                     'performance' => 10, // 10% return (stored as percentage)
                 ],

@@ -201,9 +201,9 @@ class AssetPriceDataWarningsTest extends TestCase
 
         $this->assertCount(2, $dataWarnings['longSpans']);
 
-        // Verify both records are flagged
-        $this->assertEquals('2026-01-06', $dataWarnings['longSpans'][0]['from']);
-        $this->assertEquals('2026-01-12', $dataWarnings['longSpans'][1]['from']);
+        // Verify both records are flagged (sorted descending by date, newest first)
+        $this->assertEquals('2026-01-12', $dataWarnings['longSpans'][0]['from']);
+        $this->assertEquals('2026-01-06', $dataWarnings['longSpans'][1]['from']);
     }
 
     /**

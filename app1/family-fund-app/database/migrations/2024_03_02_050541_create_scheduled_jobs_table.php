@@ -14,7 +14,6 @@ class CreateScheduledJobsTable extends Migration
      */
     public function up()
     {
-        DB::beginTransaction();
         Schema::create('scheduled_jobs', function (Blueprint $table) {
             $table->bigInteger('id', true, true);
             $table->bigInteger('schedule_id', false, true);
@@ -51,7 +50,6 @@ class CreateScheduledJobsTable extends Migration
 
         // drop the fund_report_schedules table
         Schema::dropIfExists('fund_report_schedules');
-        DB::commit();
     }
 
     /**

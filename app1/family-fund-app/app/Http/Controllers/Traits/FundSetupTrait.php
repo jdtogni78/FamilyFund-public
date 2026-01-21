@@ -37,6 +37,9 @@ trait FundSetupTrait
             $accountNickname = $input['account_nickname']
                 ?? ($fund->name . ' Fund Account');
 
+            // Truncate nickname to fit 100 character limit
+            $accountNickname = substr($accountNickname, 0, 100);
+
             $account = AccountExt::create([
                 'fund_id' => $fund->id,
                 'user_id' => null,
@@ -63,19 +66,23 @@ trait FundSetupTrait
             $transactionData = null;
 
             if ($input['create_initial_transaction'] ?? true) {
-                $initialShares = $input['initial_shares'] ?? null;
+                $initialShares = $input['initial_shares'] ?? 1;
                 $initialValue = $input['initial_value'] ?? 0.01;
+                $initialTimestamp = $input['initial_transaction_date'] ?? now();
 
                 // Build transaction input
+                // For fund initial transactions, use FLAGS_CASH_ADDED
                 $tranInput = [
-                    'fund_id' => $fund->id,
                     'account_id' => $account->id,
                     'type' => TransactionExt::TYPE_INITIAL,
-                    'amount' => $initialValue,
+                    'status' => TransactionExt::STATUS_PENDING,
+                    'value' => $initialValue,
                     'shares' => $initialShares,
-                    'timestamp' => now(),
-                    'description' => $input['transaction_description']
+                    'timestamp' => $initialTimestamp,
+                    'source' => 'API',
+                    'descr' => $input['transaction_description']
                         ?? 'Initial fund setup',
+                    'flags' => TransactionExt::FLAGS_CASH_ADDED,
                 ];
 
                 // Use TransactionTrait::createTransaction which calls processPending
@@ -83,6 +90,11 @@ trait FundSetupTrait
 
                 $transaction = $transactionData['transaction'];
                 $accountBalance = $transaction->balance;
+
+                // Eager load relations for dry_run mode (needed before rollback)
+                if ($dry_run && $accountBalance) {
+                    $accountBalance->load('transaction', 'account.fund');
+                }
             }
 
             // Gather setup data

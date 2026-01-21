@@ -353,7 +353,7 @@ class FundTraitTest extends TestCase
         // Ensure holiday exists
         ExchangeHoliday::updateOrCreate(
             ['exchange_code' => 'NYSE', 'holiday_date' => $holiday->format('Y-m-d')],
-            ['holiday_name' => 'MLK Day', 'is_active' => true]
+            ['holiday_name' => 'MLK Day', 'is_active' => true, 'source' => 'test']
         );
 
         $this->setupAssetPricesForTest($friday->format('Y-m-d'));

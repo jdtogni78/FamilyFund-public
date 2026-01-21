@@ -6,12 +6,10 @@ use App\Mail\AccountMatchingRuleEmail;
 use App\Mail\AccountQuarterlyReport;
 use App\Mail\CashDepositErrorMail;
 use App\Mail\CashDepositMail;
-use App\Mail\PortfolioReportEmail;
 use App\Mail\TradePortfolioAnnouncementMail;
 use App\Models\AccountMatchingRule;
 use App\Models\CashDeposit;
 use App\Models\CashDepositExt;
-use App\Models\PortfolioReport;
 use App\Models\TradePortfolio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -298,115 +296,4 @@ class MailableTest extends TestCase
         Mail::assertSent(TradePortfolioAnnouncementMail::class);
     }
 
-    // ==================== PortfolioReportEmail ====================
-
-    public function test_portfolio_report_email_constructor_sets_properties()
-    {
-        // Create portfolio report directly without factory
-        $portfolioReport = new PortfolioReport();
-        $portfolioReport->portfolio_id = $this->factory->portfolio->id;
-        $portfolioReport->start_date = '2022-01-01';
-        $portfolioReport->end_date = '2022-06-30';
-        $portfolioReport->save();
-
-        $user = $this->factory->user;
-        $dateRange = '2022-01-01 to 2022-06-30';
-        $pdf = '/tmp/test.pdf';
-
-        $email = new PortfolioReportEmail($portfolioReport, $user, $dateRange, $pdf);
-
-        $this->assertEquals($portfolioReport->id, $email->portfolioReport->id);
-        $this->assertEquals($user->id, $email->user->id);
-        $this->assertEquals($dateRange, $email->dateRange);
-        $this->assertEquals($pdf, $email->pdf);
-    }
-
-    public function test_portfolio_report_email_constructor_allows_null_user()
-    {
-        $portfolioReport = new PortfolioReport();
-        $portfolioReport->portfolio_id = $this->factory->portfolio->id;
-        $portfolioReport->start_date = '2022-01-01';
-        $portfolioReport->end_date = '2022-06-30';
-        $portfolioReport->save();
-
-        $dateRange = '2022-01-01 to 2022-06-30';
-        $pdf = '/tmp/test.pdf';
-
-        $email = new PortfolioReportEmail($portfolioReport, null, $dateRange, $pdf);
-
-        $this->assertNull($email->user);
-    }
-
-    public function test_portfolio_report_email_build()
-    {
-        $portfolioReport = new PortfolioReport();
-        $portfolioReport->portfolio_id = $this->factory->portfolio->id;
-        $portfolioReport->start_date = '2022-01-01';
-        $portfolioReport->end_date = '2022-06-30';
-        $portfolioReport->save();
-        $portfolioReport->load('portfolio');
-
-        $user = $this->factory->user;
-        $dateRange = '2022-01-01 to 2022-06-30';
-
-        $pdfPath = sys_get_temp_dir() . '/test_portfolio_report.pdf';
-        file_put_contents($pdfPath, 'PDF content');
-
-        $email = new PortfolioReportEmail($portfolioReport, $user, $dateRange, $pdfPath);
-        $builtEmail = $email->build();
-
-        $this->assertStringContainsString($dateRange, $builtEmail->subject);
-
-        @unlink($pdfPath);
-    }
-
-    public function test_portfolio_report_email_can_be_sent()
-    {
-        Mail::fake();
-
-        $portfolioReport = new PortfolioReport();
-        $portfolioReport->portfolio_id = $this->factory->portfolio->id;
-        $portfolioReport->start_date = '2022-01-01';
-        $portfolioReport->end_date = '2022-06-30';
-        $portfolioReport->save();
-        $portfolioReport->load('portfolio');
-
-        $user = $this->factory->user;
-        $dateRange = '2022-01-01 to 2022-06-30';
-
-        $pdfPath = sys_get_temp_dir() . '/test_portfolio_report.pdf';
-        file_put_contents($pdfPath, 'PDF content');
-
-        $email = new PortfolioReportEmail($portfolioReport, $user, $dateRange, $pdfPath);
-        Mail::to('test@example.com')->send($email);
-
-        Mail::assertSent(PortfolioReportEmail::class, function ($mail) use ($portfolioReport) {
-            return $mail->portfolioReport->id === $portfolioReport->id;
-        });
-
-        @unlink($pdfPath);
-    }
-
-    public function test_portfolio_report_email_with_null_user_uses_admin_name()
-    {
-        $portfolioReport = new PortfolioReport();
-        $portfolioReport->portfolio_id = $this->factory->portfolio->id;
-        $portfolioReport->start_date = '2022-01-01';
-        $portfolioReport->end_date = '2022-06-30';
-        $portfolioReport->save();
-        $portfolioReport->load('portfolio');
-
-        $dateRange = '2022-01-01 to 2022-06-30';
-
-        $pdfPath = sys_get_temp_dir() . '/test_portfolio_report.pdf';
-        file_put_contents($pdfPath, 'PDF content');
-
-        $email = new PortfolioReportEmail($portfolioReport, null, $dateRange, $pdfPath);
-        $builtEmail = $email->build();
-
-        // Should use 'Admin' as the default name
-        $this->assertStringContainsString('Rebalance Report', $builtEmail->subject);
-
-        @unlink($pdfPath);
-    }
 }

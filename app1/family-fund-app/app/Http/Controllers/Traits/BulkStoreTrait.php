@@ -93,10 +93,13 @@ trait BulkStoreTrait
                 if ($this->verbose) Log::info("Existing record: id=" . $obj->id . ", start=" . $obj->start_dt->format('Y-m-d') .
                     ", end=" . $obj->end_dt->format('Y-m-d') . ", " . $field . "=" . $obj->$field);
 
-                $tsDiff = $timestamp->getTimestamp() - $obj->start_dt->getTimestamp();
+                // Compare dates (not full timestamps) since asset prices use DATE columns
+                $timestampDate = $timestamp->format('Y-m-d');
+                $startDate = $obj->start_dt->format('Y-m-d');
+                $dateDiff = strcmp($timestampDate, $startDate);
 
-                if ($tsDiff == 0 && $obj->$field != $newValue) {
-                    // Exact timestamp with different value - throw error
+                if ($dateDiff == 0 && $obj->$field != $newValue) {
+                    // Exact date match with different value - throw error
                     $symbol = $asset->name;
                     if ($this->verbose) Log::error("CONFLICT: Exact timestamp exists with different $field!");
                     throw new Exception("A '$symbol' record with this exact timestamp and different $field already exists");

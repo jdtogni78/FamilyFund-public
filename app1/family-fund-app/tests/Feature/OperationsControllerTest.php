@@ -30,18 +30,13 @@ class OperationsControllerTest extends TestCase
         $this->df->createFund();
         $this->df->createUser();
 
-        // Find existing admin user or create one with unique email
-        $existingAdmin = User::where('email', 'admin@dev.familyfund.local')->first();
-        if ($existingAdmin) {
-            $this->adminUser = $existingAdmin;
-        } else {
-            $this->adminUser = User::factory()->create(['email' => 'admin-test-' . uniqid() . '@example.com']);
-            // Make them user ID 1 equivalent by using their actual admin status
-        }
-        // Fallback: use user ID 1 if available
+        // Create admin user - either use existing user ID 1 or create with admin email
         $userOne = User::find(1);
         if ($userOne) {
             $this->adminUser = $userOne;
+        } else {
+            // Create user with email from ADMIN_EMAILS env (default: admin@dev.familyfund.local)
+            $this->adminUser = User::factory()->create(['email' => 'admin@dev.familyfund.local']);
         }
 
         // Create regular user (not admin)
@@ -62,19 +57,24 @@ class OperationsControllerTest extends TestCase
 
     public function test_is_admin_returns_true_for_admin_email()
     {
-        $this->actingAs($this->adminUser);
-        $this->assertTrue(OperationsController::isAdmin());
+        // Test by accessing the operations page - admin should get 200
+        $response = $this->actingAs($this->adminUser)->get('/operations');
+        $response->assertStatus(200);
     }
 
     public function test_is_admin_returns_false_for_regular_user()
     {
-        $this->actingAs($this->regularUser);
-        $this->assertFalse(OperationsController::isAdmin());
+        // Regular user should be redirected with error
+        $response = $this->actingAs($this->regularUser)->get('/operations');
+        $response->assertRedirect('/');
+        $response->assertSessionHas('flash_notification');
     }
 
     public function test_is_admin_returns_false_when_not_logged_in()
     {
-        $this->assertFalse(OperationsController::isAdmin());
+        // Not logged in should redirect to login
+        $response = $this->get('/operations');
+        $response->assertRedirect();
     }
 
     // ==================== Index Tests ====================

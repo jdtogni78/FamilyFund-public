@@ -39,8 +39,12 @@ class EmailControllerTest extends TestCase
             if ($existingAdmin) {
                 $this->adminUser = $existingAdmin;
             } else {
-                // Create an admin user
-                $this->adminUser = User::factory()->create(['email' => 'admin-email-test-' . uniqid() . '@example.com']);
+                // Create an admin user with a test email
+                $adminEmail = 'admin-email-test@example.com';
+                $this->adminUser = User::factory()->create(['email' => $adminEmail]);
+
+                // Add this email to the admin list for testing
+                putenv('ADMIN_EMAILS=' . $adminEmail);
             }
         }
 

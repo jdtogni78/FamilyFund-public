@@ -1,6 +1,4 @@
 <x-app-layout>
-
-@section('content')
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
          <a href="{!! route('funds.index') !!}">Fund</a>

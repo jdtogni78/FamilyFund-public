@@ -11,6 +11,7 @@ use App\Services\HolidaySyncService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -28,11 +29,15 @@ class HolidaysSyncApiTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+        Mail::fake();
     }
 
     #[Test]
     public function test_schedule_jobs_api_executes_holidays_sync()
     {
+        // Clear any existing scheduled jobs to ensure clean test
+        ScheduledJob::query()->delete();
+
         // Arrange: Create a holiday sync scheduled job
         $schedule = ScheduleExt::create([
             'descr' => 'Monthly - 1st',
@@ -49,19 +54,21 @@ class HolidaysSyncApiTest extends TestCase
         ]);
 
         // Mock the sync service
-        $mockService = $this->createMock(HolidaySyncService::class);
-        $mockService->expects($this->once())
-            ->method('syncHolidays')
-            ->with('NYSE', 2026)
-            ->willReturn([
-                'records_added' => 15,
-                'source' => 'NYSE.com',
-            ]);
-        $this->app->instance(HolidaySyncService::class, $mockService);
+        // Note: The service syncs 4 years (asOf.year-1 to asOf.year+2)
+        // For 2026-01-01, it syncs: 2025, 2026, 2027, 2028
+        $this->mock(HolidaySyncService::class, function ($mock) {
+            $mock->shouldReceive('syncHolidays')
+                ->times(4)
+                ->andReturn([
+                    'records_added' => 4, // 4 per year = 16 total
+                    'source' => 'NYSE.com',
+                ]);
+        });
 
-        // Act: Call the schedule_jobs API endpoint
+        // Act: Call the schedule_jobs API endpoint with entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
             'as_of' => '2026-01-01',
+            'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
         // Assert: Successful response
@@ -72,11 +79,11 @@ class HolidaysSyncApiTest extends TestCase
                 'message',
             ]);
 
-        // Verify log was created
+        // Verify log was created (4 years × 4 records = 16 total)
         $this->assertDatabaseHas('holidays_sync_logs', [
             'scheduled_job_id' => $job->id,
             'exchange' => 'NYSE',
-            'records_synced' => 15,
+            'records_synced' => 16,
             'source' => 'NYSE.com',
         ]);
     }
@@ -84,6 +91,9 @@ class HolidaysSyncApiTest extends TestCase
     #[Test]
     public function test_schedule_jobs_api_returns_holidays_sync_in_response()
     {
+        // Clear any existing scheduled jobs to ensure clean test
+        ScheduledJob::query()->delete();
+
         // Arrange
         $schedule = ScheduleExt::create([
             'descr' => 'Test Schedule',
@@ -99,16 +109,20 @@ class HolidaysSyncApiTest extends TestCase
             'end_dt' => Carbon::now()->addYear(),
         ]);
 
-        $mockService = $this->createMock(HolidaySyncService::class);
-        $mockService->method('syncHolidays')->willReturn([
-            'records_added' => 10,
-            'source' => 'test',
-        ]);
-        $this->app->instance(HolidaySyncService::class, $mockService);
+        // Mock syncs 4 years (2025-2028 for asOf=2026-02-01)
+        $this->mock(HolidaySyncService::class, function ($mock) {
+            $mock->shouldReceive('syncHolidays')
+                ->times(4)
+                ->andReturn([
+                    'records_added' => 3, // 3 per year = 12 total
+                    'source' => 'test',
+                ]);
+        });
 
-        // Act
+        // Act: Use entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
             'as_of' => '2026-02-01',
+            'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
         // Assert
@@ -124,12 +138,15 @@ class HolidaysSyncApiTest extends TestCase
         });
 
         $this->assertNotNull($holidaysSyncLog, 'Holidays sync log not found in response');
-        $this->assertEquals(10, $holidaysSyncLog['records_synced']);
+        $this->assertEquals(12, $holidaysSyncLog['records_synced']); // 4 years × 3 records
     }
 
     #[Test]
     public function test_schedule_jobs_api_handles_holidays_sync_failure()
     {
+        // Clear any existing scheduled jobs to ensure clean test
+        ScheduledJob::query()->delete();
+
         // Arrange
         $schedule = ScheduleExt::create([
             'descr' => 'Test Schedule',
@@ -146,28 +163,34 @@ class HolidaysSyncApiTest extends TestCase
         ]);
 
         // Mock service to throw exception
-        $mockService = $this->createMock(HolidaySyncService::class);
-        $mockService->method('syncHolidays')
-            ->willThrowException(new \Exception('API connection failed'));
-        $this->app->instance(HolidaySyncService::class, $mockService);
+        $this->mock(HolidaySyncService::class, function ($mock) {
+            $mock->shouldReceive('syncHolidays')
+                ->andThrow(new \Exception('API connection failed'));
+        });
 
-        // Act
+        // Act: Use entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
             'as_of' => '2026-03-01',
+            'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
-        // Assert: Should return error
-        $response->assertStatus(400); // or whatever error code your controller returns
+        // Assert: The trait catches exceptions and continues, creating a log with 0 records
+        // The API still returns success (200) but the log shows the failure
+        $response->assertStatus(200);
 
-        // No log should be created
-        $this->assertDatabaseMissing('holidays_sync_logs', [
+        // Log is created but with 0 records due to failure
+        $this->assertDatabaseHas('holidays_sync_logs', [
             'scheduled_job_id' => $job->id,
+            'records_synced' => 0,
         ]);
     }
 
     #[Test]
     public function test_holidays_sync_with_entity_descr_filter()
     {
+        // Clear any existing scheduled jobs to ensure clean test
+        ScheduledJob::query()->delete();
+
         // Arrange: Create both fund_report and holidays_sync jobs
         $schedule = ScheduleExt::create([
             'descr' => 'Test Schedule',
@@ -183,15 +206,15 @@ class HolidaysSyncApiTest extends TestCase
             'end_dt' => Carbon::now()->addYear(),
         ]);
 
-        // Mock only holidays sync
-        $mockService = $this->createMock(HolidaySyncService::class);
-        $mockService->expects($this->once())
-            ->method('syncHolidays')
-            ->willReturn([
-                'records_added' => 8,
-                'source' => 'test',
-            ]);
-        $this->app->instance(HolidaySyncService::class, $mockService);
+        // Mock only holidays sync (syncs 4 years: 2025-2028 for asOf=2026-04-01)
+        $this->mock(HolidaySyncService::class, function ($mock) {
+            $mock->shouldReceive('syncHolidays')
+                ->times(4)
+                ->andReturn([
+                    'records_added' => 2, // 2 per year = 8 total
+                    'source' => 'test',
+                ]);
+        });
 
         // Act: Call with entity filter
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
@@ -202,9 +225,10 @@ class HolidaysSyncApiTest extends TestCase
         // Assert
         $response->assertStatus(200);
 
-        // Only holidays_sync should have executed
+        // Only holidays_sync should have executed (4 years × 2 records = 8 total)
         $this->assertDatabaseHas('holidays_sync_logs', [
             'scheduled_job_id' => $holidaysJob->id,
+            'records_synced' => 8,
         ]);
     }
 

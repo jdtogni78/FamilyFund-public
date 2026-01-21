@@ -76,4 +76,15 @@ class Fund extends Model
     {
         return $this->hasOne(\App\Models\PortfolioExt::class, 'fund_id');
     }
+
+    /**
+     * Get the fund account (the account with null user_id)
+     * This is a convenience method for tests and simple access
+     *
+     * @return \App\Models\AccountExt|null
+     */
+    public function account()
+    {
+        return $this->accounts()->whereNull('user_id')->first();
+    }
 }

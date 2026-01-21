@@ -33,12 +33,20 @@ class CreateFundWithSetupRequest extends FormRequest
             'account_nickname' => 'nullable|string|max:100',
 
             // Portfolio fields (can be single or array)
-            'portfolio_source' => 'required',
+            'portfolio_source' => ['required', function ($attribute, $value, $fail) {
+                if (is_string($value) && strlen($value) > 30) {
+                    $fail('The ' . $attribute . ' must not be greater than 30 characters.');
+                }
+                if (is_string($value) || is_array($value)) {
+                    return;
+                }
+                $fail('The ' . $attribute . ' must be a string or array.');
+            }],
             'portfolio_source.*' => 'required|string|max:30',
 
             // Transaction fields
             'create_initial_transaction' => 'nullable|boolean',
-            'initial_shares' => 'nullable|numeric|min:0.00000001|max:9999999999999.9991',
+            'initial_shares' => 'nullable|numeric|min:0.00000001|max:9999999999999.9',
             'initial_value' => 'nullable|numeric|min:0.01|max:99999999999.99',
             'transaction_description' => 'nullable|string|max:255',
 

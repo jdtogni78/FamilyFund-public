@@ -40,7 +40,10 @@
                                 <div>
                                     <h4 class="mb-1" style="font-weight: 700;">{{ $account->nickname }}</h4>
                                     <div class="subtitle" style="font-size: 14px;">
-                                        {{ $account->fund->name }} &bull; {{ $account->user->name }}
+                                        {{ $account->fund->name }}
+                                        @if($account->user)
+                                            &bull; {{ $account->user->name }}
+                                        @endif
                                         @if($account->email_cc)
                                             &bull; {{ $account->email_cc }}
                                         @endif

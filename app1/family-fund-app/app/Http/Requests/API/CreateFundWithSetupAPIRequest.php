@@ -33,7 +33,7 @@ class CreateFundWithSetupAPIRequest extends BaseAPIRequest
 
             // Portfolio details - can be string or array
             'portfolio_source' => 'required',
-            'portfolio_source.*' => 'required|string|max:30',
+            'portfolio_source.*' => 'string|max:30',
 
             // Transaction details
             'create_initial_transaction' => 'nullable|boolean',

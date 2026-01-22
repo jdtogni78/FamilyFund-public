@@ -52,6 +52,7 @@
     <div class="card text-white bg-primary py-5 d-md-down-none" style="width:44%">
         <div class="card-body text-center">
             <div>
+                <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="mb-4 rounded-circle" style="width: 150px; height: 150px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
                 <h2>Sign up</h2>
                 <p>Join Family Fund to manage your family's financial future with confidence.</p>
                 <a class="btn btn-primary active mt-3" href="{{ url('/register') }}">Register Now!</a>

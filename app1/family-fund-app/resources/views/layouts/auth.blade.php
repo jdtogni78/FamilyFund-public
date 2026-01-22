@@ -22,10 +22,6 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <!-- Logo -->
-                <div class="text-center mb-4">
-                    <img src="{{ asset('images/logo.png') }}" alt="Family Fund" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                </div>
                 @yield('content')
             </div>
         </div>

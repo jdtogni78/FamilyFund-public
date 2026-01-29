@@ -29,6 +29,18 @@
     </div>
 </div>
 
+<div class="row">
+    <!-- Display Name Field -->
+    <div class="form-group col-md-6 mb-3">
+        <label for="display_name" class="form-label">
+            <i class="fa fa-tag me-1"></i> Display Name
+        </label>
+        <input type="text" name="display_name" id="display_name" class="form-control" maxlength="100"
+               value="{{ $portfolio->display_name ?? old('display_name') }}">
+        <small class="text-body-secondary">Optional friendly name (shown instead of source if set)</small>
+    </div>
+</div>
+
 <hr class="my-4">
 
 <!-- Submit Field -->

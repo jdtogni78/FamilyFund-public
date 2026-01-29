@@ -21,6 +21,29 @@
             }
         }
     }
+
+    // Aggregate assets from ALL portfolios
+    $aggregatedAssets = [];
+    $portfoliosToProcess = isset($api['portfolios']) ? $api['portfolios'] : [$api['portfolio']];
+    foreach ($portfoliosToProcess as $port) {
+        foreach ($port['assets'] ?? [] as $asset) {
+            $name = $asset['name'];
+            if (!isset($aggregatedAssets[$name])) {
+                $aggregatedAssets[$name] = $asset;
+                // Convert values to floats for aggregation
+                $aggregatedAssets[$name]['position'] = floatval($asset['position'] ?? 0);
+                $aggregatedAssets[$name]['value'] = floatval($asset['value'] ?? 0);
+            } else {
+                // Aggregate position and value
+                $aggregatedAssets[$name]['position'] += floatval($asset['position'] ?? 0);
+                $aggregatedAssets[$name]['value'] += floatval($asset['value'] ?? 0);
+            }
+        }
+    }
+    // Sort by value descending
+    uasort($aggregatedAssets, function($a, $b) {
+        return ($b['value'] ?? 0) <=> ($a['value'] ?? 0);
+    });
 @endphp
 <div class="table-responsive-sm">
     <table class="table table-striped" id="fund-assets-table">
@@ -28,6 +51,7 @@
             <tr>
                 <th scope="col">Asset</th>
                 <th scope="col">Type</th>
+                <th scope="col">Group</th>
                 <th scope="col">Position</th>
                 <th scope="col">Price</th>
                 <th scope="col">Market Value</th>
@@ -37,7 +61,7 @@
             </tr>
         </thead>
         <tbody>
-        @foreach($api['portfolio']['assets'] as $asset)
+        @foreach($aggregatedAssets as $asset)
             <tr>
                 <th scope="row">
                     {{ $asset['name'] }}
@@ -53,6 +77,20 @@
                     @endphp
                     <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
                         {{ $colors['label'] }}
+                    </span>
+                </td>
+                <td>
+                    @php
+                        $groupColors = [
+                            'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
+                            'Stability' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'],
+                            'Crypto' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
+                        ];
+                        $groupName = $asset['group'] ?? 'Unknown';
+                        $groupStyle = $groupColors[$groupName] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'];
+                    @endphp
+                    <span class="badge" style="background: {{ $groupStyle['bg'] }}; color: {{ $groupStyle['text'] }}; border: 1px solid {{ $groupStyle['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
+                        {{ $groupName }}
                     </span>
                 </td>
                 <td data-order="{{ $asset['position'] }}">{{ number_format($asset['position'], 6) }}</td>
@@ -102,6 +140,7 @@
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
                 <td>${{ number_format($api['summary']['value'], 2) }}</td>
                 <td>100%</td>
                 <td></td>
@@ -115,7 +154,7 @@
 <script>
 $(document).ready(function() {
     $('#fund-assets-table').DataTable({
-        order: [[4, 'desc']], // Sort by Market Value descending
+        order: [[5, 'desc']], // Sort by Market Value descending
         pageLength: 25,
         paging: false,
         searching: false,

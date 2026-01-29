@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 */
 
 // Dev-only auto-login route for CLI testing
-if (app()->environment('local')) {
+if (app()->environment('local', 'dev')) {
     Route::get('/dev-login/{redirect?}', function ($redirect = '/') {
         Auth::loginUsingId(\App\Models\User::where('email', 'claude@test.local')->first()->id);
         return redirect('/' . $redirect);
@@ -42,6 +42,8 @@ Route::middleware('auth')->group(function () {
         ->name('funds.show_trade_bands_as_of');
     Route::get('funds/{id}/trade_bands_pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showTradeBandsPDFAsOf')
         ->name('funds.show_trade_bands_pdf');
+    Route::get('funds/{id}/portfolios', 'App\Http\Controllers\WebV1\FundControllerExt@portfolios')
+        ->name('funds.portfolios');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
     Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')

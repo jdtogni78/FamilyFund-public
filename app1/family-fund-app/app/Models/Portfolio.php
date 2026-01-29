@@ -34,7 +34,8 @@ class Portfolio extends Model
 
     public $fillable = [
         'fund_id',
-        'source'
+        'source',
+        'display_name'
     ];
 
     /**
@@ -45,7 +46,8 @@ class Portfolio extends Model
     protected $casts = [
         'id' => 'integer',
         'fund_id' => 'integer',
-        'source' => 'string'
+        'source' => 'string',
+        'display_name' => 'string'
     ];
 
     /**

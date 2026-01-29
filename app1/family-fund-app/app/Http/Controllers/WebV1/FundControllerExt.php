@@ -136,4 +136,26 @@ class FundControllerExt extends FundController
 
         return $pdf->inline('fund.pdf');
     }
+
+    /**
+     * Display portfolios for a fund.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function portfolios($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $portfolios = $fund->portfolios()->get();
+
+        return view('funds.portfolios')
+            ->with('fund', $fund)
+            ->with('portfolios', $portfolios);
+    }
 }

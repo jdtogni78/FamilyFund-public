@@ -194,19 +194,126 @@
                 </div>
             </div>
 
+            @php
+                $hasTradePortfolios = $api['tradePortfolios']->count() > 0;
+                $hasForecastData = !empty($api['linear_regression']['predictions']);
+                $hasMultiplePortfolios = count($api['portfolios'] ?? []) > 1;
+            @endphp
+
             {{-- Reusable Jump Bar --}}
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
+                ['id' => 'section-brokerage-portfolios', 'icon' => 'fa-folder-open', 'label' => 'Portfolios', 'condition' => $hasMultiplePortfolios],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
-                ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast'],
-                ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios'],
+                ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => $hasForecastData],
+                ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => $hasTradePortfolios],
                 ['id' => 'section-allocation', 'icon' => 'fa-users', 'label' => 'Acct Alloc', 'condition' => isset($api['admin']) && $accountsCount > 0],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
-                ['id' => 'section-trade-portfolios', 'icon' => 'fa-briefcase', 'label' => 'Trade Portfolios'],
+                ['id' => 'section-trade-portfolios', 'icon' => 'fa-briefcase', 'label' => 'Trade Portfolios', 'condition' => $hasTradePortfolios],
                 ['id' => 'section-assets-table', 'icon' => 'fa-coins', 'label' => 'Assets'],
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transaction History', 'condition' => isset($api['admin'])],
                 ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin']) && $accountsCount > 0],
             ]])
+
+            {{-- Portfolios Section (only show if multiple portfolios) --}}
+            @if($hasMultiplePortfolios)
+            <div class="row mb-4" id="section-brokerage-portfolios">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
+                            <strong><i class="fa fa-folder-open mr-2"></i>Portfolios <span class="badge bg-light text-dark ms-2">{{ count($api['portfolios']) }}</span></strong>
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapsePortfoliosList"
+                               role="button" aria-expanded="true" aria-controls="collapsePortfoliosList">
+                                <i class="fa fa-chevron-down"></i>
+                            </a>
+                        </div>
+                        <div class="collapse show" id="collapsePortfoliosList">
+                            <div class="card-body">
+                                @php
+                                    $grandTotalValue = 0;
+                                    foreach ($api['portfolios'] as $port) {
+                                        $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                                        $grandTotalValue += $portValue;
+                                    }
+                                    // Color palette for asset badges
+                                    $assetColors = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#65a30d', '#0891b2', '#4f46e5'];
+                                    // Build symbol -> color mapping (consistent colors per symbol)
+                                    $symbolColorMap = [];
+                                    $colorIdx = 0;
+                                    foreach ($api['portfolios'] as $port) {
+                                        foreach ($port['assets'] ?? [] as $asset) {
+                                            $symbol = $asset['name'];
+                                            if (!isset($symbolColorMap[$symbol])) {
+                                                $symbolColorMap[$symbol] = $assetColors[$colorIdx % count($assetColors)];
+                                                $colorIdx++;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                <div class="table-responsive-sm">
+                                    <table class="table table-striped" id="portfolios-list-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Portfolio</th>
+                                                <th class="text-end">Value</th>
+                                                <th class="text-end">% of Fund</th>
+                                                <th>Assets</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach($api['portfolios'] as $port)
+                                            @php
+                                                $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                                                $portPct = $grandTotalValue > 0 ? ($portValue / $grandTotalValue) * 100 : 0;
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ route('portfolios.show', $port['id']) }}"><strong>{{ $port['display_name'] ?? $port['source'] }}</strong></a>
+                                                    @if($port['display_name'])
+                                                        <br><small class="text-muted">{{ $port['source'] }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end" data-order="{{ $portValue }}">${{ number_format($portValue, 2) }}</td>
+                                                <td class="text-end" data-order="{{ $portPct }}">{{ number_format($portPct, 1) }}%</td>
+                                                <td>
+                                                    @foreach($port['assets'] ?? [] as $asset)
+                                                        @php $badgeColor = $symbolColorMap[$asset['name']] ?? '#6b7280'; @endphp
+                                                        <span class="badge me-1" style="background: {{ $badgeColor }}; color: white;" title="${{ number_format($asset['value'] ?? 0, 2) }}">
+                                                            {{ $asset['name'] }}: ${{ number_format($asset['value'] ?? 0, 0) }}
+                                                        </span>
+                                                    @endforeach
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="background: #f0fdfa; font-weight: bold;">
+                                                <td>Total</td>
+                                                <td class="text-end">${{ number_format($grandTotalValue, 2) }}</td>
+                                                <td class="text-end">100%</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @push('scripts')
+            <script>
+            $(document).ready(function() {
+                $('#portfolios-list-table').DataTable({
+                    order: [[1, 'desc']],
+                    paging: false,
+                    searching: false,
+                    info: false
+                });
+            });
+            </script>
+            @endpush
+            @endif
 
             {{-- Main Charts Row (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-charts">
@@ -247,6 +354,7 @@
             </div>
 
             {{-- Forecast (Linear Regression) (Collapsible, start expanded) --}}
+            @if($hasForecastData)
             <div class="row mb-4" id="section-regression">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
@@ -281,6 +389,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             {{-- Asset Performance by Group (Collapsible, start expanded) --}}
             @foreach($api['asset_monthly_performance'] as $group => $perf)
@@ -305,6 +414,7 @@
             @endforeach
 
             {{-- Trade Portfolios Comparison by Group --}}
+            @if($hasTradePortfolios)
             <div id="section-portfolios-groups">
                 @include('trade_portfolios.stacked_bar_groups_graph')
             </div>
@@ -313,9 +423,10 @@
             <div id="section-portfolios">
                 @include('trade_portfolios.stacked_bar_graph')
             </div>
+            @endif
 
             {{-- Admin Accounts Allocation Chart (Collapsible, start expanded) --}}
-            @isset($api['balances'])@isset($api['admin'])
+            @if(isset($api['balances']) && isset($api['admin']) && $accountsCount > 0)
             <div class="row mb-4" id="section-allocation">
                 <div class="col">
                     <div class="card">
@@ -334,7 +445,7 @@
                     </div>
                 </div>
             </div>
-            @endisset @endisset
+            @endif
 
             {{-- Performance Tables (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-performance">
@@ -375,6 +486,7 @@
             </div>
 
             {{-- Trade Portfolios Comparison (Collapsible, start expanded) --}}
+            @if($hasTradePortfolios)
             <div class="row mb-4" id="section-portfolios-alt">
             <div class="col">
             <div class="card">
@@ -417,6 +529,7 @@
             </div>
             </div>
             </div>
+            @endif
 
             {{-- Assets Table (Collapsible, start expanded) --}}
             <div class="row mb-4" id="section-assets-table">

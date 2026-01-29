@@ -96,7 +96,12 @@ Trait FundTrait
         $arr['unallocated_value'] = Utils::currency($unallocatedValue = $unallocated * $sharePrice);
 
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
-        $arr['max_cash_value'] = $fund->portfolio()->maxCashBetween($prevYearAsOf, $asOf);
+        // Sum max cash across all portfolios
+        $maxCash = 0;
+        foreach ($fund->portfolios()->get() as $portfolio) {
+            $maxCash += $portfolio->maxCashBetween($prevYearAsOf, $asOf);
+        }
+        $arr['max_cash_value'] = $maxCash;
 
         $ret['summary'] = $arr;
         $ret['as_of'] = $asOf;
@@ -129,16 +134,26 @@ Trait FundTrait
         $arr = $api->createFundResponse($fund, $asOf);
         $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
         $account = $fund->fundAccount();
-        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+        $arr['transactions'] = $account ? $accountController->createTransactionsResponse($account, $asOf) : [];
+
+        // Handle multiple portfolios - return array of portfolio responses
+        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
+        $portfolios = $fund->portfolios()->get();
+        $portfolioResponses = [];
+        $allTradePortfolios = collect();
+        $fromDate = $startDate ?? Utils::asOfAddYear($asOf, -5);
 
         /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
-        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
-        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
+        foreach ($portfolios as $portfolio) {
+            $portfolioResponses[] = $portController->createPortfolioResponse($portfolio, $asOf);
+            $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
+            $allTradePortfolios = $allTradePortfolios->merge($tradePortfolios);
+        }
 
-        $fromDate = $startDate ?? Utils::asOfAddYear($asOf, -5);
-        $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
-        $arr['tradePortfolios'] = $tradePortfolios;
+        // For backward compatibility, set portfolio to first one; add all as array
+        $arr['portfolio'] = $portfolioResponses[0] ?? null;
+        $arr['portfolios'] = $portfolioResponses;
+        $arr['tradePortfolios'] = $allTradePortfolios;
 
         $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate);
         $arr['asset_monthly_bands'] = $assetPerf;
@@ -289,20 +304,32 @@ Trait FundTrait
 
         $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
         $account = $fund->fundAccount();
-        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+        $arr['transactions'] = $account ? $accountController->createTransactionsResponse($account, $asOf) : [];
 
         $arr['sp500_monthly_performance'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
         $arr['cash'] = $this->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
 
+        // Handle multiple portfolios
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
-        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
-
+        $portfolios = $fund->portfolios()->get();
+        $portfolioResponses = [];
+        $allTradePortfolios = collect();
         $yearAgo = Utils::asOfAddYear($asOf, -1);
-        $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
-        $arr['tradePortfolios'] = $tradePortfolios;
+
+        /** @var PortfolioExt $portfolio */
+        foreach ($portfolios as $portfolio) {
+            $portResponse = $portController->createPortfolioResponse($portfolio, $asOf);
+            $portResponse['id'] = $portfolio->id;
+            $portfolioResponses[] = $portResponse;
+            $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
+            $allTradePortfolios = $allTradePortfolios->merge($tradePortfolios);
+        }
+
+        // For backward compatibility, set portfolio to first one; add all as array
+        $arr['portfolio'] = $portfolioResponses[0] ?? null;
+        $arr['portfolios'] = $portfolioResponses;
+        $arr['tradePortfolios'] = $allTradePortfolios;
 
         $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
         $arr['asset_monthly_performance'] = $assetPerf;
@@ -618,13 +645,16 @@ Trait FundTrait
             }
         }
 
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
+        // Collect portfolio assets from ALL portfolios
+        $allPortfolioAssets = collect();
+        foreach ($fund->portfolios()->get() as $portfolio) {
+            $allPortfolioAssets = $allPortfolioAssets->merge($portfolio->portfolioAssets()->get());
+        }
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];
         $processed = [];
-        foreach ($portfolio->portfolioAssets()->get() as $pa) {
+        foreach ($allPortfolioAssets as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
             if (in_array($asset->name, $processed)) {
@@ -667,19 +697,18 @@ Trait FundTrait
     // this data is the real value of assets (quantity * price)
     private function createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate = null)
     {
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
+        // Get all portfolio IDs for this fund
+        $portfolioIds = $fund->portfolios()->pluck('id')->toArray();
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];
         $processed = [];
-        // TODO get unique assets from portfolioAssets
+        // Get unique assets from ALL portfolios
         $uniqueAssets = PortfolioAsset::query()
-            ->where('portfolio_id', $portfolio->id)
+            ->whereIn('portfolio_id', $portfolioIds)
             ->select('asset_id')
             ->distinct()
             ->get();
-        // foreach ($portfolio->portfolioAssets()->get() as $pa) {
         foreach ($uniqueAssets as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
@@ -692,9 +721,9 @@ Trait FundTrait
             $processed[] = $asset->name;
 
             $allShares = [];
-            // loop through the history of the portfolio assets for this asset
+            // loop through the history of the portfolio assets for this asset across ALL portfolios
             PortfolioAsset::query()
-                ->where('portfolio_id', $portfolio->id)
+                ->whereIn('portfolio_id', $portfolioIds)
                 ->where('asset_id', $asset->id)
                 // ->where('end_dt', '<=', $asOf)
                 ->orderBy('start_dt', 'asc')

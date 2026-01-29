@@ -122,15 +122,15 @@
                 <div style="font-size: 10px; color: #0f766e; text-transform: uppercase;">All-Time</div>
             </td>
             @endif
-            @isset($api['admin'])
+            @if(isset($api['admin']) && $accountsCount > 0)
             <td style="background: #fffbeb; padding: 12px 8px; text-align: center; border-radius: 0;">
                 <div style="font-size: 18px; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
                 <div style="font-size: 10px; color: #92400e; text-transform: uppercase;">Accounts <span style="background: #d97706; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 8px; vertical-align: top;">ADMIN</span></div>
             </td>
-            @endisset
+            @endif
         </tr>
         <!-- Admin: Share Allocation Section -->
-        @isset($api['admin'])
+        @if(isset($api['admin']) && $accountsCount > 0)
         <tr>
             <td colspan="7" style="background: #fffbeb; padding: 12px 16px; border-top: 1px solid #99f6e4;">
                 <div style="margin-bottom: 8px;">
@@ -183,7 +183,7 @@
                 </table>
             </td>
         </tr>
-        @endisset
+        @endif
         <!-- As of / Source Row -->
         <tr>
             <td colspan="7" style="background: #ffffff; padding: 8px 16px; border-top: 1px solid #99f6e4;">
@@ -309,6 +309,7 @@
     @endforeach
 
     <!-- Trade Portfolios Section -->
+    @if($api['tradePortfolios']->count() > 0)
     <h3 class="section-title">Portfolio Allocation</h3>
 
     @if(isset($files['portfolio_group_comparison.png']))
@@ -388,9 +389,10 @@
     @foreach($api['tradePortfolios']->sortByDesc('start_dt') as $tradePortfolio)
         @include('trade_portfolios.inner_show_pdf')
     @endforeach
+    @endif
 
     <!-- Admin Only: Accounts Allocation -->
-    @isset($api['balances']) @isset($api['admin'])
+    @if(isset($api['balances']) && isset($api['admin']) && $accountsCount > 0)
         <div class="card mb-3">
             <div class="card-header admin-header">
                 <h4 class="card-header-title"><img src="{{ public_path('images/icons/users.svg') }}" class="header-icon">Accounts Allocation <span class="badge badge-warning" style="margin-left: 8px;">ADMIN</span></h4>
@@ -401,7 +403,7 @@
                 </div>
             </div>
         </div>
-    @endisset @endisset
+    @endif
 
     <!-- Performance Tables -->
     <h3 class="section-title">Performance Data</h3>
@@ -451,7 +453,7 @@
     @endisset
 
     <!-- Admin Only: Accounts Table -->
-    @isset($api['balances']) @isset($api['admin'])
+    @if(isset($api['balances']) && isset($api['admin']) && $accountsCount > 0)
         <div class="page-break"></div>
         <div class="card mb-3">
             <div class="card-header admin-header">
@@ -461,5 +463,5 @@
                 @include('funds.accounts_table_pdf')
             </div>
         </div>
-    @endisset @endisset
+    @endif
 @endsection

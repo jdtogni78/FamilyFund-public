@@ -34,6 +34,38 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Asset Prices Section -->
+            @php
+                $assetPrices = $asset->assetPrices()
+                    ->orderBy('start_dt', 'desc')
+                    ->limit(20)
+                    ->get();
+                $dataWarnings = ['overlappingIds' => [], 'gapIds' => [], 'longSpanIds' => []];
+            @endphp
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fa fa-chart-line me-2"></i>
+                                <strong>Price History</strong>
+                                <span class="badge bg-primary ms-2">{{ $asset->assetPrices()->count() }}</span>
+                            </div>
+                            <a href="{{ route('assetPrices.index', ['asset_id' => $asset->id]) }}" class="btn btn-sm btn-secondary">
+                                <i class="fa fa-list me-1"></i> View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            @if($assetPrices->count() > 0)
+                                @include('asset_prices.table')
+                            @else
+                                <p class="text-body-secondary mb-0">No price history for this asset</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

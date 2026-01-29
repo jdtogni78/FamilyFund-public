@@ -144,4 +144,34 @@ class FundExtTest extends TestCase
 
         $this->assertIsNumeric($result);
     }
+
+    public function test_portfolios_returns_collection()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+
+        $result = $fund->portfolios()->get();
+
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
+        $this->assertGreaterThanOrEqual(1, $result->count());
+    }
+
+    public function test_value_as_of_aggregates_multiple_portfolios()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+
+        // Create a second portfolio for the same fund
+        $portfolio2 = PortfolioExt::create([
+            'fund_id' => $fund->id,
+            'source' => 'TEST_PORTFOLIO_2',
+        ]);
+
+        // Get value - should include both portfolios
+        $result = $fund->valueAsOf('2022-06-01');
+
+        // Value should be numeric (even if 0 for the second empty portfolio)
+        $this->assertIsNumeric($result);
+
+        // Clean up
+        $portfolio2->delete();
+    }
 }

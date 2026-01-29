@@ -70,11 +70,11 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      **/
     public function portfolios()
     {
-        return $this->hasOne(\App\Models\PortfolioExt::class, 'fund_id');
+        return $this->hasMany(\App\Models\PortfolioExt::class, 'fund_id');
     }
 
     /**

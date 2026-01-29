@@ -24,24 +24,22 @@ class FundExt extends Fund
         return $out;
     }
 
+    /**
+     * Get the primary portfolio for this fund (first one).
+     * For backward compatibility. Use portfolios() for all portfolios.
+     */
     public function portfolio()
     {
-        $portfolios = $this->portfolios();
-        if ($portfolios->count() != 1)
-            throw new \Exception("Every fund must have 1 portfolio (found " . $portfolios->count() . ")");
-        return $portfolios->first();
+        return $this->portfolios()->first();
     }
 
-    public function account() : AccountExt
+    /**
+     * Get the fund account (the account with null user_id).
+     * Returns null if not found instead of throwing.
+     */
+    public function account() : ?AccountExt
     {
-        $accountRepo = \App::make(AccountRepository::class);
-        $query = $accountRepo->makeModel()->newQuery();
-        $query->where('fund_id', $this->id);
-        $query->where('user_id', null);
-        $accounts = $query->get(['*']);
-        if ($accounts->count() != 1)
-            throw new \Exception("Every fund must have 1 account with no user id (found " . $accounts->count() . ")");
-        return $accounts->first();
+        return $this->fundAccount();
     }
 
     /**
@@ -50,15 +48,25 @@ class FundExt extends Fund
 
     public function sharesAsOf($now)
     {
-        $balance = $this->account()->sharesAsOf($now);
-        return $balance;
+        $account = $this->account();
+        if (!$account) {
+            return 0;
+        }
+        return $account->sharesAsOf($now);
     }
 
+    /**
+     * Get the total value of the fund as of a given date.
+     * Sums values from ALL portfolios associated with this fund.
+     */
     public function valueAsOf($now, $verbose=false)
     {
+        $totalValue = 0;
         /** @var PortfolioExt $portfolio */
-        $portfolio = $this->portfolio();
-        return $portfolio->valueAsOf($now, $verbose);
+        foreach ($this->portfolios()->get() as $portfolio) {
+            $totalValue += $portfolio->valueAsOf($now, $verbose);
+        }
+        return $totalValue;
     }
 
     public function shareValueAsOf($now)
@@ -93,14 +101,58 @@ class FundExt extends Fund
         return $this->allocatedShares($now, true);
     }
 
+    /**
+     * Calculate period performance aggregated across all portfolios.
+     * Returns weighted average based on portfolio values.
+     */
     public function periodPerformance($from, $to)
     {
-        return $this->portfolio()->periodPerformance($from, $to);
+        $portfolios = $this->portfolios()->get();
+        if ($portfolios->isEmpty()) {
+            return 0;
+        }
+
+        // For single portfolio, return directly
+        if ($portfolios->count() === 1) {
+            return $portfolios->first()->periodPerformance($from, $to);
+        }
+
+        // For multiple portfolios, calculate weighted average performance
+        $totalStartValue = 0;
+        $totalEndValue = 0;
+        foreach ($portfolios as $portfolio) {
+            $startValue = $portfolio->valueAsOf($from);
+            $endValue = $portfolio->valueAsOf($to);
+            $totalStartValue += $startValue;
+            $totalEndValue += $endValue;
+        }
+
+        if ($totalStartValue == 0) {
+            return 0;
+        }
+
+        return ($totalEndValue - $totalStartValue) / $totalStartValue;
     }
 
+    /**
+     * Calculate yearly performance aggregated across all portfolios.
+     */
     public function yearlyPerformance($year)
     {
-        return $this->portfolio()->yearlyPerformance($year);
+        $portfolios = $this->portfolios()->get();
+        if ($portfolios->isEmpty()) {
+            return 0;
+        }
+
+        // For single portfolio, return directly
+        if ($portfolios->count() === 1) {
+            return $portfolios->first()->yearlyPerformance($year);
+        }
+
+        // For multiple portfolios, calculate weighted average performance
+        $from = "$year-01-01";
+        $to = "$year-12-31";
+        return $this->periodPerformance($from, $to);
     }
 
     public function accountBalancesAsOf($asOf)
@@ -123,7 +175,11 @@ class FundExt extends Fund
     }
 
     public function findOldestTransaction() {
-        $trans = $this->account()->transactions()->get();
+        $account = $this->account();
+        if (!$account) {
+            return null;
+        }
+        $trans = $account->transactions()->get();
         $tran = $trans->sortBy('timestamp')->first();
         return $tran;
     }

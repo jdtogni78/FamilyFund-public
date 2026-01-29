@@ -65,7 +65,7 @@
                                                     <input type="date" name="end_dt" id="end_dt" class="form-control"
                                                            value="{{ old('end_dt', $end_dt) }}" required>
                                                     <button type="button" class="btn btn-outline-secondary" id="set_never_end" title="Set to never expire">
-                                                        <i class="fa fa-infinity"></i> Never
+                                                        <i class="fa fa-infinity"></i> Forever
                                                     </button>
                                                 </div>
                                                 <small class="text-body-secondary">When this configuration expires</small>

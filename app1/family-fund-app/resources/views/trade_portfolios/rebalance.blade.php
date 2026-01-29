@@ -193,20 +193,14 @@
                                                             <span class="badge bg-secondary">{{ $item->type }}</span>
                                                         </td>
                                                         <td>
-                                                            <div class="input-group input-group-sm">
-                                                                <input type="number" name="items[{{ $i }}][target_share]"
-                                                                       class="form-control target-share-input" step="0.001" min="0" max="1"
-                                                                       value="{{ $item->target_share }}" required>
-                                                                <span class="input-group-text">dec</span>
-                                                            </div>
+                                                            <input type="number" name="items[{{ $i }}][target_share]"
+                                                                   class="form-control form-control-sm target-share-input pct-input" step="0.1" min="0" max="100"
+                                                                   value="{{ $item->target_share * 100 }}" required>
                                                         </td>
                                                         <td>
-                                                            <div class="input-group input-group-sm">
-                                                                <input type="number" name="items[{{ $i }}][deviation_trigger]"
-                                                                       class="form-control" step="0.001" min="0" max="1"
-                                                                       value="{{ $item->deviation_trigger }}" required>
-                                                                <span class="input-group-text">dec</span>
-                                                            </div>
+                                                            <input type="number" name="items[{{ $i }}][deviation_trigger]"
+                                                                   class="form-control form-control-sm pct-input" step="0.1" min="0" max="100"
+                                                                   value="{{ $item->deviation_trigger * 100 }}" required>
                                                         </td>
                                                         <td class="text-center">
                                                             <input type="hidden" name="items[{{ $i }}][deleted]" value="0" class="deleted-flag">
@@ -242,14 +236,14 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-md-2 mb-2">
-                                                        <label for="new-target" class="form-label small">Target (dec)</label>
+                                                        <label for="new-target" class="form-label small">Target %</label>
                                                         <input type="number" id="new-target" class="form-control form-control-sm"
-                                                               step="0.001" min="0" max="1" placeholder="0.10">
+                                                               step="0.1" min="0" max="100" placeholder="10">
                                                     </div>
                                                     <div class="col-md-2 mb-2">
-                                                        <label for="new-deviation" class="form-label small">Deviation (dec)</label>
+                                                        <label for="new-deviation" class="form-label small">Deviation %</label>
                                                         <input type="number" id="new-deviation" class="form-control form-control-sm"
-                                                               step="0.001" min="0" max="1" placeholder="0.05">
+                                                               step="0.1" min="0" max="100" placeholder="5">
                                                     </div>
                                                     <div class="col-md-3 mb-2">
                                                         <button type="button" id="btn-add" class="btn btn-sm btn-success w-100">
@@ -291,7 +285,7 @@
                 document.getElementById('end_dt').value = '9999-12-31';
             });
 
-            // Calculate and update total
+            // Calculate and update total (values are now in percentage form)
             function updateTotal() {
                 let total = 0;
                 document.querySelectorAll('.item-row').forEach(row => {
@@ -304,13 +298,13 @@
                     }
                 });
 
-                // Add cash target
-                const cashVal = parseFloat(cashTarget.value) || 0;
+                // Add cash target (still in decimal form, convert to %)
+                const cashVal = (parseFloat(cashTarget.value) || 0) * 100;
                 total += cashVal;
 
-                const totalPct = (total * 100).toFixed(1);
+                const totalPct = total.toFixed(1);
 
-                if (Math.abs(total - 1.0) < 0.001) {
+                if (Math.abs(total - 100) < 0.1) {
                     totalBadge.className = 'badge bg-success';
                     totalBadge.innerHTML = '<i class="fa fa-check-circle me-1"></i> Total: ' + totalPct + '%';
                 } else {
@@ -395,20 +389,14 @@
                         <span class="badge bg-secondary">${type}</span>
                     </td>
                     <td>
-                        <div class="input-group input-group-sm">
-                            <input type="number" name="items[${itemIndex}][target_share]"
-                                   class="form-control target-share-input" step="0.001" min="0" max="1"
-                                   value="${target}" required>
-                            <span class="input-group-text">dec</span>
-                        </div>
+                        <input type="number" name="items[${itemIndex}][target_share]"
+                               class="form-control form-control-sm target-share-input pct-input" step="0.1" min="0" max="100"
+                               value="${target}" required>
                     </td>
                     <td>
-                        <div class="input-group input-group-sm">
-                            <input type="number" name="items[${itemIndex}][deviation_trigger]"
-                                   class="form-control" step="0.001" min="0" max="1"
-                                   value="${deviation}" required>
-                            <span class="input-group-text">dec</span>
-                        </div>
+                        <input type="number" name="items[${itemIndex}][deviation_trigger]"
+                               class="form-control form-control-sm pct-input" step="0.1" min="0" max="100"
+                               value="${deviation}" required>
                     </td>
                     <td class="text-center">
                         <input type="hidden" name="items[${itemIndex}][deleted]" value="0" class="deleted-flag">
@@ -431,6 +419,14 @@
                 document.getElementById('new-deviation').value = '';
 
                 updateTotal();
+            });
+
+            // Convert percentage values to decimals before form submission
+            document.getElementById('rebalance-form').addEventListener('submit', function(e) {
+                document.querySelectorAll('.pct-input').forEach(input => {
+                    const pctValue = parseFloat(input.value) || 0;
+                    input.value = (pctValue / 100).toFixed(6);
+                });
             });
         });
     </script>

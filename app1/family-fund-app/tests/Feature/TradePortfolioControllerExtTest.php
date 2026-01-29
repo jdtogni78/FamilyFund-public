@@ -137,25 +137,138 @@ class TradePortfolioControllerExtTest extends TestCase
         $response->assertRedirect(route('tradePortfolios.index'));
     }
 
-    // ==================== Split Tests ====================
+    // ==================== Rebalance Edit Page Tests ====================
 
-    public function test_split_displays_form()
+    public function test_rebalance_displays_form()
     {
-        $response = $this->actingAs($this->user)->get('/tradePortfolios/' . $this->tradePortfolio->id . '/split');
+        $response = $this->actingAs($this->user)->get('/tradePortfolios/' . $this->tradePortfolio->id . '/rebalance');
 
         $response->assertStatus(200);
         $response->assertViewHas('tradePortfolio');
-        $response->assertViewHas('split', true);
+        $response->assertViewHas('items');
+        $response->assertViewHas('assetMap');
+        $response->assertViewHas('typeMap');
     }
 
-    public function test_split_redirects_when_not_found()
+    public function test_rebalance_redirects_when_not_found()
     {
-        $response = $this->actingAs($this->user)->get('/tradePortfolios/99999/split');
+        $response = $this->actingAs($this->user)->get('/tradePortfolios/99999/rebalance');
 
         $response->assertRedirect(route('tradePortfolios.index'));
     }
 
-    // ==================== ShowRebalance Tests ====================
+    public function test_do_rebalance_creates_new_portfolio()
+    {
+        $startDate = now()->addDay()->format('Y-m-d');
+
+        $response = $this->actingAs($this->user)->post('/tradePortfolios/' . $this->tradePortfolio->id . '/rebalance', [
+            'start_dt' => $startDate,
+            'end_dt' => '9999-12-31',
+            'cash_target' => 0.10,
+            'cash_reserve_target' => 0.05,
+            'rebalance_period' => 60,
+            'mode' => 'STD',
+            'minimum_order' => 100,
+            'max_single_order' => 0.05,
+            'items' => [
+                [
+                    'symbol' => 'AAPL',
+                    'type' => 'STK',
+                    'target_share' => 0.45,
+                    'deviation_trigger' => 0.05,
+                    'deleted' => false,
+                ],
+                [
+                    'symbol' => 'GOOGL',
+                    'type' => 'STK',
+                    'target_share' => 0.45,
+                    'deviation_trigger' => 0.05,
+                    'deleted' => false,
+                ],
+            ],
+        ]);
+
+        // Should redirect to the new portfolio
+        $response->assertRedirect();
+
+        // Verify old portfolio end_dt was updated
+        $this->tradePortfolio->refresh();
+        $this->assertEquals($startDate, $this->tradePortfolio->end_dt->format('Y-m-d'));
+
+        // Verify new portfolio was created
+        $newPortfolio = \App\Models\TradePortfolio::where('portfolio_id', $this->tradePortfolio->portfolio_id)
+            ->where('start_dt', $startDate)
+            ->first();
+        $this->assertNotNull($newPortfolio);
+        $this->assertEquals(0.10, $newPortfolio->cash_target);
+        $this->assertEquals(60, $newPortfolio->rebalance_period);
+
+        // Verify items were created (only 2, not 3 since MSFT was not included)
+        $this->assertEquals(2, $newPortfolio->tradePortfolioItems()->count());
+    }
+
+    public function test_do_rebalance_validates_required_fields()
+    {
+        $response = $this->actingAs($this->user)->post('/tradePortfolios/' . $this->tradePortfolio->id . '/rebalance', [
+            'start_dt' => now()->addDay()->format('Y-m-d'),
+            // Missing required fields
+        ]);
+
+        $response->assertSessionHasErrors([
+            'end_dt',
+            'cash_target',
+            'cash_reserve_target',
+            'rebalance_period',
+            'mode',
+            'minimum_order',
+            'max_single_order',
+            'items',
+        ]);
+    }
+
+    public function test_do_rebalance_can_delete_items()
+    {
+        $startDate = now()->addDay()->format('Y-m-d');
+
+        $response = $this->actingAs($this->user)->post('/tradePortfolios/' . $this->tradePortfolio->id . '/rebalance', [
+            'start_dt' => $startDate,
+            'end_dt' => '9999-12-31',
+            'cash_target' => 0.10,
+            'cash_reserve_target' => 0.05,
+            'rebalance_period' => 30,
+            'mode' => 'STD',
+            'minimum_order' => 100,
+            'max_single_order' => 0.05,
+            'items' => [
+                [
+                    'symbol' => 'AAPL',
+                    'type' => 'STK',
+                    'target_share' => 0.90,
+                    'deviation_trigger' => 0.05,
+                    'deleted' => false,
+                ],
+                [
+                    'symbol' => 'GOOGL',
+                    'type' => 'STK',
+                    'target_share' => 0.33,
+                    'deviation_trigger' => 0.05,
+                    'deleted' => true, // Mark as deleted
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+
+        // Verify new portfolio has only 1 item (GOOGL was deleted)
+        $newPortfolio = \App\Models\TradePortfolio::where('portfolio_id', $this->tradePortfolio->portfolio_id)
+            ->where('start_dt', $startDate)
+            ->first();
+        $this->assertNotNull($newPortfolio);
+        $this->assertEquals(1, $newPortfolio->tradePortfolioItems()->count());
+        $this->assertEquals('AAPL', $newPortfolio->tradePortfolioItems()->first()->symbol);
+    }
+
+    // ==================== ShowRebalance (Analysis) Tests ====================
 
     public function test_show_rebalance_with_date_range()
     {

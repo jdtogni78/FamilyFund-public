@@ -61,8 +61,13 @@
                                                 <label for="end_dt" class="form-label">
                                                     <i class="fa fa-stop me-1"></i> End Date <span class="text-danger">*</span>
                                                 </label>
-                                                <input type="date" name="end_dt" id="end_dt" class="form-control"
-                                                       value="{{ old('end_dt', $end_dt) }}" required>
+                                                <div class="input-group">
+                                                    <input type="date" name="end_dt" id="end_dt" class="form-control"
+                                                           value="{{ old('end_dt', $end_dt) }}" required>
+                                                    <button type="button" class="btn btn-outline-secondary" id="set_never_end" title="Set to never expire">
+                                                        <i class="fa fa-infinity"></i> Never
+                                                    </button>
+                                                </div>
                                                 <small class="text-body-secondary">When this configuration expires</small>
                                             </div>
                                         </div>
@@ -280,6 +285,11 @@
             const tbody = document.getElementById('items-tbody');
             const totalBadge = document.getElementById('total-badge');
             const cashTarget = document.getElementById('cash_target');
+
+            // Set end date to "never" (9999-12-31)
+            document.getElementById('set_never_end').addEventListener('click', function() {
+                document.getElementById('end_dt').value = '9999-12-31';
+            });
 
             // Calculate and update total
             function updateTotal() {

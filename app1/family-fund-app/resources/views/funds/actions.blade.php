@@ -1,3 +1,9 @@
+@php
+    $activeTradePortfolio = $fund->portfolios()->first()?->tradePortfolios()
+        ->where('end_dt', '>', now())
+        ->orderBy('start_dt', 'desc')
+        ->first();
+@endphp
 <form action="{{ route('funds.destroy', $fund->id) }}" method="POST" class="d-inline-block">
     @csrf
     @method('DELETE')
@@ -7,6 +13,10 @@
         @if($fund->portfolios()->first())
             <a href="{{ route('portfolios.showRebalance', [$fund->portfolios()->first()->id, now()->subMonths(3)->format('Y-m-d'), now()->format('Y-m-d')]) }}"
                class='btn btn-ghost-primary' title="Rebalance Analysis (last 3 months)"><i class="fa fa-chart-line"></i></a>
+        @endif
+        @if($activeTradePortfolio)
+            <a href="{{ route('tradePortfolios.rebalance', [$activeTradePortfolio->id]) }}"
+               class='btn btn-ghost-warning' title="Edit Allocations"><i class="fa fa-balance-scale"></i></a>
         @endif
         <a href="{{ route('funds.edit', [$fund->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
         <a href="{{ route('portfolios.show', [$fund->portfolios()->first()]) }}" class='btn btn-ghost-info'><i class="fa fa-eye"></i></a>

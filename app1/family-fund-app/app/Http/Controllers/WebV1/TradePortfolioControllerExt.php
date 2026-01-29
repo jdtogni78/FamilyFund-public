@@ -6,13 +6,14 @@ use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Controllers\Traits\MailTrait;
 use App\Http\Controllers\Traits\CashDepositTrait;
 
-use App\Http\Requests\SplitTradePortfolioRequest;
+use App\Http\Requests\RebalanceTradePortfolioRequest;
 use App\Http\Resources\PortfolioAssetResource;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
 use App\Models\TradePortfolioExt;
 use App\Models\TradePortfolioItem;
+use App\Models\TradePortfolioItemExt;
 use App\Repositories\TradePortfolioRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -59,41 +60,6 @@ class TradePortfolioControllerExt extends TradePortfolioController
         return parent::create()->with('portfolio_id', $portfolio_id);
     }
 
-    public function split($id)
-    {
-        $tradePortfolio = $this->tradePortfolioRepository->find($id);
-
-        if (empty($tradePortfolio)) {
-            Flash::error('Trade Portfolio not found');
-            return redirect(route('tradePortfolios.index'));
-        }
-
-        $api = $this->createAPIResponse($tradePortfolio);
-        $date = new Carbon();
-        $api['api']['tradePortfolio']['start_dt'] = $date;
-        $api['api']['tradePortfolio']['show_end_dt'] = $date;
-        $api['api']['tradePortfolio']['end_dt'] = new Carbon('9999-12-31');
-
-        return view('trade_portfolios.show', $api)
-            ->with('split', true)
-            ->with('asOf', $date);
-    }
-
-    public function doSplit(SplitTradePortfolioRequest $request)
-    {
-        // create db transaction
-        DB::transaction(function () use ($request, &$newTP) {
-            $id = $request->route('id');
-            $start_dt = $request->input('start_dt');
-            $end_dt = $request->input('end_dt');
-            Log::debug("doSplit id: $id, start_dt: $start_dt, end_dt: $end_dt");
-            /** @var TradePortfolioExt $tradePortfolio */
-            $tradePortfolio = $this->tradePortfolioRepository->find($id);
-            $newTP = $tradePortfolio->splitWithItems($start_dt, $end_dt);
-        });
-        return redirect(route('tradePortfolios.show', $newTP->id));
-    }
-
     public function showRebalance($id, $start=null, $end=null)
     {
         $tradePortfolio = $this->tradePortfolioRepository->find($id);
@@ -117,6 +83,85 @@ class TradePortfolioControllerExt extends TradePortfolioController
 
         $api['asOf'] = $start;
         return view('trade_portfolios.show_rebalance')->with('api', $api);
+    }
+
+    /**
+     * Show the rebalance edit form for modifying portfolio settings and items.
+     *
+     * @param int $id
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function rebalance($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            Flash::error('Trade Portfolio not found');
+            return redirect(route('tradePortfolios.index'));
+        }
+
+        $tradePortfolio->annotateAssetsAndGroups();
+        $tradePortfolio->annotateTotalShares();
+
+        $date = new Carbon();
+        $api = [
+            'assetMap' => AssetExt::symbolMap(),
+            'typeMap' => TradePortfolioItemExt::typeMap(),
+            'tradePortfolio' => $tradePortfolio,
+            'items' => $tradePortfolio->tradePortfolioItems()->get(),
+            'start_dt' => $date->format('Y-m-d'),
+            'end_dt' => '9999-12-31',
+        ];
+
+        return view('trade_portfolios.rebalance', $api);
+    }
+
+    /**
+     * Process the rebalance form submission.
+     * Creates a new trade portfolio version with modified settings and items.
+     *
+     * @param RebalanceTradePortfolioRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function doRebalance(RebalanceTradePortfolioRequest $request, $id)
+    {
+        $newTP = null;
+
+        try {
+            DB::transaction(function () use ($request, $id, &$newTP) {
+                /** @var TradePortfolioExt $tradePortfolio */
+                $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+                if (empty($tradePortfolio)) {
+                    throw new \Exception('Trade Portfolio not found');
+                }
+
+                $settings = [
+                    'cash_target' => $request->input('cash_target'),
+                    'cash_reserve_target' => $request->input('cash_reserve_target'),
+                    'rebalance_period' => $request->input('rebalance_period'),
+                    'mode' => $request->input('mode'),
+                    'minimum_order' => $request->input('minimum_order'),
+                    'max_single_order' => $request->input('max_single_order'),
+                ];
+
+                $items = $request->input('items', []);
+
+                $newTP = $tradePortfolio->rebalanceWithItems(
+                    $request->input('start_dt'),
+                    $request->input('end_dt'),
+                    $settings,
+                    $items
+                );
+            });
+
+            Flash::success('Portfolio rebalanced successfully');
+            return redirect(route('tradePortfolios.show', $newTP->id));
+        } catch (\Exception $e) {
+            Flash::error('Failed to rebalance portfolio: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
     }
 
     /**

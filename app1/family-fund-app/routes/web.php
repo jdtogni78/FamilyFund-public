@@ -44,10 +44,10 @@ Route::middleware('auth')->group(function () {
         ->name('funds.show_trade_bands_pdf');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
-    Route::get('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@split')
-        ->name('tradePortfolios.split');
-    Route::patch('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doSplit')
-        ->name('tradePortfolios.doSplit');
+    Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')
+        ->name('tradePortfolios.rebalance');
+    Route::post('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doRebalance')
+        ->name('tradePortfolios.doRebalance');
     Route::get('tradePortfolios/{id}/show_diff', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showDiff')
         ->name('tradePortfolios.show_diff');
     Route::get('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')

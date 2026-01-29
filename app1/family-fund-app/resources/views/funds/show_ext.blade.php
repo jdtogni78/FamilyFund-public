@@ -66,8 +66,18 @@
                                     <span class="badge badge-warning ms-2">ADMIN</span>
                                 @endisset
                             </div>
+                            @php
+                                $activeTradePortfolio = $api['tradePortfolios']->first(function($tp) {
+                                    return \Carbon\Carbon::parse($tp->end_dt)->isAfter(\Carbon\Carbon::today());
+                                });
+                            @endphp
                             <div class="d-flex flex-wrap" style="gap: 4px;">
                                 <a href="{{ route('funds.index') }}" class="btn btn-sm btn-primary">Back</a>
+                                @if($activeTradePortfolio)
+                                <a href="{{ route('tradePortfolios.rebalance', [$activeTradePortfolio->id]) }}" class="btn btn-sm btn-warning" title="Edit Allocations">
+                                    <i class="fa fa-balance-scale"></i>
+                                </a>
+                                @endif
                                 <a href="/funds/{{ $api['id'] }}/trade_bands" class="btn btn-sm btn-primary" title="Trading Bands">
                                     <i class="fa fa-chart-bar"></i>
                                 </a>

@@ -23,24 +23,6 @@
     <div class="container-fluid">
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')
-            @isset($split) @if($split==true)
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <strong>Split Trade Portfolio</strong>
-                            </div>
-                            <div class="card-body">
-<form method="POST" action="{{ route('tradePortfolios.split', $tradePortfolio->id) }}">
-                                    @csrf
-                                    @method('PATCH')
-                                @include('trade_portfolios.split_fields')
-</form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif @endisset
             @include("trade_portfolios.inner_show")
             <div class="row">
                 @include("trade_portfolios.inner_show_graphs")

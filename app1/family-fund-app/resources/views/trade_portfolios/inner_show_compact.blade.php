@@ -32,6 +32,7 @@
     </div>
     <div>
         @if(!$editable)
+            <a href="{{ route('tradePortfolios.rebalance', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-warning mr-1" title="Rebalance"><i class="fa fa-balance-scale"></i></a>
             <a href="{{ route('tradePortfoliosItems.createWithParams', ['tradePortfolioId' => $tradePortfolio->id]) }}" class="btn btn-sm btn-outline-dark mr-1" title="Add Item"><i class="fa fa-plus"></i></a>
             <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="fa fa-edit"></i></a>
             <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-secondary" title="Compare"><i class="fa fa-random"></i></a>

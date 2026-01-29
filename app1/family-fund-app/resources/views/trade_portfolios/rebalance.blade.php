@@ -197,7 +197,7 @@
                                                                 <input type="number" name="items[{{ $i }}][target_share]"
                                                                        class="form-control target-share-input" step="0.001" min="0" max="1"
                                                                        value="{{ $item->target_share }}" required>
-                                                                <span class="input-group-text">%</span>
+                                                                <span class="input-group-text">dec</span>
                                                             </div>
                                                         </td>
                                                         <td>
@@ -205,7 +205,7 @@
                                                                 <input type="number" name="items[{{ $i }}][deviation_trigger]"
                                                                        class="form-control" step="0.001" min="0" max="1"
                                                                        value="{{ $item->deviation_trigger }}" required>
-                                                                <span class="input-group-text">%</span>
+                                                                <span class="input-group-text">dec</span>
                                                             </div>
                                                         </td>
                                                         <td class="text-center">
@@ -399,7 +399,7 @@
                             <input type="number" name="items[${itemIndex}][target_share]"
                                    class="form-control target-share-input" step="0.001" min="0" max="1"
                                    value="${target}" required>
-                            <span class="input-group-text">%</span>
+                            <span class="input-group-text">dec</span>
                         </div>
                     </td>
                     <td>
@@ -407,7 +407,7 @@
                             <input type="number" name="items[${itemIndex}][deviation_trigger]"
                                    class="form-control" step="0.001" min="0" max="1"
                                    value="${deviation}" required>
-                            <span class="input-group-text">%</span>
+                            <span class="input-group-text">dec</span>
                         </div>
                     </td>
                     <td class="text-center">

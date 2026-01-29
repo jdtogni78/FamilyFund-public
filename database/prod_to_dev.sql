@@ -35,10 +35,10 @@ WHERE email = 'admin@dev.familyfund.local';
 -- Create or update test user for CLI testing (claude@test.local / claude-test-2024)
 -- Password hash: bcrypt('claude-test-2024')
 INSERT INTO users (name, email, password, created_at, updated_at)
-VALUES ('Claude Test', 'claude@test.local', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4k5FkJpKqGr9ELSi', NOW(), NOW())
+VALUES ('Claude Test', 'claude@test.local', '$2y$12$RPdNTcpwuZxPZvSSqkpWUeX0MZNOvzPMMcS3uxi1hqHVWlbpW4cHG', NOW(), NOW())
 ON DUPLICATE KEY UPDATE
     name = 'Claude Test',
-    password = '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4k5FkJpKqGr9ELSi',
+    password = '$2y$12$RPdNTcpwuZxPZvSSqkpWUeX0MZNOvzPMMcS3uxi1hqHVWlbpW4cHG',
     updated_at = NOW();
 
 -- -----------------------------------------------------------------------------

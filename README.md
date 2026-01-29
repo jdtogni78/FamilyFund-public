@@ -461,6 +461,33 @@ Database backups are encrypted using GPG before being stored. The encryption run
 docker exec dstrader bash -c "echo test | gpg --batch --yes --trust-model always -e -r docker@example.local > /dev/null && echo OK"
 ```
 
+### Server Disk Space Management
+
+The root partition on spirit (`/dev/nvme0n1p6`, 48GB) can fill up and cause DSTrader to fail (mariadb won't start).
+
+**Check disk usage:**
+```bash
+ssh dstrader "df -h /"
+# Should stay below 90%
+```
+
+**Common space culprits:**
+
+| Location | Issue | Fix |
+|----------|-------|-----|
+| `/var/log/journal` | Systemd journal grows unbounded | Set `SystemMaxUse=500M` in `/etc/systemd/journald.conf` then `sudo systemctl restart systemd-journald` |
+| `/var/log/dstrader/prod/` | Old log files accumulate | Delete logs older than 6 months: `rm /var/log/dstrader/prod/*2024*` |
+| `/tmp` | Temporary backup files | Check with `ls -lh /tmp/*.tar.gz` and remove old ones |
+
+**One-time journald fix (recommended):**
+```bash
+ssh dstrader
+sudo vi /etc/systemd/journald.conf
+# Add under [Journal]:
+# SystemMaxUse=500M
+sudo systemctl restart systemd-journald
+```
+
 ## VPN Setup
 
 L2TP/IPSec

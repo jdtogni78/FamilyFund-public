@@ -67,6 +67,8 @@
 
 <script>
     $(document).ready(function() {
-        $('#tradePortfolios-table').DataTable();
+        $('#tradePortfolios-table').DataTable({
+            order: [[7, 'desc']]
+        });
     });
 </script>

@@ -35,12 +35,21 @@
                 </div>
             </div>
 
-            <!-- Related Assets Section (same name, different type) -->
+            <!-- Related Assets Section (via linked_asset_id) -->
             @php
-                $relatedAssets = \App\Models\Asset::where('name', $asset->name)
-                    ->where('data_source', $asset->data_source)
-                    ->where('id', '!=', $asset->id)
-                    ->get();
+                // Get assets linked TO this asset (e.g., mortgages pointing to this property)
+                $linkedFrom = $asset->linkedFrom;
+                // Get the asset this one links TO (e.g., property this mortgage points to)
+                $linkedTo = $asset->linkedAsset;
+                // Combine into related assets collection
+                $relatedAssets = collect();
+                if ($linkedTo) {
+                    $relatedAssets->push($linkedTo);
+                    // Also get other assets linked to the same parent
+                    $siblings = $linkedTo->linkedFrom->where('id', '!=', $asset->id);
+                    $relatedAssets = $relatedAssets->merge($siblings);
+                }
+                $relatedAssets = $relatedAssets->merge($linkedFrom);
             @endphp
             @if($relatedAssets->count() > 0)
             <div class="row">
@@ -53,7 +62,7 @@
                         </div>
                         <div class="card-body">
                             <p class="text-body-secondary small mb-3">
-                                Assets linked by name "{{ $asset->name }}" ({{ $asset->data_source }})
+                                Assets linked to {{ $linkedTo ? '"' . $linkedTo->name . '"' : 'this asset' }}
                             </p>
                             <table class="table table-sm table-hover">
                                 <thead>
@@ -68,7 +77,7 @@
                                     @foreach($relatedAssets as $related)
                                     @php
                                         $latestPrice = $related->assetPrices()->orderBy('start_dt', 'desc')->first();
-                                        $isLiability = in_array($related->type, ['mortgage', 'loan', 'credit_card']);
+                                        $isLiability = in_array($related->type, ['MORTGAGE', 'LOAN', 'CREDIT_CARD']);
                                     @endphp
                                     <tr>
                                         <td>
@@ -103,14 +112,14 @@
                                     foreach($relatedAssets as $related) {
                                         $price = $related->assetPrices()->orderBy('start_dt', 'desc')->first();
                                         if ($price) {
-                                            $isLiability = in_array($related->type, ['mortgage', 'loan', 'credit_card']);
+                                            $isLiability = in_array($related->type, ['MORTGAGE', 'LOAN', 'CREDIT_CARD']);
                                             $totalValue += $isLiability ? -$price->price : $price->price;
                                         }
                                     }
                                     // Add current asset
                                     $currentPrice = $asset->assetPrices()->orderBy('start_dt', 'desc')->first();
                                     if ($currentPrice) {
-                                        $isCurrentLiability = in_array($asset->type, ['mortgage', 'loan', 'credit_card']);
+                                        $isCurrentLiability = in_array($asset->type, ['MORTGAGE', 'LOAN', 'CREDIT_CARD']);
                                         $totalValue += $isCurrentLiability ? -$currentPrice->price : $currentPrice->price;
                                     }
                                 @endphp

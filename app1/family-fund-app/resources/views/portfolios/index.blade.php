@@ -21,10 +21,12 @@
                              </a>
                          </div>
                          <div class="card-body">
-                             @include('portfolios.table')
-                              <div class="pull-right mr-3">
-
-                              </div>
+                             @include('funds.portfolios_table', [
+                                 'portfolios' => $portfolios,
+                                 'showActions' => true,
+                                 'showFund' => true,
+                                 'compact' => false
+                             ])
                          </div>
                      </div>
                   </div>

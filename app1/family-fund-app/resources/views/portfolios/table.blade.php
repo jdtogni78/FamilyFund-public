@@ -15,6 +15,7 @@
             @php
                 $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
                 $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
+                $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
                 $categoryLabels = \App\Models\PortfolioExt::CATEGORY_LABELS;
             @endphp
             <tr>
@@ -45,7 +46,9 @@
                 </td>
                 <td>
                     @if($portfolio->category)
-                        {{ $categoryLabels[$portfolio->category] ?? ucfirst($portfolio->category) }}
+                        <span class="badge" style="background: {{ $categoryColors[$portfolio->category] ?? '#6b7280' }}; color: white;">
+                            {{ $categoryLabels[$portfolio->category] ?? ucfirst($portfolio->category) }}
+                        </span>
                     @else
                         <span class="text-muted">-</span>
                     @endif

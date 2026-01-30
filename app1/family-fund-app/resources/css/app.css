@@ -768,6 +768,7 @@
         border-left: 4px solid;
         @apply border-emerald-500 dark:border-emerald-600;
     }
+
 }
 
 @layer utilities {

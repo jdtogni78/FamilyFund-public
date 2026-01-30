@@ -223,6 +223,7 @@ class PortfolioExt extends Portfolio
 
     /**
      * Calculate portfolio value from assets (positions * prices).
+     * For liability portfolios, the result is negated.
      *
      * @param string $now
      * @return float
@@ -254,6 +255,12 @@ class PortfolioExt extends Portfolio
                 # TODO printf("No price for $asset_id\n");
             }
         }
+
+        // Liability portfolios should have negative values (debts owed)
+        if ($this->category === self::CATEGORY_LIABILITY) {
+            $totalValue = -abs($totalValue);
+        }
+
         return $totalValue;
     }
 
@@ -273,8 +280,9 @@ class PortfolioExt extends Portfolio
         if ($validate) {
             $calculatedValue = $this->calculateValueFromAssets($now);
             $difference = $setBalanceValue !== null ? $setBalanceValue - $calculatedValue : null;
-            $percentDiff = ($setBalanceValue !== null && $calculatedValue > 0)
-                ? (($setBalanceValue - $calculatedValue) / $calculatedValue) * 100
+            // Use absolute values for percent diff calculation (handles both assets and liabilities)
+            $percentDiff = ($setBalanceValue !== null && $calculatedValue != 0)
+                ? (($setBalanceValue - $calculatedValue) / abs($calculatedValue)) * 100
                 : null;
 
             return [

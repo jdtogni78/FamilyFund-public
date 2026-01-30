@@ -199,20 +199,39 @@
                 $hasForecastData = !empty($api['linear_regression']['predictions']);
                 $hasMultiplePortfolios = count($api['portfolios'] ?? []) > 1;
 
-                // Calculate category totals
+                // Calculate category totals with portfolio details
                 $categoryTotals = [];
                 $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
                 $categoryLabels = \App\Models\PortfolioExt::CATEGORY_LABELS;
                 foreach ($api['portfolios'] ?? [] as $port) {
                     $cat = $port['category'] ?? 'unknown';
                     $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                    $portName = $port['display_name'] ?? $port['source'] ?? 'Unknown';
                     if (!isset($categoryTotals[$cat])) {
-                        $categoryTotals[$cat] = ['value' => 0, 'count' => 0];
+                        $categoryTotals[$cat] = ['value' => 0, 'count' => 0, 'portfolios' => []];
                     }
                     $categoryTotals[$cat]['value'] += $portValue;
                     $categoryTotals[$cat]['count']++;
+                    $categoryTotals[$cat]['portfolios'][$portName] = $portValue;
                 }
                 $hasCategoryData = count($categoryTotals) > 1 || (count($categoryTotals) == 1 && !isset($categoryTotals['unknown']));
+
+                // Calculate portfolio type totals with portfolio details
+                $typeTotals = [];
+                $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
+                $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
+                foreach ($api['portfolios'] ?? [] as $port) {
+                    $type = $port['type'] ?? 'unknown';
+                    $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                    $portName = $port['display_name'] ?? $port['source'] ?? 'Unknown';
+                    if (!isset($typeTotals[$type])) {
+                        $typeTotals[$type] = ['value' => 0, 'count' => 0, 'portfolios' => []];
+                    }
+                    $typeTotals[$type]['value'] += $portValue;
+                    $typeTotals[$type]['count']++;
+                    $typeTotals[$type]['portfolios'][$portName] = $portValue;
+                }
+                $hasTypeData = count($typeTotals) > 1 || (count($typeTotals) == 1 && !isset($typeTotals['unknown']));
             @endphp
 
             {{-- Category Summary (only if portfolios have categories) --}}
@@ -245,12 +264,40 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
                                                     <span class="badge" style="background: {{ $color }}; color: white;">{{ $label }}</span>
-                                                    <span class="text-muted small ms-1">({{ $data['count'] }})</span>
+                                                    <span class="text-muted small ms-1">({{ $data['count'] }} portfolio{{ $data['count'] > 1 ? 's' : '' }})</span>
                                                 </div>
                                                 <span class="text-muted small">{{ number_format($pct, 1) }}%</span>
                                             </div>
                                             <div class="mt-2" style="font-size: 1.25rem; font-weight: 700; color: {{ $isLiability ? '#dc2626' : $color }};">
                                                 {{ $isLiability ? '-' : '' }}${{ number_format(abs($data['value']), 0) }}
+                                            </div>
+                                            {{-- Show portfolios in this category --}}
+                                            @php
+                                                arsort($data['portfolios']);
+                                                $allPortfolios = $data['portfolios'];
+                                                $topPortfolios = array_slice($allPortfolios, 0, 3, true);
+                                                $remainingPortfolios = array_slice($allPortfolios, 3, null, true);
+                                                $catId = 'cat-' . Str::slug($cat);
+                                            @endphp
+                                            <div class="mt-2 small text-muted">
+                                                @foreach($topPortfolios as $portName => $portVal)
+                                                    <span class="badge badge-light me-1 mb-1" style="background: {{ $color }}30; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                        {{ Str::limit($portName, 20) }}: {{ $isLiability ? '-' : '' }}${{ number_format(abs($portVal), 0) }}
+                                                    </span>
+                                                @endforeach
+                                                @if(count($remainingPortfolios) > 0)
+                                                    <span class="collapse" id="{{ $catId }}-more">
+                                                        @foreach($remainingPortfolios as $portName => $portVal)
+                                                            <span class="badge badge-light me-1 mb-1" style="background: {{ $color }}30; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                                {{ Str::limit($portName, 20) }}: {{ $isLiability ? '-' : '' }}${{ number_format(abs($portVal), 0) }}
+                                                            </span>
+                                                        @endforeach
+                                                    </span>
+                                                    <a href="#" class="expand-toggle" data-target="{{ $catId }}-more" style="color: {{ $color }}; text-decoration: none;">
+                                                        <span class="expand-text">+{{ count($remainingPortfolios) }} more</span>
+                                                        <span class="collapse-text" style="display: none;">show less</span>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -276,10 +323,251 @@
             </div>
             @endif
 
+            {{-- Portfolio Type Summary (only if portfolios have types) --}}
+            @if($hasTypeData && $hasMultiplePortfolios)
+            <div class="row mb-4" id="section-type-summary">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                            <strong><i class="fa fa-briefcase me-2"></i>Portfolio Type Summary</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row">
+                                @php
+                                    // Sort types by value descending
+                                    uasort($typeTotals, function($a, $b) {
+                                        return abs($b['value']) <=> abs($a['value']);
+                                    });
+                                    $typeGrandTotal = array_sum(array_column($typeTotals, 'value'));
+                                    $liabilityTypes = ['mortgage', 'loan', 'credit_card'];
+                                @endphp
+                                @foreach($typeTotals as $type => $data)
+                                    @php
+                                        $color = $typeColors[$type] ?? '#6b7280';
+                                        $label = $typeLabels[$type] ?? ucfirst($type);
+                                        $pct = $typeGrandTotal != 0 ? ($data['value'] / abs($typeGrandTotal)) * 100 : 0;
+                                        $isLiability = in_array($type, $liabilityTypes);
+                                    @endphp
+                                    <div class="col-md-{{ count($typeTotals) <= 4 ? (12 / count($typeTotals)) : 3 }} mb-2">
+                                        <div class="p-3 rounded" style="background: {{ $color }}15; border-left: 4px solid {{ $color }};">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge" style="background: {{ $color }}; color: white;">{{ $label }}</span>
+                                                    <span class="text-muted small ms-1">({{ $data['count'] }} portfolio{{ $data['count'] > 1 ? 's' : '' }})</span>
+                                                </div>
+                                                <span class="text-muted small">{{ number_format(abs($pct), 1) }}%</span>
+                                            </div>
+                                            <div class="mt-2" style="font-size: 1.25rem; font-weight: 700; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                {{ $isLiability ? '-' : '' }}${{ number_format(abs($data['value']), 0) }}
+                                            </div>
+                                            {{-- Show portfolios in this type --}}
+                                            @php
+                                                arsort($data['portfolios']);
+                                                $allPortfolios = $data['portfolios'];
+                                                $topPortfolios = array_slice($allPortfolios, 0, 3, true);
+                                                $remainingPortfolios = array_slice($allPortfolios, 3, null, true);
+                                                $typeId = 'type-' . Str::slug($type);
+                                            @endphp
+                                            <div class="mt-2 small text-muted">
+                                                @foreach($topPortfolios as $portName => $portVal)
+                                                    <span class="badge badge-light me-1 mb-1" style="background: {{ $color }}30; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                        {{ Str::limit($portName, 20) }}: {{ $isLiability ? '-' : '' }}${{ number_format(abs($portVal), 0) }}
+                                                    </span>
+                                                @endforeach
+                                                @if(count($remainingPortfolios) > 0)
+                                                    <span class="collapse" id="{{ $typeId }}-more">
+                                                        @foreach($remainingPortfolios as $portName => $portVal)
+                                                            <span class="badge badge-light me-1 mb-1" style="background: {{ $color }}30; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                                {{ Str::limit($portName, 20) }}: {{ $isLiability ? '-' : '' }}${{ number_format(abs($portVal), 0) }}
+                                                            </span>
+                                                        @endforeach
+                                                    </span>
+                                                    <a href="#" class="expand-toggle" data-target="{{ $typeId }}-more" style="color: {{ $color }}; text-decoration: none;">
+                                                        <span class="expand-text">+{{ count($remainingPortfolios) }} more</span>
+                                                        <span class="collapse-text" style="display: none;">show less</span>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Group Summary (aggregate assets by display_group) --}}
+            @php
+                // Liability asset types (values should be negative)
+                $liabilityAssetTypes = ['MORTGAGE', 'LOAN', 'CREDIT_CARD'];
+                // Liability portfolio categories (for derived cash calculation)
+                $liabilityCategories = ['liability'];
+
+                // Aggregate assets from all portfolios by display_group
+                $groupTotals = [];
+                $derivedCashTotal = 0;
+                $portfoliosToProcess = isset($api['portfolios']) ? $api['portfolios'] : [$api['portfolio']];
+                foreach ($portfoliosToProcess as $port) {
+                    // Calculate derived cash: Set Balance - Sum of Assets
+                    $portTotalValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                    $portCategory = $port['category'] ?? '';
+                    $isLiabilityPortfolio = in_array($portCategory, $liabilityCategories);
+
+                    $assetsSum = 0;
+                    foreach ($port['assets'] ?? [] as $asset) {
+                        $group = $asset['group'] ?? 'Other';
+                        $assetType = $asset['type'] ?? '';
+                        $isLiability = in_array($assetType, $liabilityAssetTypes);
+                        $rawValue = floatval($asset['value'] ?? 0);
+                        $assetValue = $isLiability ? -abs($rawValue) : $rawValue;
+                        $assetsSum += abs($rawValue); // Sum absolute for comparison
+
+                        if (!isset($groupTotals[$group])) {
+                            $groupTotals[$group] = ['value' => 0, 'count' => 0, 'assets' => [], 'is_liability' => $isLiability];
+                        }
+                        // Only count unique assets per group
+                        $assetName = $asset['name'];
+                        if (!isset($groupTotals[$group]['assets'][$assetName])) {
+                            $groupTotals[$group]['assets'][$assetName] = 0;
+                            $groupTotals[$group]['count']++;
+                        }
+                        $groupTotals[$group]['assets'][$assetName] += $assetValue;
+                        $groupTotals[$group]['value'] += $assetValue;
+                        // If any asset in group is liability, mark group as liability
+                        if ($isLiability) {
+                            $groupTotals[$group]['is_liability'] = true;
+                        }
+                    }
+
+                    // Calculate derived cash for non-liability portfolios
+                    if (!$isLiabilityPortfolio && $portTotalValue > 0) {
+                        $portDerivedCash = $portTotalValue - $assetsSum;
+                        if ($portDerivedCash > 100) { // Only add if > $100 (avoid rounding noise)
+                            $derivedCashTotal += $portDerivedCash;
+                        }
+                    }
+                }
+
+                // Add derived cash to Stability group if significant
+                if ($derivedCashTotal > 100) {
+                    if (!isset($groupTotals['Stability'])) {
+                        $groupTotals['Stability'] = ['value' => 0, 'count' => 0, 'assets' => [], 'is_liability' => false];
+                    }
+                    $groupTotals['Stability']['value'] += $derivedCashTotal;
+                    $groupTotals['Stability']['assets']['Cash (derived)'] = $derivedCashTotal;
+                    $groupTotals['Stability']['count']++;
+                }
+
+                $hasGroupData = count($groupTotals) > 0;
+                $groupGrandTotal = array_sum(array_column($groupTotals, 'value'));
+
+                // Group colors - using standard scheme from stacked bar chart
+                $groupColors = [
+                    'Growth' => '#16a34a',
+                    'Stability' => '#2563eb',
+                    'Crypto' => '#d97706',
+                    'Bonds' => '#9333ea',
+                    'Real Estate' => '#0d9488',
+                    'SP500' => '#059669',
+                    'Vehicles' => '#64748b',
+                    'Dividend' => '#0891b2',
+                    'Other' => '#6b7280',
+                ];
+
+                // Sort groups by absolute value descending
+                uasort($groupTotals, function($a, $b) {
+                    return abs($b['value']) <=> abs($a['value']);
+                });
+            @endphp
+            @if($hasGroupData)
+            <div class="row mb-4" id="section-group-summary">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                            <strong><i class="fa fa-chart-pie me-2"></i>Group Summary (by Asset Type)</strong>
+                            <div>
+                                <a href="{{ route('assets.index') }}" class="btn btn-sm btn-outline-light me-1" title="Manage Asset Groups">
+                                    <i class="fa fa-cog"></i>
+                                </a>
+                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroupSummary"
+                                   role="button" aria-expanded="true" aria-controls="collapseGroupSummary">
+                                    <i class="fa fa-chevron-down"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="collapse show" id="collapseGroupSummary">
+                            <div class="card-body py-3">
+                                <div class="row">
+                                    @foreach($groupTotals as $group => $data)
+                                        @php
+                                            $isLiabilityGroup = $data['is_liability'] ?? false;
+                                            $color = $isLiabilityGroup ? '#dc2626' : ($groupColors[$group] ?? \App\Support\UIColors::byIndex(crc32($group)));
+                                            $pct = $groupGrandTotal != 0 ? ($data['value'] / abs($groupGrandTotal)) * 100 : 0;
+                                        @endphp
+                                        <div class="col-md-{{ count($groupTotals) <= 4 ? (12 / count($groupTotals)) : 3 }} mb-2">
+                                            <div class="p-3 rounded" style="background: {{ $color }}15; border-left: 4px solid {{ $color }};">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <span class="badge" style="background: {{ $color }}; color: white;">{{ $group }}</span>
+                                                        <span class="text-muted small ms-1">({{ $data['count'] }} asset{{ $data['count'] > 1 ? 's' : '' }})</span>
+                                                    </div>
+                                                    <span class="text-muted small">{{ number_format(abs($pct), 1) }}%</span>
+                                                </div>
+                                                <div class="mt-2" style="font-size: 1.25rem; font-weight: 700; color: {{ $color }};">
+                                                    ${{ number_format($data['value'], 0) }}
+                                                </div>
+                                                {{-- Show top assets in this group --}}
+                                                @php
+                                                    // Sort by absolute value for liabilities
+                                                    if ($isLiabilityGroup) {
+                                                        uasort($data['assets'], fn($a, $b) => abs($b) <=> abs($a));
+                                                    } else {
+                                                        arsort($data['assets']);
+                                                    }
+                                                    $allAssets = $data['assets'];
+                                                    $topAssets = array_slice($allAssets, 0, 3, true);
+                                                    $remainingAssets = array_slice($allAssets, 3, null, true);
+                                                    $groupId = 'group-' . Str::slug($group);
+                                                @endphp
+                                                <div class="mt-2 small text-muted">
+                                                    @foreach($topAssets as $assetName => $assetVal)
+                                                        <span class="badge badge-light me-1" style="background: {{ $color }}30; color: {{ $color }};">
+                                                            {{ $assetName }}: ${{ number_format($assetVal, 0) }}
+                                                        </span>
+                                                    @endforeach
+                                                    @if(count($remainingAssets) > 0)
+                                                        <span class="collapse" id="{{ $groupId }}-more">
+                                                            @foreach($remainingAssets as $assetName => $assetVal)
+                                                                <span class="badge badge-light me-1" style="background: {{ $color }}30; color: {{ $color }};">
+                                                                    {{ $assetName }}: ${{ number_format($assetVal, 0) }}
+                                                                </span>
+                                                            @endforeach
+                                                        </span>
+                                                        <a href="#" class="expand-toggle" data-target="{{ $groupId }}-more" style="color: {{ $color }}; text-decoration: none;">
+                                                            <span class="expand-text">+{{ count($remainingAssets) }} more</span>
+                                                            <span class="collapse-text" style="display: none;">show less</span>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Reusable Jump Bar --}}
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
                 ['id' => 'section-category-summary', 'icon' => 'fa-layer-group', 'label' => 'Categories', 'condition' => $hasCategoryData && $hasMultiplePortfolios],
+                ['id' => 'section-type-summary', 'icon' => 'fa-briefcase', 'label' => 'Types', 'condition' => $hasTypeData && $hasMultiplePortfolios],
+                ['id' => 'section-group-summary', 'icon' => 'fa-chart-pie', 'label' => 'Groups', 'condition' => $hasGroupData],
                 ['id' => 'section-brokerage-portfolios', 'icon' => 'fa-folder-open', 'label' => 'Portfolios', 'condition' => $hasMultiplePortfolios],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
                 ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => $hasForecastData],
@@ -306,103 +594,17 @@
                         </div>
                         <div class="collapse show" id="collapsePortfoliosList">
                             <div class="card-body">
-                                @php
-                                    $grandTotalValue = 0;
-                                    foreach ($api['portfolios'] as $port) {
-                                        $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
-                                        $grandTotalValue += $portValue;
-                                    }
-                                    // Color palette for asset badges
-                                    $assetColors = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#65a30d', '#0891b2', '#4f46e5'];
-                                    // Build symbol -> color mapping (consistent colors per symbol)
-                                    $symbolColorMap = [];
-                                    $colorIdx = 0;
-                                    foreach ($api['portfolios'] as $port) {
-                                        foreach ($port['assets'] ?? [] as $asset) {
-                                            $symbol = $asset['name'];
-                                            if (!isset($symbolColorMap[$symbol])) {
-                                                $symbolColorMap[$symbol] = $assetColors[$colorIdx % count($assetColors)];
-                                                $colorIdx++;
-                                            }
-                                        }
-                                    }
-                                @endphp
-                                <div class="table-responsive-sm">
-                                    <table class="table table-striped" id="portfolios-list-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Portfolio</th>
-                                                <th class="text-end">Value</th>
-                                                <th class="text-end">% of Fund</th>
-                                                <th>Assets</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        @foreach($api['portfolios'] as $port)
-                                            @php
-                                                $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
-                                                $portPct = $grandTotalValue > 0 ? ($portValue / $grandTotalValue) * 100 : 0;
-                                            @endphp
-                                            <tr>
-                                                <td>
-                                                    <a href="{{ route('portfolios.show', $port['id']) }}"><strong>{{ $port['display_name'] ?? $port['source'] }}</strong></a>
-                                                    @if($port['display_name'])
-                                                        <br><small class="text-muted">{{ $port['source'] }}</small>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end" data-order="{{ $portValue }}">${{ number_format($portValue, 2) }}</td>
-                                                <td class="text-end" data-order="{{ $portPct }}">{{ number_format($portPct, 1) }}%</td>
-                                                <td>
-                                                    @if(count($port['assets'] ?? []) > 0)
-                                                        @foreach($port['assets'] as $asset)
-                                                            @php $badgeColor = $symbolColorMap[$asset['name']] ?? '#6b7280'; @endphp
-                                                            <span class="badge me-1" style="background: {{ $badgeColor }}; color: white;" title="${{ number_format($asset['value'] ?? 0, 2) }}">
-                                                                {{ $asset['name'] }}: ${{ number_format($asset['value'] ?? 0, 0) }}
-                                                            </span>
-                                                        @endforeach
-                                                    @else
-                                                        @php
-                                                            $portType = $port['type'] ?? null;
-                                                            $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
-                                                            $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
-                                                            $typeLabel = $typeLabels[$portType] ?? ucfirst($portType ?? 'Account');
-                                                            $typeColor = $typeColors[$portType] ?? '#6b7280';
-                                                        @endphp
-                                                        <span class="badge" style="background: {{ $typeColor }}; color: white;">
-                                                            {{ $typeLabel }}
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background: #f0fdfa; font-weight: bold;">
-                                                <td>Total</td>
-                                                <td class="text-end">${{ number_format($grandTotalValue, 2) }}</td>
-                                                <td class="text-end">100%</td>
-                                                <td></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
+                                @include('funds.portfolios_table', [
+                                    'portfolios' => $api['portfolios'],
+                                    'asOf' => $asOf,
+                                    'showActions' => isset($api['admin']),
+                                    'compact' => false
+                                ])
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            @push('scripts')
-            <script>
-            $(document).ready(function() {
-                $('#portfolios-list-table').DataTable({
-                    order: [[1, 'desc']],
-                    paging: false,
-                    searching: false,
-                    info: false
-                });
-            });
-            </script>
-            @endpush
             @endif
 
             {{-- Main Charts Row (Collapsible, start expanded) --}}
@@ -664,7 +866,7 @@
             @endisset
 
             {{-- Accounts Table - Admin Only (Collapsible, start expanded) --}}
-            @isset($api['balances']) @isset($api['admin'])
+            @if(isset($api['admin']) && $accountsCount > 0)
                 <div class="row mb-4" id="section-accounts">
                     <div class="col">
                         <div class="card">
@@ -683,7 +885,37 @@
                         </div>
                     </div>
                 </div>
-            @endisset @endisset
+            @endif
         </div>
     </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Expand/collapse toggle for category and type summaries
+    $('.expand-toggle').on('click', function(e) {
+        e.preventDefault();
+        var targetId = $(this).data('target');
+        var $target = $('#' + targetId);
+        var $expandText = $(this).find('.expand-text');
+        var $collapseText = $(this).find('.collapse-text');
+
+        if ($target.hasClass('show')) {
+            $target.removeClass('show');
+            $expandText.show();
+            $collapseText.hide();
+        } else {
+            $target.addClass('show');
+            $expandText.hide();
+            $collapseText.show();
+        }
+    });
+});
+</script>
+<style>
+.expand-toggle { cursor: pointer; font-weight: 500; }
+.expand-toggle:hover { text-decoration: underline !important; }
+.collapse.show { display: inline !important; }
+</style>
+@endpush
 </x-app-layout>

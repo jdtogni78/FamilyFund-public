@@ -68,7 +68,7 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
                             <strong><i class="fa fa-chart-line me-2"></i>Balance History</strong>
-                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseBalanceChart"
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseBalanceChart"
                                role="button" aria-expanded="true" aria-controls="collapseBalanceChart">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -108,13 +108,18 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
+                                @php
+                                    $isLiability = $portfolio->category === 'liability';
+                                    $setBalanceColor = $isLiability ? 'text-danger' : 'text-primary';
+                                    $calculatedColor = $isLiability ? 'text-danger' : 'text-body';
+                                @endphp
                                 <div class="col-md-4">
                                     <label class="text-body-secondary small">Set Balance</label>
-                                    <div class="fw-bold text-primary">${{ number_format($validation['set_balance'], 2) }}</div>
+                                    <div class="fw-bold {{ $setBalanceColor }}">${{ number_format($validation['set_balance'], 2) }}</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="text-body-secondary small">Calculated (from assets)</label>
-                                    <div class="fw-bold">${{ number_format($validation['calculated'], 2) }}</div>
+                                    <div class="fw-bold {{ $calculatedColor }}">${{ number_format($validation['calculated'], 2) }}</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="text-body-secondary small">Difference</label>
@@ -185,7 +190,22 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-secondary">{{ $asset->type ?? 'N/A' }}</span>
+                                                    @php
+                                                        $typeColors = [
+                                                            'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
+                                                            'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
+                                                            'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
+                                                            'FUND' => ['bg' => '#e0e7ff', 'border' => '#4f46e5', 'text' => '#4338ca', 'label' => 'Fund'],
+                                                            'RE' => ['bg' => '#ccfbf1', 'border' => '#0d9488', 'text' => '#0f766e', 'label' => 'Real Estate'],
+                                                            'VEHICLE' => ['bg' => '#e0f2fe', 'border' => '#0284c7', 'text' => '#0369a1', 'label' => 'Vehicle'],
+                                                            'MORTGAGE' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Mortgage'],
+                                                            'BOND' => ['bg' => '#fae8ff', 'border' => '#c026d3', 'text' => '#a21caf', 'label' => 'Bond'],
+                                                        ];
+                                                        $typeInfo = $typeColors[$asset->type ?? ''] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $asset->type ?? 'N/A'];
+                                                    @endphp
+                                                    <span class="badge" style="background: {{ $typeInfo['bg'] }}; color: {{ $typeInfo['text'] }}; border: 1px solid {{ $typeInfo['border'] }};">
+                                                        {{ $typeInfo['label'] }}
+                                                    </span>
                                                 </td>
                                                 <td class="text-end">{{ number_format($pa->position, 4) }}</td>
                                                 <td class="text-end">${{ number_format($price, 2) }}</td>
@@ -220,7 +240,7 @@
                                 <strong>Balance Records</strong>
                                 <span class="badge bg-light text-dark ms-2">{{ $totalBalanceCount }}</span>
                             </div>
-                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseBalanceTable"
+                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseBalanceTable"
                                role="button" aria-expanded="false" aria-controls="collapseBalanceTable">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -302,6 +322,7 @@
                         },
                         plugins: {
                             legend: { display: false },
+                            datalabels: { display: false },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {

@@ -41,7 +41,8 @@ class Asset extends Model
         'data_source',
         'name',
         'type',
-        'display_group'
+        'display_group',
+        'linked_asset_id'
     ];
 
     /**
@@ -55,7 +56,8 @@ class Asset extends Model
         'data_source' => 'string',
         'name' => 'string',
         'type' => 'string',
-        'display_group' => 'string'
+        'display_group' => 'string',
+        'linked_asset_id' => 'integer'
     ];
 
     /**
@@ -69,6 +71,7 @@ class Asset extends Model
         'source' => 'nullable|regex:/[a-zA-Z][a-zA-Z]+/|max:50',
         'data_source' => 'required|string|max:30',
         'display_group' => 'nullable|string|max:50',
+        'linked_asset_id' => 'nullable|integer|exists:assets,id',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -96,5 +99,23 @@ class Asset extends Model
     public function portfolioAssets()
     {
         return $this->hasMany(\App\Models\PortfolioAsset::class, 'asset_id');
+    }
+
+    /**
+     * The asset this one is linked to (e.g., mortgage linked to property)
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function linkedAsset()
+    {
+        return $this->belongsTo(\App\Models\Asset::class, 'linked_asset_id');
+    }
+
+    /**
+     * Assets that link to this one (e.g., mortgages linked to this property)
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function linkedFrom()
+    {
+        return $this->hasMany(\App\Models\Asset::class, 'linked_asset_id');
     }
 }

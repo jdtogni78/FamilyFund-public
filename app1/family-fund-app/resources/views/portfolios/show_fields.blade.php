@@ -2,6 +2,7 @@
     $fund = $portfolio->fund;
     $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
     $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
+    $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
     $categoryLabels = \App\Models\PortfolioExt::CATEGORY_LABELS;
 @endphp
 
@@ -54,7 +55,9 @@
             <label class="text-body-secondary"><i class="fa fa-folder me-1"></i> Category:</label>
             <p class="mb-0">
                 @if($portfolio->category)
-                    {{ $categoryLabels[$portfolio->category] ?? ucfirst($portfolio->category) }}
+                    <span class="badge" style="background: {{ $categoryColors[$portfolio->category] ?? '#6b7280' }}; color: white;">
+                        {{ $categoryLabels[$portfolio->category] ?? ucfirst($portfolio->category) }}
+                    </span>
                 @else
                     <span class="text-body-secondary">Not set</span>
                 @endif

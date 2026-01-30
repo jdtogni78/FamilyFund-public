@@ -22,27 +22,68 @@
         }
     }
 
-    // Aggregate assets from ALL portfolios
+    // Liability asset types (values should be negative)
+    $liabilityTypes = ['MORTGAGE', 'LOAN', 'CREDIT_CARD'];
+    // Liability portfolio categories
+    $liabilityCategories = ['liability'];
+
+    // Aggregate assets from ALL portfolios and calculate derived cash
     $aggregatedAssets = [];
+    $derivedCashTotal = 0;
     $portfoliosToProcess = isset($api['portfolios']) ? $api['portfolios'] : [$api['portfolio']];
     foreach ($portfoliosToProcess as $port) {
+        $portTotalValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+        $portCategory = $port['category'] ?? '';
+        $isLiabilityPortfolio = in_array($portCategory, $liabilityCategories);
+        $assetsSum = 0;
+
         foreach ($port['assets'] ?? [] as $asset) {
             $name = $asset['name'];
+            $assetType = $asset['type'] ?? '';
+            $isLiability = in_array($assetType, $liabilityTypes);
+            $rawValue = floatval($asset['value'] ?? 0);
+            $assetsSum += $rawValue;
+
             if (!isset($aggregatedAssets[$name])) {
                 $aggregatedAssets[$name] = $asset;
                 // Convert values to floats for aggregation
                 $aggregatedAssets[$name]['position'] = floatval($asset['position'] ?? 0);
-                $aggregatedAssets[$name]['value'] = floatval($asset['value'] ?? 0);
+                // Make liability values negative
+                $aggregatedAssets[$name]['value'] = $isLiability ? -abs($rawValue) : $rawValue;
+                $aggregatedAssets[$name]['is_liability'] = $isLiability;
             } else {
                 // Aggregate position and value
                 $aggregatedAssets[$name]['position'] += floatval($asset['position'] ?? 0);
-                $aggregatedAssets[$name]['value'] += floatval($asset['value'] ?? 0);
+                $aggregatedAssets[$name]['value'] += $isLiability ? -abs($rawValue) : $rawValue;
+            }
+        }
+
+        // Calculate derived cash for non-liability portfolios
+        if (!$isLiabilityPortfolio && $portTotalValue > 0) {
+            $portDerivedCash = $portTotalValue - $assetsSum;
+            if ($portDerivedCash > 100) {
+                $derivedCashTotal += $portDerivedCash;
             }
         }
     }
-    // Sort by value descending
+
+    // Add derived cash as a synthetic asset if significant
+    if ($derivedCashTotal > 100) {
+        $aggregatedAssets['Cash (derived)'] = [
+            'name' => 'Cash (derived)',
+            'type' => 'CSH',
+            'group' => 'Stability',
+            'position' => $derivedCashTotal,
+            'price' => 1.0,
+            'value' => $derivedCashTotal,
+            'is_liability' => false,
+            'is_derived' => true,
+        ];
+    }
+
+    // Sort by absolute value descending
     uasort($aggregatedAssets, function($a, $b) {
-        return ($b['value'] ?? 0) <=> ($a['value'] ?? 0);
+        return abs($b['value'] ?? 0) <=> abs($a['value'] ?? 0);
     });
 @endphp
 <div class="table-responsive-sm">
@@ -62,10 +103,14 @@
         </thead>
         <tbody>
         @foreach($aggregatedAssets as $asset)
-            <tr>
+            @php $isDerived = $asset['is_derived'] ?? false; @endphp
+            <tr class="{{ $isDerived ? 'table-info' : '' }}">
                 <th scope="row">
                     @if(isset($asset['id']))
                         <a href="{{ route('assets.show', $asset['id']) }}">{{ $asset['name'] }}</a>
+                    @elseif($isDerived)
+                        <em class="text-info">{{ $asset['name'] }}</em>
+                        <i class="fa fa-calculator ms-1 text-muted" title="Calculated from portfolio balance minus tracked assets"></i>
                     @else
                         {{ $asset['name'] }}
                     @endif
@@ -76,6 +121,11 @@
                             'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
                             'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
                             'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
+                            'FUND' => ['bg' => '#e0e7ff', 'border' => '#4f46e5', 'text' => '#4338ca', 'label' => 'Fund'],
+                            'RE' => ['bg' => '#ccfbf1', 'border' => '#0d9488', 'text' => '#0f766e', 'label' => 'Real Estate'],
+                            'VEHICLE' => ['bg' => '#e0f2fe', 'border' => '#0284c7', 'text' => '#0369a1', 'label' => 'Vehicle'],
+                            'MORTGAGE' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Mortgage'],
+                            'BOND' => ['bg' => '#fae8ff', 'border' => '#c026d3', 'text' => '#a21caf', 'label' => 'Bond'],
                         ];
                         $colors = $typeColors[$asset['type']] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $asset['type']];
                     @endphp
@@ -98,7 +148,11 @@
                     @else
                         <span class="text-danger">N/A</span>
                     @endisset</td>
-                <td data-order="{{ $asset['value'] ?? 0 }}">@isset($asset['value'])
+                @php
+                    $isLiabilityAsset = $asset['is_liability'] ?? in_array($asset['type'] ?? '', ['MORTGAGE', 'LOAN', 'CREDIT_CARD']);
+                    $valueClass = $isLiabilityAsset ? 'text-danger' : '';
+                @endphp
+                <td data-order="{{ $asset['value'] ?? 0 }}" class="{{ $valueClass }}">@isset($asset['value'])
                         ${{ number_format($asset['value'], 2) }}
                     @else
                         <span class="text-danger">N/A</span>

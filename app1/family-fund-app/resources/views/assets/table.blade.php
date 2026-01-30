@@ -15,7 +15,24 @@
             <tr>
                 <td>{{ $asset->id }}</td>
                 <td><a href="{{ route('assets.show', $asset->id) }}">{{ $asset->name }}</a></td>
-                <td><span class="badge bg-info">{{ $asset->type }}</span></td>
+                <td>
+                    @php
+                        $typeColors = [
+                            'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
+                            'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
+                            'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
+                            'FUND' => ['bg' => '#e0e7ff', 'border' => '#4f46e5', 'text' => '#4338ca', 'label' => 'Fund'],
+                            'RE' => ['bg' => '#ccfbf1', 'border' => '#0d9488', 'text' => '#0f766e', 'label' => 'Real Estate'],
+                            'VEHICLE' => ['bg' => '#e0f2fe', 'border' => '#0284c7', 'text' => '#0369a1', 'label' => 'Vehicle'],
+                            'MORTGAGE' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Mortgage'],
+                            'BOND' => ['bg' => '#fae8ff', 'border' => '#c026d3', 'text' => '#a21caf', 'label' => 'Bond'],
+                        ];
+                        $colors = $typeColors[$asset->type] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $asset->type];
+                    @endphp
+                    <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }};">
+                        {{ $colors['label'] }}
+                    </span>
+                </td>
                 <td><span class="badge bg-secondary">{{ $asset->data_source }}</span></td>
                 <td>
                     @if($asset->display_group)

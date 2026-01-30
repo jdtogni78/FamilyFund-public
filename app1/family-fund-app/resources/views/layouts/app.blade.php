@@ -55,6 +55,24 @@
         table.dataTable thead th.no-sort:after {
             content: none;
         }
+        /* Fix DataTables length selector dropdown arrow overlap */
+        .dt-length select,
+        div.dt-length select,
+        .dataTables_length select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            padding: 5px 24px 5px 8px !important;
+            min-width: 55px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            background-color: #fff !important;
+            background-image: linear-gradient(45deg, transparent 50%, #666 50%), linear-gradient(135deg, #666 50%, transparent 50%) !important;
+            background-position: calc(100% - 12px) center, calc(100% - 7px) center !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+        }
         </style>
         
         <script src="https://kit.fontawesome.com/d955b811ba.js" crossorigin="anonymous"></script>

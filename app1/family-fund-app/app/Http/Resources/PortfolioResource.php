@@ -18,6 +18,9 @@ class PortfolioResource extends JsonResource
             'id' => $this->id,
             'fund_id' => $this->fund_id,
             'source' => $this->source,
+            'display_name' => $this->display_name,
+            'type' => $this->type,
+            'category' => $this->category,
 //            'updated_at' => $this->updated_at,
 //            'created_at' => $this->created_at,
 //            'deleted_at' => $this->deleted_at

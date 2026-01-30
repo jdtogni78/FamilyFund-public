@@ -198,11 +198,88 @@
                 $hasTradePortfolios = $api['tradePortfolios']->count() > 0;
                 $hasForecastData = !empty($api['linear_regression']['predictions']);
                 $hasMultiplePortfolios = count($api['portfolios'] ?? []) > 1;
+
+                // Calculate category totals
+                $categoryTotals = [];
+                $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
+                $categoryLabels = \App\Models\PortfolioExt::CATEGORY_LABELS;
+                foreach ($api['portfolios'] ?? [] as $port) {
+                    $cat = $port['category'] ?? 'unknown';
+                    $portValue = floatval(str_replace(['$', ','], '', $port['total_value'] ?? 0));
+                    if (!isset($categoryTotals[$cat])) {
+                        $categoryTotals[$cat] = ['value' => 0, 'count' => 0];
+                    }
+                    $categoryTotals[$cat]['value'] += $portValue;
+                    $categoryTotals[$cat]['count']++;
+                }
+                $hasCategoryData = count($categoryTotals) > 1 || (count($categoryTotals) == 1 && !isset($categoryTotals['unknown']));
             @endphp
+
+            {{-- Category Summary (only if portfolios have categories) --}}
+            @if($hasCategoryData && $hasMultiplePortfolios)
+            <div class="row mb-4" id="section-category-summary">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                            <strong><i class="fa fa-layer-group me-2"></i>Category Summary</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row">
+                                @php
+                                    $catOrder = ['retirement', 'taxable', 'education', 'cash', 'liability'];
+                                    $sortedCategories = collect($categoryTotals)->sortBy(function($v, $k) use ($catOrder) {
+                                        $pos = array_search($k, $catOrder);
+                                        return $pos !== false ? $pos : 999;
+                                    });
+                                    $grandTotal = array_sum(array_column($categoryTotals, 'value'));
+                                @endphp
+                                @foreach($sortedCategories as $cat => $data)
+                                    @php
+                                        $color = $categoryColors[$cat] ?? '#6b7280';
+                                        $label = $categoryLabels[$cat] ?? ucfirst($cat);
+                                        $pct = $grandTotal > 0 ? ($data['value'] / $grandTotal) * 100 : 0;
+                                        $isLiability = $cat === 'liability';
+                                    @endphp
+                                    <div class="col-md-{{ count($categoryTotals) <= 4 ? (12 / count($categoryTotals)) : 3 }} mb-2">
+                                        <div class="p-3 rounded" style="background: {{ $color }}15; border-left: 4px solid {{ $color }};">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge" style="background: {{ $color }}; color: white;">{{ $label }}</span>
+                                                    <span class="text-muted small ms-1">({{ $data['count'] }})</span>
+                                                </div>
+                                                <span class="text-muted small">{{ number_format($pct, 1) }}%</span>
+                                            </div>
+                                            <div class="mt-2" style="font-size: 1.25rem; font-weight: 700; color: {{ $isLiability ? '#dc2626' : $color }};">
+                                                {{ $isLiability ? '-' : '' }}${{ number_format(abs($data['value']), 0) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if(isset($categoryTotals['liability']))
+                            <div class="mt-3 pt-3" style="border-top: 1px solid #e5e7eb;">
+                                @php
+                                    $netWorth = $grandTotal;
+                                    // Note: liability values should already be negative in the API
+                                @endphp
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>Net Worth</strong>
+                                    <span style="font-size: 1.25rem; font-weight: 700; color: {{ $netWorth >= 0 ? '#0d9488' : '#dc2626' }};">
+                                        ${{ number_format($netWorth, 0) }}
+                                    </span>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             {{-- Reusable Jump Bar --}}
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
+                ['id' => 'section-category-summary', 'icon' => 'fa-layer-group', 'label' => 'Categories', 'condition' => $hasCategoryData && $hasMultiplePortfolios],
                 ['id' => 'section-brokerage-portfolios', 'icon' => 'fa-folder-open', 'label' => 'Portfolios', 'condition' => $hasMultiplePortfolios],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
                 ['id' => 'section-regression', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => $hasForecastData],

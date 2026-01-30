@@ -35,6 +35,104 @@
                 </div>
             </div>
 
+            <!-- Related Assets Section (same name, different type) -->
+            @php
+                $relatedAssets = \App\Models\Asset::where('name', $asset->name)
+                    ->where('data_source', $asset->data_source)
+                    ->where('id', '!=', $asset->id)
+                    ->get();
+            @endphp
+            @if($relatedAssets->count() > 0)
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fa fa-link me-2"></i>
+                            <strong>Related Assets</strong>
+                            <span class="badge bg-secondary ms-2">{{ $relatedAssets->count() }}</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-body-secondary small mb-3">
+                                Assets linked by name "{{ $asset->name }}" ({{ $asset->data_source }})
+                            </p>
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Latest Price</th>
+                                        <th>As Of</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($relatedAssets as $related)
+                                    @php
+                                        $latestPrice = $related->assetPrices()->orderBy('start_dt', 'desc')->first();
+                                        $isLiability = in_array($related->type, ['mortgage', 'loan', 'credit_card']);
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <span class="badge {{ $isLiability ? 'bg-danger' : 'bg-success' }}">
+                                                {{ ucfirst(str_replace('_', ' ', $related->type)) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($latestPrice)
+                                                @if($isLiability)
+                                                    <span class="text-danger">-${{ number_format($latestPrice->price, 2) }}</span>
+                                                @else
+                                                    ${{ number_format($latestPrice->price, 2) }}
+                                                @endif
+                                            @else
+                                                <span class="text-body-secondary">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ $latestPrice ? $latestPrice->start_dt : '-' }}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ route('assets.show', $related->id) }}" class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                                @php
+                                    $totalValue = 0;
+                                    foreach($relatedAssets as $related) {
+                                        $price = $related->assetPrices()->orderBy('start_dt', 'desc')->first();
+                                        if ($price) {
+                                            $isLiability = in_array($related->type, ['mortgage', 'loan', 'credit_card']);
+                                            $totalValue += $isLiability ? -$price->price : $price->price;
+                                        }
+                                    }
+                                    // Add current asset
+                                    $currentPrice = $asset->assetPrices()->orderBy('start_dt', 'desc')->first();
+                                    if ($currentPrice) {
+                                        $isCurrentLiability = in_array($asset->type, ['mortgage', 'loan', 'credit_card']);
+                                        $totalValue += $isCurrentLiability ? -$currentPrice->price : $currentPrice->price;
+                                    }
+                                @endphp
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="2">
+                                            <strong>Net Equity (including this asset)</strong>
+                                        </td>
+                                        <td colspan="2">
+                                            <strong class="{{ $totalValue >= 0 ? 'text-success' : 'text-danger' }}">
+                                                ${{ number_format($totalValue, 2) }}
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Asset Prices Section -->
             @php
                 $assetPrices = $asset->assetPrices()

@@ -41,18 +41,15 @@ class FundSetupSequentialTest extends TestCase
     {
         parent::setUp();
 
-        // Create required CASH asset for transaction processing
-        \App\Models\Asset::factory()->create([
-            'name' => 'CASH',
-            'type' => 'CSH',
-            'source' => 'SYSTEM',
-            'display_group' => 'Cash',
-        ]);
+        // Create required CASH asset for transaction processing if not exists
+        \App\Models\Asset::firstOrCreate(
+            ['data_source' => 'MANUAL', 'name' => 'CASH', 'type' => 'CSH'],
+            ['source' => 'SYSTEM', 'display_group' => 'Cash']
+        );
 
-        // DataFactory only used to create test user
+        // Create test user directly (not via DataFactory since that requires a fund)
         $this->df = new DataFactory();
-        $this->df->createUser();
-        $this->user = $this->df->user;
+        $this->user = User::factory()->create();
     }
 
     // ==================== Multiple Portfolio Scenarios ====================

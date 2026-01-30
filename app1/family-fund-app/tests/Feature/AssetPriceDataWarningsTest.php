@@ -404,7 +404,7 @@ class AssetPriceDataWarningsTest extends TestCase
         foreach ($dataWarnings['longSpans'] as $span) {
             if ($span['from'] === '2026-01-09' && $span['to'] === '2026-01-26') {
                 $foundLongSpan = true;
-                $this->assertGreaterThanOrEqual(10, $span['days']); // At least 10 trading days
+                $this->assertGreaterThanOrEqual(9, $span['days']); // At least 9 trading days (10 minus MLK Day holiday)
                 break;
             }
         }

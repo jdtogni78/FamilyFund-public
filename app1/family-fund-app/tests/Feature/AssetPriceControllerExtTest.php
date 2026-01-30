@@ -161,8 +161,13 @@ class AssetPriceControllerExtTest extends TestCase
         AssetPrice::factory()->create(['asset_id' => $assetB->id]);
         AssetPrice::factory()->create(['asset_id' => $assetA->id]);
 
+        // Filter to only the test assets to avoid interference from pre-existing data
         $response = $this->actingAs($this->user)
-            ->get(route('assetPrices.index', ['sort' => 'asset', 'dir' => 'asc']));
+            ->get(route('assetPrices.index', [
+                'sort' => 'asset',
+                'dir' => 'asc',
+                'asset_id' => [$assetA->id, $assetB->id],
+            ]));
 
         $response->assertStatus(200);
         $assetPrices = $response->viewData('assetPrices');

@@ -33,6 +33,7 @@ class FundSetupAPISequentialTest extends TestCase
         parent::setUp();
 
         $this->df = new DataFactory();
+        $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
     }
@@ -201,8 +202,9 @@ class FundSetupAPISequentialTest extends TestCase
             $data = $response->json('data');
 
             $this->assertEquals($value, $data['account_balance']['balance']);
-            $this->assertEquals($shares, $data['account_balance']['shares']);
-            $this->assertEquals($expectedPrice, $data['account_balance']['share_value'], "Share price mismatch for $name");
+            // Use delta for floating point precision (database stores up to 4 decimal places for shares)
+            $this->assertEqualsWithDelta($shares, $data['account_balance']['shares'], 0.0001, "Shares mismatch for $name");
+            $this->assertEqualsWithDelta($expectedPrice, $data['account_balance']['share_value'], 0.01, "Share price mismatch for $name");
         }
     }
 

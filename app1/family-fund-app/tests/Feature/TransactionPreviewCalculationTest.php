@@ -39,21 +39,21 @@ class TransactionPreviewCalculationTest extends TestCase
     {
         parent::setUp();
 
-        // Create CASH asset required by DataFactory
-        $cashAsset = Asset::factory()->create([
-            'name' => 'CASH',
-            'type' => 'CSH',
-            'source' => 'MANUAL',
-            'display_group' => 'Cash',
-        ]);
+        // Create CASH asset required by DataFactory - use firstOrCreate to avoid duplicates
+        $cashAsset = Asset::firstOrCreate(
+            ['name' => 'CASH', 'type' => 'CSH'],
+            ['source' => 'MANUAL', 'display_group' => 'Cash']
+        );
 
-        // Create AssetPrice for CASH (always 1.0)
-        AssetPrice::factory()->create([
-            'asset_id' => $cashAsset->id,
-            'price' => 1.0,
-            'start_dt' => '2020-01-01',
-            'end_dt' => '9999-12-31',
-        ]);
+        // Only create AssetPrice for CASH if none exists (to avoid overlapping date ranges)
+        if (AssetPrice::where('asset_id', $cashAsset->id)->count() === 0) {
+            AssetPrice::factory()->create([
+                'asset_id' => $cashAsset->id,
+                'price' => 1.0,
+                'start_dt' => '2020-01-01',
+                'end_dt' => '9999-12-31',
+            ]);
+        }
 
         $this->factory = new DataFactory();
         $this->transactionRepository = app(TransactionRepository::class);

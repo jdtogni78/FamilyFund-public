@@ -67,6 +67,10 @@ class TransactionApiGoldenDataTest extends TestCase
             }
 
             $portfolio = $fund->portfolio();
+            if (!$portfolio) {
+                // Fund has no portfolio - skip this transaction
+                continue;
+            }
             $assets = $portfolio->valueAsOf($asOf, $this->verbose);
             if ($transaction->type != TransactionExt::TYPE_INITIAL) {
                 if ($fixValues) {

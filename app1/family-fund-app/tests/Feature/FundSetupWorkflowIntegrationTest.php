@@ -38,20 +38,19 @@ class FundSetupWorkflowIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        // Create required system assets (CASH and SPY) for fund operations
-        Asset::factory()->create([
-            'name' => 'CASH',
-            'type' => 'CSH',
-            'source' => 'SYSTEM',
-        ]);
+        // Create required system assets (CASH and SPY) for fund operations - use firstOrCreate to avoid duplicates
+        Asset::firstOrCreate(
+            ['name' => 'CASH', 'type' => 'CSH'],
+            ['source' => 'SYSTEM']
+        );
 
-        Asset::factory()->create([
-            'name' => 'SPY',
-            'type' => 'STK',
-            'source' => 'SYSTEM',
-        ]);
+        Asset::firstOrCreate(
+            ['name' => 'SPY', 'type' => 'STK'],
+            ['source' => 'SYSTEM']
+        );
 
         $this->df = new DataFactory();
+        $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
 

@@ -26,38 +26,30 @@ class TradePortfolioControllerExtTest extends TestCase
     {
         parent::setUp();
 
-        // Create CASH asset required by DataFactory
-        Asset::factory()->create([
-            'name' => 'CASH',
-            'type' => 'CSH',
-            'source' => 'MANUAL',
-            'display_group' => 'Cash',
-        ]);
+        // Create CASH asset required by DataFactory - use firstOrCreate to avoid duplicates
+        Asset::firstOrCreate(
+            ['name' => 'CASH', 'type' => 'CSH'],
+            ['source' => 'MANUAL', 'display_group' => 'Cash']
+        );
 
         $this->df = new DataFactory();
         $this->df->createFund();
         $this->df->createUser();
         $this->user = $this->df->user;
 
-        // Create assets for trade portfolio items
-        $asset1 = Asset::factory()->create([
-            'name' => 'AAPL',
-            'type' => 'STK',
-            'source' => 'IB',
-            'display_group' => 'Tech Stocks',
-        ]);
-        $asset2 = Asset::factory()->create([
-            'name' => 'GOOGL',
-            'type' => 'STK',
-            'source' => 'IB',
-            'display_group' => 'Tech Stocks',
-        ]);
-        $asset3 = Asset::factory()->create([
-            'name' => 'MSFT',
-            'type' => 'STK',
-            'source' => 'IB',
-            'display_group' => 'Tech Stocks',
-        ]);
+        // Create assets for trade portfolio items - use firstOrCreate to avoid duplicates
+        $asset1 = Asset::firstOrCreate(
+            ['name' => 'AAPL', 'type' => 'STK'],
+            ['source' => 'IB', 'display_group' => 'Tech Stocks']
+        );
+        $asset2 = Asset::firstOrCreate(
+            ['name' => 'GOOGL', 'type' => 'STK'],
+            ['source' => 'IB', 'display_group' => 'Tech Stocks']
+        );
+        $asset3 = Asset::firstOrCreate(
+            ['name' => 'MSFT', 'type' => 'STK'],
+            ['source' => 'IB', 'display_group' => 'Tech Stocks']
+        );
 
         // Create a trade portfolio for tests that need it
         $this->tradePortfolio = TradePortfolio::factory()

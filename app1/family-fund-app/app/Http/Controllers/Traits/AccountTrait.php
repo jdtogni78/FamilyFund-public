@@ -106,7 +106,7 @@ trait AccountTrait
         $arr['cash'] = $api->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
         // Add trade portfolios from the fund's portfolio
-        $portfolio = $account->fund->portfolios;
+        $portfolio = $account->fund->portfolio();
         $arr['tradePortfolios'] = $portfolio ? $portfolio->tradePortfolios()->with('tradePortfolioItems')->orderBy('start_dt')->get() : collect();
 
         // Create a linear regression projection for the next 10 years

@@ -19,6 +19,14 @@ class AssetPriceGapsAPITest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Clear existing asset price data to ensure clean test state
+        \DB::table('asset_prices')->delete();
+
+        // Clear existing holidays to ensure clean test state
+        // Tests will create their own holidays as needed
+        \DB::table('exchange_holidays')->delete();
+
         Carbon::setTestNow('2026-01-16 10:00:00'); // Friday
     }
 

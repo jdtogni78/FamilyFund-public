@@ -23,6 +23,10 @@ class AssetPriceGapServiceTest extends TestCase
         // This is necessary because the service queries ALL asset prices, not filtered by asset
         \DB::table('asset_prices')->delete();
 
+        // Clear existing holidays to ensure clean test state
+        // Tests will create their own holidays as needed
+        \DB::table('exchange_holidays')->delete();
+
         $this->gapService = new AssetPriceGapService();
     }
 

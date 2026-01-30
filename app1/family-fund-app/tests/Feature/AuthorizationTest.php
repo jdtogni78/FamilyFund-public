@@ -37,6 +37,9 @@ class AuthorizationTest extends TestCase
     {
         parent::setUp();
 
+        // Seed permissions (required for permission checks)
+        $this->seed(RolesAndPermissionsSeeder::class);
+
         // Clear Spatie permission cache before each test
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 

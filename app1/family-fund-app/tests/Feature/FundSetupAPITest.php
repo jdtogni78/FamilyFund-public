@@ -33,6 +33,7 @@ class FundSetupAPITest extends TestCase
         parent::setUp();
 
         $this->df = new DataFactory();
+        $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
     }

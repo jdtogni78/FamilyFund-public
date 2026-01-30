@@ -18,6 +18,125 @@ class PortfolioExt extends Portfolio
 {
     use VerboseTrait;
 
+    // Portfolio types
+    const TYPE_BROKERAGE = 'brokerage';
+    const TYPE_401K = '401k';
+    const TYPE_IRA = 'ira';
+    const TYPE_ROTH_IRA = 'roth_ira';
+    const TYPE_PENSION = 'pension';
+    const TYPE_529 = '529';
+    const TYPE_REAL_ESTATE = 'real_estate';
+    const TYPE_VEHICLE = 'vehicle';
+    const TYPE_MORTGAGE = 'mortgage';
+    const TYPE_LOAN = 'loan';
+    const TYPE_CREDIT_CARD = 'credit_card';
+    const TYPE_CHECKING = 'checking';
+    const TYPE_SAVINGS = 'savings';
+
+    // Portfolio categories
+    const CATEGORY_RETIREMENT = 'retirement';
+    const CATEGORY_TAXABLE = 'taxable';
+    const CATEGORY_EDUCATION = 'education';
+    const CATEGORY_LIABILITY = 'liability';
+    const CATEGORY_CASH = 'cash';
+
+    // Type to category mapping
+    const TYPE_CATEGORY_MAP = [
+        self::TYPE_BROKERAGE => self::CATEGORY_TAXABLE,
+        self::TYPE_401K => self::CATEGORY_RETIREMENT,
+        self::TYPE_IRA => self::CATEGORY_RETIREMENT,
+        self::TYPE_ROTH_IRA => self::CATEGORY_RETIREMENT,
+        self::TYPE_PENSION => self::CATEGORY_RETIREMENT,
+        self::TYPE_529 => self::CATEGORY_EDUCATION,
+        self::TYPE_REAL_ESTATE => self::CATEGORY_TAXABLE,
+        self::TYPE_VEHICLE => self::CATEGORY_TAXABLE,
+        self::TYPE_MORTGAGE => self::CATEGORY_LIABILITY,
+        self::TYPE_LOAN => self::CATEGORY_LIABILITY,
+        self::TYPE_CREDIT_CARD => self::CATEGORY_LIABILITY,
+        self::TYPE_CHECKING => self::CATEGORY_CASH,
+        self::TYPE_SAVINGS => self::CATEGORY_CASH,
+    ];
+
+    // Type display labels
+    const TYPE_LABELS = [
+        self::TYPE_BROKERAGE => 'Brokerage',
+        self::TYPE_401K => '401(k)',
+        self::TYPE_IRA => 'IRA',
+        self::TYPE_ROTH_IRA => 'Roth IRA',
+        self::TYPE_PENSION => 'Pension',
+        self::TYPE_529 => '529 Plan',
+        self::TYPE_REAL_ESTATE => 'Real Estate',
+        self::TYPE_VEHICLE => 'Vehicle',
+        self::TYPE_MORTGAGE => 'Mortgage',
+        self::TYPE_LOAN => 'Loan',
+        self::TYPE_CREDIT_CARD => 'Credit Card',
+        self::TYPE_CHECKING => 'Checking',
+        self::TYPE_SAVINGS => 'Savings',
+    ];
+
+    // Category display labels
+    const CATEGORY_LABELS = [
+        self::CATEGORY_RETIREMENT => 'Retirement',
+        self::CATEGORY_TAXABLE => 'Taxable',
+        self::CATEGORY_EDUCATION => 'Education',
+        self::CATEGORY_LIABILITY => 'Liability',
+        self::CATEGORY_CASH => 'Cash',
+    ];
+
+    // Category colors for UI
+    const CATEGORY_COLORS = [
+        self::CATEGORY_RETIREMENT => '#7c3aed',  // purple
+        self::CATEGORY_TAXABLE => '#059669',     // green
+        self::CATEGORY_EDUCATION => '#0284c7',   // blue
+        self::CATEGORY_LIABILITY => '#dc2626',   // red
+        self::CATEGORY_CASH => '#6b7280',        // gray
+    ];
+
+    /**
+     * Get category from type using the mapping.
+     */
+    public static function getCategoryFromType(?string $type): ?string
+    {
+        return self::TYPE_CATEGORY_MAP[$type] ?? null;
+    }
+
+    /**
+     * Get display label for type.
+     */
+    public function getTypeLabel(): string
+    {
+        return self::TYPE_LABELS[$this->type] ?? ucfirst($this->type ?? 'Unknown');
+    }
+
+    /**
+     * Get display label for category.
+     */
+    public function getCategoryLabel(): string
+    {
+        return self::CATEGORY_LABELS[$this->category] ?? ucfirst($this->category ?? 'Unknown');
+    }
+
+    /**
+     * Get color for category.
+     */
+    public function getCategoryColor(): string
+    {
+        return self::CATEGORY_COLORS[$this->category] ?? '#6b7280';
+    }
+
+    /**
+     * Check if this portfolio represents a property (real estate, vehicle, mortgage, loan).
+     */
+    public function isPropertyType(): bool
+    {
+        return in_array($this->type, [
+            self::TYPE_REAL_ESTATE,
+            self::TYPE_VEHICLE,
+            self::TYPE_MORTGAGE,
+            self::TYPE_LOAN,
+        ]);
+    }
+
     public function assetsAsOf($now, $assetId=null): Collection
     {
         $portfolioAssetsRepo = \App::make(PortfolioAssetRepository::class);

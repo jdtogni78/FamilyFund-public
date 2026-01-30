@@ -39,6 +39,8 @@ class PortfolioAPIControllerExt extends AppBaseController
         $arr['value'] = $portfolio->valueAsOf($as_of);  // Raw numeric value
         $arr['source'] = $portfolio->source;
         $arr['display_name'] = $portfolio->display_name;
+        $arr['type'] = $portfolio->type;
+        $arr['category'] = $portfolio->category;
         return $arr;
     }
 

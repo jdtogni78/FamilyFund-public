@@ -285,15 +285,12 @@
                                                         @endforeach
                                                     @else
                                                         @php
-                                                            $source = $port['source'] ?? '';
-                                                            $typeLabel = 'Account';
-                                                            $typeColor = '#6b7280';
-                                                            if (str_contains($source, 'ZILL')) { $typeLabel = 'Real Estate'; $typeColor = '#059669'; }
-                                                            elseif (str_contains($source, 'USBA') || str_contains($source, 'FREE')) { $typeLabel = 'Mortgage'; $typeColor = '#dc2626'; }
-                                                            elseif (str_contains($source, 'VINA')) { $typeLabel = 'Vehicle'; $typeColor = '#7c3aed'; }
-                                                            elseif (str_contains($source, 'CITI') || str_contains($source, 'APPL_CARD')) { $typeLabel = 'Credit Card'; $typeColor = '#ea580c'; }
-                                                            elseif (str_contains($source, 'WELL') || str_contains($source, 'APPL_CASH')) { $typeLabel = 'Banking'; $typeColor = '#0284c7'; }
-                                                            elseif (str_contains($source, 'ESPP') || str_contains($source, 'EQUITY')) { $typeLabel = 'Stock Plan'; $typeColor = '#4f46e5'; }
+                                                            $portType = $port['type'] ?? null;
+                                                            $portCategory = $port['category'] ?? null;
+                                                            $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
+                                                            $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
+                                                            $typeLabel = $typeLabels[$portType] ?? ucfirst($portType ?? 'Account');
+                                                            $typeColor = $categoryColors[$portCategory] ?? '#6b7280';
                                                         @endphp
                                                         <span class="badge" style="background: {{ $typeColor }}; color: white;">
                                                             {{ $typeLabel }}

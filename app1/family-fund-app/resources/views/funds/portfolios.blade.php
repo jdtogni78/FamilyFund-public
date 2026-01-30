@@ -26,14 +26,19 @@
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Source</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
                                             <th>Assets</th>
                                             <th class="text-end">Balance</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                    @php $totalBalance = 0; @endphp
+                                    @php
+                                        $totalBalance = 0;
+                                        $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
+                                        $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
+                                    @endphp
                                     @foreach($portfolios as $portfolio)
                                         @php
                                             $assetCount = $portfolio->portfolioAssets()
@@ -52,6 +57,15 @@
                                                     <br><code class="small">{{ $portfolio->source }}</code>
                                                 @else
                                                     <a href="{{ route('portfolios.show', $portfolio->id) }}"><code>{{ $portfolio->source }}</code></a>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($portfolio->type)
+                                                    <span class="badge" style="background: {{ $categoryColors[$portfolio->category] ?? '#6b7280' }}; color: white;">
+                                                        {{ $typeLabels[$portfolio->type] ?? ucfirst($portfolio->type) }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -86,7 +100,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="table-dark">
-                                            <th colspan="3" class="text-end">Total:</th>
+                                            <th colspan="4" class="text-end">Total:</th>
                                             <th class="text-end">${{ number_format($totalBalance, 2) }}</th>
                                             <th></th>
                                         </tr>

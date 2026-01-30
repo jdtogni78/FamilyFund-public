@@ -64,7 +64,11 @@
         @foreach($aggregatedAssets as $asset)
             <tr>
                 <th scope="row">
-                    {{ $asset['name'] }}
+                    @if(isset($asset['id']))
+                        <a href="{{ route('assets.show', $asset['id']) }}">{{ $asset['name'] }}</a>
+                    @else
+                        {{ $asset['name'] }}
+                    @endif
                 </th>
                 <td>
                     @php
@@ -82,9 +86,9 @@
                 <td>
                     @php
                         $groupName = $asset['group'] ?? 'Unknown';
-                        $groupIndex = crc32($groupName) % 6;
+                        $groupColor = \App\Support\UIColors::byIndex(crc32($groupName));
                     @endphp
-                    <span class="badge badge-group-{{ $groupIndex }}">
+                    <span class="badge" style="background: {{ $groupColor }}; color: white;">
                         {{ $groupName }}
                     </span>
                 </td>

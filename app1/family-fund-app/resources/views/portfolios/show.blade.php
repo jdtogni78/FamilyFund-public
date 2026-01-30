@@ -287,8 +287,9 @@
                             borderWidth: 2,
                             fill: true,
                             tension: 0.3,
-                            pointRadius: 0,
+                            pointRadius: 4,
                             pointHoverRadius: 6,
+                            pointBackgroundColor: '#0d9488',
                             pointHoverBackgroundColor: '#0d9488'
                         }]
                     },
@@ -321,9 +322,12 @@
                                 ticks: {
                                     callback: function(value) {
                                         if (value >= 1000000) {
-                                            return '$' + (value / 1000000).toFixed(1) + 'M';
+                                            return (value / 1000000).toFixed(1) + 'M';
                                         }
-                                        return '$' + (value / 1000).toFixed(0) + 'K';
+                                        if (value >= 1000) {
+                                            return (value / 1000).toFixed(0) + 'K';
+                                        }
+                                        return value;
                                     }
                                 }
                             }

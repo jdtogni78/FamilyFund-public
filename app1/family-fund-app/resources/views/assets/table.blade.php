@@ -3,9 +3,9 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>Source</th>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Data Source</th>
                 <th>Display Group</th>
                 <th>Action</th>
             </tr>
@@ -14,10 +14,19 @@
         @foreach($assets as $asset)
             <tr>
                 <td>{{ $asset->id }}</td>
-                <td>{{ $asset->source }}</td>
-                <td>{{ $asset->name }}</td>
-                <td>{{ $asset->type }}</td>
-                <td>{{ $asset->display_group }}</td>
+                <td><a href="{{ route('assets.show', $asset->id) }}">{{ $asset->name }}</a></td>
+                <td><span class="badge bg-info">{{ $asset->type }}</span></td>
+                <td><span class="badge bg-secondary">{{ $asset->data_source }}</span></td>
+                <td>
+                    @if($asset->display_group)
+                        @php
+                            $groupColor = \App\Support\UIColors::byIndex(crc32($asset->display_group));
+                        @endphp
+                        <span class="badge" style="background: {{ $groupColor }}; color: white;">{{ $asset->display_group }}</span>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
                 <td>
                     <form action="{{ route('assets.destroy', $asset->id) }}" method="POST">
                         @csrf

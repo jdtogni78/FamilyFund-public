@@ -12,6 +12,14 @@
             <p class="mb-0">{{ $asset->source ?: '-' }}</p>
         </div>
 
+        <!-- Data Source Field -->
+        <div class="form-group mb-3">
+            <label class="text-body-secondary"><i class="fa fa-server me-1"></i> Data Source:</label>
+            <p class="mb-0">
+                <span class="badge bg-secondary">{{ $asset->data_source }}</span>
+            </p>
+        </div>
+
         <!-- Type Field -->
         <div class="form-group mb-3">
             <label class="text-body-secondary"><i class="fa fa-tag me-1"></i> Type:</label>
@@ -25,7 +33,16 @@
         <!-- Display Group Field -->
         <div class="form-group mb-3">
             <label class="text-body-secondary"><i class="fa fa-layer-group me-1"></i> Display Group:</label>
-            <p class="mb-0">{{ $asset->display_group ?: '-' }}</p>
+            <p class="mb-0">
+                @if($asset->display_group)
+                    @php
+                        $groupColor = \App\Support\UIColors::byIndex(crc32($asset->display_group));
+                    @endphp
+                    <span class="badge" style="background: {{ $groupColor }}; color: white;">{{ $asset->display_group }}</span>
+                @else
+                    <span class="text-muted">-</span>
+                @endif
+            </p>
         </div>
 
         <!-- Portfolio Assets Count -->

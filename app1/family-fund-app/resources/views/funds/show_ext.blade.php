@@ -363,11 +363,10 @@
                                                     @else
                                                         @php
                                                             $portType = $port['type'] ?? null;
-                                                            $portCategory = $port['category'] ?? null;
                                                             $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
-                                                            $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
+                                                            $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
                                                             $typeLabel = $typeLabels[$portType] ?? ucfirst($portType ?? 'Account');
-                                                            $typeColor = $categoryColors[$portCategory] ?? '#6b7280';
+                                                            $typeColor = $typeColors[$portType] ?? '#6b7280';
                                                         @endphp
                                                         <span class="badge" style="background: {{ $typeColor }}; color: white;">
                                                             {{ $typeLabel }}

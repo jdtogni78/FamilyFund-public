@@ -13,7 +13,7 @@
         <tbody>
         @foreach($portfolios as $portfolio)
             @php
-                $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
+                $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
                 $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
                 $categoryLabels = \App\Models\PortfolioExt::CATEGORY_LABELS;
             @endphp
@@ -36,7 +36,7 @@
                 </td>
                 <td>
                     @if($portfolio->type)
-                        <span class="badge" style="background: {{ $categoryColors[$portfolio->category] ?? '#6b7280' }}; color: white;">
+                        <span class="badge" style="background: {{ $typeColors[$portfolio->type] ?? '#6b7280' }}; color: white;">
                             {{ $typeLabels[$portfolio->type] ?? ucfirst($portfolio->type) }}
                         </span>
                     @else

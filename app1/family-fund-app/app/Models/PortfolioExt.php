@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Repositories\PortfolioAssetRepository;
 use App\Repositories\TradePortfolioRepository;
+use App\Support\UIColors;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -83,13 +84,30 @@ class PortfolioExt extends Portfolio
         self::CATEGORY_CASH => 'Cash',
     ];
 
-    // Category colors for UI
+    // Category colors for UI (uses App\Support\UIColors)
     const CATEGORY_COLORS = [
-        self::CATEGORY_RETIREMENT => '#7c3aed',  // purple
-        self::CATEGORY_TAXABLE => '#059669',     // green
-        self::CATEGORY_EDUCATION => '#0284c7',   // blue
-        self::CATEGORY_LIABILITY => '#dc2626',   // red
-        self::CATEGORY_CASH => '#6b7280',        // gray
+        self::CATEGORY_RETIREMENT => UIColors::VIOLET,
+        self::CATEGORY_TAXABLE => UIColors::EMERALD,
+        self::CATEGORY_EDUCATION => UIColors::SKY,
+        self::CATEGORY_LIABILITY => UIColors::RED,
+        self::CATEGORY_CASH => UIColors::GRAY,
+    ];
+
+    // Type colors for UI (distinct color per type)
+    const TYPE_COLORS = [
+        self::TYPE_BROKERAGE => UIColors::EMERALD,
+        self::TYPE_401K => UIColors::VIOLET,
+        self::TYPE_IRA => UIColors::PURPLE,
+        self::TYPE_ROTH_IRA => UIColors::PINK,
+        self::TYPE_PENSION => UIColors::BLUE,
+        self::TYPE_529 => UIColors::SKY,
+        self::TYPE_REAL_ESTATE => UIColors::TEAL,
+        self::TYPE_VEHICLE => UIColors::LIME,
+        self::TYPE_MORTGAGE => UIColors::RED,
+        self::TYPE_LOAN => UIColors::ORANGE,
+        self::TYPE_CREDIT_CARD => UIColors::AMBER,
+        self::TYPE_CHECKING => UIColors::GRAY,
+        self::TYPE_SAVINGS => UIColors::SLATE,
     ];
 
     /**

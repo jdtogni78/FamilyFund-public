@@ -58,7 +58,13 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
     {
         $input = $request->all();
 
-        $assetPrice = $this->insertHistorical(null, $input['asset_id'], $input['start_dt'], $input['price'], 'price');
+        // Convert start_dt to Carbon if it's a string
+        $timestamp = $input['start_dt'];
+        if (is_string($timestamp)) {
+            $timestamp = \Carbon\Carbon::parse($timestamp);
+        }
+
+        $assetPrice = $this->insertHistorical(null, $input['asset_id'], $timestamp, $input['price'], 'price');
 
         return $this->sendResponse(new AssetPriceResource($assetPrice), 'Asset Price saved successfully');
     }

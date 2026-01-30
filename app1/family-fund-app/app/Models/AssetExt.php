@@ -15,11 +15,51 @@ class AssetExt extends Asset
     public static $rules = [
         'name' => 'required|string|max:128',
         'type' => 'required|[a-zA-Z][a-zA-Z]+|max:20',
-        'source' => 'required|[a-zA-Z][a-zA-Z]+|max:30',
+        'source' => 'nullable|[a-zA-Z][a-zA-Z]+|max:30',
+        'data_source' => 'required|string|max:30',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
+
+    /**
+     * Map a portfolio source to its data source.
+     * Data sources represent where price data comes from (IB, MANUAL, etc.)
+     * Portfolio sources are identifiers like 'FFIB', 'MONARCH_FIDE_XXXX', etc.
+     */
+    public static function getDataSourceForPortfolio(string $portfolioSource): string
+    {
+        // Cash is always manual
+        if ($portfolioSource === 'CASH') {
+            return 'MANUAL';
+        }
+
+        // IB sources: *IB, MONARCH_*
+        if (str_ends_with($portfolioSource, 'IB') || str_starts_with($portfolioSource, 'MONARCH_')) {
+            return 'IB';
+        }
+
+        // Default to IB for now
+        return 'IB';
+    }
+
+    /**
+     * Find or create an asset by data_source, name, and type.
+     * This is the preferred method for looking up assets to avoid duplicates.
+     */
+    public static function findOrCreateByDataSource(string $name, string $type, string $dataSource, ?string $source = null): AssetExt
+    {
+        return self::firstOrCreate(
+            [
+                'data_source' => $dataSource,
+                'name' => $name,
+                'type' => $type,
+            ],
+            [
+                'source' => $source, // Keep for backward compatibility
+            ]
+        );
+    }
 
     public static function assetMap() {
         $assets = AssetExt::all();

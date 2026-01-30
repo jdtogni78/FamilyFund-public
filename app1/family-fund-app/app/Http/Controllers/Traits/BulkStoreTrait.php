@@ -54,7 +54,14 @@ trait BulkStoreTrait
                 unset($input['source']);
                 $asset = Asset::orWhere($input)->firstOrFail();
             } else {
-                $asset = AssetExt::firstOrCreate($input);
+                // Use data_source for asset lookup to avoid duplicates
+                $dataSource = AssetExt::getDataSourceForPortfolio($source);
+                $asset = AssetExt::findOrCreateByDataSource(
+                    $input['name'],
+                    $input['type'],
+                    $dataSource,
+                    $source // Keep original source for backward compat
+                );
             }
             $this->insertHistorical($source, $asset->id, $timestamp, $symbol[$field], $field);
         }

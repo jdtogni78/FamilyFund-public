@@ -18,6 +18,7 @@ class AssetPriceOverlapTest extends TestCase
 
     protected DataFactory $df;
     protected string $source;
+    protected string $dataSource;
 
     protected function setUp(): void
     {
@@ -25,6 +26,7 @@ class AssetPriceOverlapTest extends TestCase
         $this->df = new DataFactory();
         $this->df->createFund();
         $this->source = $this->df->portfolio->source;
+        $this->dataSource = AssetExt::getDataSourceForPortfolio($this->source);
     }
 
     /**
@@ -46,7 +48,7 @@ class AssetPriceOverlapTest extends TestCase
             'timestamp' => '2025-12-30 10:00:00',
             'symbols' => [
                 [
-                    'name' => 'SOXL',
+                    'name' => 'TEST_SOXL',
                     'type' => 'STK',
                     'price' => '60.50',
                 ],
@@ -55,9 +57,9 @@ class AssetPriceOverlapTest extends TestCase
 
         $response1->assertStatus(200);
 
-        // Get the created asset
-        $asset = AssetExt::where('name', 'SOXL')
-            ->where('source', $this->source)
+        // Get the created asset (now keyed by data_source, not source)
+        $asset = AssetExt::where('name', 'TEST_SOXL')
+            ->where('data_source', $this->dataSource)
             ->firstOrFail();
 
         // Verify initial record
@@ -73,7 +75,7 @@ class AssetPriceOverlapTest extends TestCase
             'timestamp' => '2026-01-17 10:00:00',
             'symbols' => [
                 [
-                    'name' => 'SOXL',
+                    'name' => 'TEST_SOXL',
                     'type' => 'STK',
                     'price' => '60.50', // Same price
                 ],
@@ -94,7 +96,7 @@ class AssetPriceOverlapTest extends TestCase
             'timestamp' => '2025-12-31 10:00:00',
             'symbols' => [
                 [
-                    'name' => 'SOXL',
+                    'name' => 'TEST_SOXL',
                     'type' => 'STK',
                     'price' => '60.50', // Same price
                 ],
@@ -113,7 +115,7 @@ class AssetPriceOverlapTest extends TestCase
             'timestamp' => '2026-01-02 10:00:00',
             'symbols' => [
                 [
-                    'name' => 'SOXL',
+                    'name' => 'TEST_SOXL',
                     'type' => 'STK',
                     'price' => '60.50', // Same price
                 ],
@@ -171,20 +173,20 @@ class AssetPriceOverlapTest extends TestCase
             'source' => $this->source,
             'timestamp' => '2025-12-30 10:00:00',
             'symbols' => [
-                ['name' => 'TECL', 'type' => 'STK', 'price' => '50.00'],
+                ['name' => 'TEST_TECL', 'type' => 'STK', 'price' => '50.00'],
             ],
         ]);
 
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'TECL')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'TEST_TECL')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Update with different price
         $response2 = $this->json('POST', '/api/asset_prices_bulk_update', [
             'source' => $this->source,
             'timestamp' => '2026-01-10 10:00:00',
             'symbols' => [
-                ['name' => 'TECL', 'type' => 'STK', 'price' => '55.00'], // Price changed
+                ['name' => 'TEST_TECL', 'type' => 'STK', 'price' => '55.00'], // Price changed
             ],
         ]);
 
@@ -230,7 +232,7 @@ class AssetPriceOverlapTest extends TestCase
         ]);
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'UPRO')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'UPRO')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Day 6: Same price (no gap detection yet, simulating daily run)
         $response2 = $this->json('POST', '/api/asset_prices_bulk_update', [
@@ -324,7 +326,7 @@ class AssetPriceOverlapTest extends TestCase
         ]);
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'TQQQ')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'TQQQ')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Verify initial record spans to 9999-12-31
         $prices = AssetPrice::where('asset_id', $asset->id)->get();
@@ -403,7 +405,7 @@ class AssetPriceOverlapTest extends TestCase
         ]);
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'FNGU')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'FNGU')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Try to insert EXACT same timestamp with SAME price - should be idempotent
         $response2 = $this->json('POST', '/api/asset_prices_bulk_update', [
@@ -472,7 +474,7 @@ class AssetPriceOverlapTest extends TestCase
         ]);
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'PROD_SOXL')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'PROD_SOXL')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Check initial state - should be wide range to 9999-12-31
         $prices = AssetPrice::where('asset_id', $asset->id)->orderBy('start_dt')->get();
@@ -557,7 +559,7 @@ class AssetPriceOverlapTest extends TestCase
         ]);
         $response1->assertStatus(200);
 
-        $asset = AssetExt::where('name', 'MULTI_SOXL')->where('source', $this->source)->firstOrFail();
+        $asset = AssetExt::where('name', 'MULTI_SOXL')->where('data_source', $this->dataSource)->firstOrFail();
 
         // Portfolio 2 inserts EXACT same timestamp and price
         // (simulating multiple portfolios processing same date)

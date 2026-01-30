@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Database\Eloquent\Collection $assetPrices
  * @property \Illuminate\Database\Eloquent\Collection $portfolioAssets
  * @property string $source
+ * @property string $data_source
  * @property string $name
  * @property string $type
  * @property string $display_group
@@ -37,6 +38,7 @@ class Asset extends Model
 
     public $fillable = [
         'source',
+        'data_source',
         'name',
         'type',
         'display_group'
@@ -50,6 +52,7 @@ class Asset extends Model
     protected $casts = [
         'id' => 'integer',
         'source' => 'string',
+        'data_source' => 'string',
         'name' => 'string',
         'type' => 'string',
         'display_group' => 'string'
@@ -63,7 +66,8 @@ class Asset extends Model
     public static $rules = [
         'name' => 'required|string|max:128',
         'type' => 'required|regex:/[a-zA-Z][a-zA-Z]+/|max:20',
-        'source' => 'required|regex:/[a-zA-Z][a-zA-Z]+/|max:50',
+        'source' => 'nullable|regex:/[a-zA-Z][a-zA-Z]+/|max:50',
+        'data_source' => 'required|string|max:30',
         'display_group' => 'nullable|string|max:50',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',

@@ -73,7 +73,7 @@
                             'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
                             'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
                         ];
-                        $colors = $typeColors[$asset['type']] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $asset['type']];
+                        $colors = $typeColors[$asset['type']] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $asset['type']];
                     @endphp
                     <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
                         {{ $colors['label'] }}
@@ -81,15 +81,10 @@
                 </td>
                 <td>
                     @php
-                        $groupColors = [
-                            'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
-                            'Stability' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'],
-                            'Crypto' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
-                        ];
                         $groupName = $asset['group'] ?? 'Unknown';
-                        $groupStyle = $groupColors[$groupName] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'];
+                        $groupIndex = crc32($groupName) % 6;
                     @endphp
-                    <span class="badge" style="background: {{ $groupStyle['bg'] }}; color: {{ $groupStyle['text'] }}; border: 1px solid {{ $groupStyle['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
+                    <span class="badge badge-group-{{ $groupIndex }}">
                         {{ $groupName }}
                     </span>
                 </td>

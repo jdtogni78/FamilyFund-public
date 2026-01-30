@@ -561,4 +561,42 @@ class OperationsController extends AppBaseController
 
         return redirect(route('operations.index'));
     }
+
+    /**
+     * Validate all portfolio balances
+     */
+    public function validatePortfolioBalances(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $asOf = $request->get('as_of', now()->format('Y-m-d'));
+        $threshold = floatval($request->get('threshold', 5.0));
+
+        $results = \App\Models\PortfolioExt::validateAllBalances($asOf, $threshold);
+
+        $portfolioCount = count($results['portfolios']);
+        $errorCount = collect($results['portfolios'])->where('is_valid', false)->count();
+
+        OperationLog::log(
+            'VALIDATE_PORTFOLIO_BALANCES',
+            $results['has_errors'] ? OperationLog::RESULT_WARNING : OperationLog::RESULT_SUCCESS,
+            "Validated $portfolioCount portfolios. $errorCount mismatches found (threshold: {$threshold}%)."
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json($results);
+        }
+
+        if ($results['has_errors']) {
+            Flash::warning("Found $errorCount portfolio(s) with balance mismatches exceeding {$threshold}%.");
+        } elseif ($portfolioCount === 0) {
+            Flash::info("No portfolios with set balances found for $asOf.");
+        } else {
+            Flash::success("All $portfolioCount portfolio balances are valid (within {$threshold}% threshold).");
+        }
+
+        return redirect(route('operations.index'))->with('portfolio_validation', $results);
+    }
 }

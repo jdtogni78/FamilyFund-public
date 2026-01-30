@@ -38,6 +38,7 @@ Route::get('portfolios/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\Portfoli
 Route::post('asset_prices_bulk_update', [AssetPriceAPIControllerExt::class, 'bulkStore']);
 Route::get('asset_prices/gaps', [AssetPriceAPIControllerExt::class, 'gaps']);
 Route::post('portfolio_assets_bulk_update', [PortfolioAssetAPIControllerExt::class, 'bulkStore']);
+Route::post('portfolio_balances_bulk_update', [App\Http\Controllers\API\PortfolioBalanceAPIController::class, 'bulkUpdate']);
 
 Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\FundAPIControllerExt@showAsOf');
 Route::get('funds/{id}/performance_as_of/{as_of}', 'App\Http\Controllers\APIv1\FundAPIControllerExt@showPerformanceAsOf');

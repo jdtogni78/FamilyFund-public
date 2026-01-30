@@ -276,12 +276,29 @@
                                                 <td class="text-end" data-order="{{ $portValue }}">${{ number_format($portValue, 2) }}</td>
                                                 <td class="text-end" data-order="{{ $portPct }}">{{ number_format($portPct, 1) }}%</td>
                                                 <td>
-                                                    @foreach($port['assets'] ?? [] as $asset)
-                                                        @php $badgeColor = $symbolColorMap[$asset['name']] ?? '#6b7280'; @endphp
-                                                        <span class="badge me-1" style="background: {{ $badgeColor }}; color: white;" title="${{ number_format($asset['value'] ?? 0, 2) }}">
-                                                            {{ $asset['name'] }}: ${{ number_format($asset['value'] ?? 0, 0) }}
+                                                    @if(count($port['assets'] ?? []) > 0)
+                                                        @foreach($port['assets'] as $asset)
+                                                            @php $badgeColor = $symbolColorMap[$asset['name']] ?? '#6b7280'; @endphp
+                                                            <span class="badge me-1" style="background: {{ $badgeColor }}; color: white;" title="${{ number_format($asset['value'] ?? 0, 2) }}">
+                                                                {{ $asset['name'] }}: ${{ number_format($asset['value'] ?? 0, 0) }}
+                                                            </span>
+                                                        @endforeach
+                                                    @else
+                                                        @php
+                                                            $source = $port['source'] ?? '';
+                                                            $typeLabel = 'Account';
+                                                            $typeColor = '#6b7280';
+                                                            if (str_contains($source, 'ZILL')) { $typeLabel = 'Real Estate'; $typeColor = '#059669'; }
+                                                            elseif (str_contains($source, 'USBA') || str_contains($source, 'FREE')) { $typeLabel = 'Mortgage'; $typeColor = '#dc2626'; }
+                                                            elseif (str_contains($source, 'VINA')) { $typeLabel = 'Vehicle'; $typeColor = '#7c3aed'; }
+                                                            elseif (str_contains($source, 'CITI') || str_contains($source, 'APPL_CARD')) { $typeLabel = 'Credit Card'; $typeColor = '#ea580c'; }
+                                                            elseif (str_contains($source, 'WELL') || str_contains($source, 'APPL_CASH')) { $typeLabel = 'Banking'; $typeColor = '#0284c7'; }
+                                                            elseif (str_contains($source, 'ESPP') || str_contains($source, 'EQUITY')) { $typeLabel = 'Stock Plan'; $typeColor = '#4f46e5'; }
+                                                        @endphp
+                                                        <span class="badge" style="background: {{ $typeColor }}; color: white;">
+                                                            {{ $typeLabel }}
                                                         </span>
-                                                    @endforeach
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach

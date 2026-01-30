@@ -70,13 +70,28 @@ class PortfolioExt extends Portfolio
     }
 
     /**
-     * @param $now
-     * @param bool $verbose
+     * Get the set balance for a specific date, if one exists.
+     * Uses start_dt <= date AND end_dt > date (end_dt is exclusive).
+     *
+     * @param string $date
+     * @return PortfolioBalance|null
+     */
+    public function balanceAsOf($date)
+    {
+        return $this->portfolioBalances()
+            ->whereDate('start_dt', '<=', $date)
+            ->whereDate('end_dt', '>', $date)
+            ->first();
+    }
+
+    /**
+     * Calculate portfolio value from assets (positions * prices).
+     *
+     * @param string $now
      * @return float
      */
-    public function valueAsOf($now): float
+    public function calculateValueFromAssets($now): float
     {
-//        Log::debug("port value $now");
         $portfolioAssets = $this->assetsAsOf($now);
 
         $totalValue = 0;
@@ -102,7 +117,50 @@ class PortfolioExt extends Portfolio
                 # TODO printf("No price for $asset_id\n");
             }
         }
-        // $totalValue = round($totalValue,4);
+        return $totalValue;
+    }
+
+    /**
+     * Get portfolio value as of a date.
+     * Uses set balance if available, otherwise calculates from assets.
+     *
+     * @param string $now Date string
+     * @param bool $validate If true, returns validation info comparing set vs calculated
+     * @return float|array Float value normally, or array with validation info if $validate=true
+     */
+    public function valueAsOf($now, bool $validate = false)
+    {
+        $setBalance = $this->balanceAsOf($now);
+        $setBalanceValue = $setBalance ? (float) $setBalance->balance : null;
+
+        if ($validate) {
+            $calculatedValue = $this->calculateValueFromAssets($now);
+            $difference = $setBalanceValue !== null ? $setBalanceValue - $calculatedValue : null;
+            $percentDiff = ($setBalanceValue !== null && $calculatedValue > 0)
+                ? (($setBalanceValue - $calculatedValue) / $calculatedValue) * 100
+                : null;
+
+            return [
+                'value' => $setBalanceValue ?? $calculatedValue,
+                'set_balance' => $setBalanceValue,
+                'calculated' => $calculatedValue,
+                'difference' => $difference,
+                'percent_diff' => $percentDiff,
+                'has_set_balance' => $setBalanceValue !== null,
+                'is_valid' => $difference === null || abs($percentDiff) < 5.0, // 5% threshold
+            ];
+        }
+
+        // Normal mode: return set balance if available, otherwise calculated
+        if ($setBalanceValue !== null) {
+            $this->debug('id '.$this->id);
+            $this->debug('asOf '.$now);
+            $this->debug('using set balance '.$setBalanceValue);
+            return $setBalanceValue;
+        }
+
+        $totalValue = $this->calculateValueFromAssets($now);
+
         $this->debug('id '.$this->id);
         $this->debug('asOf '.$now);
         $this->debug('totalvalue '.$totalValue);
@@ -141,5 +199,51 @@ class PortfolioExt extends Portfolio
         $from = $year.'-01-01';
         $to = ($year+1).'-01-01';
         return $this->periodPerformance($from, $to);
+    }
+
+    /**
+     * Validate all portfolio balances against calculated values.
+     *
+     * @param string|null $asOf Date to validate (defaults to today)
+     * @param float $threshold Percentage difference threshold (default 5%)
+     * @return array Validation results for all portfolios with set balances
+     */
+    public static function validateAllBalances(?string $asOf = null, float $threshold = 5.0): array
+    {
+        $asOf = $asOf ?? date('Y-m-d');
+        $results = [];
+        $hasErrors = false;
+
+        // Get all portfolios that have balances for the given date
+        $portfolioIds = PortfolioBalance::whereDate('start_dt', '<=', $asOf)
+            ->whereDate('end_dt', '>', $asOf)
+            ->pluck('portfolio_id')
+            ->unique();
+
+        foreach ($portfolioIds as $portfolioId) {
+            $portfolio = self::find($portfolioId);
+            if (!$portfolio) continue;
+
+            $validation = $portfolio->valueAsOf($asOf, true);
+            $validation['portfolio_id'] = $portfolioId;
+            $validation['source'] = $portfolio->source;
+            $validation['display_name'] = $portfolio->display_name;
+            $validation['fund_name'] = $portfolio->fund?->name;
+
+            // Check against threshold
+            if ($validation['percent_diff'] !== null && abs($validation['percent_diff']) >= $threshold) {
+                $validation['is_valid'] = false;
+                $hasErrors = true;
+            }
+
+            $results[] = $validation;
+        }
+
+        return [
+            'as_of' => $asOf,
+            'threshold' => $threshold,
+            'has_errors' => $hasErrors,
+            'portfolios' => $results,
+        ];
     }
 }

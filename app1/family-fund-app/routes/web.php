@@ -122,6 +122,8 @@ Route::middleware('auth')->group(function () {
         ->name('operations.queue_flush');
     Route::post('operations/send-test-email', 'App\Http\Controllers\WebV1\OperationsController@sendTestEmail')
         ->name('operations.send_test_email');
+    Route::get('operations/validate-portfolio-balances', 'App\Http\Controllers\WebV1\OperationsController@validatePortfolioBalances')
+        ->name('operations.validate_portfolio_balances');
 
     // Exchange Holidays (admin only - checked in controller)
     Route::get('exchange-holidays', 'App\Http\Controllers\WebV1\ExchangeHolidayController@index')

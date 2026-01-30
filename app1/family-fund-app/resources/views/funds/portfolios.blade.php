@@ -28,28 +28,42 @@
                                             <th>ID</th>
                                             <th>Source</th>
                                             <th>Assets</th>
+                                            <th class="text-end">Balance</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    @php $totalBalance = 0; @endphp
                                     @foreach($portfolios as $portfolio)
                                         @php
                                             $assetCount = $portfolio->portfolioAssets()
                                                 ->where('end_dt', '>=', now()->format('Y-m-d'))
                                                 ->count();
+                                            $latestBalance = $portfolio->portfolioBalances()
+                                                ->orderBy('start_dt', 'desc')
+                                                ->first();
+                                            $totalBalance += $latestBalance?->balance ?? 0;
                                         @endphp
                                         <tr>
                                             <td>{{ $portfolio->id }}</td>
                                             <td>
                                                 @if($portfolio->display_name)
-                                                    <strong>{{ $portfolio->display_name }}</strong>
+                                                    <a href="{{ route('portfolios.show', $portfolio->id) }}"><strong>{{ $portfolio->display_name }}</strong></a>
                                                     <br><code class="small">{{ $portfolio->source }}</code>
                                                 @else
-                                                    <code>{{ $portfolio->source }}</code>
+                                                    <a href="{{ route('portfolios.show', $portfolio->id) }}"><code>{{ $portfolio->source }}</code></a>
                                                 @endif
                                             </td>
                                             <td>
                                                 <span class="badge bg-secondary">{{ $assetCount }}</span>
+                                            </td>
+                                            <td class="text-end" data-order="{{ $latestBalance?->balance ?? 0 }}">
+                                                @if($latestBalance)
+                                                    <strong>${{ number_format($latestBalance->balance, 2) }}</strong>
+                                                    <br><span class="text-muted small">{{ $latestBalance->start_dt->format('Y-m-d') }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="btn-group">
@@ -70,6 +84,13 @@
                                         </tr>
                                     @endforeach
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="table-dark">
+                                            <th colspan="3" class="text-end">Total:</th>
+                                            <th class="text-end">${{ number_format($totalBalance, 2) }}</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>

@@ -7,7 +7,7 @@
         'Growth' => '#16a34a',
         'Stability' => '#2563eb',
         'Crypto' => '#d97706',
-        'Other' => '#64748b',
+        'Other' => '#9333ea',
     ];
 
     // Get cash asset's group
@@ -100,7 +100,7 @@ $(document).ready(function() {
             'Growth': '#16a34a',
             'Stability': '#2563eb',
             'Crypto': '#d97706',
-            'Other': '#64748b',
+            'Other': '#9333ea',
         };
 
         const groupOrder = ['Growth', 'Stability', 'Crypto', 'Other'];

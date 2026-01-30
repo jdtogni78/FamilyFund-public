@@ -9,13 +9,16 @@
     $cashGroup = $cashAsset->display_group ?? 'Stability';
     $cashPct = $tradePortfolio->cash_target * 100;
 
-    // Group colors
-    $groupColors = [
-        'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
-        'Stability' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'],
-        'Crypto' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
-        'default' => ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'],
+    // Group color palette (indexed by hash for consistent colors)
+    $groupPalette = [
+        ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'], // green
+        ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'], // blue
+        ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'], // amber
+        ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce'], // purple
+        ['bg' => '#ffe4e6', 'border' => '#e11d48', 'text' => '#be123c'], // rose
+        ['bg' => '#ccfbf1', 'border' => '#14b8a6', 'text' => '#0f766e'], // teal
     ];
+    $getGroupColors = fn($name) => $groupPalette[crc32($name) % 6];
 
     $groupCount = count($tradePortfolio->groups);
 @endphp
@@ -89,7 +92,7 @@
     <tr>
         @foreach($tradePortfolio->groups as $group => $targetPct)
             @php
-                $colors = $groupColors[$group] ?? $groupColors['default'];
+                $colors = $getGroupColors($group);
                 $items = $groupedItems->get($group, collect());
                 $actualPct = $items->sum('target_share') * 100;
                 // Add cash to the group it belongs to

@@ -60,7 +60,10 @@ trait TransactionTrait
                 $this->sendTransactionConfirmation($api);
             }
         } catch (\Exception $e) {
-            DB::rollback();
+            // Only rollback if we started the transaction (not in nested/test transaction)
+            if (DB::transactionLevel() > 0) {
+                DB::rollback();
+            }
             throw $e;
         }
         return $api;

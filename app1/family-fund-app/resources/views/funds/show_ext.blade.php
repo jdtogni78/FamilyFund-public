@@ -73,6 +73,9 @@
                             @endphp
                             <div class="d-flex flex-wrap" style="gap: 4px;">
                                 <a href="{{ route('funds.index') }}" class="btn btn-sm btn-primary">Back</a>
+                                <a href="{{ route('funds.overview', $api['id']) }}" class="btn btn-sm btn-primary" title="Overview">
+                                    <i class="fa fa-chart-area"></i>
+                                </a>
                                 @if($activeTradePortfolio)
                                 <a href="{{ route('tradePortfolios.rebalance', [$activeTradePortfolio->id]) }}" class="btn btn-sm btn-warning" title="Edit Allocations">
                                     <i class="fa fa-balance-scale"></i>

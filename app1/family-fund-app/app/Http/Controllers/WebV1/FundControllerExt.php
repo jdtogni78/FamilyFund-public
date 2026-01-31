@@ -4,6 +4,7 @@ namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
+use App\Http\Controllers\Traits\OverviewTrait;
 use App\Repositories\FundRepository;
 use App\Repositories\TransactionRepository;
 use Laracasts\Flash\Flash;
@@ -17,6 +18,7 @@ class FundControllerExt extends FundController
 {
     use FundTrait;
     use ChartBaseTrait;
+    use OverviewTrait;
 
     public function __construct(FundRepository $fundRepo, TransactionRepository $transactionRepo)
     {
@@ -157,5 +159,72 @@ class FundControllerExt extends FundController
         return view('funds.portfolios')
             ->with('fund', $fund)
             ->with('portfolios', $portfolios);
+    }
+
+    /**
+     * Display the fund overview (Monarch-inspired).
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function overview($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $asOf = request()->get('as_of', date('Y-m-d'));
+        $period = request()->get('period', '1Y');
+        $groupBy = request()->get('group_by', 'category');
+
+        // Validate period and groupBy
+        if (!in_array(strtoupper($period), self::$validPeriods)) {
+            $period = self::$defaultPeriod;
+        }
+        if (!in_array($groupBy, self::$validGroupBy)) {
+            $groupBy = 'category';
+        }
+
+        $overviewData = $this->createFundOverviewResponse($fund, $asOf, $period, $groupBy);
+
+        return view('funds.overview')
+            ->with('api', $overviewData)
+            ->with('asOf', $asOf)
+            ->with('period', strtoupper($period))
+            ->with('groupBy', $groupBy);
+    }
+
+    /**
+     * Return overview data as JSON for AJAX updates.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function overviewData($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            return response()->json(['error' => 'Fund not found'], 404);
+        }
+
+        $asOf = request()->get('as_of', date('Y-m-d'));
+        $period = request()->get('period', '1Y');
+        $groupBy = request()->get('group_by', 'category');
+
+        // Validate period and groupBy
+        if (!in_array(strtoupper($period), self::$validPeriods)) {
+            $period = self::$defaultPeriod;
+        }
+        if (!in_array($groupBy, self::$validGroupBy)) {
+            $groupBy = 'category';
+        }
+
+        $overviewData = $this->createFundOverviewResponse($fund, $asOf, $period, $groupBy);
+
+        return response()->json($overviewData);
     }
 }

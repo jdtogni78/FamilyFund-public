@@ -132,34 +132,94 @@
                 <td>
                     @php
                         $assets = $data['assets'];
+                        $portfolioValue = abs($value);
                         $assetColors = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c'];
                         $topAssets = array_slice($assets, 0, 3);
                         $remainingAssets = array_slice($assets, 3);
                         $assetsToggleId = 'assets-' . $id . '-' . Str::random(4);
+
+                        // Get active trade portfolio for deviation triggers
+                        $tradePortfolioItems = [];
+                        if (!is_array($portfolio) && method_exists($portfolio, 'tradePortfoliosBetween')) {
+                            $activeTP = $portfolio->tradePortfoliosBetween(now()->subYear()->format('Y-m-d'), now()->format('Y-m-d'))
+                                ->sortByDesc('start_dt')->first();
+                            if ($activeTP) {
+                                foreach ($activeTP->tradePortfolioItems as $item) {
+                                    $tradePortfolioItems[$item->symbol] = [
+                                        'target' => $item->target_share * 100,
+                                        'deviation' => $item->deviation_trigger * 100,
+                                    ];
+                                }
+                            }
+                        }
                     @endphp
                     @if(count($assets) > 0)
+                        <table class="asset-table mb-0">
                         @foreach($topAssets as $idx => $asset)
-                            <span class="badge me-1" style="background: {{ $assetColors[$idx % count($assetColors)] }}; color: white;"
-                                  title="${{ number_format($asset['value'] ?? 0, 2) }}">
-                                {{ $asset['name'] }}
-                            </span>
+                            @php
+                                $assetValue = $asset['value'] ?? 0;
+                                $assetPct = $portfolioValue > 0 ? ($assetValue / $portfolioValue) * 100 : 0;
+                                $assetName = $asset['name'];
+                                $tpInfo = $tradePortfolioItems[$assetName] ?? null;
+                            @endphp
+                            <tr>
+                                <td style="padding: 1px 4px 1px 0;">
+                                    <span class="badge" style="background: {{ $assetColors[$idx % count($assetColors)] }}; color: white;">
+                                        {{ $assetName }}
+                                    </span>
+                                </td>
+                                <td class="text-right" style="padding: 1px 4px; font-size: 0.8rem;">
+                                    {{ number_format($assetPct, 1) }}%
+                                </td>
+                                <td class="text-right" style="padding: 1px 0; font-size: 0.75rem; color: #6b7280;">
+                                    @if($tpInfo)
+                                        <span title="Target: {{ number_format($tpInfo['target'], 1) }}% ± {{ number_format($tpInfo['deviation'], 1) }}%">
+                                            ±{{ number_format($tpInfo['deviation'], 0) }}%
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
                         @endforeach
                         @if(count($remainingAssets) > 0)
-                            <span class="collapse" id="{{ $assetsToggleId }}">
-                                @foreach($remainingAssets as $idx => $asset)
-                                    <span class="badge me-1" style="background: {{ $assetColors[($idx + 3) % count($assetColors)] }}; color: white;"
-                                          title="${{ number_format($asset['value'] ?? 0, 2) }}">
-                                        {{ $asset['name'] }}
-                                    </span>
-                                @endforeach
-                            </span>
-                            <a href="#" class="assets-toggle text-muted small" data-target="{{ $assetsToggleId }}" style="text-decoration: none;">
-                                <span class="expand-text">+{{ count($remainingAssets) }}</span>
-                                <span class="collapse-text" style="display: none;">less</span>
-                            </a>
+                            <tbody class="collapse" id="{{ $assetsToggleId }}">
+                            @foreach($remainingAssets as $idx => $asset)
+                                @php
+                                    $assetValue = $asset['value'] ?? 0;
+                                    $assetPct = $portfolioValue > 0 ? ($assetValue / $portfolioValue) * 100 : 0;
+                                    $assetName = $asset['name'];
+                                    $tpInfo = $tradePortfolioItems[$assetName] ?? null;
+                                @endphp
+                                <tr>
+                                    <td style="padding: 1px 4px 1px 0;">
+                                        <span class="badge" style="background: {{ $assetColors[($idx + 3) % count($assetColors)] }}; color: white;">
+                                            {{ $assetName }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right" style="padding: 1px 4px; font-size: 0.8rem;">
+                                        {{ number_format($assetPct, 1) }}%
+                                    </td>
+                                    <td class="text-right" style="padding: 1px 0; font-size: 0.75rem; color: #6b7280;">
+                                        @if($tpInfo)
+                                            <span title="Target: {{ number_format($tpInfo['target'], 1) }}% ± {{ number_format($tpInfo['deviation'], 1) }}%">
+                                                ±{{ number_format($tpInfo['deviation'], 0) }}%
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                            <tr>
+                                <td colspan="3">
+                                    <a href="#" class="assets-toggle text-muted small" data-target="{{ $assetsToggleId }}" style="text-decoration: none;">
+                                        <span class="expand-text">+{{ count($remainingAssets) }} more</span>
+                                        <span class="collapse-text" style="display: none;">less</span>
+                                    </a>
+                                </td>
+                            </tr>
                         @endif
+                        </table>
                     @else
-                        <span class="badge bg-secondary">-</span>
+                        <span class="text-muted">-</span>
                     @endif
                 </td>
                 @endif
@@ -235,5 +295,9 @@ $(document).ready(function() {
 .assets-toggle { cursor: pointer; }
 .assets-toggle:hover { text-decoration: underline !important; }
 .collapse.show { display: inline !important; }
+tbody.collapse { display: none; }
+tbody.collapse.show { display: table-row-group !important; }
+.asset-table { width: auto; border-collapse: collapse; }
+.asset-table td { white-space: nowrap; }
 </style>
 @endpush

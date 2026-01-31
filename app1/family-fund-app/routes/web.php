@@ -34,6 +34,10 @@ Route::view('profile', 'profile')
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::middleware('auth')->group(function () {
+    Route::get('funds/{id}/overview', 'App\Http\Controllers\WebV1\FundControllerExt@overview')
+        ->name('funds.overview');
+    Route::get('api/funds/{id}/overview-data', 'App\Http\Controllers\WebV1\FundControllerExt@overviewData')
+        ->name('api.funds.overview_data');
     Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showAsOf');
     Route::get('funds/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showPDFAsOf');
     Route::get('funds/{id}/trade_bands', 'App\Http\Controllers\WebV1\FundControllerExt@tradeBands')

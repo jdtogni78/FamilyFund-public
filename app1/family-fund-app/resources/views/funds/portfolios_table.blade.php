@@ -133,16 +133,30 @@
                     @php
                         $assets = $data['assets'];
                         $assetColors = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c'];
+                        $topAssets = array_slice($assets, 0, 3);
+                        $remainingAssets = array_slice($assets, 3);
+                        $assetsToggleId = 'assets-' . $id . '-' . Str::random(4);
                     @endphp
                     @if(count($assets) > 0)
-                        @foreach(array_slice($assets, 0, 3) as $idx => $asset)
+                        @foreach($topAssets as $idx => $asset)
                             <span class="badge me-1" style="background: {{ $assetColors[$idx % count($assetColors)] }}; color: white;"
                                   title="${{ number_format($asset['value'] ?? 0, 2) }}">
                                 {{ $asset['name'] }}
                             </span>
                         @endforeach
-                        @if(count($assets) > 3)
-                            <span class="text-muted small">+{{ count($assets) - 3 }}</span>
+                        @if(count($remainingAssets) > 0)
+                            <span class="collapse" id="{{ $assetsToggleId }}">
+                                @foreach($remainingAssets as $idx => $asset)
+                                    <span class="badge me-1" style="background: {{ $assetColors[($idx + 3) % count($assetColors)] }}; color: white;"
+                                          title="${{ number_format($asset['value'] ?? 0, 2) }}">
+                                        {{ $asset['name'] }}
+                                    </span>
+                                @endforeach
+                            </span>
+                            <a href="#" class="assets-toggle text-muted small" data-target="{{ $assetsToggleId }}" style="text-decoration: none;">
+                                <span class="expand-text">+{{ count($remainingAssets) }}</span>
+                                <span class="collapse-text" style="display: none;">less</span>
+                            </a>
                         @endif
                     @else
                         <span class="badge bg-secondary">-</span>
@@ -196,6 +210,30 @@ $(document).ready(function() {
         searching: true,
         info: true
     });
+
+    // Assets expand/collapse toggle
+    $('.assets-toggle').on('click', function(e) {
+        e.preventDefault();
+        var targetId = $(this).data('target');
+        var $target = $('#' + targetId);
+        var $expandText = $(this).find('.expand-text');
+        var $collapseText = $(this).find('.collapse-text');
+
+        if ($target.hasClass('show')) {
+            $target.removeClass('show');
+            $expandText.show();
+            $collapseText.hide();
+        } else {
+            $target.addClass('show');
+            $expandText.hide();
+            $collapseText.show();
+        }
+    });
 });
 </script>
+<style>
+.assets-toggle { cursor: pointer; }
+.assets-toggle:hover { text-decoration: underline !important; }
+.collapse.show { display: inline !important; }
+</style>
 @endpush

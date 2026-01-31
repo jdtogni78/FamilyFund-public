@@ -9,9 +9,7 @@
             <label class="text-body-secondary"><i class="fa fa-coins me-1"></i> Asset:</label>
             <p class="mb-0">
                 @if($asset)
-                    <a href="{{ route('assets.show', $asset->id) }}" class="fw-bold">
-                        {{ $asset->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('assets.show', $asset->id), 'text' => $asset->name, 'class' => 'fw-bold'])
                     <span class="badge bg-secondary ms-1">{{ $asset->type }}</span>
                 @else
                     <span class="text-body-secondary">ID: {{ $assetPrice->asset_id }}</span>

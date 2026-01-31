@@ -11,9 +11,7 @@
             <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund:</label>
             <p class="mb-0">
                 @if($fund)
-                    <a href="{{ route('funds.show', $fund->id) }}" class="fw-bold">
-                        {{ $fund->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('funds.show', $fund->id), 'text' => $fund->name, 'class' => 'fw-bold'])
                 @else
                     <span class="text-body-secondary">ID: {{ $tradeBandReport->fund_id }}</span>
                 @endif
@@ -39,9 +37,7 @@
             <label class="text-body-secondary"><i class="fa fa-clock me-1"></i> Scheduled Job:</label>
             <p class="mb-0">
                 @if($scheduledJob)
-                    <a href="{{ route('scheduledJobs.show', $scheduledJob->id) }}">
-                        #{{ $scheduledJob->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('scheduledJobs.show', $scheduledJob->id), 'text' => '#' . $scheduledJob->id])
                     @if($scheduledJob->schedule)
                         <span class="text-body-secondary">- {{ $scheduledJob->schedule->descr }}</span>
                     @endif

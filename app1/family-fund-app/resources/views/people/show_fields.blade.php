@@ -27,9 +27,7 @@
             <label class="text-body-secondary"><i class="fa fa-user-shield me-1"></i> Legal Guardian:</label>
             <p class="mb-0">
                 @if($guardian)
-                    <a href="{{ route('people.show', $guardian->id) }}">
-                        {{ $guardian->first_name }} {{ $guardian->last_name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('people.show', $guardian->id), 'text' => $guardian->first_name . ' ' . $guardian->last_name])
                 @else
                     <span class="text-body-secondary">None</span>
                 @endif

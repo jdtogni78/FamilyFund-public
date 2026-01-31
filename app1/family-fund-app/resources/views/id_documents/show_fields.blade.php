@@ -9,9 +9,7 @@
             <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Person:</label>
             <p class="mb-0">
                 @if($person)
-                    <a href="{{ route('people.show', $person->id) }}" class="fw-bold">
-                        {{ $person->first_name }} {{ $person->last_name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('people.show', $person->id), 'text' => $person->first_name . ' ' . $person->last_name, 'class' => 'fw-bold'])
                 @else
                     <span class="text-body-secondary">ID: {{ $idDocument->person_id }}</span>
                 @endif

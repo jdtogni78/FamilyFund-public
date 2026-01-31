@@ -11,9 +11,7 @@
             <label class="text-body-secondary"><i class="fa fa-link me-1"></i> Matching Rule:</label>
             <p class="mb-0">
                 @if($matchingRule)
-                    <a href="{{ route('matchingRules.show', $matchingRule->id) }}" class="fw-bold">
-                        {{ $matchingRule->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('matchingRules.show', $matchingRule->id), 'text' => $matchingRule->name, 'class' => 'fw-bold'])
                     <br><small class="text-body-secondary">
                         {{ number_format($matchingRule->match_percent * 100, 0) }}% match
                     </small>
@@ -28,16 +26,14 @@
             <label class="text-body-secondary"><i class="fa fa-exchange-alt me-1"></i> Matching Transaction:</label>
             <p class="mb-0">
                 @if($transaction)
-                    <a href="{{ route('transactions.show', $transaction->id) }}">
-                        #{{ $transaction->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('transactions.show', $transaction->id), 'text' => '#' . $transaction->id])
                     <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
                     @if($transaction->account)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-user me-1"></i>
-                            <a href="{{ route('accounts.show', $transaction->account_id) }}">{{ $transaction->account->nickname }}</a>
+                            @include('partials.view_link', ['route' => route('accounts.show', $transaction->account_id), 'text' => $transaction->account->nickname])
                         </small>
                     @endif
                 @else
@@ -53,16 +49,14 @@
             <label class="text-body-secondary"><i class="fa fa-reply me-1"></i> Reference Transaction:</label>
             <p class="mb-0">
                 @if($refTransaction)
-                    <a href="{{ route('transactions.show', $refTransaction->id) }}">
-                        #{{ $refTransaction->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('transactions.show', $refTransaction->id), 'text' => '#' . $refTransaction->id])
                     <span class="{{ $refTransaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($refTransaction->value), 2) }}
                     </span>
                     @if($refTransaction->account)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-user me-1"></i>
-                            <a href="{{ route('accounts.show', $refTransaction->account_id) }}">{{ $refTransaction->account->nickname }}</a>
+                            @include('partials.view_link', ['route' => route('accounts.show', $refTransaction->account_id), 'text' => $refTransaction->account->nickname])
                         </small>
                     @endif
                 @else

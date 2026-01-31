@@ -84,9 +84,7 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h5 class="mb-1">
-                            <a href="{{ route('accounts.show', $account->id) }}" class="text-decoration-none">
-                                {{ $account->nickname }}
-                            </a>
+                            @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname])
                         </h5>
                         @if($account->code)
                             <span class="text-muted">Code: {{ $account->code }}</span>
@@ -174,13 +172,13 @@
                     @if($transaction->cashDeposit)
                     <div class="col-md-4">
                         <div class="text-muted small">Cash Deposit</div>
-                        <a href="{{ route('cashDeposits.show', $transaction->cashDeposit->id) }}">#{{ $transaction->cashDeposit->id }}</a>
+                        @include('partials.view_link', ['route' => route('cashDeposits.show', $transaction->cashDeposit->id), 'text' => '#' . $transaction->cashDeposit->id])
                     </div>
                     @endif
                     @if($transaction->depositRequest)
                     <div class="col-md-4">
                         <div class="text-muted small">Deposit Request</div>
-                        <a href="{{ route('depositRequests.show', $transaction->depositRequest->id) }}">#{{ $transaction->depositRequest->id }}</a>
+                        @include('partials.view_link', ['route' => route('depositRequests.show', $transaction->depositRequest->id), 'text' => '#' . $transaction->depositRequest->id])
                     </div>
                     @endif
                     @if($transaction->scheduled_job_id)
@@ -189,7 +187,7 @@
                     @endphp
                     <div class="col-md-4">
                         <div class="text-muted small">Scheduled Job</div>
-                        <a href="{{ route('scheduledJobs.show', $transaction->scheduled_job_id) }}">#{{ $transaction->scheduled_job_id }}</a>
+                        @include('partials.view_link', ['route' => route('scheduledJobs.show', $transaction->scheduled_job_id), 'text' => '#' . $transaction->scheduled_job_id])
                         @if($sj)
                             <span class="badge bg-primary ms-1">{{ \App\Models\ScheduledJobExt::$entityMap[$sj->entity_descr] ?? $sj->entity_descr }}</span>
                             @if($sj->schedule)

@@ -197,6 +197,27 @@
                 </div>
             </div>
 
+            {{-- 4% Rule Retirement Goal Card --}}
+            @if(isset($api['four_pct_goal']))
+                @include('funds.four_pct_goal_card', ['fourPctGoal' => $api['four_pct_goal'], 'fund' => $fund ?? (object)['id' => $api['id']]])
+            @elseif(isset($api['admin']))
+                {{-- Show setup prompt for admins --}}
+                <div class="row mb-4" id="section-four-pct-goal">
+                    <div class="col">
+                        <div class="card" style="border: 2px dashed #9ca3af;">
+                            <div class="card-body text-center py-4">
+                                <i class="fa fa-bullseye fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Set Up 4% Rule Retirement Goal</h5>
+                                <p class="text-muted small mb-3">Track progress toward your retirement target based on the 4% withdrawal rule.</p>
+                                <a href="{{ route('funds.four_pct_goal.edit', $api['id']) }}" class="btn btn-outline-primary">
+                                    <i class="fa fa-plus me-1"></i> Configure Goal
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @php
                 $hasTradePortfolios = $api['tradePortfolios']->count() > 0;
                 $hasForecastData = !empty($api['linear_regression']['predictions']);
@@ -649,6 +670,7 @@
             {{-- Reusable Jump Bar --}}
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-info-circle', 'label' => 'Details'],
+                ['id' => 'section-four-pct-goal', 'icon' => 'fa-bullseye', 'label' => '4% Goal', 'condition' => isset($api['four_pct_goal']) || isset($api['admin'])],
                 ['id' => 'section-category-summary', 'icon' => 'fa-layer-group', 'label' => 'Categories', 'condition' => $hasCategoryData && $hasMultiplePortfolios],
                 ['id' => 'section-type-summary', 'icon' => 'fa-briefcase', 'label' => 'Types', 'condition' => $hasTypeData && $hasMultiplePortfolios],
                 ['id' => 'section-group-summary', 'icon' => 'fa-chart-pie', 'label' => 'Groups', 'condition' => $hasGroupData],

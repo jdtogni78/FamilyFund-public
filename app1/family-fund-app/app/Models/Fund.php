@@ -34,7 +34,9 @@ class Fund extends Model
 
     public $fillable = [
         'name',
-        'goal'
+        'goal',
+        'four_pct_yearly_expenses',
+        'four_pct_net_worth_pct'
     ];
 
     /**
@@ -45,7 +47,9 @@ class Fund extends Model
     protected $casts = [
         'id' => 'integer',
         'name' => 'string',
-        'goal' => 'string'
+        'goal' => 'string',
+        'four_pct_yearly_expenses' => 'decimal:2',
+        'four_pct_net_worth_pct' => 'decimal:2'
     ];
 
     /**

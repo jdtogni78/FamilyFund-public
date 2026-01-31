@@ -5,8 +5,10 @@ namespace App\Http\Controllers\WebV1;
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
 use App\Http\Controllers\Traits\OverviewTrait;
+use App\Models\FundExt;
 use App\Repositories\FundRepository;
 use App\Repositories\TransactionRepository;
+use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
@@ -226,5 +228,64 @@ class FundControllerExt extends FundController
         $overviewData = $this->createFundOverviewResponse($fund, $asOf, $period, $groupBy);
 
         return response()->json($overviewData);
+    }
+
+    /**
+     * Show form to edit 4% rule goal for a fund.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function editFourPctGoal($id)
+    {
+        $fund = FundExt::find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        if (!$this->isAdmin()) {
+            Flash::error('Unauthorized');
+            return redirect(route('funds.show', $id));
+        }
+
+        return view('funds.four_pct_goal_edit')
+            ->with('fund', $fund);
+    }
+
+    /**
+     * Update 4% rule goal for a fund.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return Response
+     */
+    public function updateFourPctGoal(Request $request, $id)
+    {
+        $fund = FundExt::find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        if (!$this->isAdmin()) {
+            Flash::error('Unauthorized');
+            return redirect(route('funds.show', $id));
+        }
+
+        $request->validate([
+            'four_pct_yearly_expenses' => 'nullable|numeric|min:0',
+            'four_pct_net_worth_pct' => 'nullable|numeric|min:1|max:100',
+        ]);
+
+        $fund->update([
+            'four_pct_yearly_expenses' => $request->four_pct_yearly_expenses ?: null,
+            'four_pct_net_worth_pct' => $request->four_pct_net_worth_pct ?: 100,
+        ]);
+
+        Flash::success('4% Rule Goal updated successfully.');
+        return redirect(route('funds.show', $id));
     }
 }

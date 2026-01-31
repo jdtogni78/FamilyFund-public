@@ -183,4 +183,78 @@ class FundExt extends Fund
         $tran = $trans->sortBy('timestamp')->first();
         return $tran;
     }
+
+    /**
+     * Check if fund has a 4% rule goal configured.
+     */
+    public function hasFourPctGoal(): bool
+    {
+        return $this->four_pct_yearly_expenses !== null && $this->four_pct_yearly_expenses > 0;
+    }
+
+    /**
+     * Get the target value for the 4% rule (expenses * 25).
+     */
+    public function fourPctTargetValue(): float
+    {
+        if (!$this->hasFourPctGoal()) {
+            return 0;
+        }
+        return (float) $this->four_pct_yearly_expenses * 25;
+    }
+
+    /**
+     * Get the net worth percentage to use (default 100%).
+     */
+    public function fourPctNetWorthPct(): float
+    {
+        return (float) ($this->four_pct_net_worth_pct ?? 100.00);
+    }
+
+    /**
+     * Get the adjusted fund value based on net worth percentage.
+     */
+    public function fourPctAdjustedValue($asOf): float
+    {
+        $fundValue = $this->valueAsOf($asOf);
+        return $fundValue * ($this->fourPctNetWorthPct() / 100);
+    }
+
+    /**
+     * Get the current 4% yield from adjusted value.
+     */
+    public function fourPctCurrentYield($asOf): float
+    {
+        return $this->fourPctAdjustedValue($asOf) * 0.04;
+    }
+
+    /**
+     * Get complete 4% goal progress data.
+     * Reuses pattern from AccountTrait::getGoalPct()
+     */
+    public function fourPctProgress($asOf): array
+    {
+        if (!$this->hasFourPctGoal()) {
+            return [];
+        }
+
+        $targetValue = $this->fourPctTargetValue();
+        $adjustedValue = $this->fourPctAdjustedValue($asOf);
+        $currentYield = $this->fourPctCurrentYield($asOf);
+        $targetYield = (float) $this->four_pct_yearly_expenses;
+        $netWorthPct = $this->fourPctNetWorthPct();
+
+        // Progress percentage (capped at 100%)
+        $progressPct = $targetValue > 0 ? min(100, ($adjustedValue / $targetValue) * 100) : 0;
+
+        return [
+            'yearly_expenses' => $targetYield,
+            'target_value' => $targetValue,
+            'net_worth_pct' => $netWorthPct,
+            'adjusted_value' => $adjustedValue,
+            'current_yield' => $currentYield,
+            'progress_pct' => $progressPct,
+            'is_reached' => $adjustedValue >= $targetValue,
+        ];
+    }
 }

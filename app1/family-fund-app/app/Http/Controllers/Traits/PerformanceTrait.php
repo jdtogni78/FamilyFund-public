@@ -335,4 +335,65 @@ trait PerformanceTrait
         return $linReg;
     }
 
+    /**
+     * Calculate when a target value will be reached using linear regression.
+     *
+     * @param float $targetValue The target value to reach
+     * @param array $linearRegression The linear regression data (must have 'm' and 'intercept')
+     * @param string $asOf Current as-of date
+     * @return array Target reach data including estimated date, years from now, yearly growth
+     */
+    public function calculateTargetReachDate(float $targetValue, array $linearRegression, string $asOf): array
+    {
+        $slope = $linearRegression['m'] ?? 0;
+        $intercept = $linearRegression['intercept'] ?? 0;
+
+        // If slope is zero or negative, target cannot be reached through growth
+        if ($slope <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => $slope == 0 ? 'no_growth' : 'negative_growth',
+                'yearly_growth' => $slope * 365 * 24 * 3600, // Convert to yearly
+            ];
+        }
+
+        // Solve for timestamp: target_timestamp = (targetValue - intercept) / slope
+        $targetTimestamp = ($targetValue - $intercept) / $slope;
+        $currentTimestamp = strtotime($asOf);
+
+        // Check if already reached
+        if ($targetTimestamp <= $currentTimestamp) {
+            return [
+                'reachable' => true,
+                'already_reached' => true,
+                'yearly_growth' => $slope * 365 * 24 * 3600,
+            ];
+        }
+
+        // Calculate years from now
+        $secondsFromNow = $targetTimestamp - $currentTimestamp;
+        $yearsFromNow = $secondsFromNow / (365 * 24 * 3600);
+
+        // If more than 50 years away, mark as distant
+        if ($yearsFromNow > 50) {
+            return [
+                'reachable' => true,
+                'distant' => true,
+                'years_from_now' => $yearsFromNow,
+                'yearly_growth' => $slope * 365 * 24 * 3600,
+            ];
+        }
+
+        $estimatedDate = date('Y-m-d', (int) $targetTimestamp);
+        $estimatedDateFormatted = date('M Y', (int) $targetTimestamp);
+
+        return [
+            'reachable' => true,
+            'estimated_date' => $estimatedDate,
+            'estimated_date_formatted' => $estimatedDateFormatted,
+            'years_from_now' => round($yearsFromNow, 1),
+            'yearly_growth' => $slope * 365 * 24 * 3600,
+        ];
+    }
+
 }

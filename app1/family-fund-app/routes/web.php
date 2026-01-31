@@ -48,6 +48,10 @@ Route::middleware('auth')->group(function () {
         ->name('funds.show_trade_bands_pdf');
     Route::get('funds/{id}/portfolios', 'App\Http\Controllers\WebV1\FundControllerExt@portfolios')
         ->name('funds.portfolios');
+    Route::get('funds/{id}/four_pct_goal/edit', 'App\Http\Controllers\WebV1\FundControllerExt@editFourPctGoal')
+        ->name('funds.four_pct_goal.edit');
+    Route::put('funds/{id}/four_pct_goal', 'App\Http\Controllers\WebV1\FundControllerExt@updateFourPctGoal')
+        ->name('funds.four_pct_goal.update');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
     Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')
@@ -147,7 +151,7 @@ Route::middleware('auth')->group(function () {
         ->name('emails.show');
 
     Route::resource('accountBalances', App\Http\Controllers\WebV1\AccountBalanceControllerExt::class);
-    Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
+    Route::resource('accountGoals', App\Http\Controllers\WebV1\AccountGoalControllerExt::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);

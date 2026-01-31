@@ -10,3 +10,4 @@
 /.env.stage
 storage/coverage/
 .env.prod
+/public/build/

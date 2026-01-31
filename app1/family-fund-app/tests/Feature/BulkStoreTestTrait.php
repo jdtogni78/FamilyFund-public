@@ -171,18 +171,27 @@ trait BulkStoreTestTrait
 
         $df = new DataFactory();
         $df->createFund();
-        $source = $df->portfolio->source;
-        $this->post['source'] = $source;
+        $source2 = $df->portfolio->source;
+        $this->post['source'] = $source2;
 
-        $this->assertFalse(AssetExt::where('name', $name)
-                ->where('source', $source)->exists());
+        // With data_source deduplication, assets are shared across portfolios
+        // with the same data_source. Both test portfolios map to 'IB' data_source,
+        // so the same asset will be reused.
+        $dataSource = AssetExt::getDataSourceForPortfolio($source2);
 
         $this->postBulkAPI();
 
-        $asset2 = $this->getAsset($name, $source);
-        $this->assertNotNull($asset2, $source);
-        $this->assertCount(1, $this->getChildren($asset2, $source));
+        // Asset should be reused (same data_source), not created new
+        $asset2 = AssetExt::where('name', $name)
+            ->where('data_source', $dataSource)->first();
+        $this->assertNotNull($asset2, "Asset should exist with data_source=$dataSource");
+
+        // Both assets should be the same record (shared across portfolios)
+        $this->assertEquals($asset->id, $asset2->id, "Asset should be reused across portfolios with same data_source");
+
+        // Children (prices/positions) are still tracked per source
         $this->assertCount(1, $this->getChildren($asset, $source1));
+        $this->assertCount(1, $this->getChildren($asset2, $source2));
     }
 
     public function testRemoveSymbol() {

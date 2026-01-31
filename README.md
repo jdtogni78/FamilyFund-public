@@ -302,6 +302,31 @@ You should see:
 Follow the instructions for rootless docker:
 * https://docs.docker.com/engine/security/rootless/
 
+### Optional: Passwordless sudo for deployments
+
+To allow jdtogni to run deployment commands without password prompts, create a sudoers file:
+
+```bash
+sudo visudo -f /etc/sudoers.d/jdtogni-deploy
+```
+
+Add these lines (adjust paths if needed):
+```
+# Deployment chown commands for FamilyFund
+jdtogni ALL=(ALL) NOPASSWD: /bin/chown jdtogni\:jdtogni /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
+jdtogni ALL=(ALL) NOPASSWD: /bin/chown dockeruser\:dockeruser /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
+
+# Admin utilities
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/crontab
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/systemctl
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/journalctl
+```
+
+Set correct permissions:
+```bash
+sudo chmod 440 /etc/sudoers.d/jdtogni-deploy
+```
+
 ### Deploying DSTrader to prod
 
 FFSERVER=REDACTED_LAN_HOST

@@ -4,21 +4,19 @@
     }
 </style>
 
-<div class="row">
-    <!-- Account Field -->
-    <div class="form-group col-md-6 mb-3">
-        <label for="account_id" class="form-label">
-            <i class="fa fa-user me-1"></i> Account <span class="text-danger">*</span>
-        </label>
-        <select name="account_id" id="account_id" class="form-control form-select" required>
-            <option value="">-- Select Account --</option>
-            @foreach($api['accounts'] as $id => $name)
-                <option value="{{ $id }}" {{ (isset($accountReport) && $accountReport->account_id == $id) ? 'selected' : '' }}>{{ $name }}</option>
-            @endforeach
-        </select>
-        <small class="text-body-secondary">Account to generate report for</small>
-    </div>
+<!-- Fund-filtered Account Selector -->
+@php
+    $selectedAccounts = old('account_id', $accountReport->account_id ?? null);
+@endphp
+@include('partials.fund_account_selector', [
+    'selectedAccounts' => $selectedAccounts ? [$selectedAccounts] : [],
+    'multiple' => false,
+    'fieldName' => 'account_id'
+])
 
+<hr class="my-3">
+
+<div class="row">
     <!-- Type Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="type" class="form-label">
@@ -31,9 +29,7 @@
         </select>
         <small class="text-body-secondary">Type of report to generate</small>
     </div>
-</div>
 
-<div class="row">
     <!-- As Of Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="as_of" class="form-label">
@@ -48,8 +44,6 @@
         </div>
         <small class="text-body-secondary">Leave empty or click "Template" to create a scheduling template</small>
     </div>
-
-    <div class="col-md-6"></div>
 </div>
 
 @push('scripts')

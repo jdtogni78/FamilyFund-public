@@ -122,7 +122,7 @@
 
 <!-- Fund-filtered Account Selector -->
 @php
-    $selectedAccounts = old('account_ids', isset($goal) ? $goal->accounts->pluck('id')->toArray() : []);
+    $selectedAccounts = old('account_ids', $api['account_ids'] ?? (isset($goal) ? $goal->accounts->pluck('id')->toArray() : []));
 @endphp
 @include('partials.fund_account_selector', ['selectedAccounts' => $selectedAccounts, 'multiple' => true])
 

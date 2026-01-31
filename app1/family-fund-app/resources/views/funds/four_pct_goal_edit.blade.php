@@ -77,7 +77,7 @@
                                         <span class="input-group-text">%</span>
                                     </div>
                                     <div class="form-text">
-                                        Use 100% for full fund value, or lower for planning scenarios (e.g., 50% for divorce planning).
+                                        Use 100% for full fund value, or lower to reflect your allocation (e.g., 50% if sharing the fund).
                                     </div>
                                 </div>
 

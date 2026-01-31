@@ -105,7 +105,7 @@
                 <div class="mt-3 pt-3 border-top">
                     <small class="text-muted">
                         <i class="fa fa-info-circle me-1"></i>
-                        Using {{ number_format($netWorthPct, 0) }}% of fund value for this calculation (adjusted for planning purposes).
+                        Using {{ number_format($netWorthPct, 0) }}% of fund value for this calculation (reflecting your allocation).
                     </small>
                 </div>
                 @endif

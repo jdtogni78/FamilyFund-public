@@ -39,6 +39,10 @@ class GoalControllerExt extends GoalController
     public function create()
     {
         $api = $this->getApi();
+        // Pre-select account if passed via query parameter
+        if (request()->has('account_id')) {
+            $api['account_ids'] = [(int) request()->get('account_id')];
+        }
         return parent::create()->with('api', $api);
     }
 

@@ -31,20 +31,29 @@ trait TransactionTrait
             DB::beginTransaction();
         }
 
-        $transaction = $this->transactionRepository->create($input);
-        $transaction_data = $this->processTransaction($transaction, $dry_run);
+        try {
+            $transaction = $this->transactionRepository->create($input);
+            $transaction_data = $this->processTransaction($transaction, $dry_run);
 
-        if (!$inTransaction) {
-            // We started the transaction, so we manage commit/rollback
-            if ($dry_run) {
-                DB::rollBack();
-            } else {
-                DB::commit();
+            if (!$inTransaction) {
+                // We started the transaction, so we manage commit/rollback
+                if ($dry_run) {
+                    DB::rollBack();
+                } else {
+                    DB::commit();
+                }
             }
-        }
-        // If we're nested, the outer transaction will handle commit/rollback
+            // If we're nested, the outer transaction will handle commit/rollback
 
-        return $transaction_data;
+            return $transaction_data;
+        } catch (\Exception $e) {
+            if (!$inTransaction) {
+                // We started the transaction, so we rollback on error
+                DB::rollBack();
+            }
+            // If nested, let the outer transaction handle rollback
+            throw $e;
+        }
     }
 
     protected function processTransaction(TransactionExt $transaction, bool $dry_run): array {
@@ -60,10 +69,7 @@ trait TransactionTrait
                 $this->sendTransactionConfirmation($api);
             }
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction (not in nested/test transaction)
-            if (DB::transactionLevel() > 0) {
-                DB::rollback();
-            }
+            // Rollback is handled by createTransaction() - just re-throw
             throw $e;
         }
         return $api;

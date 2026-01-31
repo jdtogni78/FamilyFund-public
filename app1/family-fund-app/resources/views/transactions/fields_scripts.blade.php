@@ -154,6 +154,23 @@
         $('#timestamp').val(today).trigger('change');
     });
 
+    $("#neverBtn").click(function() {
+        $('#timestamp').val('9999-12-31');
+        // Hide account info since this date won't have real data
+        $('#accountInfoPanel').hide();
+        $('#accountPlaceholder').html(
+            '<div class="alert alert-info border mb-0 text-center py-2">' +
+            '<i class="fa fa-infinity me-2"></i>' +
+            '<span>Recurrent template - no specific date</span>' +
+            '</div>'
+        ).show();
+        $('#previewCard').hide();
+    });
+
+    $("#recurrentBtn").click(function() {
+        $('#status').val('S');
+    });
+
     $("#value").on('input change', function() {
         updateSharesCalculation();
     });

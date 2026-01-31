@@ -70,11 +70,14 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Many-to-many relationship with portfolios via pivot table.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      **/
     public function portfolios()
     {
-        return $this->hasMany(\App\Models\PortfolioExt::class, 'fund_id');
+        return $this->belongsToMany(\App\Models\PortfolioExt::class, 'fund_portfolio', 'fund_id', 'portfolio_id')
+            ->withTimestamps();
     }
 
     /**

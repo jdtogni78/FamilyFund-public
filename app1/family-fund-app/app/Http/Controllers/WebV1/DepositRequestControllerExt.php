@@ -9,6 +9,7 @@ use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use App\Models\DepositRequest;
 use App\Models\DepositRequestExt;
 use App\Http\Controllers\DepositRequestController;
 use App\Models\AccountExt;
@@ -17,6 +18,44 @@ use App\Http\Controllers\Traits\AccountSelectorTrait;
 class DepositRequestControllerExt extends DepositRequestController
 {
     use AccountSelectorTrait;
+
+    /**
+     * Display a listing of DepositRequests with filtering.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function index(Request $request)
+    {
+        $query = DepositRequest::with(['account.fund']);
+
+        // Apply filters
+        $filters = [];
+
+        if ($request->filled('fund_id')) {
+            $filters['fund_id'] = $request->fund_id;
+            $query->whereHas('account', function($q) use ($request) {
+                $q->where('fund_id', $request->fund_id);
+            });
+        }
+
+        if ($request->filled('account_id')) {
+            $filters['account_id'] = $request->account_id;
+            $query->where('account_id', $request->account_id);
+        }
+
+        $depositRequests = $query->orderByDesc('id')->get();
+
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['filters' => $filters]
+        );
+
+        return view('deposit_requests.index')
+            ->with('depositRequests', $depositRequests)
+            ->with('api', $api)
+            ->with('filters', $filters);
+    }
 
     public function create()
     {

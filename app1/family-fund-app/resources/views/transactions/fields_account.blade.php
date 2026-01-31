@@ -30,6 +30,9 @@
             <button type="button" class="btn btn-outline-secondary" id="todayBtn" title="Set to today">
                 Today
             </button>
+            <button type="button" class="btn btn-outline-secondary" id="neverBtn" title="Set to 9999-12-31 (no specific date)">
+                <i class="fa fa-infinity"></i>
+            </button>
         </div>
     </div>
 </div>

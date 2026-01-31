@@ -59,8 +59,34 @@ class CashDepositControllerExt extends CashDepositController
 
     public function index(Request $request)
     {
-        $api = $this->getApi();
-        return parent::index($request)->with('api', $api);
+        $query = CashDeposit::with(['account.fund']);
+
+        // Apply filters
+        $filters = [];
+
+        if ($request->filled('fund_id')) {
+            $filters['fund_id'] = $request->fund_id;
+            $query->whereHas('account', function($q) use ($request) {
+                $q->where('fund_id', $request->fund_id);
+            });
+        }
+
+        if ($request->filled('account_id')) {
+            $filters['account_id'] = $request->account_id;
+            $query->where('account_id', $request->account_id);
+        }
+
+        $cashDeposits = $query->orderByDesc('id')->get();
+
+        $api = array_merge(
+            $this->getApi(),
+            ['filters' => $filters]
+        );
+
+        return view('cash_deposits.index')
+            ->with('cashDeposits', $cashDeposits)
+            ->with('api', $api)
+            ->with('filters', $filters);
     }
 
     public function assign($id)

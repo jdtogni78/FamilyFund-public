@@ -1,5 +1,4 @@
 @php
-    $fund = $portfolio->fund;
     $typeColors = \App\Models\PortfolioExt::TYPE_COLORS;
     $typeLabels = \App\Models\PortfolioExt::TYPE_LABELS;
     $categoryColors = \App\Models\PortfolioExt::CATEGORY_COLORS;
@@ -8,17 +7,17 @@
 
 <div class="row">
     <div class="col-md-6">
-        <!-- Fund Field -->
+        <!-- Funds Field -->
         <div class="form-group mb-3">
-            <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund:</label>
+            <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund(s):</label>
             <p class="mb-0">
-                @if($fund)
-                    <a href="{{ route('funds.show', $fund->id) }}" class="fw-bold">
+                @forelse($portfolio->funds as $fund)
+                    <a href="{{ route('funds.show', $fund->id) }}" class="badge bg-primary me-1">
                         {{ $fund->name }}
                     </a>
-                @else
+                @empty
                     <span class="text-body-secondary">N/A</span>
-                @endif
+                @endforelse
             </p>
         </div>
 

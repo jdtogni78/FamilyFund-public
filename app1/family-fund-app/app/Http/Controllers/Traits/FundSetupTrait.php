@@ -54,10 +54,13 @@ trait FundSetupTrait
                 : [$input['portfolio_source']];
 
             foreach ($portfolioSources as $source) {
-                $portfolios[] = PortfolioExt::create([
+                $portfolio = PortfolioExt::create([
                     'fund_id' => $fund->id,
                     'source' => $source,
                 ]);
+                // Add to pivot table for many-to-many relationship
+                $portfolio->funds()->attach($fund->id);
+                $portfolios[] = $portfolio;
             }
 
             // 4. Create initial transaction (if requested)

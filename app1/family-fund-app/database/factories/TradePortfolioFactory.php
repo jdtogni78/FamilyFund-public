@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Fund;
 use App\Models\TradePortfolioExt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,8 +22,13 @@ class TradePortfolioFactory extends Factory
      */
     public function definition()
     {
+        // Create a fund first, which will auto-create a portfolio
+        // This ensures the portfolio has a proper fund association
+        $fund = Fund::factory()->create();
+        $portfolio = $fund->portfolio();
+
         return [
-            'portfolio_id' => PortfolioFactory::new(),
+            'portfolio_id' => $portfolio->id,
             'account_name' => $this->faker->word,
             'tws_query_id' => $this->faker->word,
             'tws_token' => $this->faker->word,

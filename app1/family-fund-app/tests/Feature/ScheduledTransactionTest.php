@@ -156,4 +156,77 @@ class ScheduledTransactionTest extends TestCase
         }
         return $found;
     }
+
+    /**
+     * Test that scheduled jobs with a future start_dt are skipped
+     */
+    public function test_scheduled_job_skipped_before_start_date()
+    {
+        $factory = $this->factory;
+        $today = Carbon::parse('2024-12-15');
+        $futureStart = $today->copy()->addDays(5); // start_dt is 5 days from now
+        $dow = 1; // monday
+
+        list ($schedule, $job, $stran) = $factory->createScheduledTransaction(
+            ScheduleExt::TYPE_DAY_OF_WEEK, $dow, $today, 100);
+
+        // Set start_dt in the future
+        $job->start_dt = $futureStart->toDateString();
+        $job->save();
+
+        // Run scheduler - should skip because start_dt hasn't arrived
+        list($ret, $errors) = $this->scheduleDueJobs($today, ScheduledJobExt::ENTITY_TRANSACTION);
+
+        $this->assertEmpty($ret, 'Job should be skipped when before start_dt');
+        $this->assertEmpty($errors, 'No errors expected');
+    }
+
+    /**
+     * Test that scheduled jobs with a past end_dt are skipped
+     */
+    public function test_scheduled_job_skipped_after_end_date()
+    {
+        $factory = $this->factory;
+        $today = Carbon::parse('2024-12-15');
+        $pastEnd = $today->copy()->subDays(5); // end_dt was 5 days ago
+        $dow = 1; // monday
+
+        list ($schedule, $job, $stran) = $factory->createScheduledTransaction(
+            ScheduleExt::TYPE_DAY_OF_WEEK, $dow, $today, 100);
+
+        // Set end_dt in the past
+        $job->end_dt = $pastEnd->toDateString();
+        $job->save();
+
+        // Run scheduler - should skip because end_dt has passed
+        list($ret, $errors) = $this->scheduleDueJobs($today, ScheduledJobExt::ENTITY_TRANSACTION);
+
+        $this->assertEmpty($ret, 'Job should be skipped when after end_dt');
+        $this->assertEmpty($errors, 'No errors expected');
+    }
+
+    /**
+     * Test that scheduled jobs run when within start_dt and end_dt range
+     */
+    public function test_scheduled_job_runs_within_date_range()
+    {
+        $factory = $this->factory;
+        $today = Carbon::parse('2024-12-16'); // Monday
+        $pastStart = $today->copy()->subDays(10);
+        $futureEnd = $today->copy()->addDays(10);
+        $dow = 1; // monday
+
+        list ($schedule, $job, $stran) = $factory->createScheduledTransaction(
+            ScheduleExt::TYPE_DAY_OF_WEEK, $dow, $today, 100);
+
+        // Set date range that includes today
+        $job->start_dt = $pastStart->toDateString();
+        $job->end_dt = $futureEnd->toDateString();
+        $job->save();
+
+        // Run scheduler - should run because we're within the date range
+        list($ret, $errors) = $this->scheduleDueJobs($today, ScheduledJobExt::ENTITY_TRANSACTION);
+
+        $this->assertNotEmpty($ret, 'Job should run when within date range');
+    }
 }

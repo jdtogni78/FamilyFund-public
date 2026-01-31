@@ -169,6 +169,8 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 
 ## Development Notes
 
+- **NEVER edit code directly on the production server (REDACTED_PROD_HOST)** - always edit locally and deploy
+- Use http://localhost:3000 for testing, not the production URL
 - Share prices calculated from previous day's NAV
 - Quarterly reports generated via queue jobs
 - PDF reports use wkhtmltopdf (installed in container)

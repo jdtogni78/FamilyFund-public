@@ -43,8 +43,21 @@ Trait ScheduledJobTrait
         Log::info('Checking scheduled job: ' . json_encode($schedule->toArray()));
         if ($entityDescrFilter && $schedule->entity_descr != $entityDescrFilter) {
             Log::info('Skip scheduled job ' . $schedule->id . ', entity_descr ' . $schedule->entity_descr . ' does not match filter ' . $entityDescrFilter);
-            return;
+            return [null, null, null];
         }
+
+        // Enforce start_dt: skip if not yet started
+        if ($schedule->start_dt && $asOf->lt(Carbon::parse($schedule->start_dt))) {
+            Log::info('Skip scheduled job ' . $schedule->id . ', start_dt ' . $schedule->start_dt . ' is in the future');
+            return [null, null, null];
+        }
+
+        // Enforce end_dt: skip if already ended
+        if ($schedule->end_dt && $asOf->gt(Carbon::parse($schedule->end_dt))) {
+            Log::info('Skip scheduled job ' . $schedule->id . ', end_dt ' . $schedule->end_dt . ' has passed');
+            return [null, null, null];
+        }
+
         /** @var ScheduledJobExt $schedule */
         // $schedule->verbose = true;
         $shouldRunBy = $schedule->shouldRunBy($asOf);

@@ -15,11 +15,17 @@
                          <strong>Run Info</strong>
                      </div>
                      <div class="card-body">
+                        @if($shouldRunBy)
                         <ul>
                             <li>Today: {{ $shouldRunBy['today']->toDateString() }}</li>
                             <li>Last Run: {{ $shouldRunBy['lastRun']?->toDateString() }}</li>
                             <li>Should Run By: {{ $shouldRunBy['shouldRunBy']->toDateString() }}</li>
                         </ul>
+                        @else
+                        <div class="alert alert-warning">
+                            Job is outside its active date range (check start_dt/end_dt).
+                        </div>
+                        @endif
                      </div>
                  </div>
             </div>

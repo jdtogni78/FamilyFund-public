@@ -14,7 +14,7 @@
         @foreach($assets as $asset)
             <tr>
                 <td>{{ $asset->id }}</td>
-                <td><a href="{{ route('assets.show', $asset->id) }}">{{ $asset->name }}</a></td>
+                <td>@include('partials.view_link', ['route' => route('assets.show', $asset->id), 'text' => $asset->name])</td>
                 <td>
                     @php
                         $typeColors = [

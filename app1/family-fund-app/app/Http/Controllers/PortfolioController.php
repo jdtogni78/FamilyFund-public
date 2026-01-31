@@ -58,9 +58,13 @@ class PortfolioController extends AppBaseController
      */
     public function store(CreatePortfolioRequest $request)
     {
-        $input = $request->all();
+        $input = $request->except('fund_ids');
 
         $portfolio = $this->portfolioRepository->create($input);
+
+        // Sync funds via pivot table
+        $fundIds = $request->input('fund_ids', []);
+        $portfolio->funds()->sync($fundIds);
 
         Flash::success('Portfolio saved successfully.');
 
@@ -131,7 +135,12 @@ class PortfolioController extends AppBaseController
             return redirect(route('portfolios.index'));
         }
 
-        $portfolio = $this->portfolioRepository->update($request->all(), $id);
+        $input = $request->except('fund_ids');
+        $portfolio = $this->portfolioRepository->update($input, $id);
+
+        // Sync funds via pivot table
+        $fundIds = $request->input('fund_ids', []);
+        $portfolio->funds()->sync($fundIds);
 
         Flash::success('Portfolio updated successfully.');
 

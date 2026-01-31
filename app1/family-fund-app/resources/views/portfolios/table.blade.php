@@ -21,16 +21,16 @@
             <tr>
                 <td>{{ $portfolio->id }}</td>
                 <td>
-                    @if($portfolio->fund)
-                        <a href="{{ route('funds.show', $portfolio->fund_id) }}">{{ $portfolio->fund->name }}</a>
-                    @else
-                        <span class="text-muted">N/A</span>
-                    @endif
+                    @forelse($portfolio->funds as $fund)
+                        <a href="{{ route('funds.show', $fund->id) }}" class="badge bg-primary me-1">
+                            {{ $fund->name }}
+                        </a>
+                    @empty
+                        <span class="text-muted">-</span>
+                    @endforelse
                 </td>
                 <td>
-                    <a href="{{ route('portfolios.show', $portfolio->id) }}">
-                        <strong>{{ $portfolio->display_name ?? $portfolio->source }}</strong>
-                    </a>
+                    @include('partials.view_link', ['route' => route('portfolios.show', $portfolio->id), 'text' => $portfolio->display_name ?? $portfolio->source, 'class' => 'fw-bold'])
                     @if($portfolio->display_name)
                         <br><code class="small">{{ $portfolio->source }}</code>
                     @endif

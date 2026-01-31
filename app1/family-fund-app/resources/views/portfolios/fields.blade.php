@@ -5,17 +5,20 @@
 </style>
 
 <div class="row">
-    <!-- Fund Id Field -->
+    <!-- Fund(s) Field -->
     <div class="form-group col-md-6 mb-3">
-        <label for="fund_id" class="form-label">
-            <i class="fa fa-landmark me-1"></i> Fund <span class="text-danger">*</span>
+        <label for="fund_ids" class="form-label">
+            <i class="fa fa-landmark me-1"></i> Fund(s) <span class="text-danger">*</span>
         </label>
-        <select name="fund_id" id="fund_id" class="form-control form-select" required>
+        @php
+            $selectedFundIds = old('fund_ids', isset($portfolio) ? $portfolio->funds->pluck('id')->toArray() : []);
+        @endphp
+        <select name="fund_ids[]" id="fund_ids" class="form-control form-select" multiple required>
             @foreach($api['fundMap'] as $value => $label)
-                <option value="{{ $value }}" {{ ($portfolio->fund_id ?? old('fund_id')) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                <option value="{{ $value }}" {{ in_array($value, $selectedFundIds) ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <small class="text-body-secondary">Fund this portfolio belongs to</small>
+        <small class="text-body-secondary">Hold Ctrl/Cmd to select multiple funds</small>
     </div>
 
     <!-- Source Field -->

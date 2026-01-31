@@ -7,6 +7,16 @@
     <div class="container-fluid">
         <div class="animated fadeIn">
              @include('layouts.flash-messages')
+
+             {{-- Filter Bar --}}
+             @include('partials.index_filter_bar', [
+                 'filterRoute' => 'transactions.index',
+                 'showFund' => true,
+                 'showAccount' => true,
+                 'showMatchingRule' => false,
+                 'showDates' => false,
+             ])
+
              <div class="row">
                  <div class="col-lg-12">
                      <div class="card">

@@ -698,7 +698,7 @@ Trait FundTrait
     private function createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate = null)
     {
         // Get all portfolio IDs for this fund
-        $portfolioIds = $fund->portfolios()->pluck('id')->toArray();
+        $portfolioIds = $fund->portfolios()->pluck('portfolios.id')->toArray();
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];

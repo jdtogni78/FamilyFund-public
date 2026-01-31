@@ -146,7 +146,7 @@ Route::middleware('auth')->group(function () {
     Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
         ->name('emails.show');
 
-    Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
+    Route::resource('accountBalances', App\Http\Controllers\WebV1\AccountBalanceControllerExt::class);
     Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);

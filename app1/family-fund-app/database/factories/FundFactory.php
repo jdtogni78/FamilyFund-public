@@ -37,7 +37,18 @@ class FundFactory extends Factory
         return $this->afterCreating(function (FundExt $fund) {
             // Every fund must have a portfolio - create one if it doesn't exist
             if ($fund->portfolios()->count() === 0) {
-                Portfolio::factory()->create(['fund_id' => $fund->id]);
+                $portfolio = Portfolio::factory()->create(['fund_id' => $fund->id]);
+                // Sync to pivot table for belongsToMany relationship
+                $portfolio->funds()->syncWithoutDetaching([$fund->id]);
+            } else {
+                // Ensure portfolios created via has() are synced to pivot table
+                foreach ($fund->portfolios as $portfolio) {
+                    if (!$portfolio->fund_id) {
+                        $portfolio->fund_id = $fund->id;
+                        $portfolio->save();
+                    }
+                    $portfolio->funds()->syncWithoutDetaching([$fund->id]);
+                }
             }
             // Every fund must have an account with no user_id (fund account)
             if ($fund->accounts()->whereNull('user_id')->count() === 0) {

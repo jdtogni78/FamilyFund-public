@@ -22,6 +22,6 @@ class CashDepositExt extends CashDeposit
     }
 
     public function status_string() {
-        return self::statusMap()[$this->status];
+        return self::statusMap()[$this->status] ?? 'Unknown';
     }
 }

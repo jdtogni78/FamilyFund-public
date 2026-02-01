@@ -23,7 +23,7 @@
                 <td>{{ $account->user->id ?? '-' }}</td>
                 <td>{{ $account->user->name ?? '-' }}</td>
                 <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}" class="text-nowrap"><i class="fa fa-eye fa-fw me-1"></i>{{ $account->fund->id }}</a>@else - @endif</td>
-                <td>@if($account->fund)<a href="{{ route('funds.show', $account->fund->id) }}">{{ $account->fund->name }}</a>@else - @endif</td>
+                <td>@if($account->fund)@include('partials.view_link', ['route' => route('funds.show', $account->fund->id), 'text' => $account->fund->name])@else - @endif</td>
                 <td>
                     <form action="{{ route('accounts.destroy', $account->id) }}" method="POST">
                         @csrf

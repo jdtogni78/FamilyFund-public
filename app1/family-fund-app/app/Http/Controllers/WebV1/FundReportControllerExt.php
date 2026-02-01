@@ -6,9 +6,13 @@ use App\Http\Controllers\FundReportController;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
+use App\Jobs\SendAccountReport;
 use App\Jobs\SendFundReport;
+use App\Models\AccountReport;
 use App\Models\Fund;
+use App\Models\FundReport;
 use App\Models\FundReportExt;
+use App\Models\OperationLog;
 use App\Repositories\FundReportRepository;
 use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
@@ -42,7 +46,33 @@ class FundReportControllerExt extends FundReportController
             return redirect(route('fundReports.index'));
         }
 
-        return view('fund_reports.show')->with('fundReport', $fundReport);
+        // Check email status from OperationLog
+        $emailStatus = [
+            'fundEmailSent' => OperationLog::jobCompletedForModel(
+                SendFundReport::class,
+                FundReport::class,
+                $fundReport->id
+            ),
+            'accountReports' => [],
+        ];
+
+        // Get related account reports and their status
+        $accountReports = AccountReport::where('as_of', $fundReport->as_of)->get();
+        foreach ($accountReports as $ar) {
+            $emailStatus['accountReports'][] = [
+                'id' => $ar->id,
+                'account' => $ar->account->nickname ?? 'N/A',
+                'sent' => OperationLog::jobCompletedForModel(
+                    SendAccountReport::class,
+                    AccountReport::class,
+                    $ar->id
+                ),
+            ];
+        }
+
+        return view('fund_reports.show')
+            ->with('fundReport', $fundReport)
+            ->with('emailStatus', $emailStatus);
     }
 
     public function create()
@@ -79,9 +109,8 @@ class FundReportControllerExt extends FundReportController
     {
         try {
             $fundReport = $this->createFundReport($request->all());
-            // Only send if not a template (9999-12-31)
+            // createFundReport handles dispatch for non-templates
             if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
-                SendFundReport::dispatch($fundReport);
                 Flash::success('Report created and queued for sending.');
             } else {
                 Flash::success('Template saved successfully.');
@@ -105,9 +134,50 @@ class FundReportControllerExt extends FundReportController
         }
 
         $fundReport = $this->fundReportRepository->update($request->all(), $id);
-        SendFundReport::dispatch($fundReport);
+        // Only dispatch if not a template (9999-12-31)
+        if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendFundReport::dispatch($fundReport);
+            Flash::success('Report updated and queued for sending.');
+        } else {
+            Flash::success('Template updated successfully.');
+        }
 
         return redirect(route('fundReports.index'));
+    }
+
+    public function resend($id)
+    {
+        $fundReport = FundReportExt::find($id);
+
+        if (empty($fundReport)) {
+            Flash::error('Fund Report not found');
+            return redirect(route('fundReports.index'));
+        }
+
+        if ($fundReport->as_of->format('Y-m-d') === '9999-12-31') {
+            Flash::error('Cannot resend a template');
+            return redirect(route('fundReports.index'));
+        }
+
+        // Clear completion records to allow resending
+        $fundCleared = OperationLog::clearJobCompletionForModel(FundReport::class, $fundReport->id);
+
+        // Also clear related account reports
+        $accountCleared = 0;
+        $accountReports = AccountReport::where('as_of', $fundReport->as_of)->get();
+        foreach ($accountReports as $ar) {
+            $accountCleared += OperationLog::clearJobCompletionForModel(AccountReport::class, $ar->id);
+        }
+
+        SendFundReport::dispatch($fundReport);
+
+        $msg = "Report #{$id} queued for resending.";
+        if ($fundCleared > 0 || $accountCleared > 0) {
+            $msg .= " Cleared {$fundCleared} fund + {$accountCleared} account completion record(s).";
+        }
+        Flash::success($msg);
+
+        return redirect(route('fundReports.show', $id));
     }
 
 }

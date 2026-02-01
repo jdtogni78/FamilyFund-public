@@ -18,7 +18,9 @@
                               <strong>Edit Asset Change Log</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['assetChangeLogs.update', $assetChangeLog->id]') }" >
+<form method="POST" action="{{ route('assetChangeLogs.update', $assetChangeLog->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('asset_change_logs.fields')
 

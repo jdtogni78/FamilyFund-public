@@ -26,6 +26,9 @@ class UserRoleManagementTest extends TestCase
     {
         parent::setUp();
 
+        // Seed permissions (required for permission checks)
+        $this->seed(RolesAndPermissionsSeeder::class);
+
         // Clear Spatie permission cache before each test
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 

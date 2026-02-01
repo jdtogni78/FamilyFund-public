@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Mail;
 
 Trait FundTrait
 {
-    use PerformanceTrait, MailTrait;
+    use PerformanceTrait, MailTrait, DetectsDataIssuesTrait;
     protected $err = [];
     protected $msgs = [];
     private $noEmailMessage = "The following accounts have no email: ";
@@ -96,7 +96,12 @@ Trait FundTrait
         $arr['unallocated_value'] = Utils::currency($unallocatedValue = $unallocated * $sharePrice);
 
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
-        $arr['max_cash_value'] = $fund->portfolio()->maxCashBetween($prevYearAsOf, $asOf);
+        // Sum max cash across all portfolios
+        $maxCash = 0;
+        foreach ($fund->portfolios()->get() as $portfolio) {
+            $maxCash += $portfolio->maxCashBetween($prevYearAsOf, $asOf);
+        }
+        $arr['max_cash_value'] = $maxCash;
 
         $ret['summary'] = $arr;
         $ret['as_of'] = $asOf;
@@ -129,16 +134,26 @@ Trait FundTrait
         $arr = $api->createFundResponse($fund, $asOf);
         $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
         $account = $fund->fundAccount();
-        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+        $arr['transactions'] = $account ? $accountController->createTransactionsResponse($account, $asOf) : [];
+
+        // Handle multiple portfolios - return array of portfolio responses
+        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
+        $portfolios = $fund->portfolios()->get();
+        $portfolioResponses = [];
+        $allTradePortfolios = collect();
+        $fromDate = $startDate ?? Utils::asOfAddYear($asOf, -5);
 
         /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
-        $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
-        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
+        foreach ($portfolios as $portfolio) {
+            $portfolioResponses[] = $portController->createPortfolioResponse($portfolio, $asOf);
+            $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
+            $allTradePortfolios = $allTradePortfolios->merge($tradePortfolios);
+        }
 
-        $fromDate = $startDate ?? Utils::asOfAddYear($asOf, -5);
-        $tradePortfolios = $portfolio->tradePortfoliosBetween($fromDate, $asOf);
-        $arr['tradePortfolios'] = $tradePortfolios;
+        // For backward compatibility, set portfolio to first one; add all as array
+        $arr['portfolio'] = $portfolioResponses[0] ?? null;
+        $arr['portfolios'] = $portfolioResponses;
+        $arr['tradePortfolios'] = $allTradePortfolios;
 
         $assetPerf = $this->createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate);
         $arr['asset_monthly_bands'] = $assetPerf;
@@ -289,26 +304,49 @@ Trait FundTrait
 
         $accountController = new AccountControllerExt(\App::make(AccountRepository::class));
         $account = $fund->fundAccount();
-        $arr['transactions'] = $accountController->createTransactionsResponse($account, $asOf);
+        $arr['transactions'] = $account ? $accountController->createTransactionsResponse($account, $asOf) : [];
 
         $arr['sp500_monthly_performance'] = $this->createAssetMonthlyPerformanceResponse(AssetExt::getSP500Asset(), $asOf, $arr['transactions'], true);
         $arr['cash'] = $this->createCashMonthlyPerformanceResponse($asOf, $arr['transactions']);
 
 
+        // Handle multiple portfolios
         $portController = new PortfolioAPIControllerExt(\App::make(PortfolioRepository::class));
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
-        $arr['portfolio'] = $portController->createPortfolioResponse($portfolio, $asOf);
-
+        $portfolios = $fund->portfolios()->get();
+        $portfolioResponses = [];
+        $allTradePortfolios = collect();
         $yearAgo = Utils::asOfAddYear($asOf, -1);
-        $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
-        $arr['tradePortfolios'] = $tradePortfolios;
+
+        /** @var PortfolioExt $portfolio */
+        foreach ($portfolios as $portfolio) {
+            $portResponse = $portController->createPortfolioResponse($portfolio, $asOf);
+            $portResponse['id'] = $portfolio->id;
+            $portfolioResponses[] = $portResponse;
+            $tradePortfolios = $portfolio->tradePortfoliosBetween($yearAgo, $asOf);
+            $allTradePortfolios = $allTradePortfolios->merge($tradePortfolios);
+        }
+
+        // For backward compatibility, set portfolio to first one; add all as array
+        $arr['portfolio'] = $portfolioResponses[0] ?? null;
+        $arr['portfolios'] = $portfolioResponses;
+        $arr['tradePortfolios'] = $allTradePortfolios;
 
         $assetPerf = $this->createGroupMonthlyPerformanceResponse($fund, $asOf, $arr);
         $arr['asset_monthly_performance'] = $assetPerf;
 
         // create a linear regression projection for the next 10 years
         $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf);
+
+        // Add 4% rule goal data if configured
+        if ($fund->hasFourPctGoal()) {
+            $fourPctProgress = $fund->fourPctProgress($asOf);
+            $fourPctProgress['target_reach'] = $this->calculateTargetReachDate(
+                $fourPctProgress['target_value'],
+                $arr['linear_regression'],
+                $asOf
+            );
+            $arr['four_pct_goal'] = $fourPctProgress;
+        }
 
         /** @var TradePortfolioExt $tradePortfolio */
         foreach ($tradePortfolios as $tradePortfolio) {
@@ -319,6 +357,10 @@ Trait FundTrait
         }
 
         $arr['asOf'] = $asOf;
+
+        // Add data staleness info for display warning banner
+        $arr['data_staleness'] = $this->calculateDataStaleness($asOf);
+
         return $arr;
     }
 
@@ -341,6 +383,15 @@ Trait FundTrait
                 $users = $account->user()->get();
                 Log::info("* sending report to acct ".$account->nickname);
                 if (count($users) == 1) {
+                    // Check if account report already exists for this account/as_of to prevent duplicates on retry
+                    $existing = AccountReport::where('account_id', $account->id)
+                        ->where('as_of', $fundReport->as_of)
+                        ->where('type', $fundReport->type)
+                        ->first();
+                    if ($existing) {
+                        Log::info("  -> skipping, report already exists (id: {$existing->id})");
+                        continue;
+                    }
                     $accountReport = AccountReport::create([
                         'account_id' => $account->id,
                         'type' => $fundReport->type,
@@ -441,7 +492,10 @@ Trait FundTrait
         $fundReport = FundReportExt::create($input);
         $this->validateReportEmails($fundReport);
         $fundReport->save();
-        SendFundReport::dispatch($fundReport);
+        // Only dispatch if not a template (9999-12-31)
+        if ($fundReport->as_of->format('Y-m-d') !== '9999-12-31') {
+            SendFundReport::dispatch($fundReport);
+        }
         return $fundReport;
     }
 
@@ -461,24 +515,32 @@ Trait FundTrait
         return $fundReport;
     }
 
-    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf): ?FundReportExt
+    protected function fundReportScheduleDue($shouldRunBy, ScheduledJob $job, Carbon $asOf, bool $skipDataCheck = false): ?FundReportExt
     {
         $shouldRunByDate = Carbon::parse($shouldRunBy);
-        $dayOfWeek = $shouldRunByDate->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
-        
-        // Calculate lookback days based on day of week
-        $lookbackDays = 2; // Base lookback for holidays
-        // if today, or yesterday or 2 days ago falls on a weekend, add days
+
+        if ($skipDataCheck) {
+            Log::info('Skipping data check for fund report schedule: ' . $job->id);
+            return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
+        }
+
+        // Load exchange holidays for calculating trading days
+        $holidays = $this->loadExchangeHolidays('NYSE', $shouldRunByDate->copy()->subDays(14), $asOf);
+
+        // Check for recent data in the lookback window (calendar-based for simplicity)
+        $dayOfWeek = $shouldRunByDate->dayOfWeek;
+        $lookbackDays = 2;
         if (in_array($dayOfWeek, [0, 1, 2])) {
             $lookbackDays += 2;
         } elseif ($dayOfWeek == 6) {
             $lookbackDays += 1;
         }
-        
+
         $lookbackDate = $shouldRunByDate->copy()->subDays($lookbackDays);
-        $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l') 
+        $period = $lookbackDate->format('Y-m-d') . ' (' . $lookbackDate->format('l')
             . ') to ' . $shouldRunByDate->format('Y-m-d') . ' (' . $shouldRunByDate->format('l') . ')';
         Log::info('Checking if got assets between '.$period.' (lookback: '.$lookbackDays.' days)');
+
         $hasNewAssets = AssetPrice::query()
             ->whereBetween('start_dt', [$lookbackDate, $shouldRunBy])
             ->limit(1)
@@ -486,19 +548,38 @@ Trait FundTrait
 
         if ($hasNewAssets > 0) {
             Log::info('Creating fund report for schedule: ' . $job->id);
-            $report = $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
-            return $report;
-        } else {
-            $msg = 'No data for fund report schedule ' . $job->id . ' between ' . $period . '. Lookback: ' . $lookbackDays . ' days';
-            // if today is past 4 days of the schedule, error
-            $diff = $shouldRunByDate->diffInDays($asOf);
-            if ($diff > 4) {
-                throw new Exception($msg . ' (' . $diff . ' days past due date)');
-            } else {
-                Log::warning($msg);
-            }
+            return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
         }
-        return null;
+
+        // No data in lookback window - find the most recent asset price
+        $latestPrice = AssetPrice::query()
+            ->where('start_dt', '<=', $shouldRunBy)
+            ->orderBy('start_dt', 'desc')
+            ->first();
+
+        if (!$latestPrice) {
+            $msg = 'No asset price data found before ' . $shouldRunBy;
+            Log::error($msg);
+            throw new Exception($msg);
+        }
+
+        $latestPriceDate = Carbon::parse($latestPrice->start_dt);
+
+        // Calculate trading days between latest price and report date
+        $tradingDaysStale = $this->calculateTradingDays($latestPriceDate, $shouldRunByDate, $holidays);
+
+        Log::info("Latest price date: {$latestPriceDate->format('Y-m-d')}, Report date: {$shouldRunByDate->format('Y-m-d')}, Trading days stale: {$tradingDaysStale}");
+
+        // Fail if data is more than 5 trading days stale
+        if ($tradingDaysStale > 5) {
+            $msg = "No recent data for fund report schedule {$job->id}. Latest price: {$latestPriceDate->format('Y-m-d')} ({$tradingDaysStale} trading days stale)";
+            Log::error($msg);
+            throw new Exception($msg);
+        }
+
+        // Data is stale but within tolerance - proceed with warning
+        Log::warning("Creating fund report with stale data ({$tradingDaysStale} trading days). Latest price: {$latestPriceDate->format('Y-m-d')}");
+        return $this->createFundReportFromSchedule($job, $asOf, $shouldRunBy);
     }
 
     protected function sendFundEmailReport($fundReport): void
@@ -514,6 +595,55 @@ Trait FundTrait
         $this->fundEmailReport($fundReport, $pdf);
     }
 
+    /**
+     * Calculate data staleness for a given as-of date.
+     *
+     * @param string $asOf The as-of date (Y-m-d format)
+     * @return array Data staleness info: latest_price_date, trading_days_stale, is_stale
+     */
+    protected function calculateDataStaleness(string $asOf): array
+    {
+        $asOfDate = Carbon::parse($asOf);
+
+        // Find the most recent asset price on or before the as-of date
+        $latestPrice = AssetPrice::query()
+            ->where('start_dt', '<=', $asOf)
+            ->orderBy('start_dt', 'desc')
+            ->first();
+
+        if (!$latestPrice) {
+            return [
+                'latest_price_date' => null,
+                'trading_days_stale' => null,
+                'is_stale' => true,
+                'message' => 'No asset price data available',
+            ];
+        }
+
+        $latestPriceDate = Carbon::parse($latestPrice->start_dt);
+
+        // Load exchange holidays
+        $holidays = $this->loadExchangeHolidays('NYSE', $latestPriceDate, $asOfDate);
+
+        // Calculate trading days between latest price and as-of date
+        $tradingDaysStale = $this->calculateTradingDays($latestPriceDate, $asOfDate, $holidays);
+
+        // Data is considered stale if there's any missing trading day
+        $isStale = $tradingDaysStale > 0;
+
+        $result = [
+            'latest_price_date' => $latestPriceDate->format('Y-m-d'),
+            'trading_days_stale' => $tradingDaysStale,
+            'is_stale' => $isStale,
+        ];
+
+        if ($isStale) {
+            $result['message'] = "Portfolio data as of {$latestPriceDate->format('M j, Y')} ({$tradingDaysStale} trading day" . ($tradingDaysStale > 1 ? 's' : '') . " before report date)";
+        }
+
+        return $result;
+    }
+
     private function createGroupMonthlyPerformanceResponse($fund, $asOf, $arr)
     {
         $transactions = $arr['transactions'];
@@ -526,13 +656,16 @@ Trait FundTrait
             }
         }
 
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
+        // Collect portfolio assets from ALL portfolios
+        $allPortfolioAssets = collect();
+        foreach ($fund->portfolios()->get() as $portfolio) {
+            $allPortfolioAssets = $allPortfolioAssets->merge($portfolio->portfolioAssets()->get());
+        }
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];
         $processed = [];
-        foreach ($portfolio->portfolioAssets()->get() as $pa) {
+        foreach ($allPortfolioAssets as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
             if (in_array($asset->name, $processed)) {
@@ -575,19 +708,18 @@ Trait FundTrait
     // this data is the real value of assets (quantity * price)
     private function createMonthlyAssetBandsResponse($fund, $asOf, $arr, $fromDate = null)
     {
-        /** @var PortfolioExt $portfolio */
-        $portfolio = $fund->portfolios()->first();
+        // Get all portfolio IDs for this fund
+        $portfolioIds = $fund->portfolios()->pluck('portfolios.id')->toArray();
 
         /** @var PortfolioAsset $pa */
         $assetPerf = [];
         $processed = [];
-        // TODO get unique assets from portfolioAssets
+        // Get unique assets from ALL portfolios
         $uniqueAssets = PortfolioAsset::query()
-            ->where('portfolio_id', $portfolio->id)
+            ->whereIn('portfolio_id', $portfolioIds)
             ->select('asset_id')
             ->distinct()
             ->get();
-        // foreach ($portfolio->portfolioAssets()->get() as $pa) {
         foreach ($uniqueAssets as $pa) {
             /** @var AssetExt $asset */
             $asset = $pa->asset()->first();
@@ -600,9 +732,9 @@ Trait FundTrait
             $processed[] = $asset->name;
 
             $allShares = [];
-            // loop through the history of the portfolio assets for this asset
+            // loop through the history of the portfolio assets for this asset across ALL portfolios
             PortfolioAsset::query()
-                ->where('portfolio_id', $portfolio->id)
+                ->whereIn('portfolio_id', $portfolioIds)
                 ->where('asset_id', $asset->id)
                 // ->where('end_dt', '<=', $asOf)
                 ->orderBy('start_dt', 'asc')

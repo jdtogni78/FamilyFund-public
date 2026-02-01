@@ -30,3 +30,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#transactionMatchings-table').DataTable();
+    });
+</script>

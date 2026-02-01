@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class MatchingRuleRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class MatchingRuleRepositoryTest extends TestCase
         parent::setUp();
         $this->matchingRuleRepo = \App::make(MatchingRuleRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class MatchingRuleRepositoryTest extends TestCase
         $this->assertNotNull(MatchingRule::find($createdMatchingRule['id']), 'MatchingRule with given id must be in DB');
         $this->assertModelData($matchingRule, $createdMatchingRule);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();
@@ -50,10 +41,6 @@ class MatchingRuleRepositoryTest extends TestCase
         $dbMatchingRule = $dbMatchingRule->toArray();
         $this->assertModelData($matchingRule->toArray(), $dbMatchingRule);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();
@@ -65,10 +52,6 @@ class MatchingRuleRepositoryTest extends TestCase
         $dbMatchingRule = $this->matchingRuleRepo->find($matchingRule->id);
         $this->assertModelData($fakeMatchingRule, $dbMatchingRule->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_matching_rule()
     {
         $matchingRule = MatchingRule::factory()->create();

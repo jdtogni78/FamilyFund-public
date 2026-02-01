@@ -231,9 +231,7 @@ class TwoFactorAuthTest extends TestCase
 
     // ==================== Login Activity Tests ====================
 
-    /**
-     * @group needs-livewire-setup
-     */
+    #[\PHPUnit\Framework\Attributes\Group('needs-livewire-setup')]
     public function test_successful_login_records_activity()
     {
         // This test requires Livewire component testing setup for login form

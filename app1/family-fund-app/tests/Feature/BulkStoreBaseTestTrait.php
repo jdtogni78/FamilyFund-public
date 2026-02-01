@@ -93,10 +93,10 @@ trait BulkStoreBaseTestTrait
 
     protected function makeSymbol($name=null, $type=null): array
     {
-        $values = [];
-        if ($name) $values['name'] = $name;
-        if ($type) $values['type'] = $type;
-        return $this->symbolFactory->make($values)->toArray();
+        $overrides = [];
+        if ($name) $overrides['name'] = $name;
+        if ($type) $overrides['type'] = $type;
+        return $this->generateSymbol($overrides);
     }
 
     protected function postForError(?array $post)

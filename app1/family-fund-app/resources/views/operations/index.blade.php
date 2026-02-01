@@ -10,7 +10,7 @@
 
             {{-- Quick Actions --}}
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-primary">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-calendar-check me-2"></i>Scheduled Jobs</h5>
@@ -24,7 +24,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-warning">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-clock me-2"></i>Pending Transactions</h5>
@@ -50,7 +50,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card border-{{ $queueRunning ? 'success' : 'secondary' }}">
                         <div class="card-body text-center">
                             <h5 class="card-title"><i class="fa fa-cogs me-2"></i>Queue Worker</h5>
@@ -79,7 +79,34 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><i class="fa fa-envelope me-2"></i>Email</h5>
+                            <p class="card-text text-muted">View email config & logs</p>
+                            <a href="{{ route('emails.index') }}" class="btn btn-info">
+                                <i class="fa fa-arrow-right me-1"></i> View Emails
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {{-- Admin Tools - TODO: Add configSettings route when feature is implemented
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-secondary">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><i class="fa fa-cog me-2"></i>Config Settings</h5>
+                            <p class="card-text text-muted">Manage application settings</p>
+                            <a href="{{ route('configSettings.index') }}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-right me-1"></i> View Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            --}}
 
             {{-- Scheduled Jobs Status --}}
             <div class="row mb-4">
@@ -313,6 +340,7 @@
                                             <th>Operation</th>
                                             <th>Result</th>
                                             <th>Message</th>
+                                            <th>Model</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -331,6 +359,16 @@
                                                 @endif
                                             </td>
                                             <td><small>{{ $log->message }}</small></td>
+                                            <td>
+                                                @if($log->details && isset($log->details['model_class']) && isset($log->details['model_id']))
+                                                    <small class="text-muted">
+                                                        {{ class_basename($log->details['model_class']) }}
+                                                        #{{ $log->details['model_id'] }}
+                                                    </small>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                         </tr>
                                         @endforeach
                                     </tbody>

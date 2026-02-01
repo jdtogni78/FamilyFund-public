@@ -35,11 +35,16 @@
 <div class="row mb-3">
     <div class="col-md-6 d-flex flex-column">
         <label for="status" class="form-label text-muted small text-uppercase mb-1">Status</label>
-        <select name="status" class="form-select" id="status">
-            @foreach($api['statusMap'] as $value => $label)
-                <option value="{{ $value }}" {{ $defaultStatus == $value ? 'selected' : '' }}>{{ $label }}</option>
-            @endforeach
-        </select>
+        <div class="input-group">
+            <select name="status" class="form-select" id="status">
+                @foreach($api['statusMap'] as $value => $label)
+                    <option value="{{ $value }}" {{ $defaultStatus == $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+            <button type="button" class="btn btn-outline-info" id="recurrentBtn" title="Set as recurrent (scheduled) transaction">
+                <i class="fa fa-redo"></i> Recurrent
+            </button>
+        </div>
         <div class="form-text small">&nbsp;</div>
     </div>
     <div class="col-md-6 d-flex flex-column">

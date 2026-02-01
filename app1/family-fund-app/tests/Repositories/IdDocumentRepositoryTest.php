@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class IdDocumentRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class IdDocumentRepositoryTest extends TestCase
         parent::setUp();
         $this->idDocumentRepo = \App::make(IdDocumentRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_id_document()
     {
         $idDocument = IdDocument::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class IdDocumentRepositoryTest extends TestCase
         $this->assertNotNull(IdDocument::find($createdIdDocument['id']), 'IdDocument with given id must be in DB');
         $this->assertModelData($idDocument, $createdIdDocument);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_id_document()
     {
         $idDocument = IdDocument::factory()->create();
@@ -50,10 +41,6 @@ class IdDocumentRepositoryTest extends TestCase
         $dbIdDocument = $dbIdDocument->toArray();
         $this->assertModelData($idDocument->toArray(), $dbIdDocument);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_id_document()
     {
         $idDocument = IdDocument::factory()->create();
@@ -65,10 +52,6 @@ class IdDocumentRepositoryTest extends TestCase
         $dbIdDocument = $this->idDocumentRepo->find($idDocument->id);
         $this->assertModelData($fakeIdDocument, $dbIdDocument->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_id_document()
     {
         $idDocument = IdDocument::factory()->create();

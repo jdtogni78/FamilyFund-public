@@ -23,6 +23,57 @@
         <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" />
         <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
         <link rel="stylesheet" href="{{ asset('css/navigation.css') }}" />
+
+        <style>
+        /* DataTables sort indicators using Font Awesome */
+        table.dataTable thead th {
+            cursor: pointer;
+            position: relative;
+            padding-right: 28px !important;
+        }
+        table.dataTable thead th:not(.no-sort):after {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.3;
+            font-size: 12px;
+            content: "\f0dc"; /* sort icon */
+        }
+        table.dataTable thead th.dt-ordering-asc:after {
+            content: "\f0de"; /* sort-up */
+            opacity: 1;
+        }
+        table.dataTable thead th.dt-ordering-desc:after {
+            content: "\f0dd"; /* sort-down */
+            opacity: 1;
+        }
+        /* Hide sort icon on action columns */
+        table.dataTable thead th[colspan]:after,
+        table.dataTable thead th.no-sort:after {
+            content: none;
+        }
+        /* Fix DataTables length selector dropdown arrow overlap */
+        .dt-length select,
+        div.dt-length select,
+        .dataTables_length select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            padding: 5px 24px 5px 8px !important;
+            min-width: 55px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            background-color: #fff !important;
+            background-image: linear-gradient(45deg, transparent 50%, #666 50%), linear-gradient(135deg, #666 50%, transparent 50%) !important;
+            background-position: calc(100% - 12px) center, calc(100% - 7px) center !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+        }
+        </style>
         
         <script src="https://kit.fontawesome.com/d955b811ba.js" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>

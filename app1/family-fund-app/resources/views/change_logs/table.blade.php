@@ -28,3 +28,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#changeLogs-table').DataTable();
+    });
+</script>

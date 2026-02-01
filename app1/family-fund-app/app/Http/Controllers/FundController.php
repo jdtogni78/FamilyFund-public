@@ -3,21 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateFundRequest;
+use App\Http\Requests\CreateFundWithSetupRequest;
 use App\Http\Requests\UpdateFundRequest;
 use App\Repositories\FundRepository;
+use App\Repositories\TransactionRepository;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\FundSetupTrait;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
 
 class FundController extends AppBaseController
 {
+    use FundSetupTrait;
+
     /** @var  FundRepository */
     protected $fundRepository;
 
-    public function __construct(FundRepository $fundRepo)
+    /** @var  TransactionRepository */
+    protected $transactionRepository;
+
+    public function __construct(FundRepository $fundRepo, TransactionRepository $transactionRepo)
     {
         $this->fundRepository = $fundRepo;
+        $this->transactionRepository = $transactionRepo;
     }
 
     /**
@@ -152,5 +161,47 @@ class FundController extends AppBaseController
         Flash::success('Fund deleted successfully.');
 
         return redirect(route('funds.index'));
+    }
+
+    /**
+     * Show the form for creating a new Fund with complete setup
+     * (fund + account + portfolio + initial transaction).
+     *
+     * @return Response
+     */
+    public function createWithSetup()
+    {
+        return view('funds.create_with_setup');
+    }
+
+    /**
+     * Store a newly created Fund with complete setup in storage.
+     * Supports preview mode to show what will be created before committing.
+     *
+     * @param CreateFundWithSetupRequest $request
+     *
+     * @return Response
+     */
+    public function storeWithSetup(CreateFundWithSetupRequest $request)
+    {
+        $input = $request->all();
+        $isPreview = $request->input('preview', false);
+
+        try {
+            $setupData = $this->setupFund($input, $isPreview);
+
+            if ($isPreview) {
+                return view('funds.preview_setup', [
+                    'preview' => $setupData,
+                    'input' => $input,
+                ]);
+            } else {
+                Flash::success('Fund created successfully with account, portfolio, and initial transaction!');
+                return redirect(route('funds.show', $setupData['fund']->id));
+            }
+        } catch (\Exception $e) {
+            Flash::error('Fund creation failed: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
     }
 }

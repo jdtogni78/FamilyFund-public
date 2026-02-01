@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class FundReportRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class FundReportRepositoryTest extends TestCase
         parent::setUp();
         $this->fundReportRepo = \App::make(FundReportRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_fund_report()
     {
         $fundReport = FundReport::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class FundReportRepositoryTest extends TestCase
         $this->assertNotNull(FundReport::find($createdFundReport['id']), 'FundReport with given id must be in DB');
         $this->assertModelData($fundReport, $createdFundReport);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_fund_report()
     {
         $fundReport = FundReport::factory()->create();
@@ -50,10 +41,6 @@ class FundReportRepositoryTest extends TestCase
         $dbFundReport = $dbFundReport->toArray();
         $this->assertModelData($fundReport->toArray(), $dbFundReport);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_fund_report()
     {
         $fundReport = FundReport::factory()->create();
@@ -65,10 +52,6 @@ class FundReportRepositoryTest extends TestCase
         $dbFundReport = $this->fundReportRepo->find($fundReport->id);
         $this->assertModelData($fakeFundReport, $dbFundReport->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_fund_report()
     {
         $fundReport = FundReport::factory()->create();

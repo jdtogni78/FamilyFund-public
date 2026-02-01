@@ -1,0 +1,32 @@
+# Test Failures List
+# One test class per line (without "Test" suffix for the script)
+# Lines starting with # are ignored
+# Edit this file and run: ./fix_tests_batch.sh @test_failures_list.txt
+
+# Asset Price Tests
+AssetPriceControllerExtTest
+AssetPriceDataWarningsTest
+AssetPriceOverlapTest
+
+# Fund Setup Tests (many failures - may need refactoring)
+FundSetupAPISequentialTest
+FundSetupAPITest
+FundSetupSequentialTest
+FundSetupTest
+FundSetupWorkflowIntegrationTest
+
+# Portfolio Tests
+PortfolioControllerTest
+
+# Scheduled Job Tests
+ScheduledHolidaySyncTest
+ScheduledJobControllerExtTest
+
+# Trade Portfolio Tests
+TradePortfolioControllerExtTest
+
+# Transaction Tests
+TransactionExtApiTest
+TransactionPreviewCalculationTest
+
+# Add other failing test classes below:

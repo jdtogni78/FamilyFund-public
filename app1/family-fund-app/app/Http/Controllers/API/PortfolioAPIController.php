@@ -54,9 +54,19 @@ class PortfolioAPIController extends AppBaseController
      */
     public function store(CreatePortfolioAPIRequest $request)
     {
-        $input = $request->all();
+        $input = $request->except(['fund_ids']);
 
         $portfolio = $this->portfolioRepository->create($input);
+
+        // Sync funds via pivot table
+        // Support both fund_id (legacy) and fund_ids (new multi-fund)
+        $fundIds = $request->input('fund_ids', []);
+        if (empty($fundIds) && $request->has('fund_id')) {
+            $fundIds = [$request->input('fund_id')];
+        }
+        if (!empty($fundIds)) {
+            $portfolio->funds()->sync($fundIds);
+        }
 
         return $this->sendResponse(new PortfolioResource($portfolio), 'Portfolio saved successfully');
     }
@@ -92,7 +102,7 @@ class PortfolioAPIController extends AppBaseController
      */
     public function update($id, UpdatePortfolioAPIRequest $request)
     {
-        $input = $request->all();
+        $input = $request->except(['fund_ids']);
 
         /** @var Portfolio $portfolio */
         $portfolio = $this->portfolioRepository->find($id);
@@ -102,6 +112,16 @@ class PortfolioAPIController extends AppBaseController
         }
 
         $portfolio = $this->portfolioRepository->update($input, $id);
+
+        // Sync funds via pivot table
+        // Support both fund_id (legacy) and fund_ids (new multi-fund)
+        $fundIds = $request->input('fund_ids', []);
+        if (empty($fundIds) && $request->has('fund_id')) {
+            $fundIds = [$request->input('fund_id')];
+        }
+        if (!empty($fundIds)) {
+            $portfolio->funds()->sync($fundIds);
+        }
 
         return $this->sendResponse(new PortfolioResource($portfolio), 'Portfolio updated successfully');
     }

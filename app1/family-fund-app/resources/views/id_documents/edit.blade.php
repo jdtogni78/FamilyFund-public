@@ -3,7 +3,7 @@
 @section('content')
     <ol class="breadcrumb">
           <li class="breadcrumb-item">
-             <a href="{!! route('idDocuments.index') !!}">Id Document</a>
+             <a href="{!! route('id_documents.index') !!}">Id Document</a>
           </li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
@@ -18,7 +18,9 @@
                               <strong>Edit Id Document</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['idDocuments.update', $idDocument->id]') }" >
+<form method="POST" action="{{ route('id_documents.update', $idDocument->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('id_documents.fields')
 

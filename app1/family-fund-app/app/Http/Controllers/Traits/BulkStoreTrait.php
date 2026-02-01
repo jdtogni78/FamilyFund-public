@@ -31,6 +31,16 @@ trait BulkStoreTrait
         $source = $input['source'];
 
         foreach ($symbols as $symbol) {
+            // Skip invalid prices (zero or negative) - indicates failed data fetch
+            if ($field === 'price' && isset($symbol['price'])) {
+                $price = floatval($symbol['price']);
+                if ($price <= 0) {
+                    $name = $symbol['name'] ?? 'unknown';
+                    Log::warning("Skipping {$name} - invalid price: {$price}");
+                    continue;
+                }
+            }
+
             $symbol['source'] = $source;
             $input = array_intersect_key($symbol, array_flip((new AssetExt())->fillable));
             if ($this->verbose) Log::debug("input: " . json_encode($input));
@@ -44,7 +54,14 @@ trait BulkStoreTrait
                 unset($input['source']);
                 $asset = Asset::orWhere($input)->firstOrFail();
             } else {
-                $asset = AssetExt::firstOrCreate($input);
+                // Use data_source for asset lookup to avoid duplicates
+                $dataSource = AssetExt::getDataSourceForPortfolio($source);
+                $asset = AssetExt::findOrCreateByDataSource(
+                    $input['name'],
+                    $input['type'],
+                    $dataSource,
+                    $source // Keep original source for backward compat
+                );
             }
             $this->insertHistorical($source, $asset->id, $timestamp, $symbol[$field], $field);
         }
@@ -55,65 +72,107 @@ trait BulkStoreTrait
      */
     public function insertHistorical($source, $assetId, $timestamp, $newValue, $field): PortfolioAsset|AssetPrice
     {
-        if ($this->verbose) Log::debug("insertHistorical: " . json_encode([$source, $assetId, $timestamp, $newValue, $field]));
+        if ($this->verbose) Log::info("=== insertHistorical START ===");
+        if ($this->verbose) Log::info("Input: " . json_encode([
+            'asset_id' => $assetId,
+            'timestamp' => $timestamp->format('Y-m-d H:i:s'),
+            'new_value' => $newValue,
+            'field' => $field
+        ]));
+
         $asset = AssetExt::find($assetId);
         if ($asset == null) {
             throw new Exception("Invalid asset provided: " . $assetId);
         }
+
+        if ($this->verbose) Log::info("Asset: " . $asset->name . " (id: " . $asset->id . ")");
+
         $query = $this->getQuery($source, $asset, $timestamp);
+        if ($this->verbose) Log::info("Query for existing records at timestamp returned: " . $query->count() . " records");
 
         $ret = null;
         $create = true;
         $newEnd = null;
         if (!$query->isEmpty()) {
+            if ($this->verbose) Log::info("Found existing record(s) at timestamp - processing...");
             $create = false;
             foreach ($query as $obj) {
-                if ($this->verbose) Log::debug("past obj: " . json_encode($obj));
-                $tsDiff = $timestamp->getTimestamp() - $obj->start_dt->getTimestamp();
-                if ($this->verbose) Log::debug("ts: " . json_encode([$obj->start_dt, $timestamp, $tsDiff]));
-                if ($tsDiff == 0 && $obj->$field != $newValue) {
-                    // There could have been updates of that amt that were
-                    // associated w this record, its not safe to change
+                if ($this->verbose) Log::info("Existing record: id=" . $obj->id . ", start=" . $obj->start_dt->format('Y-m-d') .
+                    ", end=" . $obj->end_dt->format('Y-m-d') . ", " . $field . "=" . $obj->$field);
+
+                // Compare dates (not full timestamps) since asset prices use DATE columns
+                $timestampDate = $timestamp->format('Y-m-d');
+                $startDate = $obj->start_dt->format('Y-m-d');
+                $dateDiff = strcmp($timestampDate, $startDate);
+
+                if ($dateDiff == 0 && $obj->$field != $newValue) {
+                    // Exact date match with different value - throw error
                     $symbol = $asset->name;
-                    if ($this->verbose) Log::debug("obj: " . json_encode($obj));
-                    if ($this->verbose) Log::debug("asset: " . json_encode($asset));
+                    if ($this->verbose) Log::error("CONFLICT: Exact timestamp exists with different $field!");
                     throw new Exception("A '$symbol' record with this exact timestamp and different $field already exists");
                 } else if ($obj->$field != $newValue) {
-                    // value changed, lets end & create new
+                    // Value changed - split the range
+                    if ($this->verbose) Log::info("VALUE CHANGED: Splitting range at " . $timestamp->format('Y-m-d'));
                     $newEnd = $obj->end_dt; // in case thats not the last record
-                    if ($this->verbose) Log::debug("newend: " . json_encode($obj));
                     $obj->end_dt = $timestamp;
                     $obj->save();
+                    if ($this->verbose) Log::info("Updated record " . $obj->id . " end_dt to " . $timestamp->format('Y-m-d'));
                     $create = true;
                 } else {
+                    // Same value - keep existing record
+                    if ($this->verbose) Log::info("SAME VALUE: Keeping existing record " . $obj->id);
                     $ret = $obj;
                 }
             }
+        } else {
+            if ($this->verbose) Log::info("No existing record at timestamp - will check for future records");
         }
         if ($create) {
-            // wanna create, but there may be an asset in the future
-            $query = $this->getQuery($source, $asset, '9999-12-30');
-            if (!$query->isEmpty()) {
+            if ($this->verbose) Log::info("Need to create new record - checking for future records...");
+
+            // Find records that start AFTER this timestamp
+            // BUG FIX: The old code used getQuery($source, $asset, '9999-12-30') which only finds records
+            // active at that far-future date. This missed records ending before 9999-12-30.
+            // We need to find ANY record starting after our current timestamp.
+            $futureRecords = $asset->pricesStartingAfter($timestamp);
+
+            if ($this->verbose) Log::info("Future records query returned: " . $futureRecords->count() . " records");
+
+            if (!$futureRecords->isEmpty()) {
                 $create = false;
-                foreach ($query as $obj) {
-                    if ($this->verbose) Log::debug("future obj: " . json_encode($obj));
-                    if ($obj->$field != $newValue) {
-                        $newEnd = $obj->start_dt; // in case we are not the last record
-                        if ($this->verbose) Log::debug("newEnd: " . json_encode($obj));
-                        $create = true;
-                    } else {
-                        $ret = $obj;
-                        $obj->start_dt = $timestamp;
-                        $obj->save();
-                    }
+                // Get the FIRST (earliest) future record
+                $obj = $futureRecords->first();
+
+                if ($this->verbose) Log::info("Future record: id=" . $obj->id . ", start=" . $obj->start_dt->format('Y-m-d') .
+                    ", end=" . $obj->end_dt->format('Y-m-d') . ", " . $field . "=" . $obj->$field);
+
+                if ($obj->$field != $newValue) {
+                    // Future record has different value - create new record ending at future start
+                    if ($this->verbose) Log::info("Future has different value - will create new record ending at " . $obj->start_dt->format('Y-m-d'));
+                    $newEnd = $obj->start_dt;
+                    $create = true;
+                } else {
+                    // Future record has same value - extend it backwards
+                    if ($this->verbose) Log::info("Future has SAME value - extending backwards from " .
+                        $obj->start_dt->format('Y-m-d') . " to " . $timestamp->format('Y-m-d'));
+                    $ret = $obj;
+                    $obj->start_dt = $timestamp;
+                    $obj->save();
+                    if ($this->verbose) Log::info("Updated record " . $obj->id . " start_dt to " . $timestamp->format('Y-m-d'));
                 }
+            } else {
+                if ($this->verbose) Log::info("No future records - will create new record ending at 9999-12-31");
             }
+
             if ($create) {
                 $data = $this->getChildData($asset, $newValue, $timestamp, $newEnd, $field);
-                if ($this->verbose) Log::debug("create child: " . json_encode($data));
+                if ($this->verbose) Log::info("Creating new record: " . json_encode($data));
                 $ret = $this->createChild($data, $source);
+                if ($this->verbose) Log::info("Created new record with id: " . $ret->id);
             }
         }
+
+        if ($this->verbose) Log::info("=== insertHistorical END ===");
         return $ret;
     }
 

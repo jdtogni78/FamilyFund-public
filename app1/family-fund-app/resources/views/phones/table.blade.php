@@ -32,3 +32,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#phones-table').DataTable();
+    });
+</script>

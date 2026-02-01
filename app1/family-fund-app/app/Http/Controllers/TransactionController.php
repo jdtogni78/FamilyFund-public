@@ -30,7 +30,7 @@ class TransactionController extends AppBaseController
     public function index(Request $request)
     {
         $transactions = $this->transactionRepository->all()
-            ->sortByDesc('timestamp');
+            ->sortByDesc('id');
 
         return view('transactions.index')
             ->with('transactions', $transactions);

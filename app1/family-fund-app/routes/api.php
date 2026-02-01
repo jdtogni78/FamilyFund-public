@@ -36,7 +36,9 @@ Route::get('account_matching/{account_id}/as_of/{as_of}', [AccountAPIControllerE
 Route::get('portfolios/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\PortfolioAPIControllerExt@showAsOf');
 //Route::post('portfolios/{code}/assets_update', [PortfolioAPIControllerExt::class, 'assetsUpdate']);
 Route::post('asset_prices_bulk_update', [AssetPriceAPIControllerExt::class, 'bulkStore']);
+Route::get('asset_prices/gaps', [AssetPriceAPIControllerExt::class, 'gaps']);
 Route::post('portfolio_assets_bulk_update', [PortfolioAssetAPIControllerExt::class, 'bulkStore']);
+Route::post('portfolio_balances_bulk_update', [App\Http\Controllers\API\PortfolioBalanceAPIController::class, 'bulkUpdate']);
 
 Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\APIv1\FundAPIControllerExt@showAsOf');
 Route::get('funds/{id}/performance_as_of/{as_of}', 'App\Http\Controllers\APIv1\FundAPIControllerExt@showPerformanceAsOf');
@@ -52,6 +54,7 @@ Route::get('accounts/{id}/share_value_as_of/{as_of}', 'App\Http\Controllers\APIv
 
 Route::post('schedule_jobs', 'App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt@scheduleJobs');
 
+Route::post('funds/setup', 'App\Http\Controllers\APIv1\FundAPIControllerExt@storeWithSetup')->name('api.funds.setup');
 Route::resource('funds', App\Http\Controllers\API\FundAPIController::class)->names('api.funds');
 Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class)->names('api.accounts');
 Route::resource('portfolios', App\Http\Controllers\API\PortfolioAPIController::class)->names('api.portfolios');
@@ -88,3 +91,11 @@ Route::resource('id_documents', App\Http\Controllers\API\IdDocumentAPIController
 
 
 Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class)->names('api.phones');
+
+// Exchange Holiday API
+Route::get('/exchange_holidays/{exchange}/{year}',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'index']);
+Route::post('/exchange_holidays/sync',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'sync']);
+Route::get('/exchange_holidays/status',
+    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'status']);

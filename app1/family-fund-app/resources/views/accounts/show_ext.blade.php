@@ -40,7 +40,10 @@
                                 <div>
                                     <h4 class="mb-1" style="font-weight: 700;">{{ $account->nickname }}</h4>
                                     <div class="subtitle" style="font-size: 14px;">
-                                        {{ $account->fund->name }} &bull; {{ $account->user->name }}
+                                        {{ $account->fund->name }}
+                                        @if($account->user)
+                                            &bull; {{ $account->user->name }}
+                                        @endif
                                         @if($account->email_cc)
                                             &bull; {{ $account->email_cc }}
                                         @endif
@@ -148,6 +151,7 @@
                 ['id' => 'section-shares', 'icon' => 'fa-chart-area', 'label' => 'Shares'],
                 ['id' => 'section-performance', 'icon' => 'fa-table', 'label' => 'Performance'],
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'History'],
+                ['id' => 'section-scheduled', 'icon' => 'fa-calendar-alt', 'label' => 'Scheduled', 'condition' => isset($scheduledTransactionJobs) && $scheduledTransactionJobs->count() > 0],
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
             ]])
 
@@ -353,6 +357,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('accounts.scheduled_transactions')
 
             {{-- Matching Rules (Collapsible, start expanded) --}}
             @if(!empty($api['matching_rules']))

@@ -62,8 +62,13 @@
         <label for="timestamp" class="form-label">
             <i class="fa fa-calendar me-1"></i> Date <span class="text-danger">*</span>
         </label>
-        <input type="date" name="timestamp" id="timestamp" class="form-control"
-               value="{{ $defaultTimestamp }}" required>
+        <div class="input-group">
+            <input type="date" name="timestamp" id="timestamp" class="form-control"
+                   value="{{ $defaultTimestamp }}" required>
+            <button type="button" class="btn btn-outline-secondary" id="todayBtn" title="Set to today">
+                Today
+            </button>
+        </div>
         <small class="text-body-secondary">Transaction date</small>
     </div>
 </div>
@@ -227,6 +232,11 @@
 
     $('#timestamp').on('change', function() {
         updateShareValue();
+    });
+
+    $('#todayBtn').on('click', function() {
+        const today = new Date().toISOString().split('T')[0];
+        $('#timestamp').val(today).trigger('change');
     });
 
     $(document).ready(function() {

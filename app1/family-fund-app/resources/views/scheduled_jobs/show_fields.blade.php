@@ -58,6 +58,11 @@
                         {{ $accountName }} - {{ $typeName }} - ${{ number_format($tran->value, 0) }}
                     </a>
                     <span class="badge bg-info ms-1">Template</span>
+                @elseif($scheduledJob->entity_descr == 'matching_reminder')
+                    <span class="text-body-secondary">
+                        <i class="fa fa-bell me-1"></i>
+                        Sends reminders for matching rules expiring within 45 days
+                    </span>
                 @else
                     #{{ $scheduledJob->entity_id }}
                 @endif

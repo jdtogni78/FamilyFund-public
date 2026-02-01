@@ -28,6 +28,7 @@
         <tr>
             <th>Asset</th>
             <th>Type</th>
+            <th>Group</th>
             <th class="col-number">Position</th>
             <th class="col-number">Price</th>
             <th class="col-number">Market Value</th>
@@ -59,10 +60,27 @@
                         'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
                     ];
                     $assetType = $asset['type'] ?? '-';
-                    $colors = $typeColors[$assetType] ?? ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569', 'label' => $assetType];
+                    $colors = $typeColors[$assetType] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $assetType];
                 @endphp
                 <span style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
                     {{ $colors['label'] }}
+                </span>
+            </td>
+            <td>
+                @php
+                    $groupName = $asset['group'] ?? 'Unknown';
+                    $groupPalette = [
+                        ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'], // green
+                        ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'], // blue
+                        ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'], // amber
+                        ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce'], // purple
+                        ['bg' => '#ffe4e6', 'border' => '#e11d48', 'text' => '#be123c'], // rose
+                        ['bg' => '#ccfbf1', 'border' => '#14b8a6', 'text' => '#0f766e'], // teal
+                    ];
+                    $groupStyle = $groupPalette[crc32($groupName) % 6];
+                @endphp
+                <span style="background: {{ $groupStyle['bg'] }}; color: {{ $groupStyle['text'] }}; border: 1px solid {{ $groupStyle['border'] }}; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                    {{ $groupName }}
                 </span>
             </td>
             <td class="col-number">{{ number_format($asset['position'] ?? 0, 6) }}</td>
@@ -106,7 +124,7 @@
     </tbody>
     <tfoot>
         <tr style="background: #f1f5f9; font-weight: 600;">
-            <td colspan="4">Total</td>
+            <td colspan="5">Total</td>
             <td class="col-number">${{ number_format($api['summary']['value'], 2) }}</td>
             <td class="col-number">100%</td>
             <td colspan="2"></td>

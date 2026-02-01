@@ -17,6 +17,12 @@ docker-compose -f docker-compose.yml -f docker-compose.${MYENV}.yml up
 
 docker-compose exec familyfund composer install
 
+* Build frontend assets (from app1/family-fund-app/):
+
+cd app1/family-fund-app && npm install && npm run build
+
+Note: Must rebuild after changing Blade templates with new Tailwind classes (Tailwind purges unused classes).
+
 * First time setup database / reimport full db
 
 docker-compose exec familyfund php artisan migrate:fresh
@@ -296,6 +302,31 @@ You should see:
 Follow the instructions for rootless docker:
 * https://docs.docker.com/engine/security/rootless/
 
+### Optional: Passwordless sudo for deployments
+
+To allow jdtogni to run deployment commands without password prompts, create a sudoers file:
+
+```bash
+sudo visudo -f /etc/sudoers.d/jdtogni-deploy
+```
+
+Add these lines (adjust paths if needed):
+```
+# Deployment chown commands for FamilyFund
+jdtogni ALL=(ALL) NOPASSWD: /bin/chown jdtogni\:jdtogni /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
+jdtogni ALL=(ALL) NOPASSWD: /bin/chown dockeruser\:dockeruser /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
+
+# Admin utilities
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/crontab
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/systemctl
+jdtogni ALL=(ALL) NOPASSWD: /usr/bin/journalctl
+```
+
+Set correct permissions:
+```bash
+sudo chmod 440 /etc/sudoers.d/jdtogni-deploy
+```
+
 ### Deploying DSTrader to prod
 
 FFSERVER=REDACTED_LAN_HOST
@@ -453,6 +484,33 @@ Database backups are encrypted using GPG before being stored. The encryption run
 **Test encryption manually:**
 ```bash
 docker exec dstrader bash -c "echo test | gpg --batch --yes --trust-model always -e -r docker@example.local > /dev/null && echo OK"
+```
+
+### Server Disk Space Management
+
+The root partition on spirit (`/dev/nvme0n1p6`, 48GB) can fill up and cause DSTrader to fail (mariadb won't start).
+
+**Check disk usage:**
+```bash
+ssh dstrader "df -h /"
+# Should stay below 90%
+```
+
+**Common space culprits:**
+
+| Location | Issue | Fix |
+|----------|-------|-----|
+| `/var/log/journal` | Systemd journal grows unbounded | Set `SystemMaxUse=500M` in `/etc/systemd/journald.conf` then `sudo systemctl restart systemd-journald` |
+| `/var/log/dstrader/prod/` | Old log files accumulate | Delete logs older than 6 months: `rm /var/log/dstrader/prod/*2024*` |
+| `/tmp` | Temporary backup files | Check with `ls -lh /tmp/*.tar.gz` and remove old ones |
+
+**One-time journald fix (recommended):**
+```bash
+ssh dstrader
+sudo vi /etc/systemd/journald.conf
+# Add under [Journal]:
+# SystemMaxUse=500M
+sudo systemctl restart systemd-journald
 ```
 
 ## VPN Setup

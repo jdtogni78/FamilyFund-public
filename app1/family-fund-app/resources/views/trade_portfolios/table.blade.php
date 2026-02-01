@@ -48,8 +48,8 @@
                             @if(\Carbon\Carbon::parse($tradePortfolio->end_dt)->isBefore($asOf ?? \Carbon\Carbon::today()))
                                 {{-- If end_dt is before today, don't display the buttons --}}
                             @else
+                                <a href="{{ route('tradePortfolios.rebalance', [$tradePortfolio->id]) }}" class='btn btn-ghost-primary' title="Rebalance"><i class="fa fa-balance-scale"></i></a>
                                 <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                                <a href="{{ route('tradePortfolios.split', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-code-fork"></i></a>
                                 <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this trade portfolio?')"><i class="fa fa-trash"></i></button>
                             @endif
                             <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class='btn btn-ghost-info'><i class="fa fa-random"></i></a>
@@ -64,3 +64,11 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#tradePortfolios-table').DataTable({
+            order: [[7, 'desc']]
+        });
+    });
+</script>

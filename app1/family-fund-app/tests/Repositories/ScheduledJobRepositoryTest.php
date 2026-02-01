@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class ScheduledJobRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class ScheduledJobRepositoryTest extends TestCase
         parent::setUp();
         $this->scheduledJobRepo = \App::make(ScheduledJobRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class ScheduledJobRepositoryTest extends TestCase
         $this->assertNotNull(ScheduledJob::find($createdScheduledJob['id']), 'ScheduledJob with given id must be in DB');
         $this->assertModelData($scheduledJob, $createdScheduledJob);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();
@@ -50,10 +41,6 @@ class ScheduledJobRepositoryTest extends TestCase
         $dbScheduledJob = $dbScheduledJob->toArray();
         $this->assertModelData($scheduledJob->toArray(), $dbScheduledJob);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();
@@ -65,10 +52,6 @@ class ScheduledJobRepositoryTest extends TestCase
         $dbScheduledJob = $this->scheduledJobRepo->find($scheduledJob->id);
         $this->assertModelData($fakeScheduledJob, $dbScheduledJob->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_scheduled_job()
     {
         $scheduledJob = ScheduledJob::factory()->create();

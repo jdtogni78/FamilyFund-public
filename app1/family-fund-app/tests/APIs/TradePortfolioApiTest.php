@@ -73,4 +73,47 @@ class TradePortfolioApiTest extends TestCase
 
         $this->response->assertStatus(404);
     }
+
+    #[Test]
+    public function test_trade_portfolio_returns_fund_name_as_nickname()
+    {
+        // Create a trade portfolio (which auto-creates portfolio -> fund)
+        $tradePortfolio = TradePortfolio::factory()->create();
+
+        // Get the fund name through the relationship chain
+        $fundName = $tradePortfolio->portfolio->fund->name;
+
+        $this->response = $this->json(
+            'GET',
+            '/api/trade_portfolios/'.$tradePortfolio->id
+        );
+
+        $this->response->assertStatus(200);
+
+        // Verify the nickname field contains the fund name
+        $responseData = $this->response->json('data');
+        $this->assertEquals($fundName, $responseData['nickname'],
+            'nickname should be populated from the fund name');
+    }
+
+    #[Test]
+    public function test_trade_portfolio_nickname_null_when_no_portfolio()
+    {
+        // Create a trade portfolio without a portfolio relationship
+        $tradePortfolio = TradePortfolio::factory()->create([
+            'portfolio_id' => null
+        ]);
+
+        $this->response = $this->json(
+            'GET',
+            '/api/trade_portfolios/'.$tradePortfolio->id
+        );
+
+        $this->response->assertStatus(200);
+
+        // Verify the nickname field is null when no portfolio relationship
+        $responseData = $this->response->json('data');
+        $this->assertNull($responseData['nickname'],
+            'nickname should be null when portfolio relationship is missing');
+    }
 }

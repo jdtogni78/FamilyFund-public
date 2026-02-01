@@ -9,8 +9,11 @@ use App\Http\Requests\API\CreatePriceUpdateAPIRequest;
 use App\Http\Resources\AssetPriceResource;
 use App\Models\AssetPrice;
 use App\Repositories\AssetPriceRepository;
+use App\Services\AssetPriceGapService;
 use DB;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class AssetPriceAPIControllerExt extends AssetPriceAPIController
@@ -55,7 +58,13 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
     {
         $input = $request->all();
 
-        $assetPrice = $this->insertHistorical(null, $input['asset_id'], $input['start_dt'], $input['price'], 'price');
+        // Convert start_dt to Carbon if it's a string
+        $timestamp = $input['start_dt'];
+        if (is_string($timestamp)) {
+            $timestamp = \Carbon\Carbon::parse($timestamp);
+        }
+
+        $assetPrice = $this->insertHistorical(null, $input['asset_id'], $timestamp, $input['price'], 'price');
 
         return $this->sendResponse(new AssetPriceResource($assetPrice), 'Asset Price saved successfully');
     }
@@ -73,5 +82,35 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
     {
         $query = $asset->priceAsOf($timestamp);
         return $query;
+    }
+
+    /**
+     * Get missing asset price dates for trading days
+     * GET /api/asset_prices/gaps?days=30&exchange=NYSE
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function gaps(Request $request): JsonResponse
+    {
+        $days = $request->query('days', 30);
+        $exchange = $request->query('exchange', 'NYSE');
+
+        // Validate days parameter
+        if (!is_numeric($days) || $days < 1 || $days > 365) {
+            return response()->json([
+                'error' => 'days parameter must be between 1 and 365'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $gapService = new AssetPriceGapService();
+        $missingDates = $gapService->findGaps((int)$days, $exchange);
+
+        return response()->json([
+            'lookback_days' => (int)$days,
+            'exchange' => $exchange,
+            'missing_count' => count($missingDates),
+            'missing_dates' => $missingDates,
+        ]);
     }
 }

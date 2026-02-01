@@ -18,11 +18,10 @@ trait BulkStoreTestTrait
     protected $symbols;
     protected $updateObject;
     private $api;
-    private $symbolFactory;
-    private $requestFactory;
     private $source;
     private $cashTimestamp;
     private $df;
+    private static $symbolCounter = 0;
 
     // TEST: force not create asset?
     private int $validationError = Response::HTTP_UNPROCESSABLE_ENTITY;
@@ -55,7 +54,7 @@ trait BulkStoreTestTrait
         $this->postValidationError();
     }
 
-    private function setupBulkTest($field, $api, $symbolFactory, $reqFactory, $cashTs=null, $cashValue=null)
+    private function setupBulkTest($field, $api, $cashTs=null, $cashValue=null)
     {
         $this->df = new DataFactory();
         $this->df->createFund();
@@ -71,8 +70,31 @@ trait BulkStoreTestTrait
         $this->setupTimestampTest("2022-01-01");
         $this->field = $field;
         $this->api = $api;
-        $this->symbolFactory = $symbolFactory;
-        $this->requestFactory = $reqFactory;
+    }
+
+    private function generateSymbol(array $overrides = []): array
+    {
+        $types = ['STK', 'ETF', 'BND', 'CRY'];
+        self::$symbolCounter++;
+        $symbol = [
+            'name' => 'symbol_' . self::$symbolCounter . '_' . rand(10000, 99999),
+            'type' => $types[array_rand($types)],
+        ];
+        if ($this->field === 'position') {
+            $symbol['position'] = round(rand(1, 10000) / 100, 4);
+        } else {
+            $symbol['price'] = round(rand(1, 100000) / 100, 2);
+        }
+        return array_merge($symbol, $overrides);
+    }
+
+    private function generateSymbols(int $count): array
+    {
+        $symbols = [];
+        for ($i = 0; $i < $count; $i++) {
+            $symbols[] = $this->generateSymbol();
+        }
+        return $symbols;
     }
 
     public function testMissingFields()
@@ -149,18 +171,27 @@ trait BulkStoreTestTrait
 
         $df = new DataFactory();
         $df->createFund();
-        $source = $df->portfolio->source;
-        $this->post['source'] = $source;
+        $source2 = $df->portfolio->source;
+        $this->post['source'] = $source2;
 
-        $this->assertFalse(AssetExt::where('name', $name)
-                ->where('source', $source)->exists());
+        // With data_source deduplication, assets are shared across portfolios
+        // with the same data_source. Both test portfolios map to 'IB' data_source,
+        // so the same asset will be reused.
+        $dataSource = AssetExt::getDataSourceForPortfolio($source2);
 
         $this->postBulkAPI();
 
-        $asset2 = $this->getAsset($name, $source);
-        $this->assertNotNull($asset2, $source);
-        $this->assertCount(1, $this->getChildren($asset2, $source));
+        // Asset should be reused (same data_source), not created new
+        $asset2 = AssetExt::where('name', $name)
+            ->where('data_source', $dataSource)->first();
+        $this->assertNotNull($asset2, "Asset should exist with data_source=$dataSource");
+
+        // Both assets should be the same record (shared across portfolios)
+        $this->assertEquals($asset->id, $asset2->id, "Asset should be reused across portfolios with same data_source");
+
+        // Children (prices/positions) are still tracked per source
         $this->assertCount(1, $this->getChildren($asset, $source1));
+        $this->assertCount(1, $this->getChildren($asset2, $source2));
     }
 
     public function testRemoveSymbol() {
@@ -256,25 +287,22 @@ trait BulkStoreTestTrait
 
     protected function createSampleReq($count=2, $cashValue=1000): array
     {
-        $this->symbols = $this->symbolFactory->count($count)->make();
+        $this->symbols = collect($this->generateSymbols($count));
         if ($this->field == 'position' && $cashValue > 0) {
-            $this->symbols->add(
-                $this->symbolFactory->make([
-                    'name' => 'CASH',
-                    'type' => 'CSH',
-                    $this->field => $cashValue,
-                ]));
+            $this->symbols->add([
+                'name' => 'CASH',
+                'type' => 'CSH',
+                $this->field => $cashValue,
+            ]);
         }
-        $this->updateObject = $this->requestFactory->make([
+
+        $this->post = [
             'timestamp' => $this->timestamp(),
             'source'    => $this->source,
-        ]);
-
-        $assetsArr = $this->updateObject->toArray();
-        $assetsArr['symbols'] = $this->symbols->toArray();
-        $this->post = $assetsArr;
-        $this->debug("createSampleReq: " . json_encode($assetsArr));
-        return $assetsArr;
+            'symbols'   => $this->symbols->toArray(),
+        ];
+        $this->debug("createSampleReq: " . json_encode($this->post));
+        return $this->post;
     }
 
     protected function validateSampleRequest($func, $ts1=null, $value1=null, $ts2=null, $value2=null): void

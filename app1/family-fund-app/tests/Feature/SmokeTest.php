@@ -358,6 +358,9 @@ class SmokeTest extends TestCase
 
             // Dev-only routes
             'dev-login/{redirect?}',
+
+            // Operations routes require admin permissions
+            'operations/validate-portfolio-balances',
         ];
     }
 

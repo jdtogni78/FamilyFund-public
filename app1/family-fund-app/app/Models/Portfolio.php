@@ -34,7 +34,10 @@ class Portfolio extends Model
 
     public $fillable = [
         'fund_id',
-        'source'
+        'source',
+        'display_name',
+        'type',
+        'category'
     ];
 
     /**
@@ -45,7 +48,10 @@ class Portfolio extends Model
     protected $casts = [
         'id' => 'integer',
         'fund_id' => 'integer',
-        'source' => 'string'
+        'source' => 'string',
+        'display_name' => 'string',
+        'type' => 'string',
+        'category' => 'string'
     ];
 
     /**
@@ -54,19 +60,59 @@ class Portfolio extends Model
      * @var array
      */
     public static $rules = [
-        'fund_id' => 'required',
         'source' => 'required|string|max:30',
+        'display_name' => 'nullable|string|max:100',
+        'type' => 'nullable|string|max:20',
+        'category' => 'nullable|string|max:20',
+        // Accept either fund_id (legacy) or fund_ids (new multi-fund)
+        'fund_id' => 'required_without:fund_ids|exists:funds,id',
+        'fund_ids' => 'required_without:fund_id|array|min:1',
+        'fund_ids.*' => 'exists:funds,id',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
 
     /**
+     * Many-to-many relationship with funds.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     **/
+    public function funds()
+    {
+        return $this->belongsToMany(\App\Models\FundExt::class, 'fund_portfolio', 'portfolio_id', 'fund_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Legacy relationship for backward compatibility.
+     * Returns the first fund from the pivot table, or uses fund_id if set.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      **/
     public function fund()
     {
         return $this->belongsTo(\App\Models\FundExt::class, 'fund_id');
+    }
+
+    /**
+     * Get the primary fund (first fund from pivot table or legacy fund_id).
+     * Used for backward compatibility where $portfolio->fund was used.
+     *
+     * @return \App\Models\FundExt|null
+     */
+    public function getPrimaryFund()
+    {
+        // Try pivot table first (new way)
+        $pivotFund = $this->funds()->first();
+        if ($pivotFund) {
+            return $pivotFund;
+        }
+        // Fall back to legacy fund_id
+        if ($this->fund_id) {
+            return \App\Models\FundExt::find($this->fund_id);
+        }
+        return null;
     }
 
     /**
@@ -83,5 +129,13 @@ class Portfolio extends Model
     public function tradePortfolios()
     {
         return $this->hasMany(\App\Models\TradePortfolioExt::class, 'portfolio_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function portfolioBalances()
+    {
+        return $this->hasMany(\App\Models\PortfolioBalance::class, 'portfolio_id');
     }
 }

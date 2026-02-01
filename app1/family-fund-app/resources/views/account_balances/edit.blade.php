@@ -18,7 +18,9 @@
                               <strong>Edit Account Balance</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['accountBalances.update', $accountBalance->id]') }" >
+<form method="POST" action="{{ route('accountBalances.update', $accountBalance->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('account_balances.fields')
 

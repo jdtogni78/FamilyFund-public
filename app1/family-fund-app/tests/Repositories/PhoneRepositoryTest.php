@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class PhoneRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class PhoneRepositoryTest extends TestCase
         parent::setUp();
         $this->phoneRepo = \App::make(PhoneRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_phone()
     {
         $phone = Phone::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class PhoneRepositoryTest extends TestCase
         $this->assertNotNull(Phone::find($createdPhone['id']), 'Phone with given id must be in DB');
         $this->assertModelData($phone, $createdPhone);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_phone()
     {
         $phone = Phone::factory()->create();
@@ -50,10 +41,6 @@ class PhoneRepositoryTest extends TestCase
         $dbPhone = $dbPhone->toArray();
         $this->assertModelData($phone->toArray(), $dbPhone);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_phone()
     {
         $phone = Phone::factory()->create();
@@ -65,10 +52,6 @@ class PhoneRepositoryTest extends TestCase
         $dbPhone = $this->phoneRepo->find($phone->id);
         $this->assertModelData($fakePhone, $dbPhone->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_phone()
     {
         $phone = Phone::factory()->create();

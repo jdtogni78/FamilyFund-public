@@ -10,13 +10,16 @@
     $cashGroup = $cashAsset->display_group ?? 'Stability';
     $cashPct = $tradePortfolio->cash_target * 100;
 
-    // Group colors
-    $groupColors = [
-        'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
-        'Stability' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'],
-        'Crypto' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
-        'default' => ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'],
+    // Group color palette (indexed by hash for consistent colors)
+    $groupPalette = [
+        ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'], // green
+        ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'], // blue
+        ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'], // amber
+        ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce'], // purple
+        ['bg' => '#ffe4e6', 'border' => '#e11d48', 'text' => '#be123c'], // rose
+        ['bg' => '#ccfbf1', 'border' => '#14b8a6', 'text' => '#0f766e'], // teal
     ];
+    $getGroupColors = fn($name) => $groupPalette[crc32($name) % 6];
 
     $groupCount = count($tradePortfolio->groups);
     $colClass = $groupCount <= 2 ? 'col-md-6' : ($groupCount == 3 ? 'col-lg-4 col-md-6' : 'col-lg-3 col-md-6');
@@ -35,6 +38,7 @@
         </div>
         <div>
             @if(!$editable)
+                <a href="{{ route('tradePortfolios.rebalance', [$tradePortfolio->id]) }}" class="btn btn-sm btn-warning mr-1" title="Rebalance"><i class="fa fa-balance-scale"></i></a>
                 <a href="{{ route('tradePortfoliosItems.createWithParams', ['tradePortfolioId' => $tradePortfolio->id]) }}" class="btn btn-sm btn-light mr-1" title="Add Item"><i class="fa fa-plus"></i></a>
                 <a href="{{ route('tradePortfolios.edit', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-light" title="Edit"><i class="fa fa-edit"></i></a>
                 <a href="{{ route('tradePortfolios.show_diff', [$tradePortfolio->id]) }}" class="btn btn-sm btn-outline-light" title="Compare"><i class="fa fa-random"></i></a>
@@ -87,7 +91,7 @@
         <div class="row">
             @foreach($tradePortfolio->groups as $group => $targetPct)
                 @php
-                    $colors = $groupColors[$group] ?? $groupColors['default'];
+                    $colors = $getGroupColors($group);
                     $items = $groupedItems->get($group, collect());
                     $actualPct = $items->sum('target_share') * 100;
                     // Add cash to the group it belongs to
@@ -159,7 +163,7 @@
                 $ungroupedItems = $groupedItems->filter(fn($items, $key) => !isset($tradePortfolio->groups[$key]));
             @endphp
             @foreach($ungroupedItems as $group => $items)
-                @php $colors = $groupColors['default']; @endphp
+                @php $colors = $getGroupColors($group ?: 'Other'); @endphp
                 <div class="{{ $colClass }} mb-3">
                     <div class="d-flex justify-content-between align-items-center p-2 rounded-top" style="background: {{ $colors['bg'] }}; border-left: 4px solid {{ $colors['border'] }};">
                         <strong style="color: {{ $colors['text'] }};">{{ $group ?: 'Other' }}</strong>

@@ -8,7 +8,7 @@
             <th>As Of</th>
             <th>Scheduled Job Id</th>
             <th>Created At</th>
-            <th colspan="3">Action</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
@@ -30,6 +30,12 @@
                     <div class='btn-group'>
                         <a href="{{ route('fundReports.show', [$fundReport->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
                         <a href="{{ route('fundReports.edit', [$fundReport->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        @if($fundReport->as_of->format('Y-m-d') !== '9999-12-31')
+                        <form action="{{ route('fundReports.resend', $fundReport->id) }}" method="POST" style="display:inline">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-primary" title="Resend email" onclick="return confirm('Resend this report via email?')"><i class="fa fa-paper-plane"></i></button>
+                        </form>
+                        @endif
                         <form action="{{ route('fundReports.destroy', $fundReport->id) }}" method="DELETE">
                             @csrf
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this fund report?')"><i class="fa fa-trash"></i></button>
@@ -41,3 +47,15 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#fundReports-table').DataTable({
+            order: [[3, 'desc']], // Sort by As Of (column 3) descending
+            columnDefs: [
+                { orderable: false, targets: -1 } // Disable sorting on Action column
+            ],
+            pageLength: 25
+        });
+    });
+</script>

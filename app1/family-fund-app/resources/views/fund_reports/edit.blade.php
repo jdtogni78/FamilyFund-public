@@ -18,7 +18,9 @@
                               <strong>Edit Fund Report</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['fundReports.update', $fundReport->id]') }" >
+<form method="POST" action="{{ route('fundReports.update', $fundReport->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('fund_reports.fields')
 

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AccountBalanceRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AccountBalanceRepositoryTest extends TestCase
         parent::setUp();
         $this->accountBalanceRepo = \App::make(AccountBalanceRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_account_balance()
     {
         $accountBalance = AccountBalance::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AccountBalanceRepositoryTest extends TestCase
         $this->assertNotNull(AccountBalance::find($createdAccountBalance['id']), 'AccountBalance with given id must be in DB');
         $this->assertModelData($accountBalance, $createdAccountBalance);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();
@@ -50,10 +41,6 @@ class AccountBalanceRepositoryTest extends TestCase
         $dbAccountBalance = $dbAccountBalance->toArray();
         $this->assertModelData($accountBalance->toArray(), $dbAccountBalance);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();
@@ -65,10 +52,6 @@ class AccountBalanceRepositoryTest extends TestCase
         $dbAccountBalance = $this->accountBalanceRepo->find($accountBalance->id);
         $this->assertModelData($fakeAccountBalance, $dbAccountBalance->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_account_balance()
     {
         $accountBalance = AccountBalance::factory()->create();

@@ -34,3 +34,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#assetChangeLogs-table').DataTable();
+    });
+</script>

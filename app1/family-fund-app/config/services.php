@@ -34,4 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
+    'trading_calendar' => [
+        'url' => env('TRADING_CALENDAR_URL', 'http://trading-calendar:80'),
+    ],
 ];

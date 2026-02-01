@@ -4,15 +4,17 @@
         $currentDir = request('dir', 'desc');
         $nextDir = $currentDir === 'asc' ? 'desc' : 'asc';
 
-        function sortLinkPA($column, $label, $currentSort, $currentDir, $nextDir) {
-            $isActive = $currentSort === $column;
-            $dir = $isActive ? $nextDir : 'desc';
-            $icon = '';
-            if ($isActive) {
-                $icon = $currentDir === 'asc' ? ' <i class="fa fa-sort-up"></i>' : ' <i class="fa fa-sort-down"></i>';
+        if (!function_exists('sortLinkPA')) {
+            function sortLinkPA($column, $label, $currentSort, $currentDir, $nextDir) {
+                $isActive = $currentSort === $column;
+                $dir = $isActive ? $nextDir : 'desc';
+                $icon = '';
+                if ($isActive) {
+                    $icon = $currentDir === 'asc' ? ' <i class="fa fa-sort-up"></i>' : ' <i class="fa fa-sort-down"></i>';
+                }
+                $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $dir]);
+                return '<a href="' . $url . '" class="text-decoration-none' . ($isActive ? ' fw-bold' : '') . '">' . $label . $icon . '</a>';
             }
-            $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $dir]);
-            return '<a href="' . $url . '" class="text-decoration-none' . ($isActive ? ' fw-bold' : '') . '">' . $label . $icon . '</a>';
         }
     @endphp
     <table class="table table-striped" id="portfolioAssets-table">

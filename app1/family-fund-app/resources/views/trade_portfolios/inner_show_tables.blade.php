@@ -64,12 +64,9 @@
 
 {{-- Trade Portfolios Stocks Table --}}
 @php
-    $groupColors = [
-        'Growth' => '#16a34a',
-        'Stability' => '#2563eb',
-        'Crypto' => '#d97706',
-        'default' => '#64748b',
-    ];
+    // Border color palette (indexed by hash for consistent colors)
+    $borderPalette = ['#16a34a', '#2563eb', '#d97706', '#9333ea', '#e11d48', '#14b8a6'];
+    $getGroupBorderColor = fn($name) => $borderPalette[crc32($name) % 6];
 
     $cashAsset = \App\Models\AssetExt::getCashAsset();
     $cashGroup = $cashAsset->display_group ?? 'Stability';
@@ -143,7 +140,7 @@
             <tbody>
                 @foreach($symbolMap as $symbol => $data)
                     @php
-                        $color = $groupColors[$data['group']] ?? $groupColors['default'];
+                        $color = $getGroupBorderColor($data['group']);
                         $isCash = $data['isCash'] ?? false;
                     @endphp
                     <tr @if($isCash) style="background: #f0fdfa;" @endif>

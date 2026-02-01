@@ -9,7 +9,7 @@
                 <th>Type</th>
                 <th>As Of</th>
                 <th>Created</th>
-                <th colspan="3">Action</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -23,18 +23,14 @@
                 <td>{{ $accountReport->id }}</td>
                 <td>
                     @if($account)
-                        <a href="{{ route('accounts.show', $account->id) }}">
-                            {{ $account->nickname ?? $account->code }}
-                        </a>
+                        @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname ?? $account->code])
                     @else
                         {{ $accountReport->account_id }}
                     @endif
                 </td>
                 <td>
                     @if($fund)
-                        <a href="{{ route('funds.show', $fund->id) }}">
-                            {{ $fund->name }}
-                        </a>
+                        @include('partials.view_link', ['route' => route('funds.show', $fund->id), 'text' => $fund->name])
                     @else
                         -
                     @endif
@@ -66,3 +62,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#accountReports-table').DataTable();
+    });
+</script>

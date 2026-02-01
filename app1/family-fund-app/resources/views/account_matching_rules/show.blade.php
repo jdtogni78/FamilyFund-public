@@ -135,6 +135,15 @@
                                 <a href="{{ route('accountMatchingRules.index') }}" class="btn btn-outline-secondary">
                                     <i class="fa fa-arrow-left me-2"></i> Back to List
                                 </a>
+                                <hr class="my-2">
+                                <form action="{{ route('accountMatchingRules.destroy', $accountMatchingRule->id) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger w-100"
+                                            onclick="return confirm('Are you sure you want to delete this matching rule assignment?')">
+                                        <i class="fa fa-trash mr-2"></i> Delete
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

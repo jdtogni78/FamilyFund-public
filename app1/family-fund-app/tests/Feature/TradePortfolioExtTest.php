@@ -2,9 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\PortfolioExt;
-use App\Models\PositionUpdate;
-use App\Models\SymbolPosition;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;

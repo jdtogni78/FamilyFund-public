@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class PortfolioAssetRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class PortfolioAssetRepositoryTest extends TestCase
         parent::setUp();
         $this->portfolioAssetRepo = \App::make(PortfolioAssetRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class PortfolioAssetRepositoryTest extends TestCase
         $this->assertNotNull(PortfolioAsset::find($createdPortfolioAsset['id']), 'PortfolioAsset with given id must be in DB');
         $this->assertModelData($portfolioAsset, $createdPortfolioAsset);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();
@@ -50,10 +41,6 @@ class PortfolioAssetRepositoryTest extends TestCase
         $dbPortfolioAsset = $dbPortfolioAsset->toArray();
         $this->assertModelData($portfolioAsset->toArray(), $dbPortfolioAsset);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();
@@ -65,10 +52,6 @@ class PortfolioAssetRepositoryTest extends TestCase
         $dbPortfolioAsset = $this->portfolioAssetRepo->find($portfolioAsset->id);
         $this->assertModelData($fakePortfolioAsset, $dbPortfolioAsset->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_portfolio_asset()
     {
         $portfolioAsset = PortfolioAsset::factory()->create();

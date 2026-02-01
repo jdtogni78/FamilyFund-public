@@ -55,6 +55,11 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
         $startDt = $request->input('start_dt');
         $endDt = $request->input('end_dt');
 
+        // Default to -1 year if no start date explicitly provided
+        if (!$startDt) {
+            $startDt = now()->subYear()->format('Y-m-d');
+        }
+
         if (!empty($startDt)) {
             // Record must still be active on or after this date
             $query->where('end_dt', '>=', $startDt);
@@ -94,6 +99,11 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
                 break;
         }
 
+        // Get ALL records for gap detection (clone query to avoid affecting pagination)
+        $allFilteredRecords = clone $query;
+        $allFilteredRecords = $allFilteredRecords->get();
+
+        // Now paginate for display
         $portfolioAssets = $query->paginate(50);
 
         // Prepare chart data
@@ -114,13 +124,16 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
         // Get asset map - filtered by fund if selected
         $assetMap = $this->getAssetMapWithType($fundId);
 
-        // Detect data issues (overlaps and gaps)
-        $dataWarnings = $this->detectDataIssues($portfolioAssets, 'asset_id', 'asset');
+        // Detect data issues (overlaps and gaps) on ALL filtered records, not just current page
+        $dataWarnings = $this->detectDataIssues($allFilteredRecords, 'asset_id', 'asset');
 
         $api = [
             'assetMap' => $assetMap,
             'fundMap' => $this->getFundMap(),
-            'filters' => $request->only(['asset_id', 'fund_id', 'start_dt', 'end_dt']),
+            'filters' => array_merge(
+                $request->only(['asset_id', 'fund_id', 'end_dt']),
+                ['start_dt' => $startDt] // Use the actual start_dt being applied (with default)
+            ),
         ];
 
         // Collect issue dates for chart visualization
@@ -136,7 +149,7 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
 
     /**
      * Get asset map with type information for dropdowns.
-     * Optionally filtered by fund.
+     * Optionally filtered by fund. Shows fund abbreviation when no fund filter.
      */
     protected function getAssetMapWithType($fundId = null)
     {
@@ -149,13 +162,35 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
             })->distinct()->pluck('asset_id');
 
             $assets = AssetExt::whereIn('id', $assetIds)->orderBy('name')->get();
+
+            foreach ($assets as $asset) {
+                $map[$asset->id] = $asset->name . ' (' . $asset->type . ')';
+            }
         } else {
+            // No fund filter - show fund abbreviation for each asset
             $assets = AssetExt::orderBy('name')->get();
+
+            // Get fund associations for all assets
+            $assetFunds = PortfolioAsset::with('portfolio.fund')
+                ->distinct('asset_id')
+                ->get()
+                ->groupBy('asset_id')
+                ->map(function ($items) {
+                    return $items->map(fn($pa) => $pa->portfolio->fund->name ?? null)
+                        ->filter()
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                });
+
+            foreach ($assets as $asset) {
+                $funds = $assetFunds->get($asset->id, []);
+                $fundStr = !empty($funds) ? ' [' . implode(', ', $funds) . ']' : '';
+                $map[$asset->id] = $asset->name . ' (' . $asset->type . ')' . $fundStr;
+            }
         }
 
-        foreach ($assets as $asset) {
-            $map[$asset->id] = $asset->name . ' (' . $asset->type . ')';
-        }
         return $map;
     }
 

@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Listeners\LogQueueJobCompletion;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Knp\Snappy\Pdf;
@@ -32,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Use Bootstrap 5 pagination styling
+        Paginator::useBootstrapFive();
+
         // Set default password validation rules
         Password::defaults(function () {
             return Password::min(8)
@@ -42,5 +49,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Register queue job event subscriber
         Event::subscribe(LogQueueJobCompletion::class);
+
+        // Note: LogSentEmail listener is auto-discovered by Laravel 11
+        // based on the MessageSent type-hint in the handle() method
+
+        // Decrypt mail password if encrypted version is set
+        if ($encrypted = env('MAIL_PASSWORD_ENCRYPTED')) {
+            try {
+                Config::set('mail.mailers.smtp.password', Crypt::decrypt($encrypted));
+            } catch (\Exception $e) {
+                Log::warning('Failed to decrypt MAIL_PASSWORD_ENCRYPTED - using MAIL_PASSWORD instead: ' . $e->getMessage());
+            }
+        }
     }
 }

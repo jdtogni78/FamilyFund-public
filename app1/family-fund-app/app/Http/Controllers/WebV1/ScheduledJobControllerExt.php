@@ -156,7 +156,7 @@ class ScheduledJobControllerExt extends ScheduledJobController
         return redirect(route('scheduledJobs.show', $id));
     }
 
-    public function forceRunScheduledJob($id, $asOf)
+    public function forceRunScheduledJob(Request $request, $id, $asOf)
     {
         $scheduledJob = ScheduledJobExt::find($id);
 
@@ -165,9 +165,11 @@ class ScheduledJobControllerExt extends ScheduledJobController
             return redirect()->back()->withErrors('Scheduled Job not found');
         }
 
+        $skipDataCheck = $request->boolean('skip_data_check', false);
+
         DB::beginTransaction();
         try {
-            list ($data, $error) = $this->forceRunJob(new Carbon($asOf), $scheduledJob);
+            list ($data, $error) = $this->forceRunJob(new Carbon($asOf), $scheduledJob, $skipDataCheck);
 
             if (null !== $error) {
                 DB::rollBack();

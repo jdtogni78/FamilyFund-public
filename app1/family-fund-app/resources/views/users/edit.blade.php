@@ -18,7 +18,9 @@
                               <strong>Edit User</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['users.update', $user->id]') }" >
+<form method="POST" action="{{ route('users.update', $user->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('users.fields')
 

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 */
 
 // Dev-only auto-login route for CLI testing
-if (app()->environment('local')) {
+if (app()->environment('local', 'dev')) {
     Route::get('/dev-login/{redirect?}', function ($redirect = '/') {
         Auth::loginUsingId(\App\Models\User::where('email', 'claude@test.local')->first()->id);
         return redirect('/' . $redirect);
@@ -34,6 +34,10 @@ Route::view('profile', 'profile')
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::middleware('auth')->group(function () {
+    Route::get('funds/{id}/overview', 'App\Http\Controllers\WebV1\FundControllerExt@overview')
+        ->name('funds.overview');
+    Route::get('api/funds/{id}/overview-data', 'App\Http\Controllers\WebV1\FundControllerExt@overviewData')
+        ->name('api.funds.overview_data');
     Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showAsOf');
     Route::get('funds/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showPDFAsOf');
     Route::get('funds/{id}/trade_bands', 'App\Http\Controllers\WebV1\FundControllerExt@tradeBands')
@@ -42,12 +46,18 @@ Route::middleware('auth')->group(function () {
         ->name('funds.show_trade_bands_as_of');
     Route::get('funds/{id}/trade_bands_pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showTradeBandsPDFAsOf')
         ->name('funds.show_trade_bands_pdf');
+    Route::get('funds/{id}/portfolios', 'App\Http\Controllers\WebV1\FundControllerExt@portfolios')
+        ->name('funds.portfolios');
+    Route::get('funds/{id}/four_pct_goal/edit', 'App\Http\Controllers\WebV1\FundControllerExt@editFourPctGoal')
+        ->name('funds.four_pct_goal.edit');
+    Route::put('funds/{id}/four_pct_goal', 'App\Http\Controllers\WebV1\FundControllerExt@updateFourPctGoal')
+        ->name('funds.four_pct_goal.update');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
-    Route::get('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@split')
-        ->name('tradePortfolios.split');
-    Route::patch('tradePortfolios/{id}/split', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doSplit')
-        ->name('tradePortfolios.split');
+    Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')
+        ->name('tradePortfolios.rebalance');
+    Route::post('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doRebalance')
+        ->name('tradePortfolios.doRebalance');
     Route::get('tradePortfolios/{id}/show_diff', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showDiff')
         ->name('tradePortfolios.show_diff');
     Route::get('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')
@@ -118,9 +128,30 @@ Route::middleware('auth')->group(function () {
         ->name('operations.queue_retry_all');
     Route::post('operations/queue/flush', 'App\Http\Controllers\WebV1\OperationsController@flushFailedJobs')
         ->name('operations.queue_flush');
+    Route::post('operations/send-test-email', 'App\Http\Controllers\WebV1\OperationsController@sendTestEmail')
+        ->name('operations.send_test_email');
+    Route::get('operations/validate-portfolio-balances', 'App\Http\Controllers\WebV1\OperationsController@validatePortfolioBalances')
+        ->name('operations.validate_portfolio_balances');
 
-    Route::resource('accountBalances', App\Http\Controllers\AccountBalanceController::class);
-    Route::resource('accountGoals', App\Http\Controllers\AccountGoalController::class);
+    // Exchange Holidays (admin only - checked in controller)
+    Route::get('exchange-holidays', 'App\Http\Controllers\WebV1\ExchangeHolidayController@index')
+        ->name('exchange-holidays.index');
+    Route::post('exchange-holidays/sync', 'App\Http\Controllers\WebV1\ExchangeHolidayController@sync')
+        ->name('exchange-holidays.sync');
+
+    // Email Operations (admin only - checked in controller)
+    Route::get('emails', 'App\Http\Controllers\WebV1\EmailController@index')
+        ->name('emails.index');
+    Route::post('emails/send-test', 'App\Http\Controllers\WebV1\EmailController@sendTest')
+        ->name('emails.send_test');
+    Route::get('emails/attachment/{hash}/{filename}', 'App\Http\Controllers\WebV1\EmailController@downloadAttachment')
+        ->name('emails.attachment')
+        ->where('hash', '[a-f0-9]{32}');
+    Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
+        ->name('emails.show');
+
+    Route::resource('accountBalances', App\Http\Controllers\WebV1\AccountBalanceControllerExt::class);
+    Route::resource('accountGoals', App\Http\Controllers\WebV1\AccountGoalControllerExt::class);
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
@@ -131,7 +162,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
+    Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
+        ->name('fundReports.resend');
     Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
+    Route::get('funds/create-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@createWithSetup')
+        ->name('funds.createWithSetup');
+    Route::post('funds/store-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@storeWithSetup')
+        ->name('funds.storeWithSetup');
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
     Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
@@ -151,6 +188,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
     Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');
+    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\TradeBandReportController@resend')
+        ->name('tradeBandReports.resend');
     Route::resource('tradeBandReports', App\Http\Controllers\TradeBandReportController::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);

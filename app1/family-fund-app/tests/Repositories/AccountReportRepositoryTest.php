@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AccountReportRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AccountReportRepositoryTest extends TestCase
         parent::setUp();
         $this->accountReportRepo = \App::make(AccountReportRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_account_report()
     {
         $accountReport = AccountReport::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AccountReportRepositoryTest extends TestCase
         $this->assertNotNull(AccountReport::find($createdAccountReport['id']), 'AccountReport with given id must be in DB');
         $this->assertModelData($accountReport, $createdAccountReport);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_account_report()
     {
         $accountReport = AccountReport::factory()->create();
@@ -50,10 +41,6 @@ class AccountReportRepositoryTest extends TestCase
         $dbAccountReport = $dbAccountReport->toArray();
         $this->assertModelData($accountReport->toArray(), $dbAccountReport);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_account_report()
     {
         $accountReport = AccountReport::factory()->create();
@@ -65,10 +52,6 @@ class AccountReportRepositoryTest extends TestCase
         $dbAccountReport = $this->accountReportRepo->find($accountReport->id);
         $this->assertModelData($fakeAccountReport, $dbAccountReport->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_account_report()
     {
         $accountReport = AccountReport::factory()->create();

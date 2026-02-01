@@ -42,6 +42,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     zip \
     opcache
 
+# Install pcov for code coverage (faster than Xdebug)
+RUN pecl install pcov && docker-php-ext-enable pcov
+
 # Configure PHP for development
 RUN echo 'sendmail_path = "/usr/local/bin/mhsendmail --smtp-addr=mail:1025"' >> /usr/local/etc/php/conf.d/sendmail.ini \
     && echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/custom.ini \

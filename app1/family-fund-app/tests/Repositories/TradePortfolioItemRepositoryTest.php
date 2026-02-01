@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class TradePortfolioItemRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class TradePortfolioItemRepositoryTest extends TestCase
         parent::setUp();
         $this->tradePortfolioItemRepo = \App::make(TradePortfolioItemRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class TradePortfolioItemRepositoryTest extends TestCase
         $this->assertNotNull(TradePortfolioItem::find($createdTradePortfolioItem['id']), 'TradePortfolioItem with given id must be in DB');
         $this->assertModelData($tradePortfolioItem, $createdTradePortfolioItem);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();
@@ -50,10 +41,6 @@ class TradePortfolioItemRepositoryTest extends TestCase
         $dbTradePortfolioItem = $dbTradePortfolioItem->toArray();
         $this->assertModelData($tradePortfolioItem->toArray(), $dbTradePortfolioItem);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();
@@ -65,10 +52,6 @@ class TradePortfolioItemRepositoryTest extends TestCase
         $dbTradePortfolioItem = $this->tradePortfolioItemRepo->find($tradePortfolioItem->id);
         $this->assertModelData($fakeTradePortfolioItem, $dbTradePortfolioItem->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_trade_portfolio_item()
     {
         $tradePortfolioItem = TradePortfolioItem::factory()->create();

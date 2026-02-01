@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateScheduledJobRequest;
 use App\Http\Requests\UpdateScheduledJobRequest;
+use App\Models\FundReport;
+use App\Models\TradeBandReport;
+use App\Models\Transaction;
+use App\Models\Schedule;
 use App\Repositories\ScheduledJobRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
@@ -42,7 +46,29 @@ class ScheduledJobController extends AppBaseController
      */
     public function create()
     {
-        return view('scheduled_jobs.create');
+        return view('scheduled_jobs.create', $this->getFormData());
+    }
+
+    /**
+     * Get form data for create/edit views.
+     */
+    private function getFormData(): array
+    {
+        return [
+            'schedules' => Schedule::pluck('descr', 'id'),
+            'fundReportTemplates' => FundReport::where('as_of', '9999-12-31')
+                ->with('fund')
+                ->get()
+                ->mapWithKeys(fn($r) => [$r->id => $r->fund->name . ' - ' . $r->type]),
+            'tradeBandReportTemplates' => TradeBandReport::where('as_of', '9999-12-31')
+                ->with('fund')
+                ->get()
+                ->mapWithKeys(fn($r) => [$r->id => $r->fund->name]),
+            'transactionTemplates' => Transaction::whereDate('timestamp', '9999-12-31')
+                ->with('account')
+                ->get()
+                ->mapWithKeys(fn($t) => [$t->id => ($t->account->nickname ?? 'Acct#'.$t->account_id) . ' - ' . $t->type]),
+        ];
     }
 
     /**
@@ -100,7 +126,10 @@ class ScheduledJobController extends AppBaseController
             return redirect(route('scheduledJobs.index'));
         }
 
-        return view('scheduled_jobs.edit')->with('scheduledJob', $scheduledJob);
+        return view('scheduled_jobs.edit', array_merge(
+            ['scheduledJob' => $scheduledJob],
+            $this->getFormData()
+        ));
     }
 
     /**

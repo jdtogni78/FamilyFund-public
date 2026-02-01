@@ -18,7 +18,9 @@
                               <strong>Edit Phone</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['phones.update', $phone->id]') }" >
+<form method="POST" action="{{ route('phones.update', $phone->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('phones.fields')
 

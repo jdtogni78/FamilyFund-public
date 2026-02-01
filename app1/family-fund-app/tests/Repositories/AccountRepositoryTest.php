@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AccountRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AccountRepositoryTest extends TestCase
         parent::setUp();
         $this->accountRepo = \App::make(AccountRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_account()
     {
         $account = Account::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AccountRepositoryTest extends TestCase
         $this->assertNotNull(Account::find($createdAccount['id']), 'Account with given id must be in DB');
         $this->assertModelData($account, $createdAccount);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_account()
     {
         $account = Account::factory()->create();
@@ -50,10 +41,6 @@ class AccountRepositoryTest extends TestCase
         $dbAccount = $dbAccount->toArray();
         $this->assertModelData($account->toArray(), $dbAccount);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_account()
     {
         $account = Account::factory()->create();
@@ -65,10 +52,6 @@ class AccountRepositoryTest extends TestCase
         $dbAccount = $this->accountRepo->find($account->id);
         $this->assertModelData($fakeAccount, $dbAccount->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_account()
     {
         $account = Account::factory()->create();

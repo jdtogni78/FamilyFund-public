@@ -87,6 +87,73 @@ class TradePortfolioExt extends TradePortfolio
         return $newTp;
     }
 
+    /**
+     * Create a new trade portfolio version with modified settings and items.
+     * Closes the current portfolio and creates a new one with the specified items.
+     *
+     * @param string $start_dt Start date for the new portfolio
+     * @param string $end_dt End date for the new portfolio
+     * @param array $settings Portfolio settings (cash_target, cash_reserve_target, etc.)
+     * @param array $items Array of items [{symbol, type, target_share, deviation_trigger, deleted?}, ...]
+     * @return TradePortfolioExt The newly created portfolio
+     * @throws \Exception
+     */
+    public function rebalanceWithItems($start_dt, $end_dt, $settings, $items)
+    {
+        $current = $this;
+        $newTp = $current->replicate();
+        $today = Carbon::today();
+        $end_dt = new Carbon($end_dt);
+        $start_dt = new Carbon($start_dt);
+
+        // Validate dates
+        if ($today->gt($start_dt))
+            throw new \Exception("Start date ($start_dt) must be greater than today ($today)");
+        if ($start_dt->lte($current->start_dt))
+            throw new \Exception("Start date ($start_dt) must be greater than previous start date ($current->start_dt)");
+        if ($start_dt->gt($current->end_dt))
+            throw new \Exception("Start date ($start_dt) cannot be greater than previous end date ($current->end_dt)");
+        if ($today->gte($end_dt))
+            throw new \Exception("End date ($end_dt) must be greater than today ($today)");
+        if ($end_dt->lt($start_dt))
+            throw new \Exception("End date ($end_dt) must be greater than start date ($start_dt)");
+        if ($end_dt->lt($current->end_dt))
+            throw new \Exception("End date ($end_dt) must be greater than previous end date ($current->end_dt)");
+
+        // Close current portfolio
+        $current->end_dt = $start_dt;
+        $current->save();
+
+        // Create new trade portfolio with updated settings
+        $newTp->start_dt = $start_dt;
+        $newTp->end_dt = $end_dt;
+        $newTp->cash_target = $settings['cash_target'];
+        $newTp->cash_reserve_target = $settings['cash_reserve_target'];
+        $newTp->rebalance_period = $settings['rebalance_period'];
+        $newTp->mode = $settings['mode'];
+        $newTp->minimum_order = $settings['minimum_order'];
+        $newTp->max_single_order = $settings['max_single_order'];
+        $newTp->save();
+
+        // Create new items (only non-deleted ones)
+        foreach ($items as $item) {
+            // Skip deleted items
+            if (isset($item['deleted']) && $item['deleted']) {
+                continue;
+            }
+
+            TradePortfolioItem::create([
+                'trade_portfolio_id' => $newTp->id,
+                'symbol' => $item['symbol'],
+                'type' => $item['type'],
+                'target_share' => $item['target_share'],
+                'deviation_trigger' => $item['deviation_trigger'],
+            ]);
+        }
+
+        return $newTp;
+    }
+
     public function annotateTotalShares()
     {
         // sum total shares

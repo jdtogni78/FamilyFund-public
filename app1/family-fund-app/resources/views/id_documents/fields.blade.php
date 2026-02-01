@@ -36,7 +36,7 @@
     <button type="submit" class="btn btn-primary">
         <i class="fa fa-save me-1"></i> Save
     </button>
-    <a href="{{ route('idDocuments.index') }}" class="btn btn-secondary">
+    <a href="{{ route('id_documents.index') }}" class="btn btn-secondary">
         <i class="fa fa-times me-1"></i> Cancel
     </a>
 </div>

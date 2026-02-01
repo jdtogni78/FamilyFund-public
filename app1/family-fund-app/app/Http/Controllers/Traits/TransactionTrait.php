@@ -23,12 +23,37 @@ trait TransactionTrait
         }
         $this->debug('TransactionTrait::createTransaction: ' . json_encode($input));
 
-        $transaction_data = null;
-        DB::beginTransaction();
-        $transaction = $this->transactionRepository->create($input);
-        $transaction_data = $this->processTransaction($transaction, $dry_run);
-        DB::commit();
-        return $transaction_data;
+        // Check if we're already in a transaction (called from setupFund, etc.)
+        $inTransaction = DB::transactionLevel() > 0;
+
+        if (!$inTransaction) {
+            // Not in a transaction - we need to manage it ourselves
+            DB::beginTransaction();
+        }
+
+        try {
+            $transaction = $this->transactionRepository->create($input);
+            $transaction_data = $this->processTransaction($transaction, $dry_run);
+
+            if (!$inTransaction) {
+                // We started the transaction, so we manage commit/rollback
+                if ($dry_run) {
+                    DB::rollBack();
+                } else {
+                    DB::commit();
+                }
+            }
+            // If we're nested, the outer transaction will handle commit/rollback
+
+            return $transaction_data;
+        } catch (\Exception $e) {
+            if (!$inTransaction) {
+                // We started the transaction, so we rollback on error
+                DB::rollBack();
+            }
+            // If nested, let the outer transaction handle rollback
+            throw $e;
+        }
     }
 
     protected function processTransaction(TransactionExt $transaction, bool $dry_run): array {
@@ -38,19 +63,19 @@ trait TransactionTrait
             $api = $this->getPreviewData($transaction_data);
             if ($dry_run) {
                 Flash::success('Transaction preview ready.');
-                DB::rollBack();
+                // Rollback handled by createTransaction()
             } else {
                 Flash::success('Transaction processed successfully.');
                 $this->sendTransactionConfirmation($api);
             }
         } catch (\Exception $e) {
-            DB::rollback();
+            // Rollback is handled by createTransaction() - just re-throw
             throw $e;
         }
         return $api;
     }
 
-    protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf): TransactionExt {
+    protected function transactionScheduleDue($shouldRunBy, ScheduledJob $schedule, Carbon $asOf, bool $skipDataCheck = false): TransactionExt {
         // get transaction from repo
         $tran = TransactionExt::find($schedule->entity_id);
         /** @var TransactionExt $newTran */
@@ -74,20 +99,46 @@ trait TransactionTrait
     }
 
     protected function getPreviewData($transaction_data) {
+        // Collect all available matching rules (applied + skipped)
+        $availableMatching = [];
+
         if (isset($transaction_data['matches'])) {
-            foreach ($transaction_data['matches'] as $key => $match) {
-                // Log::info('TransactionControllerExt::preview: match: ' . json_encode($match));
-                // must access fields to load
-                Log::info('TransactionTrait::getPreviewData: match: ' . json_encode($match));
-                $matchTran = TransactionExt::find($match->id);
+            foreach ($transaction_data['matches'] as $key => $matchData) {
+                // Handle new format: array with 'transaction', 'rule', 'remaining'
+                $matchTran = $matchData['transaction'] ?? $matchData;
+                $rule = $matchData['rule'] ?? null;
+                $remaining = $matchData['remaining'] ?? 0;
+
+                // Load relations
+                Log::info('TransactionTrait::getPreviewData: match: ' . json_encode($matchTran));
+                $matchTran = TransactionExt::find($matchTran->id);
                 $matchTran->cashDeposit?->id;
                 $matchTran->depositRequest?->id;
                 $matchTran->referenceTransactionMatching?->id;
                 $matchTran->account?->id;
                 $matchTran->balance?->previousBalance?->id;
                 $transaction_data['matches'][$key] = $matchTran;
+
+                // Track remaining on applied rule
+                if ($rule && $remaining > 0 && $rule->date_end >= now()) {
+                    $availableMatching[] = [
+                        'rule' => $rule,
+                        'remaining' => $remaining,
+                    ];
+                }
             }
         }
+
+        // Add skipped rules with remaining capacity
+        if (isset($transaction_data['skippedRules'])) {
+            foreach ($transaction_data['skippedRules'] as $skipped) {
+                if (($skipped['remaining'] ?? 0) > 0 && $skipped['rule']->date_end >= now()) {
+                    $availableMatching[] = $skipped;
+                }
+            }
+        }
+
+        $transaction_data['availableMatching'] = $availableMatching;
 
         $transaction = $transaction_data['transaction'];
         
@@ -111,16 +162,25 @@ trait TransactionTrait
         $transaction_data['transaction'] = $transaction;
 
         // Fund shares source data (for purchase/sale visualization)
+        // Include matching contributions in the total shares impact
         $fund = $account->fund;
         $timestamp = $transaction->timestamp;
         $fundSharesAfter = $fund->unallocatedShares($timestamp);
-        // Before = After + shares transferred to account (or - shares returned from account)
-        $fundSharesBefore = $fundSharesAfter + $transaction->shares;
+
+        // Calculate total shares including matching contributions
+        $totalShares = $transaction->shares;
+        $matches = $transaction_data['matches'] ?? [];
+        foreach ($matches as $match) {
+            $totalShares += $match->shares ?? 0;
+        }
+
+        // Before = After + total shares transferred to account
+        $fundSharesBefore = $fundSharesAfter + $totalShares;
         $transaction_data['fundShares'] = [
             'fund_name' => $fund->name,
             'before' => $fundSharesBefore,
             'after' => $fundSharesAfter,
-            'change' => -$transaction->shares, // Negative for purchase (fund loses), positive for sale
+            'change' => -$totalShares, // Negative for purchase (fund loses), positive for sale
         ];
 
         return $transaction_data;

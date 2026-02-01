@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class AssetRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class AssetRepositoryTest extends TestCase
         parent::setUp();
         $this->assetRepo = \App::make(AssetRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_asset()
     {
         $asset = Asset::factory()->make()->toArray();
@@ -37,10 +32,6 @@ class AssetRepositoryTest extends TestCase
         $this->assertNotNull(Asset::find($createdAsset['id']), 'Asset with given id must be in DB');
         $this->assertModelData($asset, $createdAsset);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_asset()
     {
         $asset = Asset::factory()->create();
@@ -50,10 +41,6 @@ class AssetRepositoryTest extends TestCase
         $dbAsset = $dbAsset->toArray();
         $this->assertModelData($asset->toArray(), $dbAsset);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_asset()
     {
         $asset = Asset::factory()->create();
@@ -65,10 +52,6 @@ class AssetRepositoryTest extends TestCase
         $dbAsset = $this->assetRepo->find($asset->id);
         $this->assertModelData($fakeAsset, $dbAsset->toArray());
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_asset()
     {
         $asset = Asset::factory()->create();

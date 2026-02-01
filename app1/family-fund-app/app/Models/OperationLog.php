@@ -32,6 +32,7 @@ class OperationLog extends Model
     const OP_QUEUE_FLUSH = 'queue_flush';
     const OP_QUEUE_JOB_COMPLETED = 'queue_job_completed';
     const OP_QUEUE_JOB_FAILED = 'queue_job_failed';
+    const OP_SEND_TEST_EMAIL = 'send_test_email';
 
     public static array $operationMap = [
         self::OP_RUN_DUE_JOBS => 'Run Due Scheduled Jobs',
@@ -43,6 +44,7 @@ class OperationLog extends Model
         self::OP_QUEUE_FLUSH => 'Flush Failed Jobs',
         self::OP_QUEUE_JOB_COMPLETED => 'Queue Job Completed',
         self::OP_QUEUE_JOB_FAILED => 'Queue Job Failed',
+        self::OP_SEND_TEST_EMAIL => 'Send Test Email',
     ];
 
     public function user(): BelongsTo
@@ -64,5 +66,38 @@ class OperationLog extends Model
             'message' => $message,
             'details' => $details,
         ]);
+    }
+
+    /**
+     * Check if a job has already completed successfully for a given model.
+     *
+     * @param string $jobClass The job class name (e.g., 'App\Jobs\SendAccountReport')
+     * @param string $modelClass The model class name (e.g., 'App\Models\AccountReport')
+     * @param int $modelId The model ID
+     * @return bool True if job already completed for this model
+     */
+    public static function jobCompletedForModel(string $jobClass, string $modelClass, int $modelId): bool
+    {
+        return self::where('operation', self::OP_QUEUE_JOB_COMPLETED)
+            ->where('result', self::RESULT_SUCCESS)
+            ->whereJsonContains('details->job_name', $jobClass)
+            ->whereJsonContains('details->model_class', $modelClass)
+            ->whereRaw("JSON_EXTRACT(details, '$.model_id') = ?", [$modelId])
+            ->exists();
+    }
+
+    /**
+     * Clear job completion records for a model (to allow resending).
+     *
+     * @param string $modelClass The model class name
+     * @param int $modelId The model ID
+     * @return int Number of records deleted
+     */
+    public static function clearJobCompletionForModel(string $modelClass, int $modelId): int
+    {
+        return self::where('operation', self::OP_QUEUE_JOB_COMPLETED)
+            ->whereJsonContains('details->model_class', $modelClass)
+            ->whereRaw("JSON_EXTRACT(details, '$.model_id') = ?", [$modelId])
+            ->delete();
     }
 }

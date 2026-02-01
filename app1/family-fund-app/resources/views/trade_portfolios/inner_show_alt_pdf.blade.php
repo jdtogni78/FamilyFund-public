@@ -4,12 +4,16 @@
 
 @if($tradePortfolios->count() > 0)
 @php
-    $groupColors = [
-        'Growth' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'],
-        'Stability' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'],
-        'Crypto' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'],
-        'default' => ['bg' => '#f1f5f9', 'border' => '#64748b', 'text' => '#475569'],
+    // Group color palette (indexed by hash for consistent colors)
+    $groupPalette = [
+        ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'], // green
+        ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'], // blue
+        ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'], // amber
+        ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce'], // purple
+        ['bg' => '#ffe4e6', 'border' => '#e11d48', 'text' => '#be123c'], // rose
+        ['bg' => '#ccfbf1', 'border' => '#14b8a6', 'text' => '#0f766e'], // teal
     ];
+    $getGroupColors = fn($name) => $groupPalette[crc32($name) % 6];
 
     $cashAsset = \App\Models\AssetExt::getCashAsset();
     $cashGroup = $cashAsset->display_group ?? 'Stability';
@@ -124,7 +128,7 @@
                     <tr>
                         <td style="padding: 8px 10px; text-align: center;">
                             @foreach($tpGroups as $group => $targetPct)
-                                @php $colors = $groupColors[$group] ?? $groupColors['default']; @endphp
+                                @php $colors = $getGroupColors($group); @endphp
                                 <span style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; display: inline-block; margin: 2px;">
                                     {{ $group }}: {{ $targetPct }}%
                                 </span>
@@ -140,7 +144,7 @@
                                 @php $currentGroup = null; @endphp
                                 @foreach($symbolMap as $symbol => $data)
                                     @php
-                                        $colors = $groupColors[$data['group']] ?? $groupColors['default'];
+                                        $colors = $getGroupColors($data['group']);
                                         $portfolioData = $data['portfolios'][$tp->id] ?? null;
                                         $isCash = $data['isCash'] ?? false;
                                     @endphp

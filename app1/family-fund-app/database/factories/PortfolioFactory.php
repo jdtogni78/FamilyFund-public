@@ -22,8 +22,33 @@ class PortfolioFactory extends Factory
     public function definition()
     {
         return [
-            'fund_id' => FundFactory::new(),
+            // Don't auto-create fund_id here - let it be set by the caller or relationship
+            // This prevents creating an extra fund when using Fund::factory()->has(Portfolio::factory())
+            'fund_id' => null,
             'source' => $this->faker->unique()->word . '_' . $this->faker->unique()->randomNumber(5),
         ];
+    }
+
+    /**
+     * State to associate with a specific fund
+     */
+    public function forFund($fund): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'fund_id' => is_object($fund) ? $fund->id : $fund,
+        ]);
+    }
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (PortfolioExt $portfolio) {
+            // Sync fund to pivot table if fund_id is set
+            if ($portfolio->fund_id) {
+                $portfolio->funds()->syncWithoutDetaching([$portfolio->fund_id]);
+            }
+        });
     }
 }

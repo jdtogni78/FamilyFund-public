@@ -18,7 +18,9 @@
                               <strong>Edit Account Matching Rule</strong>
                           </div>
                           <div class="card-body">
-<form method="patch" action="{ route('['route' => ['accountMatchingRules.update', $accountMatchingRule->id]') }" >
+<form method="POST" action="{{ route('accountMatchingRules.update', $accountMatchingRule->id) }}">
+                                  @csrf
+                                  @method('PATCH')
 
                               @include('account_matching_rules.fields')
 

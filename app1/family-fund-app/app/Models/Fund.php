@@ -34,7 +34,9 @@ class Fund extends Model
 
     public $fillable = [
         'name',
-        'goal'
+        'goal',
+        'four_pct_yearly_expenses',
+        'four_pct_net_worth_pct'
     ];
 
     /**
@@ -45,7 +47,9 @@ class Fund extends Model
     protected $casts = [
         'id' => 'integer',
         'name' => 'string',
-        'goal' => 'string'
+        'goal' => 'string',
+        'four_pct_yearly_expenses' => 'decimal:2',
+        'four_pct_net_worth_pct' => 'decimal:2'
     ];
 
     /**
@@ -70,10 +74,24 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * Many-to-many relationship with portfolios via pivot table.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      **/
     public function portfolios()
     {
-        return $this->hasOne(\App\Models\PortfolioExt::class, 'fund_id');
+        return $this->belongsToMany(\App\Models\PortfolioExt::class, 'fund_portfolio', 'fund_id', 'portfolio_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the fund account (the account with null user_id)
+     * This is a convenience method for tests and simple access
+     *
+     * @return \App\Models\AccountExt|null
+     */
+    public function account()
+    {
+        return $this->accounts()->whereNull('user_id')->first();
     }
 }

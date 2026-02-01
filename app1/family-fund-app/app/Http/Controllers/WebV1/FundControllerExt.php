@@ -4,7 +4,11 @@ namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
+use App\Http\Controllers\Traits\OverviewTrait;
+use App\Models\FundExt;
 use App\Repositories\FundRepository;
+use App\Repositories\TransactionRepository;
+use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
@@ -16,10 +20,11 @@ class FundControllerExt extends FundController
 {
     use FundTrait;
     use ChartBaseTrait;
+    use OverviewTrait;
 
-    public function __construct(FundRepository $fundRepo)
+    public function __construct(FundRepository $fundRepo, TransactionRepository $transactionRepo)
     {
-        parent::__construct($fundRepo);
+        parent::__construct($fundRepo, $transactionRepo);
     }
 
     /**
@@ -134,5 +139,153 @@ class FundControllerExt extends FundController
         $pdf->createTradeBandsPDF($arr, $isAdmin, $debug_html);
 
         return $pdf->inline('fund.pdf');
+    }
+
+    /**
+     * Display portfolios for a fund.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function portfolios($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $portfolios = $fund->portfolios()->get();
+
+        return view('funds.portfolios')
+            ->with('fund', $fund)
+            ->with('portfolios', $portfolios);
+    }
+
+    /**
+     * Display the fund overview (Monarch-inspired).
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function overview($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        $asOf = request()->get('as_of', date('Y-m-d'));
+        $period = request()->get('period', '1Y');
+        $groupBy = request()->get('group_by', 'category');
+
+        // Validate period and groupBy
+        if (!in_array(strtoupper($period), self::$validPeriods)) {
+            $period = self::$defaultPeriod;
+        }
+        if (!in_array($groupBy, self::$validGroupBy)) {
+            $groupBy = 'category';
+        }
+
+        $overviewData = $this->createFundOverviewResponse($fund, $asOf, $period, $groupBy);
+
+        return view('funds.overview')
+            ->with('api', $overviewData)
+            ->with('asOf', $asOf)
+            ->with('period', strtoupper($period))
+            ->with('groupBy', $groupBy);
+    }
+
+    /**
+     * Return overview data as JSON for AJAX updates.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function overviewData($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            return response()->json(['error' => 'Fund not found'], 404);
+        }
+
+        $asOf = request()->get('as_of', date('Y-m-d'));
+        $period = request()->get('period', '1Y');
+        $groupBy = request()->get('group_by', 'category');
+
+        // Validate period and groupBy
+        if (!in_array(strtoupper($period), self::$validPeriods)) {
+            $period = self::$defaultPeriod;
+        }
+        if (!in_array($groupBy, self::$validGroupBy)) {
+            $groupBy = 'category';
+        }
+
+        $overviewData = $this->createFundOverviewResponse($fund, $asOf, $period, $groupBy);
+
+        return response()->json($overviewData);
+    }
+
+    /**
+     * Show form to edit 4% rule goal for a fund.
+     *
+     * @param int $id
+     * @return Response
+     */
+    public function editFourPctGoal($id)
+    {
+        $fund = FundExt::find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        if (!$this->isAdmin()) {
+            Flash::error('Unauthorized');
+            return redirect(route('funds.show', $id));
+        }
+
+        return view('funds.four_pct_goal_edit')
+            ->with('fund', $fund);
+    }
+
+    /**
+     * Update 4% rule goal for a fund.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return Response
+     */
+    public function updateFourPctGoal(Request $request, $id)
+    {
+        $fund = FundExt::find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+            return redirect(route('funds.index'));
+        }
+
+        if (!$this->isAdmin()) {
+            Flash::error('Unauthorized');
+            return redirect(route('funds.show', $id));
+        }
+
+        $request->validate([
+            'four_pct_yearly_expenses' => 'nullable|numeric|min:0',
+            'four_pct_net_worth_pct' => 'nullable|numeric|min:1|max:100',
+        ]);
+
+        $fund->update([
+            'four_pct_yearly_expenses' => $request->four_pct_yearly_expenses ?: null,
+            'four_pct_net_worth_pct' => $request->four_pct_net_worth_pct ?: 100,
+        ]);
+
+        Flash::success('4% Rule Goal updated successfully.');
+        return redirect(route('funds.show', $id));
     }
 }

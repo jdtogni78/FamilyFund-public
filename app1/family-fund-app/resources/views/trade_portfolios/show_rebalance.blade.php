@@ -32,6 +32,11 @@
                                 <div class="col-md-4">
                                     <p class="mb-1"><strong>Portfolio:</strong> {{ $api['tradePortfolio']->portfolio->fund->name ?? 'N/A' }}</p>
                                     <p class="mb-1"><strong>Trade Portfolio:</strong> #{{ $api['tradePortfolio']->id }}</p>
+                                    @if(\Carbon\Carbon::parse($api['tradePortfolio']->end_dt)->isAfter(\Carbon\Carbon::today()))
+                                    <a href="{{ route('tradePortfolios.rebalance', $api['tradePortfolio']->id) }}" class="btn btn-sm btn-warning mt-2">
+                                        <i class="fa fa-balance-scale mr-1"></i> Edit Allocations
+                                    </a>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <p class="mb-1"><strong>Analysis Period:</strong></p>

@@ -19,18 +19,31 @@ Family Fund is a Laravel 11 financial fund management system for tracking fund s
 All commands run from `app1/` (NOT `app1/family-fund-app/`):
 
 ```bash
+# Deployment
+/Users/dtogni/dev/dstrader-docker/local/deploy_ff.sh  # Deploy FamilyFund to prod (REDACTED_PROD_HOST)
+
+# Production Container Management (on dstrader server REDACTED_PROD_HOST)
+# IMPORTANT: Always use these scripts, never run docker compose directly!
+# FamilyFund:
+ssh dstrader "cd ~/dev/dstrader-docker && ./server/dev/run_familyfund.sh prod"
+# Wake prod server (if sleeping): /Users/dtogni/dev/dstrader-docker/local/wake_spirit.sh
+# DStrader (auto-runs weekdays 12:33 PM via cron, or manually):
+ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && ./start_dstrader.sh restart prod -d"
+# Env vars: DSTRADER_DONT_EXECUTE_ORDERS=1, DSTRADER_DONT_RUN_STRATEGY=1, DSTRADER_DONT_VALIDATE_TRADING_HOURS=1, DSTRADER_KEEP_RUNNING=1
+
+# DStrader Prod Logs:
+# ~/dev/dstrader-docker/dstrader/prod/logs/dstrader*.log  - Main dstrader logs
+# ~/dev/dstrader-docker/dstrader/prod/logs/tws*.log       - TWS/IB Gateway logs
+# ~/dev/dstrader-docker/dstrader/prod/logs/run_report*.log - Report generation logs
+ssh dstrader "tail -100 ~/dev/dstrader-docker/dstrader/prod/logs/dstrader.log"  # View recent logs
+
 # Development (run from app1/)
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 docker exec familyfund composer install
 npm install && npm run dev   # run from app1/family-fund-app/
 
-# Testing
-php artisan test                              # All tests
-php artisan test --testsuite=Feature          # Feature tests
-php artisan test --testsuite=APIs             # API endpoint tests
-php artisan test --testsuite=Repositories     # Repository tests
-php artisan test --testsuite=GoldenData       # Golden dataset tests
-php artisan test --filter=TransactionTest     # Single test file
+# Testing (IMPORTANT: must run in Docker - database not accessible from host)
+docker exec familyfund php artisan test  # See Testing section below for more options
 
 # Database
 php artisan migrate
@@ -74,6 +87,8 @@ php artisan queue:listen
 
 ## Testing
 
+**IMPORTANT:** Tests must run in Docker (`docker exec familyfund php artisan test`) - database is not accessible from host.
+
 **Current Status (2026-01-10):** 288 passing (all pass with exclusions)
 
 Tests organized in `tests/`:
@@ -84,7 +99,7 @@ Tests organized in `tests/`:
 - `DataFactory.php` - Test data generation
 
 ```bash
-# Run tests in Docker
+# Run tests in Docker (REQUIRED - do not run locally)
 docker exec familyfund php artisan test
 docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor  # Skip problematic tests
 docker exec familyfund php artisan test --filter=TransactionTest    # Single test
@@ -154,19 +169,13 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 
 ## Development Notes
 
+- **NEVER edit code directly on the production server (REDACTED_PROD_HOST)** - always edit locally and deploy
+- Use http://localhost:3000 for testing, not the production URL
 - Share prices calculated from previous day's NAV
 - Quarterly reports generated via queue jobs
 - PDF reports use wkhtmltopdf (installed in container)
 - Email testing via MailHog in development
-
-## Agent Identification
-
-Register in `.claude-agents` file per global instructions. See `~/.claude/CLAUDE.md` for details.
-
-**Agent Name Map:**
-| Session ID | Name | Purpose |
-|------------|------|---------|
-| (your-session-id) | claude1 | (brief description) |
+- **Frontend assets**: Run `npm install && npm run build` from `app1/family-fund-app/` after changing Blade templates with new Tailwind classes (Tailwind purges unused classes)
 
 ## Claude Testing
 
@@ -179,3 +188,7 @@ Dev-only auto-login route (local environment only):
 GET /dev-login/{redirect?}
 ```
 Example: `curl -L http://localhost:3000/dev-login/accounts/8` to auto-login and access account 8.
+
+# Misc
+
+* FamilyFund .env should be a link to .env.<ENV>

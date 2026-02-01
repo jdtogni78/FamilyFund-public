@@ -72,16 +72,24 @@
              </div>
 
              <!-- Data Warnings -->
-             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']))
-             <div class="card mb-3 border-warning">
-                 <div class="card-header bg-warning text-dark">
-                     <i class="fa fa-exclamation-triangle me-2"></i>
-                     <strong>Data Warnings</strong>
+             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']) || !empty($dataWarnings['longSpans']))
+             <style>
+                 #data-warnings-header { background: #fffbeb !important; border-bottom: 1px solid #f59e0b !important; }
+                 .dark #data-warnings-header { background: #78350f !important; border-bottom: 1px solid #f59e0b !important; }
+                 .dark #data-warnings-header strong { color: #fef3c7 !important; }
+                 .dark #data-warnings-header i { color: #fbbf24 !important; }
+                 .dark .data-warnings-body { background: #451a03 !important; }
+                 .dark .data-warnings-body strong { color: #fbbf24 !important; }
+             </style>
+             <div class="card mb-3" style="border: 2px solid #f59e0b;">
+                 <div id="data-warnings-header" class="card-header">
+                     <i class="fa fa-exclamation-triangle me-2" style="color: #d97706;"></i>
+                     <strong style="color: #d97706;">Data Warnings</strong>
                  </div>
-                 <div class="card-body py-2">
+                 <div class="card-body py-2 data-warnings-body" style="max-height: 200px; overflow-y: auto;">
                      @if(!empty($dataWarnings['overlaps']))
                      <div class="mb-2">
-                         <strong class="text-warning"><i class="fa fa-clone me-1"></i> Overlapping Price Ranges:</strong>
+                         <strong style="color: #d97706;"><i class="fa fa-clone me-1" style="color: #d97706;"></i> Overlapping Price Ranges:</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['overlaps'] as $overlap)
                              <li>{{ $overlap['name'] }}: {{ $overlap['record1'] }} overlaps with {{ $overlap['record2'] }}</li>
@@ -89,12 +97,30 @@
                          </ul>
                      </div>
                      @endif
+                     @if(!empty($dataWarnings['longSpans']))
+                     <div class="mb-2">
+                         <strong style="color: #d97706;"><i class="fa fa-calendar-plus me-1"></i> Days Without New Data:</strong>
+                         <ul class="mb-0 small">
+                             @foreach($dataWarnings['longSpans'] as $span)
+                             <li>
+                                 {{ $span['name'] }}: <strong>{{ $span['days'] }} trading day{{ $span['days'] > 1 ? 's' : '' }}</strong> without new data
+                                 <span class="text-muted">({{ $span['calendar_days'] }} calendar days)</span>
+                                 from {{ $span['from'] }} to {{ $span['to'] }}
+                             </li>
+                             @endforeach
+                         </ul>
+                     </div>
+                     @endif
                      @if(!empty($dataWarnings['gaps']))
                      <div>
-                         <strong class="text-warning"><i class="fa fa-calendar-times me-1"></i> Data Gaps:</strong>
+                         <strong style="color: #d97706;"><i class="fa fa-calendar-times me-1"></i> Data Gaps (Missing Trading Days):</strong>
                          <ul class="mb-0 small">
                              @foreach($dataWarnings['gaps'] as $gap)
-                             <li>{{ $gap['name'] }}: {{ $gap['days'] }} days gap from {{ $gap['from'] }} to {{ $gap['to'] }}</li>
+                             <li>
+                                 {{ $gap['name'] }}: <strong>{{ $gap['days'] }} trading day{{ $gap['days'] > 1 ? 's' : '' }}</strong> missing
+                                 <span class="text-muted">({{ $gap['calendar_days'] }} calendar days)</span>
+                                 from {{ $gap['from'] }} to {{ $gap['to'] }}
+                             </li>
                              @endforeach
                          </ul>
                      </div>
@@ -246,10 +272,15 @@
                                 afterBody: function(context) {
                                     const date = labels[context[0].dataIndex];
                                     const issue = issueDates[date];
-                                    if (issue === 'overlap') {
+                                    if (!issue) return null;
+                                    const days = issue.days || 0;
+                                    const dayText = days + ' trading day' + (days !== 1 ? 's' : '');
+                                    if (issue.type === 'overlap') {
                                         return '⚠️ OVERLAPPING DATE RANGE';
-                                    } else if (issue === 'gap') {
-                                        return '⚠️ DATA GAP DETECTED';
+                                    } else if (issue.type === 'gap') {
+                                        return '⚠️ ' + dayText + ' gap (missing data)';
+                                    } else if (issue.type === 'long_span') {
+                                        return '⚠️ ' + dayText + ' without new data';
                                     }
                                     return null;
                                 }
@@ -339,10 +370,15 @@
                                 afterBody: function(context) {
                                     const date = singleLabels[context[0].dataIndex];
                                     const issue = issueDates[date];
-                                    if (issue === 'overlap') {
+                                    if (!issue) return null;
+                                    const days = issue.days || 0;
+                                    const dayText = days + ' trading day' + (days !== 1 ? 's' : '');
+                                    if (issue.type === 'overlap') {
                                         return '⚠️ OVERLAPPING DATE RANGE';
-                                    } else if (issue === 'gap') {
-                                        return '⚠️ DATA GAP DETECTED';
+                                    } else if (issue.type === 'gap') {
+                                        return '⚠️ ' + dayText + ' gap (missing data)';
+                                    } else if (issue.type === 'long_span') {
+                                        return '⚠️ ' + dayText + ' without new data';
                                     }
                                     return null;
                                 }

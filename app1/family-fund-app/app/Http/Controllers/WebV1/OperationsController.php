@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Laracasts\Flash\Flash;
 
 class OperationsController extends AppBaseController
@@ -513,5 +514,89 @@ class OperationsController extends AppBaseController
 
         $pid = (int) file_get_contents($this->queuePidFile);
         return $pid > 0 ? $pid : null;
+    }
+
+    /**
+     * Send a test email
+     */
+    public function sendTestEmail(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $to = $request->input('email');
+
+        try {
+            Mail::raw(
+                "This is a test email from Family Fund.\n\n" .
+                "Environment: " . config('app.env') . "\n" .
+                "Sent at: " . now()->format('Y-m-d H:i:s') . "\n" .
+                "Mailer: " . config('mail.default') . "\n" .
+                "Host: " . config('mail.mailers.smtp.host') . ":" . config('mail.mailers.smtp.port'),
+                function ($message) use ($to) {
+                    $message->to($to)
+                        ->subject('Family Fund - Test Email');
+                }
+            );
+
+            OperationLog::log(
+                OperationLog::OP_SEND_TEST_EMAIL,
+                OperationLog::RESULT_SUCCESS,
+                "Test email sent to $to"
+            );
+            Flash::success("Test email sent to $to");
+        } catch (\Exception $e) {
+            OperationLog::log(
+                OperationLog::OP_SEND_TEST_EMAIL,
+                OperationLog::RESULT_ERROR,
+                "Failed to send test email to $to: " . $e->getMessage()
+            );
+            Flash::error("Failed to send test email: " . $e->getMessage());
+        }
+
+        return redirect(route('operations.index'));
+    }
+
+    /**
+     * Validate all portfolio balances
+     */
+    public function validatePortfolioBalances(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $asOf = $request->get('as_of', now()->format('Y-m-d'));
+        $threshold = floatval($request->get('threshold', 5.0));
+
+        $results = \App\Models\PortfolioExt::validateAllBalances($asOf, $threshold);
+
+        $portfolioCount = count($results['portfolios']);
+        $errorCount = collect($results['portfolios'])->where('is_valid', false)->count();
+
+        OperationLog::log(
+            'VALIDATE_PORTFOLIO_BALANCES',
+            $results['has_errors'] ? OperationLog::RESULT_WARNING : OperationLog::RESULT_SUCCESS,
+            "Validated $portfolioCount portfolios. $errorCount mismatches found (threshold: {$threshold}%)."
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json($results);
+        }
+
+        if ($results['has_errors']) {
+            Flash::warning("Found $errorCount portfolio(s) with balance mismatches exceeding {$threshold}%.");
+        } elseif ($portfolioCount === 0) {
+            Flash::info("No portfolios with set balances found for $asOf.");
+        } else {
+            Flash::success("All $portfolioCount portfolio balances are valid (within {$threshold}% threshold).");
+        }
+
+        return redirect(route('operations.index'))->with('portfolio_validation', $results);
     }
 }

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use PHPUnit\Framework\Attributes\Test;
 class UserRepositoryTest extends TestCase
 {
     use ApiTestTrait, DatabaseTransactions;
@@ -21,10 +20,6 @@ class UserRepositoryTest extends TestCase
         parent::setUp();
         $this->userRepo = \App::make(UserRepository::class);
     }
-
-    /**
-     * @test create
-     */
     public function test_create_user()
     {
         $user = User::factory()->make();
@@ -40,10 +35,6 @@ class UserRepositoryTest extends TestCase
         $hiddenFields = ['password', 'remember_token'];
         $this->assertModelData($user->toArray(), $createdUser, $hiddenFields);
     }
-
-    /**
-     * @test read
-     */
     public function test_read_user()
     {
         $user = User::factory()->create();
@@ -55,10 +46,6 @@ class UserRepositoryTest extends TestCase
         $hiddenFields = ['password', 'remember_token'];
         $this->assertModelData($user->toArray(), $dbUser, $hiddenFields);
     }
-
-    /**
-     * @test update
-     */
     public function test_update_user()
     {
         $user = User::factory()->create();
@@ -73,10 +60,6 @@ class UserRepositoryTest extends TestCase
         $dbUser = $this->userRepo->find($user->id);
         $this->assertModelData($fakeUserModel->toArray(), $dbUser->toArray(), $hiddenFields);
     }
-
-    /**
-     * @test delete
-     */
     public function test_delete_user()
     {
         $user = User::factory()->create();

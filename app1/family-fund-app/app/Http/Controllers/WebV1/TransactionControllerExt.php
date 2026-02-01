@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\Traits\TransactionTrait;
+use App\Http\Controllers\Traits\AccountSelectorTrait;
 use App\Http\Controllers\TransactionController;
 use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Requests\PreviewTransactionRequest;
@@ -24,10 +25,49 @@ use Carbon\Carbon;
 class TransactionControllerExt extends TransactionController
 {
     use TransactionTrait;
+    use AccountSelectorTrait;
 
     public function __construct(TransactionRepository $transactionRepo)
     {
         $this->transactionRepository = $transactionRepo;
+    }
+
+    /**
+     * Display a listing of Transactions with filtering.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function index(Request $request)
+    {
+        $query = Transaction::with(['account.fund']);
+
+        // Apply filters
+        $filters = [];
+
+        if ($request->filled('fund_id')) {
+            $filters['fund_id'] = $request->fund_id;
+            $query->whereHas('account', function($q) use ($request) {
+                $q->where('fund_id', $request->fund_id);
+            });
+        }
+
+        if ($request->filled('account_id')) {
+            $filters['account_id'] = $request->account_id;
+            $query->where('account_id', $request->account_id);
+        }
+
+        $transactions = $query->orderByDesc('id')->get();
+
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['filters' => $filters]
+        );
+
+        return view('transactions.index')
+            ->with('transactions', $transactions)
+            ->with('api', $api)
+            ->with('filters', $filters);
     }
 
     /**

@@ -4,7 +4,13 @@
 
 <style>
     .form-select, .form-control {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+    }
+    .form-label {
+        font-size: 0.85rem;
+    }
+    .text-body-secondary {
+        font-size: 0.75rem;
     }
 </style>
 
@@ -91,6 +97,18 @@
         <small class="text-body-secondary">Select a transaction to duplicate on schedule</small>
     </div>
 
+    <!-- Matching Reminder Info (shown when entity_descr is matching_reminder) -->
+    <div class="form-group col-md-6 mb-3" id="matching_reminder_group" style="display: none;">
+        <label class="form-label">
+            <i class="fa fa-bell me-1"></i> Matching Reminder
+        </label>
+        <div class="alert alert-info mb-0" style="font-size: 0.85rem;">
+            <i class="fa fa-info-circle me-1"></i>
+            This job will automatically send reminder emails to accounts with matching rules expiring within 45 days that still have remaining capacity.
+            No template selection is needed.
+        </div>
+    </div>
+
     <!-- Hidden entity_id field that gets populated by JS -->
     <input type="hidden" name="entity_id" id="entity_id" value="{{ $scheduledJob->entity_id ?? '' }}">
 </div>
@@ -111,8 +129,13 @@
         <label for="end_dt" class="form-label">
             <i class="fa fa-stop me-1"></i> End Date <span class="text-danger">*</span>
         </label>
-        <input type="date" name="end_dt" id="end_dt" class="form-control"
-               value="{{ isset($scheduledJob) ? $scheduledJob->end_dt->format('Y-m-d') : now()->addYears(10)->format('Y-m-d') }}" required>
+        <div class="input-group">
+            <input type="date" name="end_dt" id="end_dt" class="form-control"
+                   value="{{ isset($scheduledJob) ? $scheduledJob->end_dt->format('Y-m-d') : now()->addYears(10)->format('Y-m-d') }}" required>
+            <button type="button" class="btn btn-outline-secondary" id="set_never_end" title="Set to never expire">
+                <i class="fa fa-infinity"></i> Never
+            </button>
+        </div>
         <small class="text-body-secondary">When should this scheduled job expire</small>
     </div>
 </div>
@@ -139,6 +162,7 @@ $(document).ready(function() {
         $('#fund_report_template_group').hide();
         $('#trade_band_template_group').hide();
         $('#transaction_template_group').hide();
+        $('#matching_reminder_group').hide();
 
         // Show the appropriate one and update entity_id
         if (entityType === 'fund_report') {
@@ -150,6 +174,9 @@ $(document).ready(function() {
         } else if (entityType === 'transaction') {
             $('#transaction_template_group').show();
             $('#entity_id').val($('#transaction_template_id').val());
+        } else if (entityType === 'matching_reminder') {
+            $('#matching_reminder_group').show();
+            $('#entity_id').val(0);  // No entity_id needed for matching_reminder
         }
     }
 
@@ -171,6 +198,11 @@ $(document).ready(function() {
 
     // Initialize on page load
     updateEntityFields();
+
+    // Set end date to "never" (9999-12-31)
+    $('#set_never_end').on('click', function() {
+        $('#end_dt').val('9999-12-31');
+    });
 });
 </script>
 @endpush

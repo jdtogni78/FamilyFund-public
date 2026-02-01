@@ -15,11 +15,17 @@
                          <strong>Run Info</strong>
                      </div>
                      <div class="card-body">
+                        @if($shouldRunBy)
                         <ul>
                             <li>Today: {{ $shouldRunBy['today']->toDateString() }}</li>
                             <li>Last Run: {{ $shouldRunBy['lastRun']?->toDateString() }}</li>
                             <li>Should Run By: {{ $shouldRunBy['shouldRunBy']->toDateString() }}</li>
                         </ul>
+                        @else
+                        <div class="alert alert-warning">
+                            Job is outside its active date range (check start_dt/end_dt).
+                        </div>
+                        @endif
                      </div>
                  </div>
             </div>
@@ -39,6 +45,13 @@
                                     @csrf
                                     <button type="submit" class="btn btn-danger" onclick="return confirm('Force run will bypass schedule checks. Are you sure?')">
                                         <i class="fa fa-forward me-1"></i> Force Run
+                                    </button>
+                                </form>
+                                <form action="{{ route('scheduledJobs.force-run', ['id' => $scheduledJob->id, 'asOf' => $asOf]) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <input type="hidden" name="skip_data_check" value="1">
+                                    <button type="submit" class="btn btn-warning" onclick="return confirm('This will create a report even without new data. Are you sure?')">
+                                        <i class="fa fa-bolt me-1"></i> Force (No Data Check)
                                     </button>
                                 </form>
                                 <a href="{{ route('scheduledJobs.index') }}" class="btn btn-light">Back</a>

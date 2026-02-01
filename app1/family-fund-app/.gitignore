@@ -9,3 +9,4 @@
 /.vscode
 /.env.stage
 storage/coverage/
+.env.prod

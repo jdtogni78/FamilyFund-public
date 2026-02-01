@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 Trait ScheduledJobTrait
 {
-    use FundTrait, TransactionTrait, TradeBandReportTrait, VerboseTrait;
+    use FundTrait, TransactionTrait, TradeBandReportTrait, MatchingReminderTrait, HolidaysSyncTrait, VerboseTrait, ScheduledJobEmailAlertTrait;
     private $handlers = [];
 
     public function setupHandlers()
@@ -18,6 +18,8 @@ Trait ScheduledJobTrait
         $this->handlers[ScheduledJobExt::ENTITY_FUND_REPORT] = 'fundReportScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRANSACTION] = 'transactionScheduleDue';
         $this->handlers[ScheduledJobExt::ENTITY_TRADE_BAND_REPORT] = 'tradeBandReportScheduleDue';
+        $this->handlers[ScheduledJobExt::ENTITY_MATCHING_REMINDER] = 'matchingReminderScheduleDue';
+        $this->handlers[ScheduledJobExt::ENTITY_HOLIDAYS_SYNC] = 'holidaysSyncScheduleDue';
     }
 
     public function scheduleDueJobs($asOf, $entityDescrFilter=null) {
@@ -41,13 +43,26 @@ Trait ScheduledJobTrait
         Log::info('Checking scheduled job: ' . json_encode($schedule->toArray()));
         if ($entityDescrFilter && $schedule->entity_descr != $entityDescrFilter) {
             Log::info('Skip scheduled job ' . $schedule->id . ', entity_descr ' . $schedule->entity_descr . ' does not match filter ' . $entityDescrFilter);
-            return;
+            return [null, null, null];
         }
+
+        // Enforce start_dt: skip if not yet started
+        if ($schedule->start_dt && $asOf->lt(Carbon::parse($schedule->start_dt))) {
+            Log::info('Skip scheduled job ' . $schedule->id . ', start_dt ' . $schedule->start_dt . ' is in the future');
+            return [null, null, null];
+        }
+
+        // Enforce end_dt: skip if already ended
+        if ($schedule->end_dt && $asOf->gt(Carbon::parse($schedule->end_dt))) {
+            Log::info('Skip scheduled job ' . $schedule->id . ', end_dt ' . $schedule->end_dt . ' has passed');
+            return [null, null, null];
+        }
+
         /** @var ScheduledJobExt $schedule */
         // $schedule->verbose = true;
         $shouldRunBy = $schedule->shouldRunBy($asOf);
         $shouldRunByDate = $shouldRunBy['shouldRunBy'];
-        
+
         // if should run by is greater than asof, skip, otherwise report as due
         if ($shouldRunByDate->lte($asOf)) {
             try {
@@ -55,9 +70,51 @@ Trait ScheduledJobTrait
                 if ($model !== null) {
                     Log::info('Scheduled job ' . $schedule->id . ' is due, adding to list');
                     return [$model, null, $shouldRunBy];
+                } else {
+                    // SOFT FAILURE: Handler returned null (e.g., missing data, template not found)
+                    $daysOverdue = $shouldRunByDate->diffInDays($asOf);
+                    $reason = "Scheduled job returned null (possible causes: missing data, missing template, or insufficient conditions to execute)";
+
+                    Log::warning("Scheduled job {$schedule->id} soft failure: {$reason}. Days overdue: {$daysOverdue}");
+
+                    // Send email alert for soft failure
+                    $this->sendScheduledJobFailureAlert(
+                        $schedule,
+                        $asOf,
+                        $reason,
+                        null, // no exception
+                        [
+                            'should_run_by' => $shouldRunByDate->toDateString(),
+                            'days_overdue' => $daysOverdue,
+                            'failure_type' => 'soft_failure',
+                        ]
+                    );
+
+                    // Create a "soft error" exception for tracking
+                    $softError = new \Exception($reason);
+                    return [null, $softError, $shouldRunBy];
                 }
             } catch (\Exception $e) {
                 report($e);
+
+                // Send email alert for exception
+                $daysOverdue = $shouldRunByDate->diffInDays($asOf);
+                $reason = "Scheduled job threw exception: " . $e->getMessage();
+
+                Log::error("Scheduled job {$schedule->id} exception: {$reason}. Days overdue: {$daysOverdue}");
+
+                $this->sendScheduledJobFailureAlert(
+                    $schedule,
+                    $asOf,
+                    $reason,
+                    $e,
+                    [
+                        'should_run_by' => $shouldRunByDate->toDateString(),
+                        'days_overdue' => $daysOverdue,
+                        'failure_type' => 'exception',
+                    ]
+                );
+
                 return [null, $e, $shouldRunBy];
             }
         } else {
@@ -66,22 +123,22 @@ Trait ScheduledJobTrait
         return [null, null, $shouldRunBy];
     }
 
-    private function scheduleDue($shouldRunByDate, ScheduledJob $schedule, Carbon $asOf): ?Model
+    private function scheduleDue($shouldRunByDate, ScheduledJob $schedule, Carbon $asOf, bool $skipDataCheck = false): ?Model
     {
         $this->setupHandlers();
         $func = $this->handlers[$schedule->entity_descr];
-        return $this->$func($shouldRunByDate, $schedule, $asOf);
+        return $this->$func($shouldRunByDate, $schedule, $asOf, $skipDataCheck);
     }
 
     /**
-     * Force run a scheduled job, bypassing the schedule check
+     * Force run a scheduled job, bypassing the schedule check and optionally the data check
      */
-    public function forceRunJob(Carbon $asOf, ScheduledJob $schedule): array
+    public function forceRunJob(Carbon $asOf, ScheduledJob $schedule, bool $skipDataCheck = false): array
     {
-        Log::info('Force running scheduled job: ' . $schedule->id);
+        Log::info('Force running scheduled job: ' . $schedule->id . ($skipDataCheck ? ' (skipping data check)' : ''));
 
         try {
-            $model = $this->scheduleDue($asOf, $schedule, $asOf);
+            $model = $this->scheduleDue($asOf, $schedule, $asOf, $skipDataCheck);
             if ($model !== null) {
                 Log::info('Force run scheduled job ' . $schedule->id . ' succeeded');
                 return [$model, null];

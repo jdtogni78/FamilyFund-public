@@ -63,17 +63,17 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded bg-warning bg-opacity-25 border-start border-warning border-4">
-                            <small class="text-body-secondary d-block text-dark">{{ $withdrawalRate }}% Yield/Year</small>
-                            <h5 class="mb-0 text-warning">${{ number_format($currentYield, 0) }}</h5>
-                            <small class="text-body-secondary">{{ number_format($currentYield / 12, 0) }}/mo</small>
+                        <div class="p-3 rounded bg-warning border-start border-warning border-4">
+                            <small class="d-block text-dark">{{ $withdrawalRate }}% Yield/Year</small>
+                            <h5 class="mb-0 text-dark">${{ number_format($currentYield, 0) }}</h5>
+                            <small class="text-dark">{{ number_format($currentYield / 12, 0) }}/mo</small>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded {{ $isReached ? 'bg-success' : 'bg-info' }} bg-opacity-25 border-start border-4 {{ $isReached ? 'border-success' : 'border-info' }}">
-                            <small class="text-body-secondary d-block">Target Value</small>
-                            <h5 class="mb-0 {{ $isReached ? 'text-success' : 'text-info' }}">${{ number_format($targetValue, 0) }}</h5>
-                            <small class="text-body-secondary">${{ number_format($yearlyExpenses, 0) }}/yr needed</small>
+                        <div class="p-3 rounded {{ $isReached ? 'bg-success' : 'bg-info' }} border-start border-4 {{ $isReached ? 'border-success' : 'border-info' }}">
+                            <small class="d-block text-white">Target Value</small>
+                            <h5 class="mb-0 text-white">${{ number_format($targetValue, 0) }}</h5>
+                            <small class="text-white">${{ number_format($yearlyExpenses, 0) }}/yr needed</small>
                         </div>
                     </div>
                 </div>

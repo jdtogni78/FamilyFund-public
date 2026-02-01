@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\FundExt;
 use App\Repositories\BaseRepository;
+use App\Repositories\Traits\AuthorizesQueries;
 
 /**
  * Class FundRepository
@@ -13,6 +14,8 @@ use App\Repositories\BaseRepository;
 
 class FundRepository extends BaseRepository
 {
+    use AuthorizesQueries;
+
     /**
      * @var array
      */

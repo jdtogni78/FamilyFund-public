@@ -55,6 +55,8 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('view', $fund);
+
         $arr = $this->createFullFundResponse($fund, $asOf, $this->isAdmin());
 
         return view('funds.show_ext')
@@ -77,6 +79,8 @@ class FundControllerExt extends FundController
             Flash::error('Fund not found');
             return redirect(route('funds.index'));
         }
+
+        $this->authorize('view', $fund);
 
         $isAdmin = $this->isAdmin();
         $arr = $this->createFullFundResponse($fund, $asOf, $isAdmin);
@@ -107,6 +111,8 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('view', $fund);
+
         $fromDate = request()->get('from');
         $arr = $this->createFundResponseTradeBands($fund, $asOf, $this->isAdmin(), $fromDate);
 
@@ -132,6 +138,8 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('view', $fund);
+
         $fromDate = request()->get('from');
         $isAdmin = $this->isAdmin();
         $arr = $this->createFundResponseTradeBands($fund, $asOf, $isAdmin, $fromDate);
@@ -156,6 +164,8 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('view', $fund);
+
         $portfolios = $fund->portfolios()->get();
 
         return view('funds.portfolios')
@@ -177,6 +187,8 @@ class FundControllerExt extends FundController
             Flash::error('Fund not found');
             return redirect(route('funds.index'));
         }
+
+        $this->authorize('view', $fund);
 
         $asOf = request()->get('as_of', date('Y-m-d'));
         $period = request()->get('period', '1Y');
@@ -213,6 +225,8 @@ class FundControllerExt extends FundController
             return response()->json(['error' => 'Fund not found'], 404);
         }
 
+        $this->authorize('view', $fund);
+
         $asOf = request()->get('as_of', date('Y-m-d'));
         $period = request()->get('period', '1Y');
         $groupBy = request()->get('group_by', 'category');
@@ -245,10 +259,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        if (!$this->isAdmin()) {
-            Flash::error('Unauthorized');
-            return redirect(route('funds.show', $id));
-        }
+        $this->authorize('update', $fund);
 
         return view('funds.four_pct_goal_edit')
             ->with('fund', $fund);
@@ -270,10 +281,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.index'));
         }
 
-        if (!$this->isAdmin()) {
-            Flash::error('Unauthorized');
-            return redirect(route('funds.show', $id));
-        }
+        $this->authorize('update', $fund);
 
         $request->validate([
             'four_pct_yearly_expenses' => 'nullable|numeric|min:0',

@@ -12,6 +12,44 @@ class TradePortfolioApiTest extends TestCase
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
     #[Test]
+    public function test_index_trade_portfolios()
+    {
+        // Create multiple trade portfolios
+        $tradePortfolio1 = TradePortfolio::factory()->create();
+        $tradePortfolio2 = TradePortfolio::factory()->create();
+
+        $this->response = $this->json(
+            'GET',
+            '/api/trade_portfolios'
+        );
+
+        $this->response->assertStatus(200);
+        $this->response->assertJson(['success' => true]);
+        $responseData = $this->response->json('data');
+        $this->assertIsArray($responseData);
+        $this->assertGreaterThanOrEqual(2, count($responseData));
+    }
+
+    #[Test]
+    public function test_index_trade_portfolios_with_pagination()
+    {
+        // Create multiple trade portfolios
+        TradePortfolio::factory()->count(5)->create();
+
+        // Test with skip and limit
+        $this->response = $this->json(
+            'GET',
+            '/api/trade_portfolios?skip=1&limit=2'
+        );
+
+        $this->response->assertStatus(200);
+        $this->response->assertJson(['success' => true]);
+        $responseData = $this->response->json('data');
+        $this->assertIsArray($responseData);
+        $this->assertLessThanOrEqual(2, count($responseData));
+    }
+
+    #[Test]
     public function test_create_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->make()->toArray();
@@ -40,6 +78,17 @@ class TradePortfolioApiTest extends TestCase
     }
 
     #[Test]
+    public function test_read_trade_portfolio_not_found()
+    {
+        $this->response = $this->json(
+            'GET',
+            '/api/trade_portfolios/999999'
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
     public function test_update_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->create();
@@ -56,6 +105,20 @@ class TradePortfolioApiTest extends TestCase
     }
 
     #[Test]
+    public function test_update_trade_portfolio_not_found()
+    {
+        $editedTradePortfolio = TradePortfolio::factory()->make()->toArray();
+
+        $this->response = $this->json(
+            'PUT',
+            '/api/trade_portfolios/999999',
+            $editedTradePortfolio
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
     public function test_delete_trade_portfolio()
     {
         $tradePortfolio = TradePortfolio::factory()->create();
@@ -69,6 +132,17 @@ class TradePortfolioApiTest extends TestCase
         $this->response = $this->json(
             'GET',
             '/api/trade_portfolios/'.$tradePortfolio->id
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
+    public function test_delete_trade_portfolio_not_found()
+    {
+        $this->response = $this->json(
+            'DELETE',
+            '/api/trade_portfolios/999999'
         );
 
         $this->response->assertStatus(404);

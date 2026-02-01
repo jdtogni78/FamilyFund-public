@@ -6,7 +6,7 @@
     <div class="container-fluid py-4">
         <div class="row g-4">
             <!-- Funds -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
                         <h5 class="mb-0"><i class="fa fa-money me-2"></i>Funds</h5>
@@ -28,7 +28,7 @@
             </div>
 
             <!-- Accounts -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
                         <h5 class="mb-0"><i class="fa fa-bank me-2"></i>Accounts</h5>
@@ -50,7 +50,7 @@
             </div>
 
             <!-- Transactions -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
                         <h5 class="mb-0"><i class="fa fa-exchange-alt me-2"></i>Transactions</h5>
@@ -72,7 +72,7 @@
             </div>
 
             <!-- Trading -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
                         <h5 class="mb-0"><i class="fa fa-exchange me-2"></i>Trading</h5>
@@ -94,7 +94,7 @@
             </div>
 
             <!-- Reports -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
                         <h5 class="mb-0"><i class="fa fa-file-text me-2"></i>Reports</h5>
@@ -117,7 +117,7 @@
 
             <!-- Admin -->
             @if(auth()->user() && method_exists(auth()->user(), 'isSystemAdmin') && auth()->user()->isSystemAdmin())
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
                         <h5 class="mb-0"><i class="fa fa-shield me-2"></i>Admin</h5>

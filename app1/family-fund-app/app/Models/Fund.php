@@ -36,7 +36,8 @@ class Fund extends Model
         'name',
         'goal',
         'four_pct_yearly_expenses',
-        'four_pct_net_worth_pct'
+        'four_pct_net_worth_pct',
+        'withdrawal_rate'
     ];
 
     /**
@@ -49,7 +50,8 @@ class Fund extends Model
         'name' => 'string',
         'goal' => 'string',
         'four_pct_yearly_expenses' => 'decimal:2',
-        'four_pct_net_worth_pct' => 'decimal:2'
+        'four_pct_net_worth_pct' => 'decimal:2',
+        'withdrawal_rate' => 'decimal:2'
     ];
 
     /**

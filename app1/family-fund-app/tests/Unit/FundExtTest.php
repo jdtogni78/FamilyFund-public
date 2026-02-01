@@ -342,126 +342,176 @@ class FundExtTest extends TestCase
     }
 
     // =========================================================================
-    // Four percent rule goal tests
+    // Withdrawal rule goal tests
     // =========================================================================
 
-    public function test_has_four_pct_goal_returns_false_when_not_configured()
+    public function test_has_withdrawal_goal_returns_false_when_not_configured()
     {
         $fund = FundExt::find($this->factory->fund->id);
 
         // By default, four_pct_yearly_expenses is null
-        $result = $fund->hasFourPctGoal();
+        $result = $fund->hasWithdrawalGoal();
 
         $this->assertFalse($result);
     }
 
-    public function test_has_four_pct_goal_returns_true_when_configured()
+    public function test_has_withdrawal_goal_returns_true_when_configured()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 40000;
         $fund->save();
 
-        $result = $fund->hasFourPctGoal();
+        $result = $fund->hasWithdrawalGoal();
 
         $this->assertTrue($result);
     }
 
-    public function test_has_four_pct_goal_returns_false_for_zero_expenses()
+    public function test_has_withdrawal_goal_returns_false_for_zero_expenses()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 0;
         $fund->save();
 
-        $result = $fund->hasFourPctGoal();
+        $result = $fund->hasWithdrawalGoal();
 
         $this->assertFalse($result);
     }
 
-    public function test_four_pct_target_value_returns_correct_calculation()
+    public function test_get_withdrawal_rate_returns_default_4()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+
+        $result = $fund->getWithdrawalRate();
+
+        $this->assertEquals(4.0, $result);
+    }
+
+    public function test_get_withdrawal_rate_returns_configured_value()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_rate = 3.5;
+        $fund->save();
+
+        $result = $fund->getWithdrawalRate();
+
+        $this->assertEquals(3.5, $result);
+    }
+
+    public function test_withdrawal_target_value_returns_correct_calculation()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_rate = 4.0;
         $fund->save();
 
-        $result = $fund->fourPctTargetValue();
+        $result = $fund->withdrawalTargetValue();
 
-        // 40000 * 25 = 1,000,000
+        // 40000 / 0.04 = 1,000,000
         $this->assertEquals(1000000, $result);
     }
 
-    public function test_four_pct_target_value_returns_zero_when_not_configured()
+    public function test_withdrawal_target_value_with_different_rate()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_rate = 3.0;  // 3% rate
+        $fund->save();
+
+        $result = $fund->withdrawalTargetValue();
+
+        // 40000 / 0.03 = 1,333,333.33
+        $this->assertEqualsWithDelta(1333333.33, $result, 0.01);
+    }
+
+    public function test_withdrawal_target_value_returns_zero_when_not_configured()
     {
         $fund = FundExt::find($this->factory->fund->id);
 
-        $result = $fund->fourPctTargetValue();
+        $result = $fund->withdrawalTargetValue();
 
         $this->assertEquals(0, $result);
     }
 
-    public function test_four_pct_net_worth_pct_returns_default_100()
+    public function test_withdrawal_net_worth_pct_returns_default_100()
     {
         $fund = FundExt::find($this->factory->fund->id);
 
-        $result = $fund->fourPctNetWorthPct();
+        $result = $fund->withdrawalNetWorthPct();
 
         $this->assertEquals(100.0, $result);
     }
 
-    public function test_four_pct_net_worth_pct_returns_configured_value()
+    public function test_withdrawal_net_worth_pct_returns_configured_value()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_net_worth_pct = 80.0;
         $fund->save();
 
-        $result = $fund->fourPctNetWorthPct();
+        $result = $fund->withdrawalNetWorthPct();
 
         $this->assertEquals(80.0, $result);
     }
 
-    public function test_four_pct_adjusted_value_applies_net_worth_pct()
+    public function test_withdrawal_adjusted_value_applies_net_worth_pct()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_net_worth_pct = 50.0;
         $fund->save();
 
         $fundValue = $fund->valueAsOf('2022-06-01');
-        $result = $fund->fourPctAdjustedValue('2022-06-01');
+        $result = $fund->withdrawalAdjustedValue('2022-06-01');
 
         $expected = $fundValue * 0.5;
         $this->assertEquals($expected, $result);
     }
 
-    public function test_four_pct_current_yield_calculates_correctly()
+    public function test_withdrawal_current_yield_calculates_correctly()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_rate = 4.0;
         $fund->save();
 
-        $adjustedValue = $fund->fourPctAdjustedValue('2022-06-01');
-        $result = $fund->fourPctCurrentYield('2022-06-01');
+        $adjustedValue = $fund->withdrawalAdjustedValue('2022-06-01');
+        $result = $fund->withdrawalCurrentYield('2022-06-01');
 
         $expected = $adjustedValue * 0.04;
         $this->assertEquals($expected, $result);
     }
 
-    public function test_four_pct_progress_returns_empty_when_not_configured()
+    public function test_withdrawal_current_yield_with_different_rate()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_rate = 3.5;
+        $fund->save();
+
+        $adjustedValue = $fund->withdrawalAdjustedValue('2022-06-01');
+        $result = $fund->withdrawalCurrentYield('2022-06-01');
+
+        $expected = $adjustedValue * 0.035;
+        $this->assertEquals($expected, $result);
+    }
+
+    public function test_withdrawal_progress_returns_empty_when_not_configured()
     {
         $fund = FundExt::find($this->factory->fund->id);
 
-        $result = $fund->fourPctProgress('2022-06-01');
+        $result = $fund->withdrawalProgress('2022-06-01');
 
         $this->assertIsArray($result);
         $this->assertEmpty($result);
     }
 
-    public function test_four_pct_progress_returns_complete_data()
+    public function test_withdrawal_progress_returns_complete_data()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 40;  // Very low, so fund value exceeds target
         $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_rate = 4.0;
         $fund->save();
 
-        $result = $fund->fourPctProgress('2022-06-01');
+        $result = $fund->withdrawalProgress('2022-06-01');
 
         $this->assertArrayHasKey('yearly_expenses', $result);
         $this->assertArrayHasKey('target_value', $result);
@@ -470,33 +520,35 @@ class FundExtTest extends TestCase
         $this->assertArrayHasKey('current_yield', $result);
         $this->assertArrayHasKey('progress_pct', $result);
         $this->assertArrayHasKey('is_reached', $result);
+        $this->assertArrayHasKey('withdrawal_rate', $result);
 
         $this->assertEquals(40, $result['yearly_expenses']);
-        $this->assertEquals(1000, $result['target_value']); // 40 * 25
+        $this->assertEquals(1000, $result['target_value']); // 40 / 0.04
         $this->assertEquals(100.0, $result['net_worth_pct']);
+        $this->assertEquals(4.0, $result['withdrawal_rate']);
     }
 
-    public function test_four_pct_progress_is_reached_when_value_exceeds_target()
+    public function test_withdrawal_progress_is_reached_when_value_exceeds_target()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 1;  // Very low target
         $fund->four_pct_net_worth_pct = 100.0;
         $fund->save();
 
-        $result = $fund->fourPctProgress('2022-06-01');
+        $result = $fund->withdrawalProgress('2022-06-01');
 
         $this->assertTrue($result['is_reached']);
         $this->assertEquals(100, $result['progress_pct']); // Capped at 100%
     }
 
-    public function test_four_pct_progress_not_reached_when_value_below_target()
+    public function test_withdrawal_progress_not_reached_when_value_below_target()
     {
         $fund = FundExt::find($this->factory->fund->id);
         $fund->four_pct_yearly_expenses = 1000000;  // Very high target
         $fund->four_pct_net_worth_pct = 100.0;
         $fund->save();
 
-        $result = $fund->fourPctProgress('2022-06-01');
+        $result = $fund->withdrawalProgress('2022-06-01');
 
         $this->assertFalse($result['is_reached']);
         $this->assertLessThan(100, $result['progress_pct']);

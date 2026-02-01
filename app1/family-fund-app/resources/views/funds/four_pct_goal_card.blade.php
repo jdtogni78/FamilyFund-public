@@ -1,12 +1,13 @@
 @php
-    $targetValue = $fourPctGoal['target_value'];
-    $yearlyExpenses = $fourPctGoal['yearly_expenses'];
-    $adjustedValue = $fourPctGoal['adjusted_value'];
-    $currentYield = $fourPctGoal['current_yield'];
-    $progressPct = $fourPctGoal['progress_pct'];
-    $netWorthPct = $fourPctGoal['net_worth_pct'];
-    $isReached = $fourPctGoal['is_reached'] ?? false;
-    $targetReach = $fourPctGoal['target_reach'] ?? [];
+    $targetValue = $withdrawalGoal['target_value'];
+    $yearlyExpenses = $withdrawalGoal['yearly_expenses'];
+    $adjustedValue = $withdrawalGoal['adjusted_value'];
+    $currentYield = $withdrawalGoal['current_yield'];
+    $progressPct = $withdrawalGoal['progress_pct'];
+    $netWorthPct = $withdrawalGoal['net_worth_pct'];
+    $isReached = $withdrawalGoal['is_reached'] ?? false;
+    $targetReach = $withdrawalGoal['target_reach'] ?? [];
+    $withdrawalRate = $withdrawalGoal['withdrawal_rate'] ?? 4;
 @endphp
 
 <div class="row mb-4" id="section-four-pct-goal">
@@ -14,7 +15,7 @@
         <div class="card" style="border: 2px solid {{ $isReached ? '#22c55e' : '#0d9488' }};">
             {{-- Header --}}
             <div class="card-header d-flex justify-content-between align-items-center" style="background: {{ $isReached ? '#22c55e' : '#0d9488' }}; color: white;">
-                <strong><i class="fa fa-bullseye me-2"></i>4% Rule Retirement Goal</strong>
+                <strong><i class="fa fa-bullseye me-2"></i>{{ $withdrawalRate }}% Rule Retirement Goal</strong>
                 @isset($api['admin'])
                 <a href="{{ route('funds.four_pct_goal.edit', $fund->id) }}" class="btn btn-sm btn-outline-light">
                     <i class="fa fa-edit"></i> Edit
@@ -33,7 +34,7 @@
                         <div class="text-end">
                             <span class="text-muted small">to generate</span>
                             <strong style="color: #0d9488;">${{ number_format($yearlyExpenses, 0) }}/year</strong>
-                            <span class="text-muted small">at 4%</span>
+                            <span class="text-muted small">at {{ $withdrawalRate }}%</span>
                         </div>
                     </div>
                 </div>
@@ -63,7 +64,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="p-3 rounded bg-warning bg-opacity-25 border-start border-warning border-4">
-                            <small class="text-body-secondary d-block">4% Yield/Year</small>
+                            <small class="text-body-secondary d-block text-dark">{{ $withdrawalRate }}% Yield/Year</small>
                             <h5 class="mb-0 text-warning">${{ number_format($currentYield, 0) }}</h5>
                             <small class="text-body-secondary">{{ number_format($currentYield / 12, 0) }}/mo</small>
                         </div>
@@ -83,7 +84,7 @@
                     <i class="fa {{ $isReached ? 'fa-check-circle' : 'fa-clock' }} fa-2x me-3"></i>
                     <div>
                         @if($isReached || ($targetReach['already_reached'] ?? false))
-                            <strong>Goal Reached!</strong> You have achieved your 4% retirement target.
+                            <strong>Goal Reached!</strong> You have achieved your {{ $withdrawalRate }}% retirement target.
                         @elseif(!($targetReach['reachable'] ?? true))
                             @if(($targetReach['reason'] ?? '') === 'negative_growth')
                                 <strong>Growth Needed</strong> Current trend shows negative growth. Consider reviewing your strategy.

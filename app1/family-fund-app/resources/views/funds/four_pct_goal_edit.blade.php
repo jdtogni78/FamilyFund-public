@@ -28,8 +28,8 @@
                                 {{-- Explanation --}}
                                 <div class="alert alert-info mb-4">
                                     <i class="fa fa-info-circle me-2"></i>
-                                    The <strong>4% Rule</strong> suggests you need 25x your annual expenses saved for retirement.
-                                    Enter your yearly expenses below to calculate your target.
+                                    The <strong>withdrawal rule</strong> suggests you need (100 / rate)x your annual expenses saved for retirement.
+                                    Enter your yearly expenses and desired withdrawal rate below to calculate your target.
                                 </div>
 
                                 {{-- Yearly Expenses --}}
@@ -49,11 +49,29 @@
                                     <div class="form-text">Leave empty to remove the 4% goal.</div>
                                 </div>
 
+                                {{-- Withdrawal Rate --}}
+                                <div class="mb-4">
+                                    <label for="withdrawal_rate" class="form-label">
+                                        <strong>Withdrawal Rate</strong>
+                                        <small class="text-muted">(What percentage can you safely withdraw per year?)</small>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="withdrawal_rate"
+                                               name="withdrawal_rate"
+                                               value="{{ old('withdrawal_rate', $fund->withdrawal_rate ?? 4) }}"
+                                               min="0.5" max="10" step="0.25">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <div class="form-text">
+                                        Common rates: 4% (traditional), 3.5% (conservative), 3% (very conservative).
+                                    </div>
+                                </div>
+
                                 {{-- Live Preview --}}
                                 <div class="mb-4 p-3 rounded" style="background: #f0fdfa;" id="preview-section">
                                     <div class="row text-center">
                                         <div class="col-md-6">
-                                            <small class="text-muted d-block">Target Value (Expenses x 25)</small>
+                                            <small class="text-muted d-block">Target Value (Expenses / Rate)</small>
                                             <span id="preview-target" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">$0</span>
                                         </div>
                                         <div class="col-md-6">
@@ -99,16 +117,22 @@
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header">
-                            <i class="fa fa-question-circle"></i> About the 4% Rule
+                            <i class="fa fa-question-circle"></i> About the Withdrawal Rule
                         </div>
                         <div class="card-body">
                             <p class="small">
-                                The <strong>4% Rule</strong> is a retirement guideline suggesting you can withdraw 4% of your portfolio annually without running out of money over a 30-year retirement.
+                                The <strong>Withdrawal Rule</strong> is a retirement guideline suggesting you can withdraw a percentage of your portfolio annually without running out of money.
+                            </p>
+                            <p class="small">
+                                <strong>Common rates:</strong><br>
+                                <span class="text-muted">4% - Traditional (25x expenses)</span><br>
+                                <span class="text-muted">3.5% - Conservative (28.6x expenses)</span><br>
+                                <span class="text-muted">3% - Very conservative (33.3x expenses)</span>
                             </p>
                             <p class="small mb-0">
                                 <strong>Formula:</strong><br>
-                                Target = Yearly Expenses x 25<br>
-                                <span class="text-muted">(e.g., $80k/year x 25 = $2M target)</span>
+                                Target = Yearly Expenses / (Rate / 100)<br>
+                                <span class="text-muted">(e.g., $80k/year at 4% = $2M target)</span>
                             </p>
                         </div>
                     </div>
@@ -122,7 +146,8 @@
 $(document).ready(function() {
     function updatePreview() {
         var expenses = parseFloat($('#four_pct_yearly_expenses').val()) || 0;
-        var target = expenses * 25;
+        var rate = parseFloat($('#withdrawal_rate').val()) || 4;
+        var target = rate > 0 ? expenses / (rate / 100) : 0;
         var monthly = expenses / 12;
 
         $('#preview-target').text('$' + target.toLocaleString('en-US', {maximumFractionDigits: 0}));
@@ -135,7 +160,7 @@ $(document).ready(function() {
         }
     }
 
-    $('#four_pct_yearly_expenses').on('input', updatePreview);
+    $('#four_pct_yearly_expenses, #withdrawal_rate').on('input', updatePreview);
     updatePreview(); // Initial call
 });
 </script>

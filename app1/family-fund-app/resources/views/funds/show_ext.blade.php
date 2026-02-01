@@ -199,7 +199,7 @@
 
             {{-- 4% Rule Retirement Goal Card --}}
             @if(isset($api['four_pct_goal']))
-                @include('funds.four_pct_goal_card', ['fourPctGoal' => $api['four_pct_goal'], 'fund' => $fund ?? (object)['id' => $api['id']]])
+                @include('funds.four_pct_goal_card', ['withdrawalGoal' => $api['four_pct_goal'], 'fund' => $fund ?? (object)['id' => $api['id']]])
             @elseif(isset($api['admin']))
                 {{-- Show setup prompt for admins --}}
                 <div class="row mb-4" id="section-four-pct-goal">

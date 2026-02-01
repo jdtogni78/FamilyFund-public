@@ -185,28 +185,40 @@ class FundExt extends Fund
     }
 
     /**
-     * Check if fund has a 4% rule goal configured.
+     * Check if fund has a withdrawal rule goal configured.
      */
-    public function hasFourPctGoal(): bool
+    public function hasWithdrawalGoal(): bool
     {
         return $this->four_pct_yearly_expenses !== null && $this->four_pct_yearly_expenses > 0;
     }
 
     /**
-     * Get the target value for the 4% rule (expenses * 25).
+     * Get the withdrawal rate (default 4%).
      */
-    public function fourPctTargetValue(): float
+    public function getWithdrawalRate(): float
     {
-        if (!$this->hasFourPctGoal()) {
+        return (float) ($this->withdrawal_rate ?? 4.00);
+    }
+
+    /**
+     * Get the target value for the withdrawal goal (expenses / withdrawal_rate * 100).
+     */
+    public function withdrawalTargetValue(): float
+    {
+        if (!$this->hasWithdrawalGoal()) {
             return 0;
         }
-        return (float) $this->four_pct_yearly_expenses * 25;
+        $rate = $this->getWithdrawalRate();
+        if ($rate <= 0) {
+            return 0;
+        }
+        return (float) $this->four_pct_yearly_expenses / ($rate / 100);
     }
 
     /**
      * Get the net worth percentage to use (default 100%).
      */
-    public function fourPctNetWorthPct(): float
+    public function withdrawalNetWorthPct(): float
     {
         return (float) ($this->four_pct_net_worth_pct ?? 100.00);
     }
@@ -214,35 +226,36 @@ class FundExt extends Fund
     /**
      * Get the adjusted fund value based on net worth percentage.
      */
-    public function fourPctAdjustedValue($asOf): float
+    public function withdrawalAdjustedValue($asOf): float
     {
         $fundValue = $this->valueAsOf($asOf);
-        return $fundValue * ($this->fourPctNetWorthPct() / 100);
+        return $fundValue * ($this->withdrawalNetWorthPct() / 100);
     }
 
     /**
-     * Get the current 4% yield from adjusted value.
+     * Get the current yield from adjusted value at the configured withdrawal rate.
      */
-    public function fourPctCurrentYield($asOf): float
+    public function withdrawalCurrentYield($asOf): float
     {
-        return $this->fourPctAdjustedValue($asOf) * 0.04;
+        return $this->withdrawalAdjustedValue($asOf) * ($this->getWithdrawalRate() / 100);
     }
 
     /**
-     * Get complete 4% goal progress data.
+     * Get complete withdrawal goal progress data.
      * Reuses pattern from AccountTrait::getGoalPct()
      */
-    public function fourPctProgress($asOf): array
+    public function withdrawalProgress($asOf): array
     {
-        if (!$this->hasFourPctGoal()) {
+        if (!$this->hasWithdrawalGoal()) {
             return [];
         }
 
-        $targetValue = $this->fourPctTargetValue();
-        $adjustedValue = $this->fourPctAdjustedValue($asOf);
-        $currentYield = $this->fourPctCurrentYield($asOf);
+        $targetValue = $this->withdrawalTargetValue();
+        $adjustedValue = $this->withdrawalAdjustedValue($asOf);
+        $currentYield = $this->withdrawalCurrentYield($asOf);
         $targetYield = (float) $this->four_pct_yearly_expenses;
-        $netWorthPct = $this->fourPctNetWorthPct();
+        $netWorthPct = $this->withdrawalNetWorthPct();
+        $withdrawalRate = $this->getWithdrawalRate();
 
         // Progress percentage (capped at 100%)
         $progressPct = $targetValue > 0 ? min(100, ($adjustedValue / $targetValue) * 100) : 0;
@@ -255,6 +268,7 @@ class FundExt extends Fund
             'current_yield' => $currentYield,
             'progress_pct' => $progressPct,
             'is_reached' => $adjustedValue >= $targetValue,
+            'withdrawal_rate' => $withdrawalRate,
         ];
     }
 }

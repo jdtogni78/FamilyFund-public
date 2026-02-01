@@ -255,7 +255,7 @@ class FundControllerExt extends FundController
     }
 
     /**
-     * Update 4% rule goal for a fund.
+     * Update withdrawal rule goal for a fund.
      *
      * @param Request $request
      * @param int $id
@@ -278,14 +278,16 @@ class FundControllerExt extends FundController
         $request->validate([
             'four_pct_yearly_expenses' => 'nullable|numeric|min:0',
             'four_pct_net_worth_pct' => 'nullable|numeric|min:1|max:100',
+            'withdrawal_rate' => 'nullable|numeric|min:0.5|max:10',
         ]);
 
         $fund->update([
             'four_pct_yearly_expenses' => $request->four_pct_yearly_expenses ?: null,
             'four_pct_net_worth_pct' => $request->four_pct_net_worth_pct ?: 100,
+            'withdrawal_rate' => $request->withdrawal_rate ?: 4,
         ]);
 
-        Flash::success('4% Rule Goal updated successfully.');
+        Flash::success('Withdrawal Rule Goal updated successfully.');
         return redirect(route('funds.show', $id));
     }
 }

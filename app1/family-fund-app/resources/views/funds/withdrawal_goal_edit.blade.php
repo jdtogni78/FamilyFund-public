@@ -8,7 +8,7 @@
         <li class="breadcrumb-item">
             <a href="{{ route('funds.show', $fund->id) }}">{{ $fund->name }}</a>
         </li>
-        <li class="breadcrumb-item active">4% Rule Goal</li>
+        <li class="breadcrumb-item active">Financial Independence Goal</li>
     </ol>
     <div class="container-fluid">
         <div class="animated fadeIn">
@@ -18,7 +18,7 @@
                     <div class="card" style="border: 2px solid #0d9488;">
                         <div class="card-header" style="background: #0d9488; color: white;">
                             <i class="fa fa-bullseye fa-lg"></i>
-                            <strong>4% Rule Retirement Goal</strong>
+                            <strong>Financial Independence Goal</strong>
                         </div>
                         <div class="card-body">
                             <form method="POST" action="{{ route('funds.withdrawal_goal.update', $fund->id) }}">
@@ -26,10 +26,47 @@
                                 @method('PUT')
 
                                 {{-- Explanation --}}
-                                <div class="alert alert-info mb-4">
+                                <div class="alert alert-info mb-4" id="mode-explanation">
                                     <i class="fa fa-info-circle me-2"></i>
-                                    The <strong>withdrawal rule</strong> suggests you need (100 / rate)x your annual expenses saved for retirement.
-                                    Enter your yearly expenses and desired withdrawal rate below to calculate your target.
+                                    <span id="explanation-text">
+                                        The <strong>withdrawal rule</strong> suggests you need (100 / rate)x your annual expenses saved for retirement.
+                                        Enter your yearly expenses and desired withdrawal rate below to calculate your target.
+                                    </span>
+                                </div>
+
+                                {{-- Goal Type Toggle --}}
+                                <div class="mb-4">
+                                    <label class="form-label">
+                                        <strong>Goal Type</strong>
+                                    </label>
+                                    <div class="btn-group w-100" role="group" aria-label="Independence mode toggle">
+                                        <input type="radio" class="btn-check" name="independence_mode" id="mode_perpetual"
+                                               value="perpetual" {{ old('independence_mode', $fund->independence_mode ?? 'perpetual') === 'perpetual' ? 'checked' : '' }}>
+                                        <label class="btn btn-outline-primary" for="mode_perpetual">
+                                            <i class="fa fa-infinity me-1"></i> Perpetual (X% Rule)
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="independence_mode" id="mode_countdown"
+                                               value="countdown" {{ old('independence_mode', $fund->independence_mode ?? 'perpetual') === 'countdown' ? 'checked' : '' }}>
+                                        <label class="btn btn-outline-primary" for="mode_countdown">
+                                            <i class="fa fa-calendar-check me-1"></i> Independence until date
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {{-- Target Date (shown only in countdown mode) --}}
+                                <div class="mb-4" id="target-date-section" style="{{ old('independence_mode', $fund->independence_mode ?? 'perpetual') === 'countdown' ? '' : 'display: none;' }}">
+                                    <label for="independence_target_date" class="form-label">
+                                        <strong>Independence Until</strong>
+                                        <small class="text-muted">(When fund can reach zero)</small>
+                                    </label>
+                                    <input type="date" class="form-control" id="independence_target_date"
+                                           name="independence_target_date"
+                                           value="{{ old('independence_target_date', $fund->independence_target_date ? $fund->independence_target_date->format('Y-m-d') : '') }}"
+                                           min="{{ now()->addMonth()->format('Y-m-d') }}">
+                                    <div class="form-text">
+                                        When pension, Social Security, or other income starts.
+                                    </div>
                                 </div>
 
                                 {{-- Yearly Expenses --}}
@@ -88,13 +125,17 @@
                                 {{-- Live Preview --}}
                                 <div class="mb-4 p-3 rounded" style="background: #f0fdfa;" id="preview-section">
                                     <div class="row text-center">
-                                        <div class="col-md-6">
-                                            <small class="text-muted d-block">Target Value (Expenses / Rate)</small>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block" id="preview-target-label">Target Value (Expenses / Rate)</small>
                                             <span id="preview-target" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">$0</span>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <small class="text-muted d-block">Monthly Budget</small>
                                             <span id="preview-monthly" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">$0</span>
+                                        </div>
+                                        <div class="col-md-4" id="preview-years-row" style="display: none;">
+                                            <small class="text-muted d-block">Time Remaining</small>
+                                            <span id="preview-years" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">0 years</span>
                                         </div>
                                     </div>
                                 </div>
@@ -135,11 +176,12 @@
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header">
-                            <i class="fa fa-question-circle"></i> About the Withdrawal Rule
+                            <i class="fa fa-question-circle"></i> About Goal Types
                         </div>
                         <div class="card-body">
                             <p class="small">
-                                The <strong>Withdrawal Rule</strong> is a retirement guideline suggesting you can withdraw a percentage of your portfolio annually without running out of money.
+                                <strong><i class="fa fa-infinity"></i> Perpetual Mode</strong><br>
+                                The traditional retirement rule suggesting you need (100/rate)x your annual expenses. Fund never depletes.
                             </p>
                             <p class="small">
                                 <strong>Common rates:</strong><br>
@@ -147,10 +189,15 @@
                                 <span class="text-muted">3.5% - Conservative (28.6x expenses)</span><br>
                                 <span class="text-muted">3% - Very conservative (33.3x expenses)</span>
                             </p>
+                            <hr>
+                            <p class="small">
+                                <strong><i class="fa fa-calendar-check"></i> Countdown Mode</strong><br>
+                                For bridging to another income source (pension, Social Security). Fund can safely reach zero at target date.
+                            </p>
                             <p class="small mb-0">
                                 <strong>Formula:</strong><br>
-                                Target = Yearly Expenses / (Rate / 100)<br>
-                                <span class="text-muted">(e.g., $80k/year at 4% = $2M target)</span>
+                                Present Value of Annuity<br>
+                                <span class="text-muted">PV = PMT × [(1-(1+r)^(-n))/r]</span>
                             </p>
                         </div>
                     </div>
@@ -162,11 +209,86 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    function getMode() {
+        return $('input[name="independence_mode"]:checked').val() || 'perpetual';
+    }
+
+    function updateModeUI() {
+        var mode = getMode();
+        var isCountdown = mode === 'countdown';
+
+        // Show/hide target date section
+        if (isCountdown) {
+            $('#target-date-section').slideDown(200);
+        } else {
+            $('#target-date-section').slideUp(200);
+        }
+
+        // Update explanation text
+        if (isCountdown) {
+            $('#explanation-text').html(
+                'In <strong>countdown mode</strong>, calculate how much you need to fund withdrawals until a target date. ' +
+                'The fund can safely reach zero when your other income (pension, Social Security) starts.'
+            );
+        } else {
+            $('#explanation-text').html(
+                'The <strong>withdrawal rule</strong> suggests you need (100 / rate)x your annual expenses saved for retirement. ' +
+                'Enter your yearly expenses and desired withdrawal rate below to calculate your target.'
+            );
+        }
+
+        // Update preview labels based on mode
+        if (isCountdown) {
+            $('#preview-target-label').text('Target Value (Present Value)');
+        } else {
+            $('#preview-target-label').text('Target Value (Expenses / Rate)');
+        }
+
+        updatePreview();
+    }
+
+    function calculatePresentValue(annualPayment, rate, years) {
+        // PV = PMT × [(1 - (1 + r)^(-n)) / r]
+        if (rate <= 0 || years <= 0) return 0;
+        var r = rate / 100;
+        return annualPayment * ((1 - Math.pow(1 + r, -years)) / r);
+    }
+
+    function getYearsRemaining() {
+        var targetDate = $('#independence_target_date').val();
+        if (!targetDate) return 0;
+
+        var target = new Date(targetDate);
+        var now = new Date();
+        var diffMs = target - now;
+        var diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays / 365.25;
+    }
+
     function updatePreview() {
         var expenses = parseFloat($('#withdrawal_yearly_expenses').val()) || 0;
         var rate = parseFloat($('#withdrawal_rate').val()) || 4;
-        var target = rate > 0 ? expenses / (rate / 100) : 0;
+        var growthRate = parseFloat($('#expected_growth_rate').val()) || 7;
         var monthly = expenses / 12;
+        var mode = getMode();
+        var target = 0;
+
+        if (mode === 'countdown') {
+            var years = getYearsRemaining();
+            if (years > 0) {
+                target = calculatePresentValue(expenses, growthRate, years);
+            }
+            // Show years remaining
+            if (years > 0) {
+                $('#preview-years').text(years.toFixed(1) + ' years');
+                $('#preview-years-row').show();
+            } else {
+                $('#preview-years-row').hide();
+            }
+        } else {
+            target = rate > 0 ? expenses / (rate / 100) : 0;
+            $('#preview-years-row').hide();
+        }
 
         $('#preview-target').text('$' + target.toLocaleString('en-US', {maximumFractionDigits: 0}));
         $('#preview-monthly').text('$' + monthly.toLocaleString('en-US', {maximumFractionDigits: 0}));
@@ -178,8 +300,14 @@ $(document).ready(function() {
         }
     }
 
-    $('#withdrawal_yearly_expenses, #withdrawal_rate').on('input', updatePreview);
-    updatePreview(); // Initial call
+    // Mode toggle handlers
+    $('input[name="independence_mode"]').on('change', updateModeUI);
+
+    // Input handlers for preview update
+    $('#withdrawal_yearly_expenses, #withdrawal_rate, #expected_growth_rate, #independence_target_date').on('input change', updatePreview);
+
+    // Initial calls
+    updateModeUI();
 });
 </script>
 @endpush

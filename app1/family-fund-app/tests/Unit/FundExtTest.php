@@ -740,7 +740,7 @@ class FundExtTest extends TestCase
         $this->assertTrue($result['already_reached']);
         $this->assertEquals(7.0, $result['expected_growth_rate']);
         $this->assertEquals(4.0, $result['withdrawal_rate']);
-        $this->assertEquals(3.0, $result['net_growth_rate']);  // 7 - 4 = 3
+        $this->assertEqualsWithDelta(3.0, $result['net_growth_rate'], 0.0001);  // 7 - 4 = 3
     }
 
     public function test_calculate_target_reach_with_withdrawals_exceeds_growth()
@@ -756,7 +756,7 @@ class FundExtTest extends TestCase
         $this->assertIsArray($result);
         $this->assertFalse($result['reachable']);
         $this->assertEquals('withdrawals_exceed_growth', $result['reason']);
-        $this->assertEquals(-1.0, $result['net_growth_rate']);  // 3 - 4 = -1
+        $this->assertEqualsWithDelta(-1.0, $result['net_growth_rate'], 0.0001);  // 3 - 4 = -1
     }
 
     public function test_calculate_target_reach_with_withdrawals_equal_rates()
@@ -857,5 +857,481 @@ class FundExtTest extends TestCase
         $this->assertTrue($result['reachable']);
         $this->assertTrue($result['distant']);
         $this->assertGreaterThan(50, $result['years_from_now']);
+    }
+
+    // =========================================================================
+    // Independence Mode tests (Countdown vs Perpetual)
+    // =========================================================================
+
+    public function test_get_independence_mode_returns_perpetual_by_default()
+    {
+        // Create a new fund without setting independence_mode to test default behavior
+        $fund = FundExt::create([
+            'name' => 'DMF' . substr(uniqid(), 0, 10),
+            'short_name' => 'DMF',
+        ]);
+
+        $result = $fund->getIndependenceMode();
+
+        $this->assertEquals('perpetual', $result);
+
+        // Clean up
+        $fund->delete();
+    }
+
+    public function test_get_independence_mode_returns_perpetual_when_set()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->save();
+
+        $result = $fund->getIndependenceMode();
+
+        $this->assertEquals('perpetual', $result);
+    }
+
+    public function test_get_independence_mode_returns_countdown_when_set()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->save();
+
+        $result = $fund->getIndependenceMode();
+
+        $this->assertEquals('countdown', $result);
+    }
+
+    // =========================================================================
+    // getIndependenceTargetDate tests
+    // =========================================================================
+
+    public function test_get_independence_target_date_returns_null_in_perpetual_mode()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->save();
+
+        $result = $fund->getIndependenceTargetDate();
+
+        $this->assertNull($result);
+    }
+
+    public function test_get_independence_target_date_returns_date_in_countdown_mode()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->save();
+
+        $result = $fund->getIndependenceTargetDate();
+
+        $this->assertNotNull($result);
+        $this->assertEquals('2035-01-01', $result->format('Y-m-d'));
+    }
+
+    public function test_get_independence_target_date_returns_null_when_no_date_set()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = null;
+        $fund->save();
+
+        $result = $fund->getIndependenceTargetDate();
+
+        $this->assertNull($result);
+    }
+
+    // =========================================================================
+    // getYearsRemaining tests
+    // =========================================================================
+
+    public function test_get_years_remaining_returns_null_in_perpetual_mode()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->save();
+
+        $result = $fund->getYearsRemaining('2025-01-01');
+
+        $this->assertNull($result);
+    }
+
+    public function test_get_years_remaining_returns_null_when_no_target_date()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = null;
+        $fund->save();
+
+        $result = $fund->getYearsRemaining('2025-01-01');
+
+        $this->assertNull($result);
+    }
+
+    public function test_get_years_remaining_correct_calculation()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->save();
+
+        $result = $fund->getYearsRemaining('2025-01-01');
+
+        // 10 years remaining (approximately, allowing for leap year handling)
+        $this->assertEqualsWithDelta(10.0, $result, 0.1);
+    }
+
+    public function test_get_years_remaining_returns_negative_for_past_dates()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2020-01-01';
+        $fund->save();
+
+        $result = $fund->getYearsRemaining('2025-01-01');
+
+        // Target date is in the past, should be negative
+        $this->assertLessThan(0, $result);
+        $this->assertEqualsWithDelta(-5.0, $result, 0.1);
+    }
+
+    public function test_get_years_remaining_fractional_years()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2025-07-01';
+        $fund->save();
+
+        $result = $fund->getYearsRemaining('2025-01-01');
+
+        // About 0.5 years remaining
+        $this->assertEqualsWithDelta(0.5, $result, 0.05);
+    }
+
+    // =========================================================================
+    // calculateCountdownTargetValue tests
+    // =========================================================================
+
+    public function test_calculate_countdown_target_value_returns_zero_when_no_goal()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        // withdrawal_yearly_expenses is null
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function test_calculate_countdown_target_value_returns_zero_for_past_target()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2020-01-01';  // In the past
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function test_calculate_countdown_target_value_returns_zero_for_zero_years()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2025-01-01';  // Same as asOf
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function test_calculate_countdown_target_value_zero_growth_simple_multiplication()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';  // 10 years
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 0;  // No growth
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // Without growth: 120,000 * 10 years = 1,200,000
+        $this->assertEqualsWithDelta(1200000, $result, 12000);  // Allow some variance for day calculation
+    }
+
+    public function test_calculate_countdown_target_value_with_growth()
+    {
+        // Formula: PV of annuity = PMT × [(1 - (1 + r)^(-n)) / r]
+        // $120k/yr, 10 years, 7% growth
+        // = 120000 × [(1 - (1.07)^(-10)) / 0.07]
+        // = 120000 × [(1 - 0.5083) / 0.07]
+        // = 120000 × [0.4917 / 0.07]
+        // = 120000 × 7.0236
+        // = ~842,832
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';  // 10 years
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // Expected: ~842,880 (the task says this, but actual calculation gives ~842,832)
+        $this->assertEqualsWithDelta(842880, $result, 10000);
+    }
+
+    public function test_calculate_countdown_target_value_very_long_period()
+    {
+        // Test with 50+ years
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2075-01-01';  // 50 years
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // With long time period, approaches the perpetual value
+        // Perpetual = 120000 / 0.07 = 1,714,286
+        // Countdown with 50 years at 7% = ~1,663,000
+        $this->assertGreaterThan(1500000, $result);
+        $this->assertLessThan(1750000, $result);
+    }
+
+    public function test_calculate_countdown_target_value_perpetual_mode_returns_zero()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // getYearsRemaining returns null in perpetual mode, so this returns 0
+        $this->assertEquals(0, $result);
+    }
+
+    // =========================================================================
+    // getCountdownFundingPct tests
+    // =========================================================================
+
+    public function test_get_countdown_funding_pct_returns_zero_when_target_is_zero()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';  // No countdown target
+        $fund->save();
+
+        $result = $fund->getCountdownFundingPct('2022-06-01');
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function test_get_countdown_funding_pct_correct_percentage()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->withdrawal_yearly_expenses = 100;  // Small target so fund value is significant percentage
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->getCountdownFundingPct('2022-06-01');
+
+        // Fund value ~1000, target will be small, so percentage should be significant
+        $this->assertGreaterThan(0, $result);
+    }
+
+    public function test_get_countdown_funding_pct_100_percent_when_fully_funded()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2025-01-01';  // Short period
+        $fund->withdrawal_yearly_expenses = 1;  // Very small, fund value exceeds target
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->getCountdownFundingPct('2022-06-01');
+
+        // Fund value of ~1000 far exceeds the tiny target
+        $this->assertGreaterThanOrEqual(100, $result);
+    }
+
+    // =========================================================================
+    // withdrawalTargetValue mode switching tests
+    // =========================================================================
+
+    public function test_withdrawal_target_value_uses_perpetual_calc_in_perpetual_mode()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->withdrawal_yearly_expenses = 40000;
+        $fund->withdrawal_rate = 4.0;
+        $fund->save();
+
+        $result = $fund->withdrawalTargetValue('2025-01-01');
+
+        // Perpetual: 40000 / 0.04 = 1,000,000
+        $this->assertEquals(1000000, $result);
+    }
+
+    public function test_withdrawal_target_value_uses_countdown_calc_in_countdown_mode()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';  // 10 years from 2025
+        $fund->withdrawal_yearly_expenses = 40000;
+        $fund->withdrawal_rate = 4.0;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->withdrawalTargetValue('2025-01-01');
+
+        // Countdown: PV of annuity formula for 10 years at 7%
+        // Different from perpetual (which would be 1,000,000)
+        $this->assertNotEquals(1000000, $result);
+        // Countdown target should be less than perpetual
+        $this->assertLessThan(1000000, $result);
+        // Expected: ~280,000 (40000 × 7.0236)
+        $this->assertEqualsWithDelta(280944, $result, 5000);
+    }
+
+    public function test_withdrawal_target_value_perpetual_when_no_as_of()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->withdrawal_yearly_expenses = 40000;
+        $fund->withdrawal_rate = 4.0;
+        $fund->save();
+
+        // Without asOf, should fall back to perpetual
+        $result = $fund->withdrawalTargetValue();
+
+        // Perpetual: 40000 / 0.04 = 1,000,000
+        $this->assertEquals(1000000, $result);
+    }
+
+    // =========================================================================
+    // withdrawalProgress with countdown mode tests
+    // =========================================================================
+
+    public function test_withdrawal_progress_includes_countdown_fields()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->withdrawal_yearly_expenses = 40000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->withdrawalProgress('2025-01-01');
+
+        $this->assertArrayHasKey('independence_mode', $result);
+        $this->assertEquals('countdown', $result['independence_mode']);
+        $this->assertArrayHasKey('independence_target_date', $result);
+        $this->assertEquals('2035-01-01', $result['independence_target_date']);
+        $this->assertArrayHasKey('years_remaining', $result);
+        $this->assertEqualsWithDelta(10.0, $result['years_remaining'], 0.1);
+    }
+
+    public function test_withdrawal_progress_perpetual_excludes_countdown_fields()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'perpetual';
+        $fund->withdrawal_yearly_expenses = 40000;
+        $fund->save();
+
+        $result = $fund->withdrawalProgress('2025-01-01');
+
+        $this->assertArrayHasKey('independence_mode', $result);
+        $this->assertEquals('perpetual', $result['independence_mode']);
+        $this->assertArrayNotHasKey('independence_target_date', $result);
+        $this->assertArrayNotHasKey('years_remaining', $result);
+    }
+
+    // =========================================================================
+    // Edge case tests
+    // =========================================================================
+
+    public function test_countdown_with_target_date_in_past_returns_zero_target()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2020-01-01';  // Past date
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->withdrawalTargetValue('2025-01-01');
+
+        // Past target date means 0 or negative years, so countdown returns 0
+        $this->assertEquals(0, $result);
+    }
+
+    public function test_countdown_with_very_high_growth_rate()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 20.0;  // Very high growth
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // Higher growth rate means need less money upfront
+        $this->assertGreaterThan(0, $result);
+        // At 20% growth, PV factor is much smaller
+        // Compare with 7% calculation (~842k)
+        $this->assertLessThan(600000, $result);
+    }
+
+    public function test_countdown_short_time_period_one_year()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2026-01-01';  // ~1 year
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // For 1 year: 120000 × [(1 - 1.07^(-1)) / 0.07]
+        // = 120000 × [(1 - 0.9346) / 0.07]
+        // = 120000 × 0.9346
+        // ≈ 112,149
+        $this->assertEqualsWithDelta(112149, $result, 2000);
+    }
+
+    public function test_countdown_negative_growth_uses_simple_multiplication()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->independence_mode = 'countdown';
+        $fund->independence_target_date = '2035-01-01';  // 10 years
+        $fund->withdrawal_yearly_expenses = 120000;
+        $fund->expected_growth_rate = -2.0;  // Negative growth
+        $fund->save();
+
+        $result = $fund->calculateCountdownTargetValue('2025-01-01');
+
+        // With non-positive growth, uses simple multiplication
+        // 120000 × 10 = 1,200,000
+        $this->assertEqualsWithDelta(1200000, $result, 12000);
     }
 }

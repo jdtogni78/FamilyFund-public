@@ -168,98 +168,98 @@ class FundControllerExtAdditionalTest extends TestCase
         $response->assertStatus(200);
     }
 
-    // ==================== Four Percent Goal Tests ====================
+    // ==================== Withdrawal Goal Tests ====================
 
-    public function test_edit_four_pct_goal_displays_form_for_admin()
+    public function test_edit_withdrawal_goal_displays_form_for_admin()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('funds.four_pct_goal.edit', $this->df->fund->id));
+            ->get(route('funds.withdrawal_goal.edit', $this->df->fund->id));
 
         $response->assertStatus(200);
-        $response->assertViewIs('funds.four_pct_goal_edit');
+        $response->assertViewIs('funds.withdrawal_goal_edit');
         $response->assertViewHas('fund');
     }
 
-    public function test_edit_four_pct_goal_redirects_when_fund_not_found()
+    public function test_edit_withdrawal_goal_redirects_when_fund_not_found()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('funds.four_pct_goal.edit', 99999));
+            ->get(route('funds.withdrawal_goal.edit', 99999));
 
         $response->assertRedirect(route('funds.index'));
     }
 
-    public function test_edit_four_pct_goal_redirects_non_admin()
+    public function test_edit_withdrawal_goal_redirects_non_admin()
     {
         $response = $this->actingAs($this->nonAdminUser)
-            ->get(route('funds.four_pct_goal.edit', $this->df->fund->id));
+            ->get(route('funds.withdrawal_goal.edit', $this->df->fund->id));
 
         $response->assertRedirect(route('funds.show', $this->df->fund->id));
     }
 
-    public function test_update_four_pct_goal_updates_fund()
+    public function test_update_withdrawal_goal_updates_fund()
     {
         $response = $this->actingAs($this->user)
-            ->put(route('funds.four_pct_goal.update', $this->df->fund->id), [
-                'four_pct_yearly_expenses' => 50000,
-                'four_pct_net_worth_pct' => 80,
+            ->put(route('funds.withdrawal_goal.update', $this->df->fund->id), [
+                'withdrawal_yearly_expenses' => 50000,
+                'withdrawal_net_worth_pct' => 80,
             ]);
 
         $response->assertRedirect(route('funds.show', $this->df->fund->id));
 
         $this->assertDatabaseHas('funds', [
             'id' => $this->df->fund->id,
-            'four_pct_yearly_expenses' => 50000,
-            'four_pct_net_worth_pct' => 80,
+            'withdrawal_yearly_expenses' => 50000,
+            'withdrawal_net_worth_pct' => 80,
         ]);
     }
 
-    public function test_update_four_pct_goal_redirects_when_fund_not_found()
+    public function test_update_withdrawal_goal_redirects_when_fund_not_found()
     {
         $response = $this->actingAs($this->user)
-            ->put(route('funds.four_pct_goal.update', 99999), [
-                'four_pct_yearly_expenses' => 50000,
+            ->put(route('funds.withdrawal_goal.update', 99999), [
+                'withdrawal_yearly_expenses' => 50000,
             ]);
 
         $response->assertRedirect(route('funds.index'));
     }
 
-    public function test_update_four_pct_goal_redirects_non_admin()
+    public function test_update_withdrawal_goal_redirects_non_admin()
     {
         $response = $this->actingAs($this->nonAdminUser)
-            ->put(route('funds.four_pct_goal.update', $this->df->fund->id), [
-                'four_pct_yearly_expenses' => 50000,
+            ->put(route('funds.withdrawal_goal.update', $this->df->fund->id), [
+                'withdrawal_yearly_expenses' => 50000,
             ]);
 
         $response->assertRedirect(route('funds.show', $this->df->fund->id));
     }
 
-    public function test_update_four_pct_goal_validates_input()
+    public function test_update_withdrawal_goal_validates_input()
     {
         $response = $this->actingAs($this->user)
-            ->put(route('funds.four_pct_goal.update', $this->df->fund->id), [
-                'four_pct_yearly_expenses' => -100,  // Invalid: must be >= 0
+            ->put(route('funds.withdrawal_goal.update', $this->df->fund->id), [
+                'withdrawal_yearly_expenses' => -100,  // Invalid: must be >= 0
             ]);
 
-        $response->assertSessionHasErrors('four_pct_yearly_expenses');
+        $response->assertSessionHasErrors('withdrawal_yearly_expenses');
     }
 
-    public function test_update_four_pct_goal_allows_null_expenses()
+    public function test_update_withdrawal_goal_allows_null_expenses()
     {
         // First set a value
-        FundExt::find($this->df->fund->id)->update(['four_pct_yearly_expenses' => 50000]);
+        FundExt::find($this->df->fund->id)->update(['withdrawal_yearly_expenses' => 50000]);
 
         $response = $this->actingAs($this->user)
-            ->put(route('funds.four_pct_goal.update', $this->df->fund->id), [
-                'four_pct_yearly_expenses' => null,
-                'four_pct_net_worth_pct' => null,
+            ->put(route('funds.withdrawal_goal.update', $this->df->fund->id), [
+                'withdrawal_yearly_expenses' => null,
+                'withdrawal_net_worth_pct' => null,
             ]);
 
         $response->assertRedirect(route('funds.show', $this->df->fund->id));
 
         $fund = FundExt::find($this->df->fund->id);
-        $this->assertNull($fund->four_pct_yearly_expenses);
+        $this->assertNull($fund->withdrawal_yearly_expenses);
         // null net_worth_pct should default to 100
-        $this->assertEquals(100, $fund->four_pct_net_worth_pct);
+        $this->assertEquals(100, $fund->withdrawal_net_worth_pct);
     }
 
     // ==================== Trade Bands With Valid Data Tests ====================

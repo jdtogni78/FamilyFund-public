@@ -349,7 +349,7 @@ class FundExtTest extends TestCase
     {
         $fund = FundExt::find($this->factory->fund->id);
 
-        // By default, four_pct_yearly_expenses is null
+        // By default, withdrawal_yearly_expenses is null
         $result = $fund->hasWithdrawalGoal();
 
         $this->assertFalse($result);
@@ -358,7 +358,7 @@ class FundExtTest extends TestCase
     public function test_has_withdrawal_goal_returns_true_when_configured()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_yearly_expenses = 40000;
         $fund->save();
 
         $result = $fund->hasWithdrawalGoal();
@@ -369,7 +369,7 @@ class FundExtTest extends TestCase
     public function test_has_withdrawal_goal_returns_false_for_zero_expenses()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 0;
+        $fund->withdrawal_yearly_expenses = 0;
         $fund->save();
 
         $result = $fund->hasWithdrawalGoal();
@@ -400,7 +400,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_target_value_returns_correct_calculation()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_yearly_expenses = 40000;
         $fund->withdrawal_rate = 4.0;
         $fund->save();
 
@@ -413,7 +413,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_target_value_with_different_rate()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_yearly_expenses = 40000;
         $fund->withdrawal_rate = 3.0;  // 3% rate
         $fund->save();
 
@@ -444,7 +444,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_net_worth_pct_returns_configured_value()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_net_worth_pct = 80.0;
+        $fund->withdrawal_net_worth_pct = 80.0;
         $fund->save();
 
         $result = $fund->withdrawalNetWorthPct();
@@ -455,7 +455,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_adjusted_value_applies_net_worth_pct()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_net_worth_pct = 50.0;
+        $fund->withdrawal_net_worth_pct = 50.0;
         $fund->save();
 
         $fundValue = $fund->valueAsOf('2022-06-01');
@@ -468,7 +468,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_current_yield_calculates_correctly()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_net_worth_pct = 100.0;
         $fund->withdrawal_rate = 4.0;
         $fund->save();
 
@@ -482,7 +482,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_current_yield_with_different_rate()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_net_worth_pct = 100.0;
         $fund->withdrawal_rate = 3.5;
         $fund->save();
 
@@ -506,8 +506,8 @@ class FundExtTest extends TestCase
     public function test_withdrawal_progress_returns_complete_data()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 40;  // Very low, so fund value exceeds target
-        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_yearly_expenses = 40;  // Very low, so fund value exceeds target
+        $fund->withdrawal_net_worth_pct = 100.0;
         $fund->withdrawal_rate = 4.0;
         $fund->save();
 
@@ -531,8 +531,8 @@ class FundExtTest extends TestCase
     public function test_withdrawal_progress_is_reached_when_value_exceeds_target()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 1;  // Very low target
-        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_yearly_expenses = 1;  // Very low target
+        $fund->withdrawal_net_worth_pct = 100.0;
         $fund->save();
 
         $result = $fund->withdrawalProgress('2022-06-01');
@@ -544,8 +544,8 @@ class FundExtTest extends TestCase
     public function test_withdrawal_progress_not_reached_when_value_below_target()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 1000000;  // Very high target
-        $fund->four_pct_net_worth_pct = 100.0;
+        $fund->withdrawal_yearly_expenses = 1000000;  // Very high target
+        $fund->withdrawal_net_worth_pct = 100.0;
         $fund->save();
 
         $result = $fund->withdrawalProgress('2022-06-01');
@@ -581,7 +581,7 @@ class FundExtTest extends TestCase
     public function test_withdrawal_progress_includes_expected_growth_rate()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 40000;
+        $fund->withdrawal_yearly_expenses = 40000;
         $fund->expected_growth_rate = 8.0;
         $fund->save();
 
@@ -594,7 +594,7 @@ class FundExtTest extends TestCase
     public function test_calculate_target_reach_with_growth_rate_returns_null_when_no_goal()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        // No four_pct_yearly_expenses set
+        // No withdrawal_yearly_expenses set
 
         $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
 
@@ -604,7 +604,7 @@ class FundExtTest extends TestCase
     public function test_calculate_target_reach_with_growth_rate_already_reached()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 1;  // Very low target, fund value exceeds it
+        $fund->withdrawal_yearly_expenses = 1;  // Very low target, fund value exceeds it
         $fund->expected_growth_rate = 7.0;
         $fund->save();
 
@@ -621,7 +621,7 @@ class FundExtTest extends TestCase
         $fund = FundExt::find($this->factory->fund->id);
         // Set a target that's reachable within 50 years given fund value
         // Fund value in test data is ~1000, target should be ~3000 to get ~16 years at 7%
-        $fund->four_pct_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->withdrawal_yearly_expenses = 120;  // target = 120/0.04 = 3000
         $fund->expected_growth_rate = 7.0;
         $fund->save();
 
@@ -644,7 +644,7 @@ class FundExtTest extends TestCase
     public function test_calculate_target_reach_with_growth_rate_zero_growth()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 75000;
+        $fund->withdrawal_yearly_expenses = 75000;
         $fund->expected_growth_rate = 0;
         $fund->save();
 
@@ -662,7 +662,7 @@ class FundExtTest extends TestCase
         // years = log(3000/1000) / log(1.07) = log(3) / 0.0677 ≈ 16.2 years
         $fund = FundExt::find($this->factory->fund->id);
         // Fund value is ~1000, set target to be 3x
-        $fund->four_pct_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->withdrawal_yearly_expenses = 120;  // target = 120/0.04 = 3000
         $fund->expected_growth_rate = 7.0;
         $fund->save();
 
@@ -678,7 +678,7 @@ class FundExtTest extends TestCase
     public function test_calculate_target_reach_with_higher_growth_rate_is_faster()
     {
         $fund = FundExt::find($this->factory->fund->id);
-        $fund->four_pct_yearly_expenses = 200;  // Moderate target
+        $fund->withdrawal_yearly_expenses = 200;  // Moderate target
         $fund->save();
 
         // Test with 7% growth
@@ -699,7 +699,7 @@ class FundExtTest extends TestCase
     {
         $fund = FundExt::find($this->factory->fund->id);
         // Set a very high target relative to fund value with low growth
-        $fund->four_pct_yearly_expenses = 10000000;  // target = 250M
+        $fund->withdrawal_yearly_expenses = 10000000;  // target = 250M
         $fund->expected_growth_rate = 1.0;  // Very low growth
         $fund->save();
 

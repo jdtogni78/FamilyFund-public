@@ -11,14 +11,14 @@
     $expectedGrowthRate = $withdrawalGoal['expected_growth_rate'] ?? 7;
 @endphp
 
-<div class="row mb-4" id="section-four-pct-goal">
+<div class="row mb-4" id="section-withdrawal-goal">
     <div class="col">
         <div class="card" style="border: 2px solid {{ $isReached ? '#22c55e' : '#0d9488' }};">
             {{-- Header --}}
             <div class="card-header d-flex justify-content-between align-items-center" style="background: {{ $isReached ? '#22c55e' : '#0d9488' }}; color: white;">
                 <strong><i class="fa fa-bullseye me-2"></i>{{ $withdrawalRate }}% Rule Retirement Goal</strong>
                 @isset($api['admin'])
-                <a href="{{ route('funds.four_pct_goal.edit', $fund->id) }}" class="btn btn-sm btn-outline-light">
+                <a href="{{ route('funds.withdrawal_goal.edit', $fund->id) }}" class="btn btn-sm btn-outline-light">
                     <i class="fa fa-edit"></i> Edit
                 </a>
                 @endisset

@@ -21,7 +21,7 @@
                             <strong>4% Rule Retirement Goal</strong>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{{ route('funds.four_pct_goal.update', $fund->id) }}">
+                            <form method="POST" action="{{ route('funds.withdrawal_goal.update', $fund->id) }}">
                                 @csrf
                                 @method('PUT')
 
@@ -34,19 +34,19 @@
 
                                 {{-- Yearly Expenses --}}
                                 <div class="mb-4">
-                                    <label for="four_pct_yearly_expenses" class="form-label">
+                                    <label for="withdrawal_yearly_expenses" class="form-label">
                                         <strong>Yearly Expenses</strong>
                                         <small class="text-muted">(How much do you need per year?)</small>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control form-control-lg" id="four_pct_yearly_expenses"
-                                               name="four_pct_yearly_expenses"
-                                               value="{{ old('four_pct_yearly_expenses', $fund->four_pct_yearly_expenses) }}"
+                                        <input type="number" class="form-control form-control-lg" id="withdrawal_yearly_expenses"
+                                               name="withdrawal_yearly_expenses"
+                                               value="{{ old('withdrawal_yearly_expenses', $fund->withdrawal_yearly_expenses) }}"
                                                placeholder="80000" min="0" step="1000">
                                         <span class="input-group-text">/year</span>
                                     </div>
-                                    <div class="form-text">Leave empty to remove the 4% goal.</div>
+                                    <div class="form-text">Leave empty to remove the withdrawal goal.</div>
                                 </div>
 
                                 {{-- Withdrawal Rate --}}
@@ -101,14 +101,14 @@
 
                                 {{-- Net Worth Percentage --}}
                                 <div class="mb-4">
-                                    <label for="four_pct_net_worth_pct" class="form-label">
+                                    <label for="withdrawal_net_worth_pct" class="form-label">
                                         <strong>Net Worth Percentage</strong>
                                         <small class="text-muted">(What portion of fund value to use?)</small>
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="four_pct_net_worth_pct"
-                                               name="four_pct_net_worth_pct"
-                                               value="{{ old('four_pct_net_worth_pct', $fund->four_pct_net_worth_pct ?? 100) }}"
+                                        <input type="number" class="form-control" id="withdrawal_net_worth_pct"
+                                               name="withdrawal_net_worth_pct"
+                                               value="{{ old('withdrawal_net_worth_pct', $fund->withdrawal_net_worth_pct ?? 100) }}"
                                                min="1" max="100" step="1">
                                         <span class="input-group-text">%</span>
                                     </div>
@@ -163,7 +163,7 @@
 <script>
 $(document).ready(function() {
     function updatePreview() {
-        var expenses = parseFloat($('#four_pct_yearly_expenses').val()) || 0;
+        var expenses = parseFloat($('#withdrawal_yearly_expenses').val()) || 0;
         var rate = parseFloat($('#withdrawal_rate').val()) || 4;
         var target = rate > 0 ? expenses / (rate / 100) : 0;
         var monthly = expenses / 12;
@@ -178,7 +178,7 @@ $(document).ready(function() {
         }
     }
 
-    $('#four_pct_yearly_expenses, #withdrawal_rate').on('input', updatePreview);
+    $('#withdrawal_yearly_expenses, #withdrawal_rate').on('input', updatePreview);
     updatePreview(); // Initial call
 });
 </script>

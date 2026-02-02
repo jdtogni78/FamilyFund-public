@@ -189,7 +189,7 @@ class FundExt extends Fund
      */
     public function hasWithdrawalGoal(): bool
     {
-        return $this->four_pct_yearly_expenses !== null && $this->four_pct_yearly_expenses > 0;
+        return $this->withdrawal_yearly_expenses !== null && $this->withdrawal_yearly_expenses > 0;
     }
 
     /**
@@ -220,7 +220,7 @@ class FundExt extends Fund
         if ($rate <= 0) {
             return 0;
         }
-        return (float) $this->four_pct_yearly_expenses / ($rate / 100);
+        return (float) $this->withdrawal_yearly_expenses / ($rate / 100);
     }
 
     /**
@@ -228,7 +228,7 @@ class FundExt extends Fund
      */
     public function withdrawalNetWorthPct(): float
     {
-        return (float) ($this->four_pct_net_worth_pct ?? 100.00);
+        return (float) ($this->withdrawal_net_worth_pct ?? 100.00);
     }
 
     /**
@@ -261,7 +261,7 @@ class FundExt extends Fund
         $targetValue = $this->withdrawalTargetValue();
         $adjustedValue = $this->withdrawalAdjustedValue($asOf);
         $currentYield = $this->withdrawalCurrentYield($asOf);
-        $targetYield = (float) $this->four_pct_yearly_expenses;
+        $targetYield = (float) $this->withdrawal_yearly_expenses;
         $netWorthPct = $this->withdrawalNetWorthPct();
         $withdrawalRate = $this->getWithdrawalRate();
 

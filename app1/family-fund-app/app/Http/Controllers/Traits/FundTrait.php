@@ -342,7 +342,7 @@ Trait FundTrait
             $withdrawalProgress = $fund->withdrawalProgress($asOf);
             // Use expected growth rate for projection instead of historical linear regression
             $withdrawalProgress['target_reach'] = $fund->calculateTargetReachWithGrowthRate($asOf);
-            $arr['four_pct_goal'] = $withdrawalProgress;
+            $arr['withdrawal_goal'] = $withdrawalProgress;
         }
 
         /** @var TradePortfolioExt $tradePortfolio */

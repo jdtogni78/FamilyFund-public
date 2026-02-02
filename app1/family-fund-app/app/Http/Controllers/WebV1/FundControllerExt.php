@@ -250,7 +250,7 @@ class FundControllerExt extends FundController
             return redirect(route('funds.show', $id));
         }
 
-        return view('funds.four_pct_goal_edit')
+        return view('funds.withdrawal_goal_edit')
             ->with('fund', $fund);
     }
 
@@ -276,15 +276,15 @@ class FundControllerExt extends FundController
         }
 
         $request->validate([
-            'four_pct_yearly_expenses' => 'nullable|numeric|min:0',
-            'four_pct_net_worth_pct' => 'nullable|numeric|min:1|max:100',
+            'withdrawal_yearly_expenses' => 'nullable|numeric|min:0',
+            'withdrawal_net_worth_pct' => 'nullable|numeric|min:1|max:100',
             'withdrawal_rate' => 'nullable|numeric|min:0.5|max:10',
             'expected_growth_rate' => 'nullable|numeric|min:0.5|max:20',
         ]);
 
         $fund->update([
-            'four_pct_yearly_expenses' => $request->four_pct_yearly_expenses ?: null,
-            'four_pct_net_worth_pct' => $request->four_pct_net_worth_pct ?: 100,
+            'withdrawal_yearly_expenses' => $request->withdrawal_yearly_expenses ?: null,
+            'withdrawal_net_worth_pct' => $request->withdrawal_net_worth_pct ?: 100,
             'withdrawal_rate' => $request->withdrawal_rate ?: 4,
             'expected_growth_rate' => $request->expected_growth_rate ?: 7,
         ]);

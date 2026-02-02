@@ -48,10 +48,10 @@ Route::middleware('auth')->group(function () {
         ->name('funds.show_trade_bands_pdf');
     Route::get('funds/{id}/portfolios', 'App\Http\Controllers\WebV1\FundControllerExt@portfolios')
         ->name('funds.portfolios');
-    Route::get('funds/{id}/four_pct_goal/edit', 'App\Http\Controllers\WebV1\FundControllerExt@editFourPctGoal')
-        ->name('funds.four_pct_goal.edit');
-    Route::put('funds/{id}/four_pct_goal', 'App\Http\Controllers\WebV1\FundControllerExt@updateFourPctGoal')
-        ->name('funds.four_pct_goal.update');
+    Route::get('funds/{id}/withdrawal_goal/edit', 'App\Http\Controllers\WebV1\FundControllerExt@editFourPctGoal')
+        ->name('funds.withdrawal_goal.edit');
+    Route::put('funds/{id}/withdrawal_goal', 'App\Http\Controllers\WebV1\FundControllerExt@updateFourPctGoal')
+        ->name('funds.withdrawal_goal.update');
     Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
     Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')

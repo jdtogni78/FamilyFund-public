@@ -7,6 +7,7 @@ use App\Repositories\AccountRepository;
 use App\Repositories\AccountBalanceRepository;
 use App\Models\Utils;
 use App\Repositories\FundRepository;
+use Carbon\Carbon;
 /**
  * Class FundExt
  * @package App\Models
@@ -209,13 +210,116 @@ class FundExt extends Fund
     }
 
     /**
-     * Get the target value for the withdrawal goal (expenses / withdrawal_rate * 100).
+     * Get the independence mode ('perpetual' or 'countdown').
+     * Defaults to 'perpetual' if not set.
      */
-    public function withdrawalTargetValue(): float
+    public function getIndependenceMode(): string
+    {
+        return $this->independence_mode ?? 'perpetual';
+    }
+
+    /**
+     * Get the independence target date for countdown mode.
+     * Returns null if not in countdown mode or date not set.
+     */
+    public function getIndependenceTargetDate(): ?Carbon
+    {
+        if ($this->getIndependenceMode() !== 'countdown') {
+            return null;
+        }
+        return $this->independence_target_date;
+    }
+
+    /**
+     * Get the years remaining until independence target date.
+     * Returns null if not in countdown mode or no target date set.
+     *
+     * @param string $asOf Current as-of date
+     * @return float|null Years remaining (can be fractional), or null if not applicable
+     */
+    public function getYearsRemaining(string $asOf): ?float
+    {
+        $targetDate = $this->getIndependenceTargetDate();
+        if (!$targetDate) {
+            return null;
+        }
+
+        $currentDate = Carbon::parse($asOf);
+        $diffInDays = $currentDate->diffInDays($targetDate, false);
+
+        // Return fractional years (using 365.25 for accuracy)
+        return $diffInDays / 365.25;
+    }
+
+    /**
+     * Calculate the target value using present value of annuity formula for countdown mode.
+     * Formula: Required = yearly_expenses × [(1 - (1 + growth_rate)^(-years)) / growth_rate]
+     *
+     * @param string $asOf Current as-of date
+     * @return float Target value needed, or 0 if not applicable
+     */
+    public function calculateCountdownTargetValue(string $asOf): float
     {
         if (!$this->hasWithdrawalGoal()) {
             return 0;
         }
+
+        $yearsRemaining = $this->getYearsRemaining($asOf);
+        if ($yearsRemaining === null || $yearsRemaining <= 0) {
+            return 0;
+        }
+
+        $yearlyExpenses = (float) $this->withdrawal_yearly_expenses;
+        $growthRate = $this->getExpectedGrowthRate() / 100;
+
+        if ($growthRate <= 0) {
+            // Without growth, need simple years × expenses
+            return $yearlyExpenses * $yearsRemaining;
+        }
+
+        // PV of annuity formula: PMT × [(1 - (1 + r)^(-n)) / r]
+        $pvFactor = (1 - pow(1 + $growthRate, -$yearsRemaining)) / $growthRate;
+        return $yearlyExpenses * $pvFactor;
+    }
+
+    /**
+     * Get the countdown mode funding percentage.
+     * Compares current adjusted value to countdown target value.
+     *
+     * @param string $asOf Current as-of date
+     * @return float Funding percentage (0-100+), or 0 if not applicable
+     */
+    public function getCountdownFundingPct(string $asOf): float
+    {
+        $targetValue = $this->calculateCountdownTargetValue($asOf);
+        if ($targetValue <= 0) {
+            return 0;
+        }
+
+        $adjustedValue = $this->withdrawalAdjustedValue($asOf);
+        return ($adjustedValue / $targetValue) * 100;
+    }
+
+    /**
+     * Get the target value for the withdrawal goal.
+     * In perpetual mode: expenses / withdrawal_rate * 100
+     * In countdown mode: uses PV of annuity formula
+     *
+     * @param string|null $asOf Required for countdown mode calculations
+     * @return float Target value needed
+     */
+    public function withdrawalTargetValue(?string $asOf = null): float
+    {
+        if (!$this->hasWithdrawalGoal()) {
+            return 0;
+        }
+
+        // In countdown mode, use PV of annuity calculation
+        if ($this->getIndependenceMode() === 'countdown' && $asOf !== null) {
+            return $this->calculateCountdownTargetValue($asOf);
+        }
+
+        // Perpetual mode: expenses / withdrawal_rate * 100
         $rate = $this->getWithdrawalRate();
         if ($rate <= 0) {
             return 0;
@@ -258,17 +362,18 @@ class FundExt extends Fund
             return [];
         }
 
-        $targetValue = $this->withdrawalTargetValue();
+        $targetValue = $this->withdrawalTargetValue($asOf);
         $adjustedValue = $this->withdrawalAdjustedValue($asOf);
         $currentYield = $this->withdrawalCurrentYield($asOf);
         $targetYield = (float) $this->withdrawal_yearly_expenses;
         $netWorthPct = $this->withdrawalNetWorthPct();
         $withdrawalRate = $this->getWithdrawalRate();
+        $independenceMode = $this->getIndependenceMode();
 
         // Progress percentage (capped at 100%)
         $progressPct = $targetValue > 0 ? min(100, ($adjustedValue / $targetValue) * 100) : 0;
 
-        return [
+        $result = [
             'yearly_expenses' => $targetYield,
             'target_value' => $targetValue,
             'net_worth_pct' => $netWorthPct,
@@ -278,7 +383,16 @@ class FundExt extends Fund
             'is_reached' => $adjustedValue >= $targetValue,
             'withdrawal_rate' => $withdrawalRate,
             'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            'independence_mode' => $independenceMode,
         ];
+
+        // Add countdown-specific fields
+        if ($independenceMode === 'countdown') {
+            $result['independence_target_date'] = $this->getIndependenceTargetDate()?->format('Y-m-d');
+            $result['years_remaining'] = $this->getYearsRemaining($asOf);
+        }
+
+        return $result;
     }
 
     /**

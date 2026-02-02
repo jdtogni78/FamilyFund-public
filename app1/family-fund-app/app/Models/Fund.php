@@ -38,7 +38,9 @@ class Fund extends Model
         'withdrawal_yearly_expenses',
         'withdrawal_net_worth_pct',
         'withdrawal_rate',
-        'expected_growth_rate'
+        'expected_growth_rate',
+        'independence_mode',
+        'independence_target_date'
     ];
 
     /**
@@ -53,7 +55,9 @@ class Fund extends Model
         'withdrawal_yearly_expenses' => 'decimal:2',
         'withdrawal_net_worth_pct' => 'decimal:2',
         'withdrawal_rate' => 'decimal:2',
-        'expected_growth_rate' => 'decimal:2'
+        'expected_growth_rate' => 'decimal:2',
+        'independence_mode' => 'string',
+        'independence_target_date' => 'date'
     ];
 
     /**

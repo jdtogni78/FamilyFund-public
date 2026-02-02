@@ -280,6 +280,8 @@ class FundControllerExt extends FundController
             'withdrawal_net_worth_pct' => 'nullable|numeric|min:1|max:100',
             'withdrawal_rate' => 'nullable|numeric|min:0.5|max:10',
             'expected_growth_rate' => 'nullable|numeric|min:0.5|max:20',
+            'independence_mode' => 'nullable|in:perpetual,countdown',
+            'independence_target_date' => 'nullable|date|after:today',
         ]);
 
         $fund->update([
@@ -287,6 +289,10 @@ class FundControllerExt extends FundController
             'withdrawal_net_worth_pct' => $request->withdrawal_net_worth_pct ?: 100,
             'withdrawal_rate' => $request->withdrawal_rate ?: 4,
             'expected_growth_rate' => $request->expected_growth_rate ?: 7,
+            'independence_mode' => $request->independence_mode ?? 'perpetual',
+            'independence_target_date' => $request->independence_mode === 'countdown'
+                ? $request->independence_target_date
+                : null,  // Clear date when switching to perpetual
         ]);
 
         Flash::success('Withdrawal Rule Goal updated successfully.');

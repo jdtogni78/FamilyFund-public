@@ -6,7 +6,8 @@
     $progressPct = $withdrawalGoal['progress_pct'];
     $netWorthPct = $withdrawalGoal['net_worth_pct'];
     $isReached = $withdrawalGoal['is_reached'] ?? false;
-    $targetReach = $withdrawalGoal['target_reach'] ?? [];
+    $targetReach = $withdrawalGoal['target_reach'] ?? [];  // Without withdrawals (pure growth)
+    $targetReachWithWithdrawals = $withdrawalGoal['target_reach_with_withdrawals'] ?? [];  // With withdrawals
     $withdrawalRate = $withdrawalGoal['withdrawal_rate'] ?? 4;
     $expectedGrowthRate = $withdrawalGoal['expected_growth_rate'] ?? 7;
 @endphp
@@ -79,30 +80,84 @@
                     </div>
                 </div>
 
-                {{-- Target Reach Projection --}}
-                @if(!empty($targetReach))
-                <div class="alert {{ $isReached ? 'alert-success' : 'alert-info' }} mb-0 d-flex align-items-center">
-                    <i class="fa {{ $isReached ? 'fa-check-circle' : 'fa-clock' }} fa-2x me-3"></i>
-                    <div>
-                        @if($isReached || ($targetReach['already_reached'] ?? false))
+                {{-- Target Reach Projections --}}
+                @if(!empty($targetReach) || !empty($targetReachWithWithdrawals))
+                @if($isReached || ($targetReach['already_reached'] ?? false))
+                    {{-- Goal already reached - single message --}}
+                    <div class="alert alert-success mb-0 d-flex align-items-center">
+                        <i class="fa fa-check-circle fa-2x me-3"></i>
+                        <div>
                             <strong>Goal Reached!</strong> You have achieved your {{ $withdrawalRate }}% retirement target.
-                        @elseif(!($targetReach['reachable'] ?? true))
-                            @if(($targetReach['reason'] ?? '') === 'negative_growth')
-                                <strong>Growth Needed</strong> Current trend shows negative growth. Consider reviewing your strategy.
-                            @elseif(($targetReach['reason'] ?? '') === 'no_growth')
-                                <strong>Growth Needed</strong> Expected growth rate is 0%. Set a positive growth rate to see projection.
-                            @else
-                                <strong>Growth Needed</strong> No current value to calculate projection.
-                            @endif
-                        @elseif($targetReach['distant'] ?? false)
-                            <strong>Long-term Goal</strong> At {{ $expectedGrowthRate }}% growth, target is {{ number_format($targetReach['years_from_now'], 0) }}+ years away.
-                        @else
-                            <strong>Estimated: {{ $targetReach['estimated_date_formatted'] }}</strong>
-                            <span class="badge bg-info ms-2">{{ $targetReach['years_from_now'] }} years</span>
-                            <small class="text-muted ms-2">at {{ $expectedGrowthRate }}% growth</small>
-                        @endif
+                        </div>
                     </div>
-                </div>
+                @else
+                    {{-- Two projection columns --}}
+                    <div class="row g-3 mb-0">
+                        {{-- Without Withdrawals (Pure Growth) --}}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded border" style="background: #f0f9ff; border-color: #3b82f6 !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fa fa-chart-line me-2" style="color: #3b82f6;"></i>
+                                    <strong style="color: #1e40af;">Without Withdrawals</strong>
+                                </div>
+                                @if(!empty($targetReach))
+                                    @if(!($targetReach['reachable'] ?? true))
+                                        @if(($targetReach['reason'] ?? '') === 'no_growth')
+                                            <span class="text-muted">Set growth rate to see projection</span>
+                                        @else
+                                            <span class="text-muted">Cannot calculate projection</span>
+                                        @endif
+                                    @elseif($targetReach['distant'] ?? false)
+                                        <div class="fs-5 fw-bold" style="color: #1e40af;">{{ number_format($targetReach['years_from_now'], 0) }}+ years</div>
+                                        <small class="text-muted">at {{ $expectedGrowthRate }}% growth</small>
+                                    @else
+                                        <div class="fs-5 fw-bold" style="color: #1e40af;">{{ $targetReach['estimated_date_formatted'] }}</div>
+                                        <div>
+                                            <span class="badge" style="background: #3b82f6;">{{ $targetReach['years_from_now'] }} yrs</span>
+                                            <small class="text-muted ms-1">at {{ $expectedGrowthRate }}% growth</small>
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="text-muted">No projection available</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- With Withdrawals (Net Growth) --}}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded border" style="background: #fef3c7; border-color: #f59e0b !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fa fa-minus-circle me-2" style="color: #f59e0b;"></i>
+                                    <strong style="color: #92400e;">With {{ $withdrawalRate }}% Withdrawals</strong>
+                                </div>
+                                @if(!empty($targetReachWithWithdrawals))
+                                    @php
+                                        $netGrowthRate = $targetReachWithWithdrawals['net_growth_rate'] ?? ($expectedGrowthRate - $withdrawalRate);
+                                    @endphp
+                                    @if(!($targetReachWithWithdrawals['reachable'] ?? true))
+                                        @if(($targetReachWithWithdrawals['reason'] ?? '') === 'withdrawals_exceed_growth')
+                                            <div class="text-danger fw-bold">Cannot reach target</div>
+                                            <small class="text-muted">Withdrawals exceed growth ({{ number_format($netGrowthRate, 1) }}% net)</small>
+                                        @else
+                                            <span class="text-muted">Cannot calculate projection</span>
+                                        @endif
+                                    @elseif($targetReachWithWithdrawals['distant'] ?? false)
+                                        <div class="fs-5 fw-bold" style="color: #92400e;">{{ number_format($targetReachWithWithdrawals['years_from_now'], 0) }}+ years</div>
+                                        <small class="text-muted">at {{ number_format($netGrowthRate, 1) }}% net growth</small>
+                                    @else
+                                        <div class="fs-5 fw-bold" style="color: #92400e;">{{ $targetReachWithWithdrawals['estimated_date_formatted'] }}</div>
+                                        <div>
+                                            <span class="badge" style="background: #f59e0b;">{{ $targetReachWithWithdrawals['years_from_now'] }} yrs</span>
+                                            <small class="text-muted ms-1">at {{ number_format($netGrowthRate, 1) }}% net growth</small>
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="text-muted">No projection available</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 @endif
 
                 {{-- Net Worth Adjustment Note --}}

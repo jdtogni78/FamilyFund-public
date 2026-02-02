@@ -282,6 +282,89 @@ class FundExt extends Fund
     }
 
     /**
+     * Calculate years to reach target accounting for ongoing withdrawals.
+     * Formula: net_rate = growth_rate - withdrawal_rate
+     *          years = log(target / current) / log(1 + net_rate)
+     *
+     * @param string $asOf Current as-of date
+     * @return array|null Target reach projection data, or null if not calculable
+     */
+    public function calculateTargetReachWithWithdrawals(string $asOf): ?array
+    {
+        if (!$this->hasWithdrawalGoal()) {
+            return null;
+        }
+
+        $targetValue = $this->withdrawalTargetValue();
+        $currentValue = $this->withdrawalAdjustedValue($asOf);
+        $growthRate = $this->getExpectedGrowthRate() / 100;
+        $withdrawalRate = $this->getWithdrawalRate() / 100;
+        $netRate = $growthRate - $withdrawalRate;
+
+        // Already reached
+        if ($currentValue >= $targetValue) {
+            return [
+                'reachable' => true,
+                'already_reached' => true,
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Cannot reach if withdrawals >= growth
+        if ($netRate <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => 'withdrawals_exceed_growth',
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Cannot calculate if no current value
+        if ($currentValue <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => 'no_value',
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Formula: years = log(target / current) / log(1 + net_rate)
+        $yearsFromNow = log($targetValue / $currentValue) / log(1 + $netRate);
+
+        // If more than 50 years away, mark as distant
+        if ($yearsFromNow > 50) {
+            return [
+                'reachable' => true,
+                'distant' => true,
+                'years_from_now' => round($yearsFromNow, 1),
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        $estimatedTimestamp = strtotime($asOf) + ($yearsFromNow * 365 * 24 * 3600);
+        $estimatedDate = date('Y-m-d', (int) $estimatedTimestamp);
+        $estimatedDateFormatted = date('M Y', (int) $estimatedTimestamp);
+
+        return [
+            'reachable' => true,
+            'estimated_date' => $estimatedDate,
+            'estimated_date_formatted' => $estimatedDateFormatted,
+            'years_from_now' => round($yearsFromNow, 1),
+            'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            'withdrawal_rate' => $this->getWithdrawalRate(),
+            'net_growth_rate' => $netRate * 100,
+        ];
+    }
+
+    /**
      * Calculate years to reach target using expected growth rate.
      * Formula: years = log(target / current) / log(1 + growth_rate)
      *

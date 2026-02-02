@@ -710,4 +710,152 @@ class FundExtTest extends TestCase
         $this->assertTrue($result['distant']);
         $this->assertGreaterThan(50, $result['years_from_now']);
     }
+
+    // =========================================================================
+    // Calculate target reach WITH withdrawals tests
+    // =========================================================================
+
+    public function test_calculate_target_reach_with_withdrawals_returns_null_when_no_goal()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // No withdrawal_yearly_expenses set
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertNull($result);
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_already_reached()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_yearly_expenses = 1;  // Very low target, fund value exceeds it
+        $fund->expected_growth_rate = 7.0;
+        $fund->withdrawal_rate = 4.0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertTrue($result['already_reached']);
+        $this->assertEquals(7.0, $result['expected_growth_rate']);
+        $this->assertEquals(4.0, $result['withdrawal_rate']);
+        $this->assertEquals(3.0, $result['net_growth_rate']);  // 7 - 4 = 3
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_exceeds_growth()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_yearly_expenses = 75000;  // High target
+        $fund->expected_growth_rate = 3.0;  // Low growth
+        $fund->withdrawal_rate = 4.0;  // Higher withdrawal rate
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertFalse($result['reachable']);
+        $this->assertEquals('withdrawals_exceed_growth', $result['reason']);
+        $this->assertEquals(-1.0, $result['net_growth_rate']);  // 3 - 4 = -1
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_equal_rates()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_yearly_expenses = 75000;
+        $fund->expected_growth_rate = 4.0;
+        $fund->withdrawal_rate = 4.0;  // Equal to growth rate
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertFalse($result['reachable']);
+        $this->assertEquals('withdrawals_exceed_growth', $result['reason']);
+        $this->assertEquals(0.0, $result['net_growth_rate']);
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_returns_projection()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // Set a target that's reachable
+        $fund->withdrawal_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->expected_growth_rate = 8.0;
+        $fund->withdrawal_rate = 4.0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertArrayNotHasKey('already_reached', $result);
+        $this->assertArrayHasKey('years_from_now', $result);
+        $this->assertGreaterThan(0, $result['years_from_now']);
+        $this->assertEquals(8.0, $result['expected_growth_rate']);
+        $this->assertEquals(4.0, $result['withdrawal_rate']);
+        $this->assertEquals(4.0, $result['net_growth_rate']);  // 8 - 4 = 4
+        // If within 50 years, should have estimated_date
+        if (!($result['distant'] ?? false)) {
+            $this->assertArrayHasKey('estimated_date', $result);
+            $this->assertArrayHasKey('estimated_date_formatted', $result);
+        }
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_slower_than_pure_growth()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_yearly_expenses = 200;  // Moderate target
+        $fund->expected_growth_rate = 8.0;
+        $fund->withdrawal_rate = 4.0;
+        $fund->save();
+
+        // Without withdrawals (pure growth)
+        $resultPure = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        // With withdrawals (net growth)
+        $resultWithdrawals = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        // With withdrawals should take longer to reach target
+        if (($resultPure['reachable'] ?? false) && ($resultWithdrawals['reachable'] ?? false)) {
+            $this->assertGreaterThan($resultPure['years_from_now'], $resultWithdrawals['years_from_now']);
+        }
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_formula()
+    {
+        // Test the formula: net_rate = growth_rate - withdrawal_rate
+        // years = log(target / current) / log(1 + net_rate)
+        // Example: Current $1,000, Target $3,000, Growth 8%, Withdrawal 4% => Net 4%
+        // years = log(3000/1000) / log(1.04) = log(3) / 0.0392 ≈ 28 years
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->withdrawal_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->expected_growth_rate = 8.0;
+        $fund->withdrawal_rate = 4.0;  // Net rate = 4%
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        // Expected: ~28 years at 4% net growth (vs ~16 years at 7% pure growth)
+        $this->assertGreaterThan(20, $result['years_from_now']);
+        $this->assertLessThan(40, $result['years_from_now']);
+    }
+
+    public function test_calculate_target_reach_with_withdrawals_distant_goal()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // Set a very high target with small net growth
+        $fund->withdrawal_yearly_expenses = 10000000;  // target = 250M
+        $fund->expected_growth_rate = 5.0;
+        $fund->withdrawal_rate = 4.0;  // Net rate = 1%
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithWithdrawals('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertTrue($result['distant']);
+        $this->assertGreaterThan(50, $result['years_from_now']);
+    }
 }

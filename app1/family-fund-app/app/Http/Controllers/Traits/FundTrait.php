@@ -340,8 +340,10 @@ Trait FundTrait
         // Add withdrawal rule goal data if configured
         if ($fund->hasWithdrawalGoal()) {
             $withdrawalProgress = $fund->withdrawalProgress($asOf);
-            // Use expected growth rate for projection instead of historical linear regression
+            // Pure growth projection (without withdrawals)
             $withdrawalProgress['target_reach'] = $fund->calculateTargetReachWithGrowthRate($asOf);
+            // Net growth projection (with withdrawals deducted from growth)
+            $withdrawalProgress['target_reach_with_withdrawals'] = $fund->calculateTargetReachWithWithdrawals($asOf);
             $arr['withdrawal_goal'] = $withdrawalProgress;
         }
 

@@ -553,4 +553,161 @@ class FundExtTest extends TestCase
         $this->assertFalse($result['is_reached']);
         $this->assertLessThan(100, $result['progress_pct']);
     }
+
+    // =========================================================================
+    // Expected growth rate tests
+    // =========================================================================
+
+    public function test_get_expected_growth_rate_returns_default_7()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+
+        $result = $fund->getExpectedGrowthRate();
+
+        $this->assertEquals(7.0, $result);
+    }
+
+    public function test_get_expected_growth_rate_returns_configured_value()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->expected_growth_rate = 5.5;
+        $fund->save();
+
+        $result = $fund->getExpectedGrowthRate();
+
+        $this->assertEquals(5.5, $result);
+    }
+
+    public function test_withdrawal_progress_includes_expected_growth_rate()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_yearly_expenses = 40000;
+        $fund->expected_growth_rate = 8.0;
+        $fund->save();
+
+        $result = $fund->withdrawalProgress('2022-06-01');
+
+        $this->assertArrayHasKey('expected_growth_rate', $result);
+        $this->assertEquals(8.0, $result['expected_growth_rate']);
+    }
+
+    public function test_calculate_target_reach_with_growth_rate_returns_null_when_no_goal()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // No four_pct_yearly_expenses set
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertNull($result);
+    }
+
+    public function test_calculate_target_reach_with_growth_rate_already_reached()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_yearly_expenses = 1;  // Very low target, fund value exceeds it
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertTrue($result['already_reached']);
+        $this->assertEquals(7.0, $result['expected_growth_rate']);
+    }
+
+    public function test_calculate_target_reach_with_growth_rate_returns_projection()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // Set a target that's reachable within 50 years given fund value
+        // Fund value in test data is ~1000, target should be ~3000 to get ~16 years at 7%
+        $fund->four_pct_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertArrayNotHasKey('already_reached', $result);
+        // Should have projection keys (not distant since target is close)
+        $this->assertArrayHasKey('years_from_now', $result);
+        $this->assertGreaterThan(0, $result['years_from_now']);
+        $this->assertEquals(7.0, $result['expected_growth_rate']);
+        // If within 50 years, should have estimated_date
+        if (!($result['distant'] ?? false)) {
+            $this->assertArrayHasKey('estimated_date', $result);
+            $this->assertArrayHasKey('estimated_date_formatted', $result);
+        }
+    }
+
+    public function test_calculate_target_reach_with_growth_rate_zero_growth()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_yearly_expenses = 75000;
+        $fund->expected_growth_rate = 0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertFalse($result['reachable']);
+        $this->assertEquals('no_growth', $result['reason']);
+    }
+
+    public function test_calculate_target_reach_with_growth_rate_formula()
+    {
+        // Test the formula: years = log(target / current) / log(1 + growth_rate)
+        // Example: Current $1,000, Target $3,000, Growth 7%
+        // years = log(3000/1000) / log(1.07) = log(3) / 0.0677 ≈ 16.2 years
+        $fund = FundExt::find($this->factory->fund->id);
+        // Fund value is ~1000, set target to be 3x
+        $fund->four_pct_yearly_expenses = 120;  // target = 120/0.04 = 3000
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        // Expected: ~16.2 years (allow some variance due to fund value)
+        $this->assertGreaterThan(10, $result['years_from_now']);
+        $this->assertLessThan(25, $result['years_from_now']);
+    }
+
+    public function test_calculate_target_reach_with_higher_growth_rate_is_faster()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fund->four_pct_yearly_expenses = 200;  // Moderate target
+        $fund->save();
+
+        // Test with 7% growth
+        $fund->expected_growth_rate = 7.0;
+        $fund->save();
+        $result7 = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        // Test with 10% growth
+        $fund->expected_growth_rate = 10.0;
+        $fund->save();
+        $result10 = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        // Higher growth rate should reach target faster
+        $this->assertLessThan($result7['years_from_now'], $result10['years_from_now']);
+    }
+
+    public function test_calculate_target_reach_distant_goal()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        // Set a very high target relative to fund value with low growth
+        $fund->four_pct_yearly_expenses = 10000000;  // target = 250M
+        $fund->expected_growth_rate = 1.0;  // Very low growth
+        $fund->save();
+
+        $result = $fund->calculateTargetReachWithGrowthRate('2022-06-01');
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['reachable']);
+        $this->assertTrue($result['distant']);
+        $this->assertGreaterThan(50, $result['years_from_now']);
+    }
 }

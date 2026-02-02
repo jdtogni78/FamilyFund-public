@@ -67,6 +67,24 @@
                                     </div>
                                 </div>
 
+                                {{-- Expected Growth Rate --}}
+                                <div class="mb-4">
+                                    <label for="expected_growth_rate" class="form-label">
+                                        <strong>Expected Growth Rate</strong>
+                                        <small class="text-muted">(Expected annual return on investments)</small>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="expected_growth_rate"
+                                               name="expected_growth_rate"
+                                               value="{{ old('expected_growth_rate', $fund->expected_growth_rate ?? 7) }}"
+                                               min="0.5" max="20" step="0.5">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <div class="form-text">
+                                        Common rates: 7% (stocks), 5% (balanced), 3% (conservative). Used for target reach projection.
+                                    </div>
+                                </div>
+
                                 {{-- Live Preview --}}
                                 <div class="mb-4 p-3 rounded" style="background: #f0fdfa;" id="preview-section">
                                     <div class="row text-center">

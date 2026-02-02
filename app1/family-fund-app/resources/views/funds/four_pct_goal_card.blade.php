@@ -8,6 +8,7 @@
     $isReached = $withdrawalGoal['is_reached'] ?? false;
     $targetReach = $withdrawalGoal['target_reach'] ?? [];
     $withdrawalRate = $withdrawalGoal['withdrawal_rate'] ?? 4;
+    $expectedGrowthRate = $withdrawalGoal['expected_growth_rate'] ?? 7;
 @endphp
 
 <div class="row mb-4" id="section-four-pct-goal">
@@ -88,14 +89,17 @@
                         @elseif(!($targetReach['reachable'] ?? true))
                             @if(($targetReach['reason'] ?? '') === 'negative_growth')
                                 <strong>Growth Needed</strong> Current trend shows negative growth. Consider reviewing your strategy.
+                            @elseif(($targetReach['reason'] ?? '') === 'no_growth')
+                                <strong>Growth Needed</strong> Expected growth rate is 0%. Set a positive growth rate to see projection.
                             @else
-                                <strong>Growth Needed</strong> No growth trend detected. Continue contributing to reach your goal.
+                                <strong>Growth Needed</strong> No current value to calculate projection.
                             @endif
                         @elseif($targetReach['distant'] ?? false)
-                            <strong>Long-term Goal</strong> Based on current growth, target is {{ number_format($targetReach['years_from_now'], 0) }}+ years away.
+                            <strong>Long-term Goal</strong> At {{ $expectedGrowthRate }}% growth, target is {{ number_format($targetReach['years_from_now'], 0) }}+ years away.
                         @else
                             <strong>Estimated: {{ $targetReach['estimated_date_formatted'] }}</strong>
-                            <span class="badge bg-info ms-2">{{ $targetReach['years_from_now'] }} years from now</span>
+                            <span class="badge bg-info ms-2">{{ $targetReach['years_from_now'] }} years</span>
+                            <small class="text-muted ms-2">at {{ $expectedGrowthRate }}% growth</small>
                         @endif
                     </div>
                 </div>

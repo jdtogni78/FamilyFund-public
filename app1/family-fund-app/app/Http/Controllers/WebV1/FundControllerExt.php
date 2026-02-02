@@ -279,12 +279,14 @@ class FundControllerExt extends FundController
             'four_pct_yearly_expenses' => 'nullable|numeric|min:0',
             'four_pct_net_worth_pct' => 'nullable|numeric|min:1|max:100',
             'withdrawal_rate' => 'nullable|numeric|min:0.5|max:10',
+            'expected_growth_rate' => 'nullable|numeric|min:0.5|max:20',
         ]);
 
         $fund->update([
             'four_pct_yearly_expenses' => $request->four_pct_yearly_expenses ?: null,
             'four_pct_net_worth_pct' => $request->four_pct_net_worth_pct ?: 100,
             'withdrawal_rate' => $request->withdrawal_rate ?: 4,
+            'expected_growth_rate' => $request->expected_growth_rate ?: 7,
         ]);
 
         Flash::success('Withdrawal Rule Goal updated successfully.');

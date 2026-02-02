@@ -340,11 +340,8 @@ Trait FundTrait
         // Add withdrawal rule goal data if configured
         if ($fund->hasWithdrawalGoal()) {
             $withdrawalProgress = $fund->withdrawalProgress($asOf);
-            $withdrawalProgress['target_reach'] = $this->calculateTargetReachDate(
-                $withdrawalProgress['target_value'],
-                $arr['linear_regression'],
-                $asOf
-            );
+            // Use expected growth rate for projection instead of historical linear regression
+            $withdrawalProgress['target_reach'] = $fund->calculateTargetReachWithGrowthRate($asOf);
             $arr['four_pct_goal'] = $withdrawalProgress;
         }
 

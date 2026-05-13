@@ -1,7 +1,7 @@
 # Money Flow — Brazil ↔ US Fund — Planning Document
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 2 — attribution mechanics per path, registry fields for sender identification)
+**Last Updated:** 2026-05-13 (rev 3 — three-account topology with API-driven US checking hub between Wise and IBKR)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md)
 
@@ -51,10 +51,62 @@ The codebase has a working CSV-driven inbound pipeline. Key pieces:
 | Constraint | Implication |
 |---|---|
 | Fund's brokerage is at **Interactive Brokers (US)**, holding USD. | All inbound BRL must convert to USD before arriving. All outbound to BR must convert USD → BRL. |
+| Fund **also holds a US business checking account** at a bank with a developer API (Mercury / Relay / Brex / Column — see §3.5). This is the **cash orchestration hub** between FX and brokerage. | Detection, attribution, and outbound disbursement all anchor on this account, not on IBKR directly. |
 | FamilyFund app stack is Laravel 11 on Docker; deployed on a single private server. | No serverless edge functions; webhook receivers must be exposed via the Laravel app. |
 | Outgoing-money operations are **high-stakes and infrequent**. | Optimize for safety (idempotency, approval flows, audit), not throughput. |
 | The system is family-scale, not commercial. | A single bank/fintech partner per direction is fine. No need for a routing engine. |
 | Brazilian financial regulation (Banco Central) and US compliance (OFAC, FinCEN) are **non-negotiable**. | Out of scope for this doc to design, but the proposal must leave room for KYC, transaction reporting, and per-recipient limits. Flag for legal review before any live deployment. |
+
+### 3.5 Fund banking topology — three-account model
+
+Money does not flow from Wise straight into IBKR. It passes through a **fund-owned US business checking account** that acts as the cash hub. This is the architectural change in rev 3:
+
+```
+┌─────────────────────────┐   ┌─────────────────────────────┐   ┌────────────────────┐
+│  Wise (BR ↔ US rails)   │ ↔ │  US business checking       │ ↔ │  IBKR (investments)│
+│  - PIX in / out         │   │  (Mercury / Relay / Brex)   │   │  - USD cash        │
+│  - FX BRL ↔ USD         │   │  - API + webhooks           │   │  - portfolio       │
+└─────────────────────────┘   │  - originator-rich inbound  │   └────────────────────┘
+                              │  - ACH out to IBKR & others │
+                              └─────────────────────────────┘
+                                          ▲
+                                          │
+                                   Detection & attribution
+                                   happen here (real-time webhooks)
+```
+
+**Why three accounts and not two:**
+
+1. **API quality.** IBKR's Flex Query is a polled CSV with stripped originator data (§4.5.1). A modern business-bank API (Mercury, Relay, etc.) gives real-time webhooks with full ACH/wire originator name, memo, trace fields, and balance updates. Detection becomes seconds, not minutes; attribution gets the data IBKR drops.
+2. **Separation of concerns.** Cash orchestration (receive → hold → invest) is conceptually different from investment custody. Mixing them at IBKR makes credit-line draws and disbursements clumsy.
+3. **Outbound automation.** ACH push from a Mercury/Relay account is one API call. Same outbound from IBKR is harder and more error-prone.
+4. **Audit boundary.** Every dollar passes through one accountable, queryable, API-introspected account before reaching the brokerage. Reconciliation becomes a tight three-way check: Wise ↔ Mercury ↔ IBKR.
+5. **Operator UX.** When attribution fails, the operator can intervene on the checking account (with a human-readable transaction list and originator info) before the money is "trapped" inside IBKR's custodial flow.
+
+**The accounts and their roles:**
+
+| Account | Role | Holds | API |
+|---|---|---|---|
+| Wise (personal or Business — see §3.6) | FX + BR rails | BRL / USD short-term | Yes (Wise Business API) |
+| **Fund US checking (Mercury / Relay / Brex / Column)** | **Cash hub, ledger of record for unallocated USD** | **USD** | **Yes (rich webhooks) — the focus of this rev** |
+| Interactive Brokers | Investment custody | USD cash + portfolio assets | Flex Query (polled CSV) |
+
+### 3.6 Banking vendor evaluation for the US checking hub
+
+ChatGPT suggested Mercury. Here are the realistic options with the trade-offs for this use case.
+
+| Vendor | API quality | Multi-user / roles | KYB for family LLC / trust | Free tier | Notes |
+|---|---|---|---|---|---|
+| **Mercury** | Strong; well-documented, webhooks for incoming + outgoing transfers, statements API. | Yes; admin/bookkeeper/custom roles. | Historically picky — accepts US LLCs and some C-corps; family trusts and foreign-owned entities have been rejected in the past. Mercury has tightened KYB significantly since 2024. **Confirm onboarding eligibility first.** | Yes | The default suggestion. Strong DX. |
+| **Relay** | Good API, webhooks, role-based permissions designed for SMB operating accounts. **Native multi-user with granular permissions** maps cleanly to our `money_flow_operator` / `money_flow_approver` split. | **Best in class for this** — built around team banking with approval workflows. | More accommodating of small entities than Mercury. Still requires a US-registered business. | Yes | Strong alternative; arguably better fit for an approval-gated outbound model since approvals are a first-class feature. |
+| **Brex Cash** | API exists; mostly aimed at funded startups. | Yes. | Restrictive — startups / funded businesses are the target. Family fund likely doesn't qualify. | Yes for qualifying customers | Likely not the right fit. |
+| **Column** | Most flexible — bank-as-a-service with direct Fed access. ACH, wire, real-time payments all as primitives. Webhooks for every event. | Programmable; you build your own permissions. | Requires a treasury/ops engineering investment. | No free tier; usage-based. | Best technical fit but the heaviest lift. Worth considering only if the integration is expected to grow into a real payments product. |
+| **Plaid (fallback)** | Read-only across most US banks. No outbound. | N/A | N/A | Yes (limited) | Not a bank — a connectivity layer. If we end up at a traditional bank without its own API, Plaid covers detection. Doesn't help outbound. |
+| **Modern Treasury / Increase** | Treasury automation over multiple banks (MT) or a bank itself (Increase). | Yes. | Varies. | No | Overkill for v1 family scale. |
+
+**Recommendation.** **Relay first, Mercury second.** Relay's built-in approval workflows mirror the §7.5 authorization model exactly — every outbound transfer can require a second approver natively at the bank level, providing defense-in-depth on top of FamilyFund's own approval flow. Mercury is a perfectly acceptable fallback if KYB at Relay doesn't work out for the entity type.
+
+Either way, the FamilyFund integration is bank-agnostic at the seam: define an abstract `BankingApiClient` interface and have `MercuryClient` / `RelayClient` / etc. as concrete implementations. The rest of the money-flow code never names the vendor.
 
 ---
 
@@ -64,65 +116,88 @@ The realistic ways money gets from a beneficiary's BR bank into the fund's IBKR 
 
 ### 4.1 Path A — Wise personal transfer (v1, lowest complexity) ✅ recommended for v1
 
-Beneficiary does a one-off Wise transfer themselves. No FamilyFund integration with Wise required; we detect via the existing IBKR pipeline.
+Beneficiary does a Wise transfer themselves; money lands in the **fund's US checking account** (Mercury/Relay/Brex/Column — see §3.6); we detect via the checking-account webhook in near-real time; a scheduled ACH push moves matched funds from checking to IBKR for investment.
 
 ```
 [Beneficiary BR bank]
        │ PIX or TED in BRL
        ▼
-[Beneficiary's Wise account]
+[Beneficiary's own Wise account]
        │ FX BRL→USD (Wise mid-market + fee)
        ▼
-[Wise → IBKR via SWIFT or ACH]
-       │
+[Wise → fund US checking via ACH]
+       │ (Mercury / Relay routing & account #)
        ▼
-[IBKR USD cash position]
-       │ next FetchDeposits run pulls Flex Query
+[Fund US checking — Mercury/Relay]
+       │ webhook: incoming ACH, originator="WISE US INC", amount, memo, trace id
        ▼
-[CashDeposit row created]  ──▶ existing matching UI / credit-line auto-matcher (§5 below)
+[Webhook receiver in App\MoneyFlow]
+       │ idempotent CheckingDeposit row, status=received
+       │ matcher runs: amount + window + open DepositRequest (§4.5)
+       ▼
+[CashDeposit attributed to beneficiary]
+       │ scheduled "sweep to IBKR" job (operator-configured threshold / cadence)
+       ▼
+[ACH push from checking → IBKR — via banking API]
+       │ FetchDeposits reconciles the IBKR side later (CSV continues working)
+       ▼
+[IBKR USD cash position]  ──▶ credit-line auto-matcher (§5 below) or DepositRequest assignment UI
 ```
 
 **What we build:**
-- Schedule `FetchDeposits` to run every 30 min (Laravel scheduler).
-- Extend `CashDepositTrait::parseCashDeposit()` to recognize Brazil-origin markers in the `ClientReference` / `Description` fields (e.g., "FROM WISE INC", "WISE TRANSFER", optional reference codes) and tag the row with `origin = 'wise_br'`.
+- A `BankingApiClient` abstraction with concrete `MercuryClient` / `RelayClient` (or whichever vendor wins §3.6). All vendor specifics live behind this seam.
+- A webhook receiver: `POST /money-flow/checking/webhook` with HMAC signature verification.
+- A `CheckingDeposit` model (analogous to `WiseTransfer` in old §4.2): id, banking_provider, provider_transaction_id, originator_name, originator_routing, amount_usd, memo, trace_id, raw_payload (encrypted JSON), status, attached_cash_deposit_id (nullable, set when reconciled with IBKR).
+- An ACH-push service that drains the checking account to IBKR (manual approval for v1, scheduled sweep for v2).
+- Schedule the existing `FetchDeposits` job at 30-min cadence — still useful as the IBKR-side reconciler, even though detection has shifted upstream.
 - Auto-match to credit-line `REP`s via the `TransactionDetectionService` from `credit_lines_plan.md` §10.
 
 **What's required from the beneficiary:**
-- Each beneficiary registers their Wise account once (so the system can recognize the sender). Optionally a per-payment reference code that the beneficiary copies into Wise's "reference" field.
+- Beneficiary registers their Wise account in `BrazilianRecipient` (one time).
+- Beneficiary pre-registers each transfer via `DepositRequest` (§4.5.1 still applies — Wise→Mercury via ACH carries originator "WISE US INC", not the BR beneficiary's name; pre-registration remains the primary attribution anchor).
 
-**Why this is v1:** zero new external integrations, leverages an existing pipeline, and Wise already handles the FX and BR-banking complexity.
+**Why this is v1:** the checking account is the *only* new account we need to open. The beneficiary still uses their existing personal Wise. The attribution problem from old rev 2 §4.5.1 is unchanged structurally — Wise's ACH-out doesn't expose the upstream PIX originator — but the detection latency drops from 30 min (CSV poll) to seconds (webhook), and the attribution UX moves to a richer surface (the checking account's transaction list, not the IBKR Flex Query).
 
-### 4.2 Path B — Wise Business API (v2, automation)
+### 4.2 Path B — Fund-owned Wise Business + checking hub (v2, full automation)
 
-Same flow, but **FamilyFund holds a Wise Business account in the fund's name** and uses the Wise API to:
-- Detect inbound transfers earlier (Wise notifies us before settlement at IBKR).
-- Provide the beneficiary with a unique "memo / reference" per expected payment, so attribution is automatic instead of fuzzy-matched.
-- Pull FX rate metadata (the actual rate Wise used, both sides of the conversion).
+The fund holds a **Wise Business account in its own name** (alongside the US checking account). The BR beneficiary sends PIX directly to the fund's Wise Business BRL receiving address. Wise webhook fires with **full PIX-originator data** (CPF, sender name, bank). Wise then auto-converts BRL→USD and forwards to the fund's US checking. The checking account's webhook fires when the USD lands.
 
 ```
 [Beneficiary BR bank]
-       │ PIX/TED in BRL with reference code R
+       │ PIX in BRL with reference code R
        ▼
-[Fund's Wise Business account, BRL receiving]
-       │ webhook: incoming transfer with reference R
+[Fund's Wise Business — BRL receiving]
+       │ webhook to App\MoneyFlow with rich sender block:
+       │   sender.profile.id, sender.name, sender.cpf,
+       │   sender.bankCode, sender.pixKey, transfer.reference=R
        ▼
-[Webhook receiver in App\MoneyFlow]
-       │ idempotent record of WiseTransfer row, status=received
-       ▼ Wise auto-converts BRL→USD per pre-set rule
-[Wise USD balance]
-       │ Wise scheduled transfer to IBKR
+[App\MoneyFlow: WiseTransfer row created, sender block stored encrypted]
+       │ auto-match against BrazilianRecipient.wise_sender_profile_id / .document_number_hash
+       │ → attribution decided HERE, at the rich Wise data
        ▼
-[IBKR USD cash position]
-       │ FetchDeposits reconciles WiseTransfer ←→ CashDeposit
+[Wise auto-FX BRL→USD per pre-set rule]
+       │
        ▼
-[matched, status=completed]
+[Wise USD → fund US checking via ACH]
+       │ checking webhook: incoming ACH "FROM WISE US INC" amount=USD
+       ▼
+[App\MoneyFlow: CheckingDeposit row, reconciled with WiseTransfer via amount + date proximity]
+       │ scheduled sweep
+       ▼
+[ACH push from checking → IBKR]
+       │ FetchDeposits reconciles the IBKR side
+       ▼
+[IBKR USD cash position]  ──▶ credit-line auto-matcher (§5 below) — already attributed
 ```
 
 **What we build (additional to Path A):**
 - A Wise Business API client (rate-limited, idempotent, signed).
 - A webhook receiver: `POST /money-flow/wise/webhook` with signature verification.
-- A `WiseTransfer` model: id, direction, amount_brl, amount_usd, fx_rate, wise_id, status (`received` / `converting` / `paid_out` / `failed`), webhook payload (encrypted JSON).
-- Reconciliation logic: pair `WiseTransfer` (Wise side) with `CashDeposit` (IBKR side) when both land.
+- A `WiseTransfer` model: id, direction, amount_brl, amount_usd, fx_rate, wise_id, status (`received` / `converting` / `paid_out` / `failed`), sender block (encrypted JSON), webhook payload (encrypted JSON), attached_checking_deposit_id (nullable).
+- Three-way reconciliation: `WiseTransfer` (BR PIX side) ↔ `CheckingDeposit` (US checking side) ↔ `CashDeposit` (IBKR side). Daily reconciliation job verifies all three legs match.
+- Attribution moves *up* the chain to the Wise step, where CPF and sender profile id are available (§4.5.2 logic).
+
+**The big win of Path B with the three-account topology:** attribution happens **at the earliest possible point** (Wise webhook with PIX data), and money moves cleanly through the cash hub for orchestration before reaching investments. The IBKR side becomes a downstream consumer that just receives "this much, sweep happened on X date" — no attribution logic there at all.
 
 ### 4.3 Path C — Brazilian fintech partner (v3, native PIX)
 
@@ -132,46 +207,52 @@ Most aggressive: a Brazilian fintech (BS2, Stark Bank, Inter, or Wise's own BR l
 
 ### 4.4 Detection mechanism summary
 
-The detection seam is **`TransactionDetectionService::ingest($transaction)`** from `credit_lines_plan.md` §10.2. Money-flow inbound feeds it via two parallel streams:
+The detection seam is **`TransactionDetectionService::ingest($transaction)`** from `credit_lines_plan.md` §10.2. With the three-account topology (§3.5), money-flow inbound feeds it via three parallel streams, each landing at a different point in the chain:
 
-| Source | Trigger | Creates |
-|---|---|---|
-| IBKR Flex Query (Path A always; Path B as the final reconcile) | `FetchDeposits` job on a 30-min schedule | `CashDeposit` row + may auto-attach a `WiseTransfer` from Path B |
-| Wise webhook (Path B/C) | `POST /money-flow/wise/webhook` | `WiseTransfer` row, then later a `CashDeposit` when settled at IBKR |
+| Source | Trigger | Creates | When this fires |
+|---|---|---|---|
+| **Fund US checking webhook** (Mercury / Relay / ...) | `POST /money-flow/checking/webhook` | `CheckingDeposit` row | First detection point for Path A. Second detection point for Path B (after Wise FX). |
+| Wise webhook (Path B/C) | `POST /money-flow/wise/webhook` | `WiseTransfer` row, with rich BR-origin sender block | First detection point for Path B. Best attribution data — happens **before** the funds reach the checking account. |
+| IBKR Flex Query | `FetchDeposits` job on a 30-min schedule | `CashDeposit` row | Last detection point — used now as a **reconciliation backstop** rather than primary detection. Confirms that swept funds actually arrived at the broker. |
 
 Each detected event flows through:
 
 ```
-Detector → CashDeposit row → DepositRequest match (existing UI) OR
-                          ↘ CreditLineMatcher (auto-match to REP) → Transaction
-                                                                       ↓
-                                                          §8.6 transaction emails
+[CheckingDeposit OR WiseTransfer] → attribute (DepositRequest / BrazilianRecipient) →
+   sweep to IBKR (next scheduled push) → CashDeposit (IBKR reconcile) →
+   CreditLineMatcher / DepositRequest match → Transaction → §8.6 transaction emails
 ```
+
+**Daily three-way reconciliation** (a new job): sum of `WiseTransfer` outgoing-to-checking ↔ sum of `CheckingDeposit` from-Wise ↔ sum of `CashDeposit` from-checking, all over the same window. Any leg that doesn't match raises an alert.
 
 ### 4.5 Attribution: how we know which beneficiary sent it
 
 **Detection** (a deposit arrived) is the easy part. **Attribution** (whose deposit is it?) is where the two paths diverge sharply. The shape of the data each path gives us decides what we can register and what we can match on.
 
-#### 4.5.1 Path A attribution — what IBKR's CSV actually tells us
+#### 4.5.1 Path A attribution — at the US checking hub (revised in rev 3)
 
-The IBKR Flex Query columns we have today (per `CashDepositTrait.php:76-191`):
+In rev 3, detection moves upstream from IBKR's CSV to the checking-account webhook. This is a meaningful upgrade *for some attribution fields*, but **not for the fundamental Wise-strips-the-originator problem**.
 
-| Column | What it carries |
-|---|---|
-| `ClientAccountID` | The fund's own IBKR account ID. **Useless for attribution** — it's our side, not the sender's. |
-| `Description` | Free-text. Tests show `"FROM WISE INC"` / `"FROM Wise Inc"`. The originating beneficiary's name is **not in there** — Wise is the wire's originator from IBKR's point of view. |
-| `SettleDate` | Date money cleared at IBKR. |
-| `Amount` | USD amount after Wise's FX. |
-| `TransactionID` | IBKR's own unique id. Useless for upstream attribution but useful for our own dedup. |
-| `ClientReference` | Free-text again. Tests show generic strings. SWIFT-MT103 field 70 / ACH addenda *can* carry a memo, but Wise routinely truncates or omits it. **Cannot be relied on** to carry our reference codes end-to-end. |
+**What the checking webhook gives us** (Mercury / Relay / Brex payloads share a similar shape; the exact field names will be normalized behind the `BankingApiClient` abstraction):
 
-**Bottom line:** when money arrives via Path A, the IBKR record looks like:
+| Field | What it carries | Better than IBKR? |
+|---|---|---|
+| `transactionId` | Bank's globally-unique id. | Equivalent. |
+| `originatorName` | "WISE US INC" or the Wise legal entity used for the ACH. **Still Wise, not the beneficiary.** | Equivalent — but populated reliably (banking APIs surface ACH originator name; IBKR's CSV often doesn't). |
+| `originatorRouting` / `originatorAccount` | Wise's routing + the last 4 of their ACH account. Distinguishes Wise vs other senders. | Better than IBKR's "from somewhere" — we can confidently say "this came via Wise" vs "this came via a domestic friend's ACH". |
+| `companyEntryDescription` / `memo` / `addenda` | Free-text. **Wise's behavior here is the key question** — see §11 open Q9 (was IBKR-specific; now applies to the checking hub). | Likely better preserved than at IBKR, but still vendor-dependent. |
+| `effectiveDate` / `postedAt` | When the ACH cleared. | Equivalent. |
+| `amount` | USD. | Equivalent. |
+| `traceNumber` | ACH trace id — useful for reconciliation with Wise's own outbound record. | New. Lets us do three-way reconciliation §4.4. |
+| `availableBalance` | Running balance on the checking account. | New. Lets the system display the fund's cash position in real time. |
+
+**Bottom line:** when money arrives via Path A, the **checking-account record** looks like:
 
 ```
-"$1000 from Wise on 2026-05-10, ref: (blank or generic)"
+"$1000 ACH credit from WISE US INC on 2026-05-10, trace 021000021xxxxxxx, memo=(maybe useful)"
 ```
 
-The original beneficiary's identity has been **stripped** by the time it lands at IBKR. We cannot recover it from the IBKR data alone.
+Compared to IBKR's view ("from Wise"), we now have: (a) confirmation it's Wise specifically (vs some other sender), (b) the ACH trace id for reconciliation, (c) seconds-latency detection via webhook, (d) likely-better-preserved memo field. But the **upstream BR beneficiary's name and CPF are still not present** — Wise's ACH-out from its USD pool to our checking carries Wise as originator, not the underlying PIX sender. That information lives in *Wise's* system and is only retrievable via Path B (a fund-owned Wise Business account with webhook access).
 
 **How we bridge the attribution gap in Path A:**
 
@@ -260,36 +341,57 @@ In both paths, the registry's value compounds over time — the more transfers a
 
 ## 5. End-to-end flow — outbound (Fund → Brazil)
 
-Outbound is triggered by credit-line draws (`credit_lines_plan.md` §5 rule 2: "Move cash out of fund to borrower"), withdrawals, or matching disbursements.
+Outbound is triggered by credit-line draws (`credit_lines_plan.md` §5 rule 2: "Move cash out of fund to borrower"), withdrawals, or matching disbursements. With the three-account topology, outbound is a chain: IBKR (sell to cash if needed) → checking hub (debit) → Wise (FX) → recipient's BR account.
 
-### 5.1 Path A — Wise Business API outbound (recommended for v1 of outbound) ✅
+### 5.1 Path A — IBKR → Checking → Wise → Recipient (recommended for v1 of outbound) ✅
 
 ```
-[Fund operator approves outbound]
-       │ amount in USD + recipient_id
+[Fund operator initiates outbound]
+       │ amount in USD + BrazilianRecipient id + reason
        ▼
-[MoneyFlow service: OutboundTransfer.create()]
-       │ pulls recipient from BrazilianRecipient registry
-       │ calls Wise quotes API → quote_id + estimated BRL
-       │ creates WiseTransfer row status=quoted
+[MoneyFlow: OutboundTransfer created, status=draft]
+       │ approval gate: amount > threshold OR first-time recipient → second user must approve
        ▼
-[Wise transfers API: fund the transfer from USD balance]
-       │ idempotency key = OutboundTransfer.id
+[Approved: status=approved]
+       │
        ▼
-[Wise: BRL→PIX to recipient's BR account]
-       │ webhook updates: funds_converted, outgoing_payment_sent, completed
+[Step 1: IBKR cash check / sell if needed]
+       │ if IBKR USD cash < amount: queue a SELL or wait for next funding day
+       │ otherwise proceed
        ▼
-[OutboundTransfer.status = completed]
-       │ records the Transaction (SAL or BOR per context) with link
+[Step 2: ACH from IBKR → fund US checking]
+       │ IBKR side: Flex Query confirms outgoing
+       │ Checking webhook: outgoing ACH confirmed; status=in_checking
        ▼
-[Recipient gets BRL in their account]
+[Step 3: ACH/wire from checking → Wise USD balance]
+       │ banking-API call (idempotency-key=OutboundTransfer.id)
+       │ webhook: outgoing ACH confirmed; status=funded_wise
+       ▼
+[Step 4: Wise quote + transfer]
+       │ POST /quotes → quote_id, BRL estimate, fee
+       │ POST /transfers → funded from Wise USD balance
+       │ status=converting
+       ▼
+[Step 5: Wise FX USD→BRL → PIX to recipient]
+       │ webhook: outgoing_payment_sent → status=sent_to_recipient
+       │ webhook: completed → status=completed
+       ▼
+[Recipient gets BRL]
+       │ Transaction booked (SAL/BOR per context); audit log written
+       ▼
+[Notification to recipient + operator]
 ```
 
 **Requirements:**
-- Fund holds a **Wise Business USD account** (separate from beneficiary Wise accounts).
-- A pre-approval flow gates all outbound: amounts above $X require a second user's approval (2FA).
-- Idempotency keys on every Wise API call so retries are safe.
-- Daily reconciliation: sum of outbound `WiseTransfer` rows should match Wise statement debits.
+- Fund holds a Wise Business USD account (separate from beneficiary Wise accounts).
+- Fund holds the US checking account from §3.5/§3.6.
+- Pre-approval flow gates all outbound: amounts above $X require a second user's approval (2FA). The bank itself can also enforce a second approval (Relay native; Mercury via roles).
+- Idempotency keys on every API call (IBKR ACH, checking-bank ACH, Wise quote+transfer) so retries are safe.
+- Daily reconciliation: outbound `OutboundTransfer` rows should match step-by-step debits at IBKR, checking, and Wise.
+
+**Why so many hops?** Each hop is an independently-verifiable ledger entry. If the money gets stuck — say, Wise rejects the BRL transfer because the recipient PIX key changed — the funds sit safely in the checking account in USD, not in a half-converted state somewhere harder to undo. The orchestration layer (`OutboundTransfer.status` state machine) tracks each step explicitly.
+
+**Performance note.** Steps 2 and 3 (IBKR → checking → Wise) can take 1–3 business days end-to-end via standard ACH. For urgent disbursements, the fund can pre-fund the checking account from IBKR on a schedule (e.g., maintain a $10k operating balance), reducing the critical path to Step 4 onward (Wise can be near-instant for BRL via PIX).
 
 ### 5.2 Path B — Manual + record (v0 stub)
 
@@ -454,7 +556,7 @@ Every external write API call (Wise quote, Wise pay, BR fintech) carries an idem
 
 ## 8. Sequence diagrams
 
-### 8.1 Inbound — Path A (Wise personal transfer detected via IBKR)
+### 8.1 Inbound — Path A (Beneficiary's own Wise → fund US checking → IBKR, rev 3)
 
 ```mermaid
 sequenceDiagram
@@ -462,30 +564,36 @@ sequenceDiagram
     participant B as Beneficiary
     participant BR as BR Bank
     participant W as Wise (personal)
+    participant CH as Fund US Checking (Relay/Mercury)
     participant IB as IBKR (fund)
     participant FF as FamilyFund app
     participant CL as CreditLineMatcher
 
-    B->>BR: PIX/TED in BRL to own Wise BR
+    B->>FF: Create DepositRequest (expected amount, window)
+    B->>BR: PIX in BRL to own Wise BR
     BR-->>W: BRL credited
-    B->>W: Convert BRL→USD, send to fund IBKR
-    W->>IB: SWIFT/ACH in USD
-    Note over FF: FetchDeposits job (cron, 30 min)
-    FF->>IB: GET Flex Query CSV
-    IB-->>FF: rows incl. "FROM WISE INC"
-    FF->>FF: parseCashDeposit → CashDeposit row
-    FF->>CL: TransactionDetectionService.ingest()
-    CL->>CL: match by amount/sender/reference
-    alt unique credit-line REP match
-        CL->>FF: create REP transaction, status=auto_matched
+    B->>W: Convert BRL→USD, send ACH to fund checking
+    W->>CH: ACH in USD, originator="WISE US INC"
+    CH->>FF: POST /money-flow/checking/webhook (signed)
+    FF->>FF: verify, CheckingDeposit row created
+    FF->>FF: match CheckingDeposit ↔ DepositRequest by amount+window
+    alt unique match
+        FF->>FF: status=attributed
+        Note over FF,CH: Operator (or scheduled sweep) approves sweep
+        FF->>CH: API: ACH push to IBKR
+        CH->>IB: ACH in USD
+        Note over FF: FetchDeposits picks up IBKR side
+        FF->>IB: GET Flex Query CSV
+        FF->>FF: reconcile CheckingDeposit ↔ CashDeposit
+        FF->>CL: TransactionDetectionService.ingest()
+        CL->>FF: create REP, status=auto_matched
         FF-->>B: email "Repayment received"
     else ambiguous / unmatched
-        CL->>FF: status=ambiguous/unmatched, flagged
-        FF-->>B: email + account-page banner
+        FF-->>B: email + operator banner; held in checking until resolved
     end
 ```
 
-### 8.2 Inbound — Path B (Wise Business API with webhook)
+### 8.2 Inbound — Path B (Fund-owned Wise Business → US checking → IBKR, rev 3)
 
 ```mermaid
 sequenceDiagram
@@ -493,25 +601,31 @@ sequenceDiagram
     participant B as Beneficiary
     participant BR as BR Bank
     participant WF as Wise Business (fund)
-    participant FF as FamilyFund app
+    participant CH as Fund US Checking (Relay/Mercury)
     participant IB as IBKR (fund)
+    participant FF as FamilyFund app
     participant CL as CreditLineMatcher
 
     B->>BR: PIX to fund's Wise BR receiving address (with ref code R)
     BR-->>WF: BRL credited
     WF->>FF: POST /money-flow/wise/webhook (signed)
-    FF->>FF: verify signature, WiseTransfer row created
-    WF->>WF: auto FX BRL→USD per rule
-    WF->>IB: USD payout to IBKR
-    Note over FF: FetchDeposits picks up the IBKR side
+    FF->>FF: WiseTransfer row + rich sender block (CPF, profile id, ref R)
+    FF->>FF: ATTRIBUTION decided here (high confidence)
+    WF->>WF: FX BRL→USD per rule
+    WF->>CH: ACH USD to fund checking
+    CH->>FF: POST /money-flow/checking/webhook
+    FF->>FF: CheckingDeposit row; reconcile with WiseTransfer
+    Note over FF,CH: Operator (or scheduled sweep) approves sweep
+    FF->>CH: API: ACH push to IBKR
+    CH->>IB: ACH in USD
     FF->>IB: GET Flex Query CSV
-    FF->>FF: reconcile WiseTransfer ↔ CashDeposit
-    FF->>CL: ingest with high-confidence attribution (ref R)
-    CL->>FF: create REP transaction, status=auto_matched
+    FF->>FF: three-way reconcile WiseTransfer ↔ CheckingDeposit ↔ CashDeposit
+    FF->>CL: ingest (already attributed)
+    CL->>FF: create REP, status=auto_matched
     FF-->>B: email "Repayment received"
 ```
 
-### 8.3 Outbound — Path A (Wise Business API)
+### 8.3 Outbound — Path A (IBKR → Checking → Wise → Recipient, rev 3)
 
 ```mermaid
 sequenceDiagram
@@ -519,27 +633,41 @@ sequenceDiagram
     participant O as Operator
     participant A as Approver
     participant FF as FamilyFund app
+    participant IB as IBKR (fund)
+    participant CH as Fund US Checking (Relay/Mercury)
     participant WF as Wise Business (fund)
-    participant BR as Recipient BR Bank
+    participant BRB as Recipient BR Bank
     participant R as Recipient
 
     O->>FF: Initiate outbound (recipient, amount USD)
     FF->>FF: BrazilianRecipient lookup, OutboundTransfer status=draft
-    alt amount > threshold OR first transfer to recipient
+    alt amount > threshold OR first-time recipient
         FF-->>A: approval request
         A->>FF: approve
     end
-    FF->>WF: POST /quotes (idempotency-key=OT.id)
+    FF->>FF: status=approved
+
+    Note over FF,IB: Step 1: IBKR → Checking (skip if operating balance covers)
+    FF->>IB: trigger ACH out IBKR → Checking
+    IB->>CH: ACH in
+    CH->>FF: webhook: incoming, status=in_checking
+
+    Note over FF,WF: Step 2: Checking → Wise USD balance
+    FF->>CH: API: ACH push to Wise (idempotency-key)
+    CH->>WF: ACH in
+    WF->>FF: webhook: incoming, status=funded_wise
+
+    Note over FF,WF: Step 3: Wise FX + payout to recipient
+    FF->>WF: POST /quotes (idempotency-key)
     WF-->>FF: quote_id, BRL estimate, fee
-    FF->>WF: POST /transfers (fund from USD)
-    WF-->>FF: transfer_id, status=incoming_payment_waiting
-    FF->>FF: OutboundTransfer.status=funded
+    FF->>WF: POST /transfers
     WF->>WF: FX USD→BRL
-    WF->>BR: PIX/TED to recipient
-    BR-->>R: BRL credited
-    WF->>FF: webhook: outgoing_payment_sent
+    WF->>BRB: PIX/TED to recipient
+    BRB-->>R: BRL credited
+    WF->>FF: webhook: outgoing_payment_sent → completed
     FF->>FF: OutboundTransfer.status=completed, Transaction booked
     FF-->>R: email "Funds sent"
+    FF-->>O: email "Outbound complete"
     FF-->>O: email "Outbound complete"
 ```
 
@@ -571,11 +699,11 @@ sequenceDiagram
 
 | Phase | Inbound | Outbound | Effort | Unblocks |
 |---|---|---|---|---|
-| **P0 — Schedule what exists** | `FetchDeposits` on a 30-min cron; CSV parser recognizes Wise origin and tags `origin='wise_br'` | Manual Path B with recording UI | S | Beneficiaries can pay; fund can disburse manually with an audit trail. |
-| **P1 — Registry + attribution** | `BrazilianRecipient` model, attribution by sender name / reference; integrate with `CreditLineMatcher` | Operator UI uses registry for recipient selection | M | Auto-routes inbound to credit-line REPs; recipients are reusable. |
-| **P2 — Wise Business API** | Wise webhook receiver, `WiseTransfer` model, IBKR reconciliation | Wise transfers API, approval flow, status polling | L | Hands-free in/out, FX captured, end-to-end <24h. |
-| **P3 — Compliance + isolation hardening** | KYC checks at registry add, OFAC screening | Outbound limits per recipient / per period | M | Production-ready posture. |
-| **P4 — Native PIX via BR fintech** | Direct PIX webhook from a BR fintech partner | Direct PIX outbound | XL | Real-time, sub-minute attribution; needs CNPJ + partner. |
+| **P0 — Banking foundation + schedule what exists** | Open US business checking (Relay/Mercury); KYB; integrate webhook receiver; `BankingApiClient` abstraction; schedule `FetchDeposits` cron as the IBKR reconciliation backstop | Manual recording UI; sweep IBKR → checking → Wise scaffolding | M | Real-time inbound detection; cash hub in place; fund can disburse manually with an audit trail. |
+| **P1 — Registry + attribution + sweep** | `BrazilianRecipient` model, `CheckingDeposit` → `DepositRequest` matcher, fuzzy-match against `wise_sender_profile_name`, three-way reconciliation | Operator UI uses registry; scheduled sweep checking → IBKR | M | Auto-routes inbound to credit-line REPs; recipients are reusable; reconciliation alerts catch drift early. |
+| **P2 — Wise Business API + outbound chain** | Fund-owned Wise Business; webhook receiver with rich PIX-origin attribution; `WiseTransfer` model | Full IBKR → checking → Wise → recipient state machine with approval flow | L | Hands-free in/out; FX captured; CPF-level attribution. |
+| **P3 — Compliance + isolation hardening** | KYC checks at registry add, OFAC screening | Outbound limits per recipient / per period; operating-balance auto-replenish | M | Production-ready posture. |
+| **P4 — Native PIX via BR fintech** | Direct PIX webhook from a BR fintech partner | Direct PIX outbound (bypass Wise) | XL | Real-time, sub-minute attribution; needs CNPJ + partner. |
 
 Recommendation: ship **P0 + P1** in one go; **P2** as a second milestone. P3 is mandatory before any real money flows; P4 is optional and depends on volume.
 
@@ -618,6 +746,15 @@ Recommendation: ship **P0 + P1** in one go; **P2** as a second milestone. P3 is 
 | MF-31 | Path B first-time sender → draft recipient pending operator confirmation         | P2    | planned |
 | MF-32 | Recipient `fingerprints` updated (append) on each successful auto-match          | P2    | planned |
 | MF-33 | High-value recipients pinned to `match_confidence_default = review`              | P2    | planned |
+| MF-34 | Open US business checking account at chosen vendor (Relay or Mercury, see §3.6)  | P0    | planned |
+| MF-35 | `BankingApiClient` abstraction + `MercuryClient` / `RelayClient` concrete impl   | P0    | planned |
+| MF-36 | Checking-account webhook receiver with HMAC verification                         | P0    | planned |
+| MF-37 | `CheckingDeposit` model + reconciliation with `WiseTransfer` and `CashDeposit`   | P0    | planned |
+| MF-38 | Scheduled sweep job: checking → IBKR ACH push above threshold                    | P1    | planned |
+| MF-39 | Outbound state machine: IBKR → checking → Wise → recipient (5-step chain)        | P2    | planned |
+| MF-40 | Three-way reconciliation report: Wise ↔ checking ↔ IBKR balances align daily    | P1    | planned |
+| MF-41 | Operating-balance maintenance: keep $X in checking to minimize critical path     | P2    | planned |
+| MF-42 | Bank-vendor onboarding KYB completed for the fund entity                         | P0    | planned |
 
 ---
 
@@ -633,7 +770,14 @@ These shape the proposal; the answers will tighten phases and the registry schem
 6. **Retention period for audit + PII?** Proposal: 7 years for audit, indefinite for recipients while active. Confirm with counsel.
 7. **Notification channels?** Today the app emails via MailHog (dev) and SMTP (prod). Should money-flow events also Slack / SMS the operator, or just email?
 8. **Wise Business webhook payload — confirm fields.** §4.5.2 lists the sender-side fields we *expect* from a Wise Business inbound transfer (sender profile id, name, CPF for PIX, bank info, reference). Before locking the schema in §6, an integration spike against the live Wise Business API (or a sandbox account) should confirm exactly which of these fields ship in production payloads vs which require an additional API call. The schema in §6 is built on the assumption that profile id + CPF + reference are all available; if reality differs, attribution logic in §4.5.2 needs adjusting.
-9. **Does the IBKR Flex Query response ever carry the original wire originator?** §4.5.1 assumes "no" based on the test data we have. Worth a quick check against a real production CSV — if a longer description format exists that names the original BR sender, Path A attribution gets meaningfully more reliable and we may not need pre-registered `DepositRequest`s for every transfer.
+9. **Does the IBKR Flex Query response ever carry the original wire originator?** §4.5.1 assumes "no" based on the test data we have. With the rev-3 topology, this becomes less critical — detection has moved to the checking webhook — but it still affects how reliably we can backfill historic IBKR-only data.
+10. **Bank vendor selection** (rev 3). §3.6 recommends Relay (built-in approval workflows match §7.5) with Mercury as fallback. Before locking it in, confirm:
+    - Will the fund entity (LLC / family trust / other) pass KYB at the chosen vendor?
+    - Are the multi-user / role-based controls a hard requirement at the bank level, or sufficient at the app level?
+    - What ACH transfer limits per day / month does each vendor impose, and do they cover the expected outbound volume?
+    - Does the vendor support **outgoing wires** (sometimes needed for IBKR funding above ACH limits)?
+11. **Checking-account webhook payload — confirm fields.** §4.5.1 (revised) lists the originator/memo/trace fields we *expect* from the chosen vendor. Same caveat as the Wise question: validate against the live API or sandbox before locking the `CheckingDeposit` schema.
+12. **Operating balance policy.** Rev 3 §5.1 mentions pre-funding the checking account from IBKR to shorten the outbound critical path. What's the target operating balance? Auto-replenish when below a floor, or manual top-ups?
 
 ---
 

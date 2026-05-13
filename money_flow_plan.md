@@ -1,7 +1,7 @@
 # Money Flow — Brazil ↔ US Fund — Planning Document
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 1)
+**Last Updated:** 2026-05-13 (rev 2 — attribution mechanics per path, registry fields for sender identification)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md)
 
@@ -148,6 +148,114 @@ Detector → CashDeposit row → DepositRequest match (existing UI) OR
                                                           §8.6 transaction emails
 ```
 
+### 4.5 Attribution: how we know which beneficiary sent it
+
+**Detection** (a deposit arrived) is the easy part. **Attribution** (whose deposit is it?) is where the two paths diverge sharply. The shape of the data each path gives us decides what we can register and what we can match on.
+
+#### 4.5.1 Path A attribution — what IBKR's CSV actually tells us
+
+The IBKR Flex Query columns we have today (per `CashDepositTrait.php:76-191`):
+
+| Column | What it carries |
+|---|---|
+| `ClientAccountID` | The fund's own IBKR account ID. **Useless for attribution** — it's our side, not the sender's. |
+| `Description` | Free-text. Tests show `"FROM WISE INC"` / `"FROM Wise Inc"`. The originating beneficiary's name is **not in there** — Wise is the wire's originator from IBKR's point of view. |
+| `SettleDate` | Date money cleared at IBKR. |
+| `Amount` | USD amount after Wise's FX. |
+| `TransactionID` | IBKR's own unique id. Useless for upstream attribution but useful for our own dedup. |
+| `ClientReference` | Free-text again. Tests show generic strings. SWIFT-MT103 field 70 / ACH addenda *can* carry a memo, but Wise routinely truncates or omits it. **Cannot be relied on** to carry our reference codes end-to-end. |
+
+**Bottom line:** when money arrives via Path A, the IBKR record looks like:
+
+```
+"$1000 from Wise on 2026-05-10, ref: (blank or generic)"
+```
+
+The original beneficiary's identity has been **stripped** by the time it lands at IBKR. We cannot recover it from the IBKR data alone.
+
+**How we bridge the attribution gap in Path A:**
+
+The only reliable mechanism is **pre-registration of the expected payment**. The existing `DepositRequest` model already supports this — we extend it:
+
+1. Beneficiary opens the app and creates a `DepositRequest`: expected amount (USD), expected window (e.g., "next 7 days"), optional currency-source note ("sending BRL 5000 via Wise today"), purpose (open new REP, top-up, etc.).
+2. Beneficiary then goes to Wise and sends the money. We don't observe this step.
+3. `FetchDeposits` later picks up the IBKR row.
+4. Matcher pairs `CashDeposit ↔ DepositRequest` on `(amount ± tolerance, settle_date within window, origin = wise)`.
+5. **If exactly one open `DepositRequest` matches** → auto-attributed.
+6. **If multiple match** → flagged; operator picks one in the existing assign UI (`GET /cashDeposits/{id}/assign`).
+7. **If none match** → flagged; could be a one-off the beneficiary forgot to register, or someone else's money.
+
+**What we register for Path A attribution:**
+
+| Data | On `DepositRequest` (per-payment) | On `BrazilianRecipient` (per-beneficiary, durable) |
+|---|---|---|
+| Expected amount (USD) | required | — |
+| Expected window | required | — |
+| Source channel (`wise_personal`, `bank_wire`, ...) | required | — |
+| Beneficiary's Wise profile name | informational | **stored** — for tie-breaking when amount is ambiguous, we can fuzzy-match against the Description |
+| Beneficiary's typical BRL amount (so we can show a quote estimate) | optional | optional |
+| Free-text reference code we'd *like* them to use | optional | — |
+| Beneficiary's confirmed past Wise transfers (sender_id, last_used_at) | — | **stored** as a learned fingerprint over time |
+
+Note that for Path A, the `BrazilianRecipient` row's role is **secondary** — it doesn't directly match the IBKR data; it just helps disambiguate when two beneficiaries have similar expected amounts in the same window. The primary attribution anchor is the per-payment `DepositRequest`.
+
+#### 4.5.2 Path B attribution — what Wise Business webhooks actually tell us
+
+When the fund holds a Wise Business account and the beneficiary sends straight to it, Wise's API and webhook events expose the full sender record. From the Wise Business API documentation, an incoming transfer event payload includes (subject to confirmation against the live API spec at integration time):
+
+| Field | What it carries |
+|---|---|
+| `transfer.id` | Wise's globally-unique transfer id. |
+| `transfer.sourceCurrency` / `targetCurrency` / `sourceAmount` / `targetAmount` / `rate` | The full FX picture. **We can record the actual rate Wise used**, not estimate. |
+| `transfer.reference` | The memo the *sender* typed. Wise preserves this end-to-end on its own rails. Reliable enough to encode a per-payment reference code. |
+| `sender.profile.name` | Sender's legal name as registered on Wise. |
+| `sender.profile.id` | Stable across transfers for the same sender. **This is the key.** |
+| `sender.email` | If sender has a Wise account. |
+| For PIX-origin transfers: `sender.cpf`, `sender.bankCode`, `sender.bankAgency`, `sender.accountNumber`, `sender.pixKey` | Brazilian Central Bank rules require PIX transactions to carry the sender's CPF and bank info. Wise exposes these on the inbound webhook. |
+
+**Bottom line:** for Path B, attribution can be **automatic** because we get sender CPF + sender Wise profile id + sender bank info, any one of which can uniquely identify a registered beneficiary.
+
+**How we attribute in Path B:**
+
+1. Webhook arrives. `WiseTransfer` row is created with the full sender block (encrypted).
+2. Matcher tries, in order:
+   - `sender.profile.id` lookup against `BrazilianRecipient.wise_sender_profile_id` (most reliable; learned on first match).
+   - `sender.cpf` lookup against `BrazilianRecipient.document_number` (encrypted-equal comparison).
+   - `sender.reference` parsing for a known per-payment code.
+   - `sender.pixKey` lookup against `BrazilianRecipient.pix_key`.
+3. If one beneficiary matches → auto-attributed with high confidence.
+4. If multiple → flagged (rare; would mean two recipients share an identifier).
+5. If none → flagged as **first-time sender** and the operator is prompted to create a new `BrazilianRecipient` row from the sender block. The next transfer from the same sender will auto-attribute.
+
+**What we register for Path B attribution:**
+
+Everything that comes back on the webhook should be persisted on `BrazilianRecipient` (encrypted), partly so attribution works on the *next* transfer, partly so the operator can verify the data without going back to Wise. See §6 for the full schema; the inbound-specific fields are added in rev 2.
+
+#### 4.5.3 Summary table — per-path attribution
+
+| Question | Path A (Wise → IBKR) | Path B (Wise Business webhook) |
+|---|---|---|
+| Do we get sender's name? | No — only "Wise Inc" | Yes — `sender.profile.name` |
+| Do we get sender's CPF? | No | Yes (for PIX-origin) |
+| Do we get sender's bank? | No | Yes |
+| Do we get a memo? | Sometimes, unreliably | Yes — `transfer.reference` |
+| Do we get the FX rate? | No (only the USD amount post-FX) | Yes |
+| Primary attribution anchor | `DepositRequest` pre-registered by beneficiary | `BrazilianRecipient.wise_sender_profile_id` or CPF |
+| Confidence on a clean match | Medium (amount + window + window) | High (id-level match) |
+| First-time sender handling | Falls back to operator manual assign | Operator prompted to register the sender block as a new recipient |
+
+#### 4.5.4 Do we need to register the source account?
+
+**For Path A: not strictly required, but strongly recommended.**
+- Without a recipient row, the matcher has only `DepositRequest` to work with. That's enough for the *primary* match.
+- With a recipient row, we can disambiguate when two beneficiaries have overlapping expected amounts, and we can pre-fill suggestions on the manual-assign UI.
+
+**For Path B: required for auto-attribution.**
+- Without a recipient row, every webhook is "first-time sender" and goes to manual review.
+- With a recipient row (created on first transfer and confirmed), subsequent transfers route automatically.
+
+In both paths, the registry's value compounds over time — the more transfers a beneficiary makes, the better the system learns their fingerprint.
+
 ---
 
 ## 5. End-to-end flow — outbound (Fund → Brazil)
@@ -207,34 +315,95 @@ Same as inbound Path C but reversed: fund's BR account sends PIX to recipient. O
 
 ## 6. Recipient registry (`BrazilianRecipient`)
 
-A new model in the isolated `App\MoneyFlow` namespace. All sensitive columns encrypted at rest using Laravel's `encrypted` cast.
+A new model in the isolated `App\MoneyFlow` namespace. All sensitive columns encrypted at rest using Laravel's `encrypted` cast. The schema is split into three logical groups: **identity** (always required), **outbound routing** (needed to send money), and **inbound attribution** (needed to auto-recognize incoming money — see §4.5).
+
+### 6.1 Schema
+
+**Identity (always required):**
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | bigint PK | |
 | `account_id` | FK → `accounts.id` | Which beneficiary account this recipient belongs to. |
 | `display_name` | string | "Maria — Itaú checking" |
-| `full_legal_name` | string (encrypted) | Required by FX providers for AML. |
+| `full_legal_name` | string (encrypted) | Required by FX providers for AML; also used for fuzzy match against IBKR Description in Path A. |
 | `document_type` | enum | `CPF` / `CNPJ`. |
-| `document_number` | string (encrypted) | Validated by check-digit algorithm. |
+| `document_number` | string (encrypted) | Validated by check-digit algorithm. Hashed copy in `document_number_hash` for indexed equality lookup without decryption. |
+| `document_number_hash` | string indexed | SHA-256 of the document_number; lets the matcher do `WHERE document_number_hash = ?` without decrypting every row. |
+| `direction` | enum | `inbound` (we expect them to send), `outbound` (we send to them), `both`. |
+| `status` | enum | `active` / `disabled` / `pending_verification`. |
+| `verified_at` | datetime nullable | Set after first successful matched transfer. |
+| `created_by_user_id` | FK → `users.id` | Audit. |
+| timestamps | | |
+
+**Outbound routing (needed when `direction` includes outbound):**
+
+| Field | Type | Notes |
+|---|---|---|
 | `pix_key_type` | enum nullable | `cpf` / `email` / `phone` / `random` / NULL. |
 | `pix_key` | string (encrypted, nullable) | Required if outbound goes via PIX. |
+| `pix_key_hash` | string indexed nullable | SHA-256 of `pix_key` for the same indexed-lookup reason as document_number_hash. |
 | `bank_code_ispb` | string nullable | Brazil Central Bank ISPB code. |
 | `bank_agency` | string nullable | |
 | `bank_account_number` | string (encrypted, nullable) | |
 | `bank_account_type` | enum nullable | `checking` / `savings`. |
-| `wise_recipient_id` | string nullable | If created on Wise side. |
-| `direction` | enum | `inbound` (we expect them to send), `outbound` (we send to them), `both`. |
-| `status` | enum | `active` / `disabled` / `pending_verification`. |
-| `verified_at` | datetime nullable | Set after first successful transfer. |
-| `created_by_user_id` | FK → `users.id` | Audit. |
-| timestamps | | |
+| `wise_recipient_id` | string nullable | If a recipient record is created on Wise side, store the id for reuse. |
 
-**Rules:**
+**Inbound attribution (needed when `direction` includes inbound — new in rev 2):**
+
+| Field | Type | Notes |
+|---|---|---|
+| `wise_sender_profile_id` | string indexed nullable | Wise's stable id for this sender. Path B's primary key for auto-attribution; learned on first matched webhook. |
+| `wise_sender_profile_name` | string (encrypted, nullable) | Sender's name as Wise sees it. Used for fuzzy match against IBKR `Description` in Path A. |
+| `wise_sender_email` | string (encrypted, nullable) | If sender has a Wise account; secondary match. |
+| `expected_inbound_reference` | string nullable | The free-text code we ask the beneficiary to put in Wise's reference field when sending. Path B can match on this even before `wise_sender_profile_id` is learned. |
+| `last_seen_sender_payload` | jsonb (encrypted) nullable | Snapshot of the most-recent webhook sender block — `bankCode`, `bankAgency`, `accountNumber`, etc. Used for forensic verification, not for matching. |
+| `fingerprints` | jsonb nullable | Learned attributes that match this sender (`{wise_profile_ids: [...], cpfs: [...], pix_keys: [...]}`). Grows on each matched transfer; allows multiple identifiers per recipient. |
+| `match_confidence_default` | enum | `auto` / `review` — controls whether a clean match auto-attributes or always goes to operator review. `review` for high-value recipients. |
+
+### 6.2 Indexes
+
+- `(account_id, status)` for the per-account listing.
+- `document_number_hash` (unique within `direction='inbound' OR 'both'`).
+- `pix_key_hash` (unique within `direction='outbound' OR 'both'`).
+- `wise_sender_profile_id` (non-unique — a recipient may legitimately have more than one Wise profile over time).
+
+### 6.3 Rules
+
 - An account can have **many** recipients (one for each BR account they own — checking + savings, for example).
-- A recipient with `direction = inbound` is used by the detector to **attribute** detected inbound transfers to the right beneficiary (sender match by Wise account name, CPF, etc.).
+- A recipient with `direction = inbound` is used by the matcher to **attribute** detected inbound transfers to the right beneficiary (sender match by Wise profile id, CPF, PIX key, or reference code — see §4.5).
 - A recipient with `direction = outbound` is selectable when the operator initiates a transfer.
 - First outbound to a new recipient is **always manual / approval-gated** (Path B) regardless of amount. Subsequent outbounds can auto-flow once `verified_at` is set.
+- First inbound from a new sender is **always flagged for operator review** — the operator either attaches it to an existing recipient (extending that recipient's `fingerprints`) or creates a new recipient from the sender block.
+- Recipients are **soft-deleted** (status → `disabled`) rather than removed; the audit log needs them.
+
+### 6.4 What the user actually enters
+
+For Path A (the only inbound path in v1), the *minimum* a beneficiary needs to register before they can send money is:
+
+- `display_name`
+- `full_legal_name`
+- `document_type` + `document_number` (CPF)
+- `direction = inbound`
+- `wise_sender_profile_name` (just the name as it appears on their Wise receipts)
+
+That's it. Bank/agency/account and PIX key are **only required for outbound**. The system can attribute Path A inbound transfers with just the legal name + a pre-registered `DepositRequest`; the Wise sender id will be learned and stored on first match.
+
+For Path B (when Wise Business is wired), the minimum stays the same — the rest of the inbound-attribution fields are populated automatically from the first webhook the system sees.
+
+For outbound, the registration form additionally requires:
+- `pix_key` + `pix_key_type` (preferred), OR `bank_code_ispb` + `bank_agency` + `bank_account_number` + `bank_account_type`.
+
+### 6.5 Data-requirements summary
+
+Quick reference for what we *need* to store to enable each operation:
+
+| Operation | Required identity | Required outbound routing | Required inbound attribution |
+|---|---|---|---|
+| Operator-initiated outbound (Path A/B) | full_legal_name + document_number | pix_key OR (bank_code_ispb + agency + account) | — |
+| Path A inbound auto-attribution | full_legal_name + document_number | — | wise_sender_profile_name (for fuzzy match) + a `DepositRequest` for the specific payment |
+| Path B inbound auto-attribution | full_legal_name + document_number | — | wise_sender_profile_id (learned on first match) OR document_number OR expected_inbound_reference OR pix_key |
+| First-time inbound from unknown sender | — | — | None — the webhook payload itself becomes a draft recipient row pending operator confirmation |
 
 ---
 
@@ -438,6 +607,17 @@ Recommendation: ship **P0 + P1** in one go; **P2** as a second milestone. P3 is 
 | MF-20 | Per-recipient + per-period outbound limits        | P3    | planned |
 | MF-21 | Direct BR-fintech PIX webhook                     | P4    | planned |
 | MF-22 | Direct BR-fintech PIX outbound                    | P4    | planned |
+| MF-23 | Beneficiary creates `DepositRequest` (expected amount + window + source channel) before sending  | P0 | planned |
+| MF-24 | Path A matcher: `CashDeposit` ↔ `DepositRequest` on amount + window + origin    | P1    | planned |
+| MF-25 | Path A matcher flags multi-match (≥2 open requests fit)                          | P1    | planned |
+| MF-26 | Path A matcher flags no-match (orphan deposit)                                   | P1    | planned |
+| MF-27 | Path A: fuzzy-match IBKR `Description` against `wise_sender_profile_name`        | P1    | planned |
+| MF-28 | `BrazilianRecipient`: `document_number_hash` + `pix_key_hash` for indexed lookup | P1    | planned |
+| MF-29 | Path B matcher: sender.profile.id → recipient (primary key)                      | P2    | planned |
+| MF-30 | Path B matcher: sender.cpf / pix_key / expected_inbound_reference fallback       | P2    | planned |
+| MF-31 | Path B first-time sender → draft recipient pending operator confirmation         | P2    | planned |
+| MF-32 | Recipient `fingerprints` updated (append) on each successful auto-match          | P2    | planned |
+| MF-33 | High-value recipients pinned to `match_confidence_default = review`              | P2    | planned |
 
 ---
 
@@ -452,6 +632,8 @@ These shape the proposal; the answers will tighten phases and the registry schem
 5. **What FX rate is the system of record?** Wise's quoted mid-market, the actual conversion rate on the day, or a daily-fixed BACEN rate? Affects how `valueAsOf` and credit-line cash-leg math work.
 6. **Retention period for audit + PII?** Proposal: 7 years for audit, indefinite for recipients while active. Confirm with counsel.
 7. **Notification channels?** Today the app emails via MailHog (dev) and SMTP (prod). Should money-flow events also Slack / SMS the operator, or just email?
+8. **Wise Business webhook payload — confirm fields.** §4.5.2 lists the sender-side fields we *expect* from a Wise Business inbound transfer (sender profile id, name, CPF for PIX, bank info, reference). Before locking the schema in §6, an integration spike against the live Wise Business API (or a sandbox account) should confirm exactly which of these fields ship in production payloads vs which require an additional API call. The schema in §6 is built on the assumption that profile id + CPF + reference are all available; if reality differs, attribution logic in §4.5.2 needs adjusting.
+9. **Does the IBKR Flex Query response ever carry the original wire originator?** §4.5.1 assumes "no" based on the test data we have. Worth a quick check against a real production CSV — if a longer description format exists that names the original BR sender, Path A attribution gets meaningfully more reliable and we may not need pre-registered `DepositRequest`s for every transfer.
 
 ---
 

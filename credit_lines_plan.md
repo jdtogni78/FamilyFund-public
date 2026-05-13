@@ -1,7 +1,7 @@
 # Credit Lines — Planning Document
 
 **Status:** Draft / ideas — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 3 — multiple lines per account made explicit)
+**Last Updated:** 2026-05-13 (rev 4 — auto-match by shares/amount, mismatch flagging + account-header banner, transaction emails, transaction-detection subsystem)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 
 ---
@@ -32,7 +32,7 @@ High-level cases to design, build, and test against. Use the **ID** column to cr
 | UC-01 | Open first credit line on an account              | Account owner  | Choose shares + term + frequency, submit              | New `AccountCreditLine`, BOR transaction, full schedule generated, cash leaves fund                    | New model, draw service, fund cash-out path (§5 rule 2)                                   | planned |
 | UC-02 | Open Nth additional line on same account          | Account owner  | Same as UC-01, with existing active lines             | Independent line; draw cap = `OWN − Σ outstanding across all active lines`; account-level BOR balance grows | §5 rules 4 + 5 + 8 (aggregated BOR, per-line bookkeeping)                                 | planned |
 | UC-03 | Attempt to over-borrow                            | Account owner  | Request shares > available-to-borrow                   | Reject with clear error; nothing committed                                                              | Validation in CreateAccountCreditLineRequest + service-level recheck inside DB tx         | planned |
-| UC-04 | Concurrent draws on same account                  | Two sessions   | Two draws at once that individually fit but collide   | Second draw rejected after lock                                                                         | `SELECT … FOR UPDATE` on account row (§10)                                                 | planned |
+| UC-04 | Concurrent draws on same account                  | Two sessions   | Two draws at once that individually fit but collide   | Second draw rejected after lock                                                                         | `SELECT … FOR UPDATE` on account row (§11)                                                 | planned |
 | UC-05 | Scheduled on-time payment                         | Account owner  | Pay shares_due on or before due_date, line specified  | REP transaction, schedule row → `paid`, line `outstanding_shares` ↓, cash returns to fund               | Repay service + payment-targeting (§5 rule 3)                                             | planned |
 | UC-06 | Partial payment                                   | Account owner  | Pay less than shares_due                              | Schedule row → `partial`, balance carries to next; outstanding still reduced                            | Repay service handles partial state                                                       | planned |
 | UC-07 | Extra / early payoff payment                      | Account owner  | Pay more than shares_due or full outstanding          | Excess applied to next scheduled rows; if fully covered, status → `paid_off`                            | Repay service applies excess in due-date order                                            | planned |
@@ -47,12 +47,22 @@ High-level cases to design, build, and test against. Use the **ID** column to cr
 | UC-16 | Quarterly report — account section                | System (queue) | Quarterly report job runs                             | New section listing each line's activity, outstanding, plan vs. projected payoff                        | Template extension (§8.4); wkhtmltopdf                                                    | planned |
 | UC-17 | Quarterly report — fund section                   | System (queue) | Quarterly report job runs                             | New section with disbursements, repayments, behind-plan list                                            | Template extension (§8.4)                                                                 | planned |
 | UC-18 | Reminder before due date                          | System         | `today + reminder_lead_days == due_date`              | Email to account owner                                                                                  | Daily scheduler + email template + per-line settings (§8.5)                               | planned |
-| UC-19 | Delay notification after missed payment           | System         | `today − due_date == delay_notification_grace_days`   | Email to account owner; repeats every `delay_notification_repeat_days` until paid (with hard cap)       | Scheduler + dedup cap (§8.5 + §10 notification spam)                                       | planned |
+| UC-19 | Delay notification after missed payment           | System         | `today − due_date == delay_notification_grace_days`   | Email to account owner; repeats every `delay_notification_repeat_days` until paid (with hard cap)       | Scheduler + dedup cap (§8.5 + §11 notification spam)                                       | planned |
 | UC-20 | Configure reminders                               | Account owner  | Update reminder settings on a line                    | Persisted; next scheduler run respects new values                                                       | Settings on `AccountCreditLine` (§8.5)                                                    | planned |
 | UC-21 | Historical (as-of) view                           | Admin          | Query account/fund as of past date                    | Per-line outstanding and account BOR balance reconstructable from BOR/REP transactions on that date     | Reuse existing temporal `AccountBalance` + transaction history                            | planned |
-| UC-22 | Fund NAV during life of a line                    | System         | Share price moves while line is open                  | Fund NAV preserved at draw (receivable booked); price drift = fund P&L over loan's life                 | Fund cash-flow design (§10 first risk) — must be settled before UC-01 ships                | planned |
+| UC-22 | Fund NAV during life of a line                    | System         | Share price moves while line is open                  | Fund NAV preserved at draw (receivable booked); price drift = fund P&L over loan's life                 | Fund cash-flow design (§11 first risk) — must be settled before UC-01 ships                | planned |
 | UC-23 | Person with multiple accounts, each with lines    | Account owner  | Open lines on accounts A and B independently          | Each account caps independently; reports per-account; no cross-account netting                          | §5 rule 6                                                                                 | planned |
 | UC-24 | `AccountExt::sharesAsOf()` discounts BOR          | System         | Any call to `sharesAsOf` on an account with BOR shares | Returns `OWN − BOR_aggregate`                                                                          | Fix existing TODO at `AccountExt.php:126`; precedes UC-01                                 | planned |
+| UC-25 | Auto-match REP — single active line               | System         | REP submitted on an account with exactly 1 active line | Assigned to that line, `credit_line_match_status = auto_matched`                                       | Matcher service (§5 rule 3)                                                               | planned |
+| UC-26 | Auto-match REP — shares match exactly one line    | System         | REP shares == `shares_due` of exactly one active line | Assigned to that line, `auto_matched`                                                                  | Matcher priority 1 (§5 rule 3)                                                            | planned |
+| UC-27 | Auto-match REP — cash match fallback              | System         | REP shares don't match but cash value does (one line) | Assigned to that line, `auto_matched`                                                                  | Matcher priority 2 (§5 rule 3)                                                            | planned |
+| UC-28 | Auto-match REP — full-payoff outstanding match    | System         | REP shares == `outstanding_shares` of one active line | Assigned, line → `paid_off`                                                                            | Matcher priority 3 (§5 rule 3)                                                            | planned |
+| UC-29 | Ambiguous REP                                     | System         | REP shares match `shares_due` on ≥2 active lines      | `credit_line_match_status = ambiguous`, FK NULL, transaction flagged, banner appears, alert email sent | §4.4, §5 rule 10, §8.2 banner, §8.5 mismatch alert                                        | planned |
+| UC-30 | Unmatched REP                                     | System         | REP shares match no active line by any priority       | `credit_line_match_status = unmatched`, FK NULL, transaction flagged, banner appears, alert email sent | §4.4, §5 rule 10, §8.2 banner, §8.5 mismatch alert                                        | planned |
+| UC-31 | Resolve flagged transaction                       | Account owner  | Clicks "Resolve" on banner, picks a target line       | `credit_line_match_status = manual`, FK set, line schedule advances, banner count drops                | Resolution screen + service action; idempotent                                            | planned |
+| UC-32 | Email on transaction received                     | System         | User-submitted BOR/REP saved                          | Email to account owner with type, shares, value, target line (or "needs review" if flagged)            | Model-event hook on Transaction save (§8.5)                                               | planned |
+| UC-33 | Email on transaction detected                     | System         | System-created BOR/REP saved (matcher, scheduler, late-sweep) | Email to account owner with "system-generated" badge                                            | Same model-event hook; distinguished by `created_by` actor                                | planned |
+| UC-34 | Email setting opt-out                             | Account owner  | Toggles `transaction_email_enabled = false` on a line | No "received"/"detected" emails for that line; reminders/mismatch alerts respect their own toggles      | Settings UI on per-line edit (§8.5)                                                       | planned |
 
 ---
 
@@ -117,6 +127,22 @@ On **readjustment** the line's remaining scheduled rows are deleted (or marked `
 
 Add `account_credit_line_id` (nullable FK) to `transactions`. A BOR/REP transaction created in service of a credit line points to it. Other BOR/REP transactions (one-offs) remain valid with NULL.
 
+### 4.4 Transaction match status
+
+Add a `credit_line_match_status` enum column (nullable) to `transactions` for BOR/REP transactions. Values:
+
+| Value | Meaning |
+|---|---|
+| `auto_matched` | The matcher uniquely identified a target line (§5 rule 3). `account_credit_line_id` is set. |
+| `manual` | A human (account owner or admin) assigned the line explicitly. `account_credit_line_id` is set. |
+| `ambiguous` | The matcher found more than one candidate line. `account_credit_line_id` is NULL. Transaction is flagged (§5 rule 10). |
+| `unmatched` | The matcher found zero candidate lines. `account_credit_line_id` is NULL. Transaction is flagged. |
+| NULL | Not applicable (non-credit-line transaction, or single-line account where the FK was assigned trivially). |
+
+The visible flag on the UI and the account-page header banner key off `credit_line_match_status IN ('ambiguous', 'unmatched')`.
+
+**Alternative:** reuse the existing `transactions.flags` field with new bit values. Cleaner is a dedicated enum because the existing `flags` is a single char used for unrelated states (`A`, `C`, `U`). Decide at implementation time.
+
 ---
 
 ## 5. Business rules
@@ -125,17 +151,24 @@ Add `account_credit_line_id` (nullable FK) to `transactions`. A BOR/REP transact
 2. **Shares, not money — but cash *does* move.** The debt is denominated in shares (same number out, same number back, regardless of price). At draw time the system must also **move cash out of the fund** equal to `principal_shares × share_price_at_draw`. This is a **new cash-flow path** the fund does not currently support and is a first-class part of this feature, not a UI concern:
    - The fund's cash position (and therefore portfolio total) drops by the disbursed amount.
    - On repayment, cash flows back into the fund equal to `shares_repaid × share_price_on_repayment_date` (price drift = fund's exposure).
-   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §10 risks.
-3. **Repayment is line-targeted.** Every REP transaction carries an `account_credit_line_id` FK (§4.3) so the system knows *which* line is being paid down. The borrower must select a target line when making a payment. The system may offer a default (e.g., earliest `origination_date`, or earliest next `due_date`) but the choice is always explicit and recorded. The REP reduces that line's `outstanding_shares` by `transaction.shares` and marks the corresponding `CreditLinePayment` row `paid` or `partial`. Repayment is funded by the borrower depositing cash; that cash returns to the fund.
-4. **Multiple lines per account.** No limit. Each line is independent — its own term, schedule, status, adjustments, and reminder settings. They share a single account and therefore a single pool of available OWN shares (rule 5).
-5. **Draw cap across all active lines.** Available-to-borrow = `OWN_shares(today) − Σ outstanding_shares` summed across **all `active` lines on this account** plus any other lines whose disbursement has cleared but repayment is incomplete. A new line cannot exceed this remainder. The check runs inside the same transaction as the draw (§10 race conditions).
+   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §11 risks.
+3. **Repayment is line-targeted via auto-matching.** Every REP transaction carries an `account_credit_line_id` FK (§4.3) plus a `match_status` (see §4.4). When an account has **only one active line**, the REP is assigned to it automatically. When an account has **two or more active lines**, the matcher tries to assign the REP to exactly one line using this priority:
+   1. **Exact share match** against any scheduled `CreditLinePayment.shares_due` on an active line (within a small tolerance, e.g., the decimal(19,4) precision).
+   2. **Exact cash match** against `shares_due × share_value_at_transaction_date` on an active line (share-price drift makes this fuzzier, so used only if shares didn't match).
+   3. **Exact outstanding match** against any active line's `outstanding_shares` (interpreted as a payoff payment).
+   If exactly one candidate emerges from any of those steps, the REP is `auto_matched` and that line's schedule advances. Otherwise the REP is **flagged** (§5 rule 10) and stays unassigned until a human resolves it.
+4. **Multiple lines per account.** No limit. Each line is independent — its own term, schedule, status, adjustments, and reminder settings. They share a single account and therefore a single pool of available OWN shares (rule 6).
+5. **Draw cap across all active lines.** Available-to-borrow = `OWN_shares(today) − Σ outstanding_shares` summed across **all `active` lines on this account** plus any other lines whose disbursement has cleared but repayment is incomplete. A new line cannot exceed this remainder. The check runs inside the same transaction as the draw (§11 race conditions).
 6. **One account per line.** Each credit line is scoped to a single account; there is no cross-account collateral or netting. A person who owns multiple accounts can open lines on any/all of them independently.
 7. **No collateral, no default, no penalty.** A missed payment does not change the debt or incur fees; it only changes the `late` flag on schedule rows and triggers notifications (§8). The line stays `active` until shares are fully repaid.
 8. **Aggregated `BOR` balance, per-line bookkeeping.** The existing `account_balances` schema allows **one row per type per account per day** — so an account with N active lines still has exactly **one** `BOR` balance row, holding the **sum** of all lines' outstanding shares. Per-line outstanding is reconstructed from the BOR/REP transactions linked via `account_credit_line_id`. Concretely:
    - `account_balance.shares` (type=BOR) = Σ over all lines of (BOR − REP) transactions
    - `line.outstanding_shares` = Σ over that line's BOR/REP transactions only
    This avoids any schema change to `account_balances` and keeps the existing temporal-balance machinery intact.
+   **Unmatched REPs do not reduce any line's outstanding.** They stay parked until matched, so the account-level BOR balance is consistent with the per-line sum at all times.
 9. **Settlement / payoff.** When a line's `outstanding_shares` reaches zero, its status → `paid_off`. The account-level `BOR` balance row only returns to zero when **all** lines on the account are paid off (or cancelled).
+10. **Mismatch flagging is visible.** When `match_status ∈ {unmatched, ambiguous}` the transaction is rendered with a visual flag in transaction lists, and the **account page header shows a persistent alert banner** with the count of flagged transactions and a link to resolve them. The flag clears when the transaction is manually assigned to a line (or cancelled).
+11. **Every transaction triggers an email.** Any BOR or REP transaction — whether **received** (user-submitted) or **detected** (system-created: auto-matcher, scheduled job, draw confirmation, retroactive late-detection) — generates an email to the account owner. Mismatch-flagged REPs generate an *additional* alert email with a link to resolve the assignment. See §8.5.
 
 ---
 
@@ -172,7 +205,7 @@ These were initially open questions; the answers below now constrain the impleme
 |---|---|
 | Interest | **None.** Borrower owes the same share count back. No interest column, no interest accrual. |
 | Counterparty / share holding | The shares stay on the borrower's account with a `BOR` `AccountBalance` row offsetting the `OWN` row (the existing schema). No escrow account. |
-| Cash flow | Borrow disburses cash *out of the fund* to the borrower. Repayment returns cash *into the fund*. The fund's cash position changes — this is **new behavior** the system does not currently support (§5 rule 2, §10 risks). |
+| Cash flow | Borrow disburses cash *out of the fund* to the borrower. Repayment returns cash *into the fund*. The fund's cash position changes — this is **new behavior** the system does not currently support (§5 rule 2, §11 risks). |
 | Default / penalty | **None.** Missed payments only update the `late` schedule flag and trigger notifications. The debt is not increased, the status is not changed. |
 | Cross-account collateral | **Not a concept.** Each line is against one account's own shares. Multiple lines per person across their accounts is fine; each is independent. |
 | Authorization | (Still to confirm with user — current assumption: account owners can open lines unilaterally; mirror the existing transaction-creation auth.) |
@@ -195,11 +228,13 @@ A small chart (cumulative-shares-repaid vs. plan line, x-axis = time) is the can
 ### 8.2 Account page
 
 On the account detail view (extending `AccountControllerExt`):
-- **Aggregate panel** at the top: total `BOR` shares (sum across lines), available-to-borrow remaining, count of active lines, count behind plan.
+- **Header alert banner (top of page, full width)** — shown when this account has any BOR/REP transaction with `credit_line_match_status IN ('ambiguous', 'unmatched')`. The banner shows the count of flagged transactions, the most recent one inline, and a "Resolve" CTA linking to a transaction-by-transaction assignment screen. Banner is persistent (sticky on scroll), styled prominently (red/orange), and dismissable only by resolving the underlying transactions (not by clicking away).
+- **Aggregate panel**: total `BOR` shares (sum across lines), available-to-borrow remaining, count of active lines, count behind plan.
 - **Per-line table** listing every credit line on the account: principal, outstanding, status, planned payoff, projected payoff, variance. Sortable; defaults to oldest-first.
 - **Drill-down** to each line showing the full schedule (paid/late/scheduled), the trajectory chart, the adjustment history, and the per-line reminder settings.
 - **Upcoming due-date callout** merging the next N payments across **all lines** on the account, sorted by `due_date`, each row labeled with which line it belongs to.
-- **New-line button** on the page, disabled when available-to-borrow is zero.
+- **Recent transactions list** — flagged transactions (`ambiguous`/`unmatched`) render with a highlight (e.g., red border, warning icon) inline, so flags are visible in context, not only in the header.
+- **New-line button**, disabled when available-to-borrow is zero.
 
 ### 8.3 Fund page
 
@@ -220,17 +255,33 @@ Reports are generated via queue jobs and rendered with wkhtmltopdf — extend th
 
 Configurable per-account (or per-line) settings:
 
+**Email types — five distinct templates:**
+
+| Email | Trigger | Recipient | Notes |
+|---|---|---|---|
+| **Transaction received** | A user-submitted BOR or REP transaction is saved (status `pending` or `cleared`) | Account owner | Subject indicates type ("Borrow recorded", "Repayment received"). Body shows shares, value, target line if matched. Sent immediately on save (queued). |
+| **Transaction detected** | The system (auto-matcher, scheduled job, late-detection sweep, draw confirmation) creates or clears a BOR/REP transaction | Account owner | Same template structure as "received" but with a "system-generated" badge. Sent immediately. |
+| **Mismatch alert** | A REP is saved with `credit_line_match_status IN ('ambiguous', 'unmatched')` | Account owner | In addition to the "transaction received" email, sends a separate alert with a "Resolve" link to the matching screen (§8.2 banner target). |
+| **Reminder** | `today + reminder_lead_days == due_date` on any scheduled `CreditLinePayment` | Account owner | Per-line settings (table below). |
+| **Delay notification** | `today − due_date == delay_notification_grace_days` on a still-unpaid scheduled row, then every `delay_notification_repeat_days` until paid | Account owner | Per-line settings. Hard cap on repeats to prevent spam (§11). |
+
+**Per-line configurable settings:**
+
 | Setting | Type | Default |
 |---|---|---|
-| `reminder_lead_days` | int (e.g., 7) | 7 — send a reminder N days before each scheduled payment. |
+| `reminder_lead_days` | int | 7 — send a reminder N days before each scheduled payment. |
 | `reminder_enabled` | bool | true |
 | `delay_notification_enabled` | bool | true |
 | `delay_notification_grace_days` | int | 3 — send "payment overdue" notification N days after a missed `due_date`. |
 | `delay_notification_repeat_days` | int nullable | 14 — re-send every N days while still late; NULL = send once. |
+| `transaction_email_enabled` | bool | true — controls both `received` and `detected` emails. |
+| `mismatch_alert_enabled` | bool | true |
 
 Implementation notes:
 - Store these settings on `AccountCreditLine` (or a sibling `credit_line_settings` table if defaults at the account level make sense — TBD).
-- A scheduled job (Laravel scheduler + queue) runs daily, scans schedule rows, sends emails via the existing mail stack (MailHog in dev). Hook into the existing `queue:listen` infrastructure.
+- "Received" and "detected" emails are dispatched via Laravel model events on the `Transaction` save lifecycle (`saved` event, gated on `type IN ('BOR', 'REP')`). This ensures every code path that creates a credit-line transaction triggers an email — there is no manual call site to forget.
+- "Mismatch alert" emails are dispatched by the auto-matcher service after it computes `credit_line_match_status` and saves the transaction.
+- "Reminder" and "delay notification" emails come from a daily scheduled job (Laravel scheduler + queue) that scans `CreditLinePayment` rows, sending via the existing mail stack (MailHog in dev). Hook into the existing `queue:listen` infrastructure.
 - Email templates live alongside existing quarterly-report templates.
 
 ---
@@ -240,51 +291,143 @@ Implementation notes:
 Rough order of work, following the repo's repository + `*Ext` pattern:
 
 1. **Fix `AccountExt::sharesAsOf()`** so BOR shares discount OWN (`app/Models/AccountExt.php:126`). Add a test before changing behavior — many calculations depend on this.
-2. **Design fund-side cash flow** (see §10 risks). Decide how a "cash leaves the fund" event is recorded. Probably a new transaction type or a dedicated fund-cash ledger. This is a prerequisite for the draw operation.
+2. **Design fund-side cash flow** (see §11 risks). Decide how a "cash leaves the fund" event is recorded. Probably a new transaction type or a dedicated fund-cash ledger. This is a prerequisite for the draw operation.
 3. **Migrations**
    - `create_account_credit_lines_table`
    - `create_credit_line_payments_table`
    - `create_credit_line_adjustments_table` (audit)
    - `add_account_credit_line_id_to_transactions`
+   - `add_credit_line_match_status_to_transactions` (§4.4 enum)
    - (possibly) `create_fund_cash_movements_table` or similar — depends on (2)
 4. **Models** following the `Account` / `AccountExt` pattern:
-   - `AccountCreditLine` + `AccountCreditLineExt` (Ext hosts amortization, readjust, trajectory logic)
+   - `AccountCreditLine` + `AccountCreditLineExt` (Ext hosts amortization, readjust, trajectory, settings)
    - `CreditLinePayment`
    - `CreditLineAdjustment`
 5. **Repositories** following `AccountRepository`:
    - `AccountCreditLineRepository`, `CreditLinePaymentRepository`, `CreditLineAdjustmentRepository`
 6. **Service / domain logic**:
    - `open(account, shares, term, frequency)` → BOR transaction, schedule rows, fund cash-out entry
-   - `repay(line, shares, date)` → REP transaction, schedule advance, fund cash-in entry
+   - `repay(account, shares, date)` → REP transaction; matcher decides target line (single-line: trivial; multi-line: shares → cash → outstanding priorities); sets `credit_line_match_status` and FK
+   - `resolveMatch(transaction, line)` → manual assignment of a flagged REP; updates FK, status → `manual`, advances schedule
    - `readjust(line, new_term, new_frequency)` → cancel scheduled rows, regenerate, record adjustment row
-   - `recomputeOutstanding(line)` → from transactions
+   - `recomputeOutstanding(line)` → from transactions, ignoring `unmatched`/`ambiguous` REPs
    - `projectPayoff(line)` → trajectory + projected_payoff_date (§8.1)
-7. **Controllers** under `app/Http/Controllers/WebV1/`:
+7. **Transaction model events** (§8.5)
+   - `Transaction::saved` listener that dispatches the "transaction received/detected" email when `type IN ('BOR','REP')` and `transaction_email_enabled` is true on the relevant line (or account default for unmatched).
+   - Matcher service dispatches the additional "mismatch alert" email when status becomes `ambiguous`/`unmatched`.
+8. **Controllers** under `app/Http/Controllers/WebV1/`:
    - `AccountCreditLineControllerExt` — CRUD + draw + readjust + repay actions
+   - `CreditLineMatchResolutionController` — endpoints powering the §8.2 banner "Resolve" CTA (list flagged, assign to line)
    - Follow `AccountMatchingRuleControllerExt` as a structural template
-8. **Form requests** in `app/Http/Requests/`:
-   - `CreateAccountCreditLineRequest`, `UpdateAccountCreditLineRequest`, `ReadjustCreditLineRequest`, `RepayCreditLineRequest`
-9. **Views** under `resources/views/account_credit_lines/` (index, create, show, edit, fields, table) — InfyOm scaffold compatible. Plus trajectory chart partial reusable from account/fund pages.
-10. **Reporting**
+9. **Form requests** in `app/Http/Requests/`:
+   - `CreateAccountCreditLineRequest`, `UpdateAccountCreditLineRequest`, `ReadjustCreditLineRequest`, `RepayCreditLineRequest`, `ResolveCreditLineMatchRequest`
+10. **Views** under `resources/views/account_credit_lines/` (index, create, show, edit, fields, table) — InfyOm scaffold compatible. Plus:
+    - Trajectory chart partial reusable from account/fund pages.
+    - Header alert banner partial included on `accounts/show`.
+    - Flagged-transaction inline highlight styling in the transactions table partial.
+11. **Reporting**
     - Extend account page (`AccountControllerExt`) and fund page with the §8.2/§8.3 sections.
     - Extend quarterly report templates with §8.4 sections.
-11. **Reminder / delay-notification job** (§8.5)
+12. **Reminder / delay-notification job** (§8.5)
     - Daily Laravel-scheduler job scans schedule rows.
     - Emails via existing mail stack (MailHog dev / SMTP prod).
-12. **API endpoints** under `app/Http/Controllers/API/` if mobile/external clients need them.
-13. **Tests**
+13. **API endpoints** under `app/Http/Controllers/API/` if mobile/external clients need them.
+14. **Tests**
     - Repository test (CRUD)
     - Feature test for the draw flow (cap enforcement, balance impact, fund cash-out)
     - Feature test for repayment (schedule advance, payoff status, fund cash-in)
     - Feature test for readjustment (schedule rebuild, adjustment audit row)
     - Feature test for trajectory calculation (projected payoff with mixed on-time/late payments)
     - **Feature test for multiple concurrent lines on one account**: open 3 lines, verify draw cap is cumulative, repay against a specific line and verify only that line's `outstanding_shares` and schedule change, verify the account-level `BOR` `AccountBalance` row equals the sum across all 3 lines, verify the account page lists 3 lines independently, verify the upcoming-due-dates callout merges payments from all 3.
+    - **Matcher feature test (UC-25 through UC-31)**: single-line auto-match; multi-line shares match; multi-line cash-fallback match; full-payoff outstanding match; ambiguous (≥2 candidates) → flagged, banner appears, mismatch email sent; unmatched (0 candidates) → flagged, banner appears, mismatch email sent; manual resolve clears the flag and advances the chosen line's schedule.
+    - **Transaction email test (UC-32, UC-33, UC-34)**: assert exactly one "received" email is sent on user-submitted REP; one "detected" email on system-created REP; no email when `transaction_email_enabled = false`; mismatch-alert email is independent of `transaction_email_enabled` but respects `mismatch_alert_enabled`.
     - Reminder/notification job test (emails sent at correct lead/grace days)
     - Golden-data integration: small fund with a draw, partial repay, readjust, full repay sequence — verify both account and fund quarterly report sections.
 
 ---
 
-## 10. Risks and watch-items
+## 10. Transaction detection subsystem
+
+### 10.1 What already exists
+
+The codebase has a **matching subsystem** focused on parental matching contributions (used when one account's transaction "matches" another's by rule). Relevant pieces:
+
+| Component | Location | Role |
+|---|---|---|
+| `MatchingRule` / `MatchingRuleExt` | `app/Models/` | Defines a matching rule (rate, cap, period) |
+| `AccountMatchingRule` / `AccountMatchingRuleExt` | `app/Models/` | Per-account binding of a rule |
+| `TransactionMatching` | `app/Models/TransactionMatching.php` | Join row: `matching_rule_id` + `transaction_id` + `reference_transaction_id` — records that transaction X was matched by rule R to reference transaction Y |
+| `MatchingReminderLog` | `app/Models/` | Audit/dedup for matching-related reminder emails |
+| `TransactionMatchingController` + `*Resource` | `app/Http/Controllers/`, `app/Http/Resources/` | CRUD over matchings |
+| `TransactionExt::TYPE_MATCHING = 'MAT'` | `app/Models/TransactionExt.php:30` | Transaction type for the matching contribution itself |
+| `TransactionExt::FLAGS_NO_MATCH = 'U'` | `app/Models/TransactionExt.php:40` | Existing flag indicating "not matched" — same conceptual gap we now have for credit-line REPs |
+
+**Implication:** the system already has the *shape* of a detect-and-classify pipeline. What's missing is (a) a single ingestion seam that all new transactions flow through, and (b) a pluggable classifier that can route each transaction to the right downstream handler — matching-rule, credit-line, or unmatched.
+
+### 10.2 Proposed: unified detection pipeline
+
+Introduce a thin **`TransactionDetectionService`** that becomes the single seam for every new BOR/REP/PUR/SAL/MAT transaction. It runs either as a model-event listener on `Transaction::saved` or as a service method that *all* transaction-creating call sites use (we can start with the listener for backward compatibility, then migrate call sites over time).
+
+Pipeline stages per transaction:
+
+```
+[ingest] → [classify] → [match] → [persist status] → [notify]
+```
+
+1. **Ingest** — the listener fires on every `Transaction::saved`. Transactions can originate from:
+   - User submission via web UI (existing flow)
+   - API endpoint (existing flow)
+   - System-generated: scheduler jobs, auto-matcher, draw confirmation, late-detection sweep (new for credit lines)
+   - **Future**: external feeds (bank API, CSV upload, email parsing) — not v1, but the seam supports them
+2. **Classify** — inspect `type` to decide which classifier(s) apply:
+   - `BOR` / `REP` → credit-line matcher (§5 rule 3)
+   - `PUR` (deposit) → existing matching-rule pipeline (find any `MatchingRule` that applies, create candidate `TransactionMatching` rows)
+   - `SAL`, `INI`, `MAT` → no matching needed for v1
+3. **Match** — call the appropriate matcher service:
+   - `CreditLineMatcher::match(transaction)` → returns `{line_id, status}` per §5 rule 3
+   - `ContributionMatcher::match(transaction)` → existing logic
+   - Both return a uniform result: `{status: matched|ambiguous|unmatched, target_ids: [], reason: ...}`
+4. **Persist status** — write the result back to the transaction:
+   - For credit-line: `account_credit_line_id` + `credit_line_match_status` (§4.4)
+   - For contribution: `TransactionMatching` rows + `flags = 'U'` if unmatched (existing pattern)
+5. **Notify** — dispatch emails:
+   - Standard "transaction received/detected" email per §8.5
+   - "Mismatch alert" email if status is `ambiguous` / `unmatched`
+   - Reuse existing `MatchingReminderLog` pattern for dedup, extending it (or creating a sibling `CreditLineEmailLog`) so we don't double-send across pipeline runs
+
+### 10.3 What "expand the existing" means in practice
+
+Rather than building a parallel system, we extend the existing matching primitives:
+
+- **`TransactionMatching` table** gets a new optional column `account_credit_line_id` (nullable FK). A row with `matching_rule_id` set continues to mean "contribution match"; a row with `account_credit_line_id` set means "credit-line match". Both NULL = unmatched / awaiting classification.
+- **`MatchingReminderLog`** is generalized (or duplicated for credit-line emails) to dedup transaction-event emails so the listener can fire safely on retries.
+- **`FLAGS_NO_MATCH = 'U'`** is reused for the `unmatched` state where it makes semantic sense, but the more specific `credit_line_match_status` enum (§4.4) carries the credit-line-specific detail.
+- **Detection sources** (v1: in-app submission and system jobs; v2: external feeds) all funnel through `TransactionDetectionService::ingest($transaction)` so behavior is uniform regardless of origin.
+
+### 10.4 Implementation impact on §9
+
+Insert these steps into the implementation sketch (between §9 step 6 and step 7):
+
+- 6a. **`TransactionDetectionService`** — orchestrator class; entry point `ingest($transaction)`.
+- 6b. **`CreditLineMatcher`** — implements §5 rule 3 priorities; returns a uniform `MatchResult`.
+- 6c. **Refactor** the existing contribution-matching code path to expose a `ContributionMatcher::match()` returning the same `MatchResult` shape, so the orchestrator treats both uniformly.
+- 6d. **Migration** — `add_account_credit_line_id_to_transaction_matchings`.
+- 6e. **Model event** — `Transaction::saved` listener delegating to `TransactionDetectionService` (gated on `type IN ('BOR','REP','PUR')` for v1).
+- 6f. **Email dedup log** — extend `MatchingReminderLog` or add `CreditLineEmailLog` for the §8.5 emails.
+
+### 10.5 New use cases (extend §2 tracker)
+
+| ID    | Use case                                              | Actor   | Trigger / Input                                         | Expected outcome                                                                            | Key changes / Notes                                                              | Status  |
+|-------|-------------------------------------------------------|---------|---------------------------------------------------------|---------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|---------|
+| UC-35 | Unified ingestion: every new transaction is classified | System  | Any `Transaction::saved` event                          | `TransactionDetectionService::ingest()` runs; classifier picked by `type`                   | §10.2 pipeline + model event listener                                            | planned |
+| UC-36 | Credit-line classifier routes BOR/REP                 | System  | New BOR/REP saved                                       | Calls `CreditLineMatcher::match`; persists status per §4.4                                  | §10.2 step 2                                                                     | planned |
+| UC-37 | Contribution classifier still handles PUR             | System  | New PUR saved                                           | Existing `TransactionMatching` rows created, no regression                                  | Backward compatibility check                                                     | planned |
+| UC-38 | Email dedup across retries                            | System  | Same transaction's listener fires twice (queue retry)   | Only one email sent; second skipped via `MatchingReminderLog` / `CreditLineEmailLog`        | §10.2 stage 5                                                                    | planned |
+| UC-39 | Future external source (placeholder)                  | Admin   | CSV import or bank feed creates `Transaction` rows      | Same pipeline runs; classification + matching + notification all happen uniformly           | Out of scope for v1 — the seam exists so v2 is additive                          | planned |
+
+---
+
+## 11. Risks and watch-items
 
 - **Fund-side cash movement is new.** Today the fund's cash position changes only through portfolio activity (asset purchases/sales) and matching contributions. A credit-line draw moves cash *out of the fund* to a borrower with no corresponding asset purchase. We need a clean way to record this without breaking NAV math (`FundExt::shareValueAsOf()` uses `valueAsOf / sharesAsOf` — if disbursed cash is no longer counted in fund value, NAV will drop on draw). Design choices to evaluate:
   - Treat the outstanding receivable (cash owed back to fund) as an *asset* of the fund so NAV is unchanged at draw, then adjusts as share price drifts during the life of the loan.
@@ -295,3 +438,5 @@ Rough order of work, following the repo's repository + `*Ext` pattern:
 - **Decimal precision.** Shares are decimal(19,4); rounding in the amortization schedule must sum to the principal exactly (use a remainder-on-last-payment scheme).
 - **Race conditions on the draw cap.** Two simultaneous draws could each individually fit but exceed the cap together. Use a DB transaction with `SELECT … FOR UPDATE` on the account row when creating a credit line.
 - **Notification spam.** A long-late line with `delay_notification_repeat_days` set will keep emailing forever. Consider a hard cap (e.g., 6 notifications) or a "snooze" action on the account page.
+- **Cash-fallback matcher is fragile.** Priority 2 of the REP matcher (§5 rule 3) compares against `shares_due × share_value_at_transaction_date`. Share-price drift between scheduled-date and payment-date means the cash amount the borrower actually sends may not equal what was originally implied. A small tolerance window (e.g., 1%) helps for honest payments but widens the chance of an ambiguous match across two lines with close `shares_due`. Default to **shares-only matching** in v1; treat cash-fallback as a feature flag that can be enabled per fund.
+- **Email-event reliability.** The `Transaction::saved` hook (§8.5) fires inside the same request as the matcher. If the email queue is down, the transaction still saves but the email may be lost. Use queued mailers and verify retry behavior; consider a daily reconciliation job that emails any transaction created in the last 24h that has no record of email dispatch.

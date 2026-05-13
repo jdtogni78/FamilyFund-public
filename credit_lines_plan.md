@@ -1,8 +1,9 @@
 # Credit Lines — Planning Document
 
 **Status:** Draft / ideas — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 5 — adjustment audit schema, change diff and history timeline view)
+**Last Updated:** 2026-05-13 (rev 6 — cross-reference money-flow sub-project)
 **Branch:** `claude/plan-credit-lines-cCjWG`
+**Related sub-projects:** [`money_flow_plan.md`](money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
 
 ---
 
@@ -180,7 +181,7 @@ Audit row written every time a line is readjusted (§6). Captures what changed, 
 2. **Shares, not money — but cash *does* move.** The debt is denominated in shares (same number out, same number back, regardless of price). At draw time the system must also **move cash out of the fund** equal to `principal_shares × share_price_at_draw`. This is a **new cash-flow path** the fund does not currently support and is a first-class part of this feature, not a UI concern:
    - The fund's cash position (and therefore portfolio total) drops by the disbursed amount.
    - On repayment, cash flows back into the fund equal to `shares_repaid × share_price_on_repayment_date` (price drift = fund's exposure).
-   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §11 risks.
+   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §11 risks. The actual external money movement (Wise / PIX / IBKR) is designed in the [money flow sub-project](money_flow_plan.md); this rule only covers how the *fund's books* reflect it.
 3. **Repayment is line-targeted via auto-matching.** Every REP transaction carries an `account_credit_line_id` FK (§4.3) plus a `match_status` (see §4.4). When an account has **only one active line**, the REP is assigned to it automatically. When an account has **two or more active lines**, the matcher tries to assign the REP to exactly one line using this priority:
    1. **Exact share match** against any scheduled `CreditLinePayment.shares_due` on an active line (within a small tolerance, e.g., the decimal(19,4) precision).
    2. **Exact cash match** against `shares_due × share_value_at_transaction_date` on an active line (share-price drift makes this fuzzier, so used only if shares didn't match).
@@ -445,7 +446,7 @@ Pipeline stages per transaction:
    - User submission via web UI (existing flow)
    - API endpoint (existing flow)
    - System-generated: scheduler jobs, auto-matcher, draw confirmation, late-detection sweep (new for credit lines)
-   - **Future**: external feeds (bank API, CSV upload, email parsing) — not v1, but the seam supports them
+   - **Future**: external feeds (bank API, CSV upload, email parsing) — designed in [`money_flow_plan.md`](money_flow_plan.md); not v1, but the seam supports them
 2. **Classify** — inspect `type` to decide which classifier(s) apply:
    - `BOR` / `REP` → credit-line matcher (§5 rule 3)
    - `PUR` (deposit) → existing matching-rule pipeline (find any `MatchingRule` that applies, create candidate `TransactionMatching` rows)

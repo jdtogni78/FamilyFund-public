@@ -5,8 +5,9 @@ Source spec: [`credit_lines_plan.md`](credit_lines_plan.md). 50 use cases in §2
 
 ## Score
 
-**49 of 50 done.** 1 explicitly deferred (out-of-scope by plan). 1 partial.
-Plus 4 features shipped **beyond the original plan**.
+**49 of 50 done.** 1 explicitly deferred (UC-39, out-of-scope by plan).
+1 dropped by design (UC-11). Plus 4 features shipped **beyond the
+original plan**.
 
 ## Per-UC status
 
@@ -32,7 +33,7 @@ Plus 4 features shipped **beyond the original plan**.
 | UC-18 Reminder before due | ✅ | Wave 1d `ScanRemindersJob` |
 | UC-19 Delay notification | ✅ | Wave 1d cap-respecting sweep |
 | UC-20 Configure reminders | ✅ | Phase 6 edit form |
-| UC-21 Historical (as-of) view | ⚠️ Partial | Phase 4 receivable balance table covers fund-level historical NAV; per-line history only accurate forward of Phase 4 ship (pre-existing lines get one seeded row at origination_date). Documented limitation. |
+| UC-21 Historical (as-of) view | ✅ | Phase 4 `account_credit_line_balances` temporal table follows the same `start_dt/end_dt` pattern as the existing `account_balances`. All three write paths (Draw, Repay, Reverse) call `CreditLineBalanceTracker::recordChange`, so undo via reversal also writes a new temporal row. The "partial" caveat in earlier audit docs only applied to hypothetical pre-Phase-4 lines — none exist (the borrowing feature was never used before this build), so no backfill is needed. |
 | UC-22 Fund NAV during life of line | ✅ | Phase 3 receivable-as-asset + Phase 4 historical |
 | UC-23 Multiple accounts | ✅ | Per-account services compose naturally |
 | UC-24 `sharesAsOf` discounts BOR | ✅ | Phase 0 |
@@ -78,12 +79,6 @@ Plus 4 features shipped **beyond the original plan**.
 
 ## Soft gaps & deferred
 
-- **UC-21 partial** — historical receivable reconstruction works forward of
-  Phase 4 only. Pre-existing lines have a single seeded `account_credit_line_balances`
-  row at origination_date. Querying their intermediate state returns the
-  *final* outstanding throughout. Two roll-forward paths documented in
-  `credit_lines_phase_4.md`: (a) replay BOR/REP transaction history into the
-  balance table for each existing line, (b) accept and document.
 - **UC-39** — explicit v2 in plan §10.5.
 
 ## Tests
@@ -122,8 +117,6 @@ Every use case in the original spec is shipped except:
 1. **UC-39** — out of scope by the plan itself.
 2. **UC-11** — dropped by design (matcher + manual-resolve covers the multi-line
    REP case more cleanly than a free-form repay form would).
-3. **UC-21 partial** — fund-level historical NAV is correct; per-line historical
-   state is correct only for lines opened after Phase 4 ship.
 
 Plus we shipped the four "beyond the plan" features above based on user
 direction during the build.

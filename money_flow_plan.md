@@ -1,7 +1,7 @@
 # Money Flow — Brazil ↔ US Fund — Planning Document
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 3 — three-account topology with API-driven US checking hub between Wise and IBKR)
+**Last Updated:** 2026-05-13 (rev 4 — outbound uses existing fund cash; trader rebalances separately)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md)
 
@@ -56,6 +56,7 @@ The codebase has a working CSV-driven inbound pipeline. Key pieces:
 | Outgoing-money operations are **high-stakes and infrequent**. | Optimize for safety (idempotency, approval flows, audit), not throughput. |
 | The system is family-scale, not commercial. | A single bank/fintech partner per direction is fine. No need for a routing engine. |
 | Brazilian financial regulation (Banco Central) and US compliance (OFAC, FinCEN) are **non-negotiable**. | Out of scope for this doc to design, but the proposal must leave room for KYC, transaction reporting, and per-recipient limits. Flag for legal review before any live deployment. |
+| The money-flow subsystem **never trades securities**. | Outbound draws against existing fund cash only. If insufficient, it blocks and notifies the trader. See §5.0. |
 
 ### 3.5 Fund banking topology — three-account model
 
@@ -341,57 +342,99 @@ In both paths, the registry's value compounds over time — the more transfers a
 
 ## 5. End-to-end flow — outbound (Fund → Brazil)
 
-Outbound is triggered by credit-line draws (`credit_lines_plan.md` §5 rule 2: "Move cash out of fund to borrower"), withdrawals, or matching disbursements. With the three-account topology, outbound is a chain: IBKR (sell to cash if needed) → checking hub (debit) → Wise (FX) → recipient's BR account.
+Outbound is triggered by credit-line draws (`credit_lines_plan.md` §5 rule 2: "Move cash out of fund to borrower"), withdrawals, or matching disbursements.
 
-### 5.1 Path A — IBKR → Checking → Wise → Recipient (recommended for v1 of outbound) ✅
+### 5.0 Principle — cash flow vs. portfolio management are separate (rev 4)
+
+The money-flow subsystem orchestrates **cash**. It never decides what positions to buy or sell. That responsibility belongs to a human trader / portfolio manager who acts on their own cadence based on market conditions.
+
+In practice:
+
+1. **Outbound disbursements draw against existing fund cash.** When a beneficiary takes a credit-line draw or withdrawal, the system *immediately* records the cash leaving the account (the account's shares are reduced; the fund's unallocated cash drops) and pushes the funds out the checking → Wise → recipient chain. **No automatic SELL is issued at IBKR.** If cash is on hand at the checking hub or at IBKR-as-cash, it gets used. If not, the disbursement is **blocked** until the trader rebalances.
+
+2. **Inbound deposits land in unallocated fund cash.** When a beneficiary repays a credit line or makes a deposit, cash arrives at the checking hub and is recorded as unallocated fund cash. The corresponding beneficiary shares are added (or BOR shares are reduced for a REP). **No automatic BUY is issued at IBKR.** The trader sweeps and invests on their own schedule.
+
+3. **The trader is signaled, not commanded.** When unallocated cash drops below the operating-balance floor or rises above the ceiling, the system raises a notification ("operating cash below floor — consider liquidating positions" / "cash buffer above ceiling — consider deploying"). The system never executes a trade.
+
+This gives a clean three-layer mental model:
 
 ```
-[Fund operator initiates outbound]
-       │ amount in USD + BrazilianRecipient id + reason
-       ▼
-[MoneyFlow: OutboundTransfer created, status=draft]
-       │ approval gate: amount > threshold OR first-time recipient → second user must approve
-       ▼
-[Approved: status=approved]
-       │
-       ▼
-[Step 1: IBKR cash check / sell if needed]
-       │ if IBKR USD cash < amount: queue a SELL or wait for next funding day
-       │ otherwise proceed
-       ▼
-[Step 2: ACH from IBKR → fund US checking]
-       │ IBKR side: Flex Query confirms outgoing
-       │ Checking webhook: outgoing ACH confirmed; status=in_checking
-       ▼
-[Step 3: ACH/wire from checking → Wise USD balance]
-       │ banking-API call (idempotency-key=OutboundTransfer.id)
-       │ webhook: outgoing ACH confirmed; status=funded_wise
-       ▼
-[Step 4: Wise quote + transfer]
-       │ POST /quotes → quote_id, BRL estimate, fee
-       │ POST /transfers → funded from Wise USD balance
-       │ status=converting
-       ▼
-[Step 5: Wise FX USD→BRL → PIX to recipient]
-       │ webhook: outgoing_payment_sent → status=sent_to_recipient
-       │ webhook: completed → status=completed
-       ▼
-[Recipient gets BRL]
-       │ Transaction booked (SAL/BOR per context); audit log written
-       ▼
-[Notification to recipient + operator]
+┌────────────────────────────────┐
+│  Portfolio (IBKR positions)    │  managed by trader, manually
+├────────────────────────────────┤
+│  Unallocated fund cash         │  managed by money-flow subsystem
+├────────────────────────────────┤
+│  Per-account share balances    │  managed by FamilyFund business logic
+└────────────────────────────────┘
+```
+
+Money-flow inbound increases the cash layer and (via the matcher) the per-account share layer. Money-flow outbound does the inverse. The portfolio layer is opaque to the money-flow subsystem — it just sees "fund operating cash position = X" and reports on it.
+
+### 5.1 Path A — Disburse against existing cash, no forced sale (rev 4) ✅
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant O as Operator
+    participant A as Approver
+    participant FF as FamilyFund app
+    participant CH as Fund US Checking (Relay/Mercury)
+    participant WF as Wise Business (fund)
+    participant BRB as Recipient BR Bank
+    participant R as Recipient
+    participant T as Trader
+
+    O->>FF: Initiate outbound (recipient, amount USD)
+    FF->>FF: BrazilianRecipient lookup, OutboundTransfer status=draft
+
+    Note over FF: Cash-availability check — do NOT auto-sell
+    alt operating cash < amount
+        FF-->>O: Block: insufficient operating cash
+        FF-->>T: Notify trader: please rebalance before this disbursement can proceed
+        Note over O,T: Operator waits; trader sells positions on their own time
+    end
+
+    alt amount > threshold OR first-time recipient
+        FF-->>A: approval request
+        A->>FF: approve
+    end
+    FF->>FF: status=approved
+
+    Note over FF: Step 1: book the cash decrement at the fund level (immediate)
+    FF->>FF: Reduce beneficiary shares (SAL or BOR), reduce fund unallocated cash, audit row
+
+    Note over FF,WF: Step 2: Checking → Wise USD balance
+    FF->>CH: API: ACH push to Wise (idempotency-key)
+    CH->>WF: ACH in
+    WF->>FF: webhook: incoming, status=funded_wise
+
+    Note over FF,WF: Step 3: Wise FX + payout to recipient
+    FF->>WF: POST /quotes (idempotency-key)
+    WF-->>FF: quote_id, BRL estimate, fee
+    FF->>WF: POST /transfers
+    WF->>WF: FX USD→BRL
+    WF->>BRB: PIX/TED to recipient
+    BRB-->>R: BRL credited
+    WF->>FF: webhook: outgoing_payment_sent → completed
+    FF->>FF: OutboundTransfer.status=completed
+    FF-->>R: email "Funds sent"
+    FF-->>O: email "Outbound complete"
+
+    Note over FF,T: Asynchronously: if cash buffer is now below floor, notify trader
+    FF-->>T: Notify trader: operating cash X below floor Y, consider liquidating
 ```
 
 **Requirements:**
 - Fund holds a Wise Business USD account (separate from beneficiary Wise accounts).
 - Fund holds the US checking account from §3.5/§3.6.
-- Pre-approval flow gates all outbound: amounts above $X require a second user's approval (2FA). The bank itself can also enforce a second approval (Relay native; Mercury via roles).
-- Idempotency keys on every API call (IBKR ACH, checking-bank ACH, Wise quote+transfer) so retries are safe.
-- Daily reconciliation: outbound `OutboundTransfer` rows should match step-by-step debits at IBKR, checking, and Wise.
+- Pre-approval flow gates all outbound: amounts above $X require a second user's approval (2FA).
+- Idempotency keys on every API call (checking-bank ACH, Wise quote+transfer) so retries are safe.
+- An **operating-balance policy** (`operating_cash_floor`, `operating_cash_ceiling`, configurable per fund) — the system blocks disbursements that would breach the floor and notifies the trader; never auto-sells.
 
-**Why so many hops?** Each hop is an independently-verifiable ledger entry. If the money gets stuck — say, Wise rejects the BRL transfer because the recipient PIX key changed — the funds sit safely in the checking account in USD, not in a half-converted state somewhere harder to undo. The orchestration layer (`OutboundTransfer.status` state machine) tracks each step explicitly.
-
-**Performance note.** Steps 2 and 3 (IBKR → checking → Wise) can take 1–3 business days end-to-end via standard ACH. For urgent disbursements, the fund can pre-fund the checking account from IBKR on a schedule (e.g., maintain a $10k operating balance), reducing the critical path to Step 4 onward (Wise can be near-instant for BRL via PIX).
+**Notable difference from earlier revisions:**
+- **IBKR is not in the outbound critical path.** Earlier rev 3 had a "Step 1: IBKR sell or pull cash from IBKR" step. Removed in rev 4. The fund's cash at IBKR is moved to the checking hub on the trader's schedule (a separate "sweep IBKR cash → checking" operation §5.4), not in response to individual disbursements.
+- **The beneficiary's account is debited *first*, before the external ACH chain runs.** If the chain later fails, we have a clean reversal — re-credit the account and re-add the cash to fund unallocated. The state machine in §5.5 handles this.
+- **The cash position drop happens immediately** at the fund-books layer. The actual money may take 1–2 days to land in the recipient's hands, but the fund's books reflect the obligation from minute one.
 
 ### 5.2 Path B — Manual + record (v0 stub)
 
@@ -412,6 +455,64 @@ For the very first cut, the operator does the Wise transfer manually through Wis
 ### 5.3 Path C — Direct PIX via BR fintech (v3)
 
 Same as inbound Path C but reversed: fund's BR account sends PIX to recipient. Out of scope until inbound Path C is in.
+
+### 5.4 Trader rebalancing — a separate, manual workflow (rev 4)
+
+The money-flow subsystem does **not** trade securities. It exposes signals and lets a human trader act. The trader's flow is independent of any specific disbursement or deposit.
+
+**Triggers that surface to the trader (dashboard + email, throttled):**
+
+| Signal | Threshold | Suggested action (informational only) |
+|---|---|---|
+| Operating cash below floor | `< operating_cash_floor` (per-fund setting) | Sell positions to replenish operating cash. |
+| Operating cash above ceiling | `> operating_cash_ceiling` | Deploy excess cash into target allocations. |
+| Cash at IBKR vs at checking imbalance | configurable | Sweep between IBKR and checking. |
+| Pending disbursements blocked on insufficient cash | any | Liquidate to unblock specific disbursements. |
+| Quarterly rebalance review | calendar | Review target allocations vs current. |
+
+**Trader actions outside the money-flow subsystem:**
+- Place sell/buy orders directly at IBKR (existing trading UI, not money-flow's concern).
+- Trigger an explicit **"sweep IBKR cash → checking"** action when they want operating cash replenished. This is a money-flow operation (just an ACH between two fund-owned accounts), but it is **operator-initiated**, never automatic.
+- Trigger an explicit **"sweep checking cash → IBKR"** action when there's idle operating cash they want to invest. Same shape — operator-initiated.
+
+**What the trader does not do:**
+- Approve individual outbound transfers — that's the `money_flow_approver` role from §7.5 (which may or may not be the same person, depending on the fund's setup).
+- Touch beneficiary-level share accounting — that's bookkeeping owned by FamilyFund's existing UIs.
+
+The trader role is essentially a **portfolio manager** with limited interaction with the money-flow subsystem: receive signals, trigger sweeps between fund-owned accounts, otherwise leave the money-flow code alone.
+
+### 5.5 Outbound state machine (rev 4)
+
+`OutboundTransfer.status` transitions and reversibility:
+
+```
+draft → approval_pending → approved → blocked_insufficient_cash (revertible)
+                                    ↓
+                              books_debited  ← (account shares + fund cash debited atomically)
+                                    ↓
+                              funding_wise   ← (ACH checking → Wise pending)
+                                    ↓
+                              converting     ← (Wise FX in progress)
+                                    ↓
+                              sent_to_recipient
+                                    ↓
+                              completed
+```
+
+**Reversal paths** — every state above `books_debited` has a defined rollback:
+- `funding_wise` fails → reverse ACH if possible, otherwise mark `funding_failed`; cash returns to checking; books reversed (account shares re-credited, fund cash re-added).
+- `converting` fails → Wise returns USD; books reversed.
+- `sent_to_recipient` followed by Wise reporting a PIX rejection → Wise returns the BRL → USD → ACH back to checking; books reversed.
+
+Each reversal writes its own audit row and re-emits notification emails (with subject "Reversed: ..."). The books are never left inconsistent; if a reversal itself fails technically, the audit log lets an operator hand-fix it with a clear trail.
+
+### 5.6 Symmetric flow for inbound (rev 4 alignment)
+
+For consistency with §5.0:
+- Inbound deposits credit the beneficiary's shares and the fund's unallocated cash **immediately on attribution** (whether at the Wise webhook for Path B or at the checking webhook for Path A).
+- The money is **not** automatically swept to IBKR or invested. It sits at the checking hub as unallocated fund cash.
+- The trader sees "cash above ceiling" once the buffer exceeds the configured limit and decides whether to sweep some to IBKR and what to buy.
+- For credit-line REPs specifically, the matched repayment increases the beneficiary's OWN shares (or reduces BOR shares per `credit_lines_plan.md` §5 rule 8) regardless of whether the cash is later invested. The investment decision is decoupled from the repayment booking.
 
 ---
 
@@ -755,6 +856,12 @@ Recommendation: ship **P0 + P1** in one go; **P2** as a second milestone. P3 is 
 | MF-40 | Three-way reconciliation report: Wise ↔ checking ↔ IBKR balances align daily    | P1    | planned |
 | MF-41 | Operating-balance maintenance: keep $X in checking to minimize critical path     | P2    | planned |
 | MF-42 | Bank-vendor onboarding KYB completed for the fund entity                         | P0    | planned |
+| MF-43 | Outbound debits beneficiary shares + fund unallocated cash *before* external ACH chain runs (§5.0) | P1 | planned |
+| MF-44 | Outbound blocks when operating cash < floor; no auto-sell                        | P1    | planned |
+| MF-45 | Trader notifications: cash below floor / above ceiling / blocked disbursements   | P1    | planned |
+| MF-46 | Operator-initiated `sweep IBKR ↔ checking` operations (no auto-sweep)             | P1    | planned |
+| MF-47 | `OutboundTransfer` state machine with explicit reversal paths per stage (§5.5)   | P2    | planned |
+| MF-48 | Per-fund `operating_cash_floor` / `operating_cash_ceiling` settings              | P1    | planned |
 
 ---
 

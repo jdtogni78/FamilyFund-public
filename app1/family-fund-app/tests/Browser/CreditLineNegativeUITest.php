@@ -34,36 +34,26 @@ class CreditLineNegativeUITest extends DuskTestCase
 
     public function test_non_admin_user_cannot_access_credit_line_create_form(): void
     {
+        // Wave-2 review (2026-05-14): GET /create itself is now admin-gated
+        // (ensureAdmin() in the controller), so the form never renders for
+        // non-admins. The assertion is therefore the page-source check, not
+        // a form-submit round trip.
         $this->browse(function (Browser $browser) {
-            // Log in as a non-admin user via Dusk's loginAs helper.
             $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
-            $browser->loginAs($nonAdmin);
+            $browser->loginAs($nonAdmin)
+                ->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
+                ->pause(500)
+                ->screenshot('negative/01a_non_admin_create_attempt');
 
-            // GET /create is accessible to all authenticated users (no route middleware).
-            // The auth gate fires on POST when CreateAccountCreditLineRequest::authorize()
-            // returns false for non-admins. Submit the form and assert it is rejected.
-            $browser->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
-                ->waitFor('form[action*="/credit-lines"]')
-                ->screenshot('negative/01a_non_admin_create_attempt')
-                ->type('input[name="principal_shares"]', '10')
-                ->clear('input[name="term_months"]')
-                ->type('input[name="term_months"]', '3')
-                ->select('select[name="payment_frequency"]', 'monthly')
-                ->press('Open')
-                ->pause(1000)
-                ->screenshot('negative/01b_non_admin_result');
-
-            // The FormRequest returns 403 when authorize() is false.
-            // Laravel renders "This action is unauthorized." by default.
             $pageSource = $browser->driver->getPageSource();
-            $httpStatusIsNot200 = str_contains($pageSource, '403')
+            $blocked = str_contains($pageSource, '403')
                 || str_contains($pageSource, 'unauthorized')
                 || str_contains($pageSource, 'Unauthorized')
                 || str_contains($pageSource, 'Forbidden');
 
             $this->assertTrue(
-                $httpStatusIsNot200,
-                'Non-admin submitting the create form should get a 403/unauthorized response.'
+                $blocked,
+                'Non-admin GET /accounts/{id}/credit-lines/create should be 403.'
             );
         });
     }

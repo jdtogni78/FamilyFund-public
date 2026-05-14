@@ -1,7 +1,7 @@
 # Money Flow — Brazil ↔ US Fund — Planning Document
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 4 — outbound uses existing fund cash; trader rebalances separately)
+**Last Updated:** 2026-05-13 (rev 5 — simplified v1 scope: Wise → US checking → IBKR with buffers; Paths B/C and BR fintech work explicitly deferred)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md)
 
@@ -17,6 +17,63 @@ Design an end-to-end money-flow subsystem so that:
 4. **Isolation** — the entire money-flow subsystem lives in its own namespace, has its own queue, its own audit log, and stricter access controls than the rest of the app.
 
 This document is a starting point. It maps the existing infrastructure, proposes options ranked by complexity, and lists what still needs decisions before implementation.
+
+---
+
+## 1.5 v1 scope (read this first)
+
+To keep the first version tractable, **v1 ships exactly one inbound path and one outbound path**, and everything else in this doc is reference for later phases.
+
+**v1 inbound** — the only path we build first:
+
+```
+Beneficiary's own Wise account
+   │ ACH USD
+   ▼
+Fund US checking (trust-owned, Relay or Mercury, with developer API)
+   │ webhook fires on arrival
+   │
+   │  ── ATTRIBUTION HAPPENS HERE, IMMEDIATELY ──
+   │      • CheckingDeposit row created
+   │      • matched to a pre-registered DepositRequest by amount + window
+   │      • beneficiary's shares credited
+   │      • fund's unallocated cash credited
+   │      • notification email sent
+   │
+   ▼ (later, operator-triggered)
+ACH push checking → IBKR (for investment, on trader's schedule)
+```
+
+**v1 outbound** — disburse against existing fund cash:
+
+```
+Operator initiates outbound
+   │ approval if needed
+   ▼
+Books debited immediately (beneficiary shares ↓, fund unallocated cash ↓)
+   │ blocks if checking cash < amount — does not auto-sell
+   ▼
+ACH checking → Wise → BRL → PIX to recipient
+```
+
+**The buffer principle that makes this work.** Attribution and bookkeeping happen as soon as the deposit is *recognized* at the checking webhook, in seconds. The physical money may take 1–3 business days to actually arrive at IBKR (for inbound) or at the recipient's BR bank (for outbound). The books don't wait. Instead, we maintain explicit **cash buffers** at each account so the system stays consistent without forcing premature trades:
+
+| Buffer | Purpose |
+|---|---|
+| Checking operating balance (floor / ceiling) | Covers outbound disbursements without needing same-day IBKR funding. When low, operator (or trader) sweeps cash from IBKR. When high, sweeps to IBKR. |
+| IBKR cash position | Covers normal portfolio activity. The trader chooses how much to leave as cash vs. invested. |
+| (Implicit) timing buffer between attribution and physical settlement | The 0–3 day gap between webhook receipt and IBKR cash arrival doesn't block anything because the fund's books already reflect the deposit on the unallocated-cash line. |
+
+**Explicitly deferred for v1** (kept in this doc for reference):
+
+| Feature | Where it's discussed | When |
+|---|---|---|
+| Fund-owned Wise Business account with PIX webhook (Path B inbound) | §4.2, §8.2 | v2 — when CPF-level attribution becomes worth the integration cost |
+| Direct PIX via Brazilian fintech partner (Path C inbound + outbound) | §4.3, §5.3 | v3+ — requires fund CNPJ, BR banking relationship, legal/compliance work |
+| OFAC / sanctions screening, per-recipient limits | §11 risks, §10 MF-19/20 | After legal review |
+| Automated state-machine reversals across all stages | §5.5 | v2 — v1 reversals are operator-driven via the audit log |
+
+The full vendor evaluation (§3.6), recipient registry (§6), subsystem isolation (§7), and reconciliation reports (§4.4 three-way) all stay in v1 because they apply to the v1 path. The deferred items above are the elaborations that add value once v1 is running.
 
 ---
 
@@ -161,6 +218,8 @@ Beneficiary does a Wise transfer themselves; money lands in the **fund's US chec
 
 ### 4.2 Path B — Fund-owned Wise Business + checking hub (v2, full automation)
 
+> **Deferred for v1** (see §1.5). v1 ships Path A only. This section stays in the doc as the v2 design — revisit when CPF-level attribution becomes worth the Wise Business integration cost.
+
 The fund holds a **Wise Business account in its own name** (alongside the US checking account). The BR beneficiary sends PIX directly to the fund's Wise Business BRL receiving address. Wise webhook fires with **full PIX-originator data** (CPF, sender name, bank). Wise then auto-converts BRL→USD and forwards to the fund's US checking. The checking account's webhook fires when the USD lands.
 
 ```
@@ -201,6 +260,8 @@ The fund holds a **Wise Business account in its own name** (alongside the US che
 **The big win of Path B with the three-account topology:** attribution happens **at the earliest possible point** (Wise webhook with PIX data), and money moves cleanly through the cash hub for orchestration before reaching investments. The IBKR side becomes a downstream consumer that just receives "this much, sweep happened on X date" — no attribution logic there at all.
 
 ### 4.3 Path C — Brazilian fintech partner (v3, native PIX)
+
+> **Deferred for v1** (see §1.5). Requires the fund to hold a Brazilian bank account under a CNPJ — significant legal/compliance work that doesn't pay off until volume justifies it.
 
 Most aggressive: a Brazilian fintech (BS2, Stark Bank, Inter, or Wise's own BR licence) gives us a fund-owned BR account that receives PIX directly. Their API notifies us on each PIX. The partner converts BRL → USD and remits to IBKR.
 
@@ -370,6 +431,19 @@ This gives a clean three-layer mental model:
 
 Money-flow inbound increases the cash layer and (via the matcher) the per-account share layer. Money-flow outbound does the inverse. The portfolio layer is opaque to the money-flow subsystem — it just sees "fund operating cash position = X" and reports on it.
 
+**Buffers absorb the timing gap (rev 5).** The system's books update *immediately* on detection (inbound) or initiation (outbound). The actual money may take 1–3 business days to move between accounts. That gap is bridged by **explicit cash buffers** held at each account:
+
+| Buffer | Setting | What it covers |
+|---|---|---|
+| `checking_cash_floor` | per-fund (e.g., $5k–$10k) | Outbound disbursements without having to wait for IBKR → checking funding. If breached, operator/trader is notified to sweep cash from IBKR. |
+| `checking_cash_ceiling` | per-fund (e.g., $20k) | Above this, system suggests sweeping checking → IBKR so the cash gets back into the trader's hands for potential investment. |
+| `ibkr_cash_position` | trader-managed, no system enforcement | Trader chooses how much cash to leave at IBKR uninvested. The money-flow subsystem just reports the value; the trader rebalances. |
+| Implicit "in-flight" buffer | t+0 to t+3 days | The accounting gap between webhook receipt and the physical settlement of an ACH. Books are already consistent; physical reconciliation catches up daily. |
+
+The buffer values are explicit settings on the fund (or fund-config table) — not hard-coded. They're surfaced on a money-flow dashboard alongside the live balances.
+
+**Consequence for v1:** the system can attribute an incoming deposit, credit the beneficiary's shares, and email them "your deposit was received" within seconds of the ACH arriving at the checking hub — **even though the cash may not reach IBKR for two days**. The fund's overall books are consistent; only the physical location of the cash is in flight. Same on outbound — books debited in seconds; recipient gets BRL hours-to-days later.
+
 ### 5.1 Path A — Disburse against existing cash, no forced sale (rev 4) ✅
 
 ```mermaid
@@ -438,6 +512,8 @@ sequenceDiagram
 
 ### 5.2 Path B — Manual + record (v0 stub)
 
+> **Useful in v1 as a fallback** when an outbound transfer has to go via a channel the API doesn't yet cover, or when the API integration is in maintenance. Otherwise §5.1 is the v1 default.
+
 For the very first cut, the operator does the Wise transfer manually through Wise's web UI; the FamilyFund app just **records** it via a form. This unblocks outbound functionally before Path A is built.
 
 ```
@@ -453,6 +529,8 @@ For the very first cut, the operator does the Wise transfer manually through Wis
 **Why this matters:** even Path B benefits from the registry (§6) and audit log (§8.4) — it just skips the API automation.
 
 ### 5.3 Path C — Direct PIX via BR fintech (v3)
+
+> **Deferred for v1** (see §1.5). Same gating as inbound §4.3 — fund needs a CNPJ-bound BR account.
 
 Same as inbound Path C but reversed: fund's BR account sends PIX to recipient. Out of scope until inbound Path C is in.
 
@@ -800,17 +878,19 @@ sequenceDiagram
 
 | Phase | Inbound | Outbound | Effort | Unblocks |
 |---|---|---|---|---|
-| **P0 — Banking foundation + schedule what exists** | Open US business checking (Relay/Mercury); KYB; integrate webhook receiver; `BankingApiClient` abstraction; schedule `FetchDeposits` cron as the IBKR reconciliation backstop | Manual recording UI; sweep IBKR → checking → Wise scaffolding | M | Real-time inbound detection; cash hub in place; fund can disburse manually with an audit trail. |
-| **P1 — Registry + attribution + sweep** | `BrazilianRecipient` model, `CheckingDeposit` → `DepositRequest` matcher, fuzzy-match against `wise_sender_profile_name`, three-way reconciliation | Operator UI uses registry; scheduled sweep checking → IBKR | M | Auto-routes inbound to credit-line REPs; recipients are reusable; reconciliation alerts catch drift early. |
-| **P2 — Wise Business API + outbound chain** | Fund-owned Wise Business; webhook receiver with rich PIX-origin attribution; `WiseTransfer` model | Full IBKR → checking → Wise → recipient state machine with approval flow | L | Hands-free in/out; FX captured; CPF-level attribution. |
-| **P3 — Compliance + isolation hardening** | KYC checks at registry add, OFAC screening | Outbound limits per recipient / per period; operating-balance auto-replenish | M | Production-ready posture. |
-| **P4 — Native PIX via BR fintech** | Direct PIX webhook from a BR fintech partner | Direct PIX outbound (bypass Wise) | XL | Real-time, sub-minute attribution; needs CNPJ + partner. |
+| **P0 — Banking foundation** ← **v1 starts here** | Open US business checking under the trust (Relay or Mercury); KYB; `BankingApiClient` abstraction; webhook receiver + signature verification; `CheckingDeposit` model; buffer settings on the fund | Manual outbound recording UI; audit log | M | The checking account exists, money can be received, and every event is logged. No automation beyond detection yet. |
+| **P1 — Attribution + outbound chain** ← **rest of v1** | `DepositRequest` pre-registration UI; matcher (`CheckingDeposit` ↔ `DepositRequest` by amount + window); credit-line REP auto-match via `TransactionDetectionService`; trader notifications on buffer breach | Operator-initiated outbound: books-debit-first, then ACH checking → Wise → recipient; operator-initiated sweeps between IBKR and checking | M | End-to-end inbound and outbound work for the basic Wise path. **v1 complete.** |
+| **P2 — Wise Business API + richer attribution** *(deferred)* | Fund-owned Wise Business account; PIX-aware webhook receiver; `WiseTransfer` model; three-way reconciliation; learned recipient fingerprints | Approval flow at the bank level; full state-machine reversals | L | CPF-level inbound attribution; webhook-driven outbound status. |
+| **P3 — Compliance hardening** *(deferred — mandatory before any meaningful volume)* | OFAC / sanctions screen at recipient add; per-recipient limits; retention policy enforcement | Operating-balance auto-replenish | M | Production-grade compliance posture. |
+| **P4 — Native PIX via BR fintech** *(deferred — only if volume justifies)* | Direct PIX webhook from a BR fintech partner | Direct PIX outbound (bypass Wise) | XL | Real-time, sub-minute attribution; needs CNPJ + partner. |
 
-Recommendation: ship **P0 + P1** in one go; **P2** as a second milestone. P3 is mandatory before any real money flows; P4 is optional and depends on volume.
+**Sequencing.** v1 = P0 + P1, shipped together. KYB on the chosen bank is the gating external dependency for P0 (start that application as soon as the trust's legal structure is settled). P2 is the natural next milestone once volume or attribution accuracy warrants it. P3 is mandatory before any non-trivial money flows. P4 is optional.
 
 ---
 
 ## 10. Use case tracker (for the sub-project)
+
+**Reading the Phase column** (rev 5 convention): `P0` and `P1` together are the **v1 scope** (see §1.5). `P2` and higher are deferred; included here for completeness so the future expansion path is visible.
 
 | ID    | Use case                                          | Phase | Status  |
 |-------|---------------------------------------------------|-------|---------|

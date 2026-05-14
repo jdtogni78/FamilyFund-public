@@ -5,6 +5,11 @@
 /vendor
 /.env
 /.phpunit.result.cache
+/.phpunit.cache
+/.env.dusk.local
+/tests/Browser/screenshots
+/tests/Browser/console
+/tests/Browser/source
 /.idea
 /.vscode
 /.env.stage

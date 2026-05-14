@@ -8,6 +8,8 @@ This directory is **temporary** — to be removed in a follow-up commit once rev
 
 > Re-captured after Phase 6 (`1af2c92`). Includes the post-fix trajectory chart (Original plan now steps by 20 as expected), and reflects all UC-20 / UC-37 / UC-46 / UC-47 wiring from Phase 6.
 
+> **See also: [negative/](negative/)** — UI screenshots of all 8 error / authorization paths (non-admin access, validation errors, over-borrow, cancel-blocked, account-closure-blocked, no-change readjust, double-reverse).
+
 ---
 
 ## 01 — Account page before any credit line

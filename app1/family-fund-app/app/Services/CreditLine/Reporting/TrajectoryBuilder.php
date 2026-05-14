@@ -50,9 +50,13 @@ class TrajectoryBuilder
             ? Carbon::parse($adjustments->first()->adjusted_at)
             : null;
 
+        // Use strict-less-than: rows created at the same instant as the
+        // first adjustment belong to the new generation, not the original.
+        // (Without this, readjust-time rows whose created_at == adjusted_at
+        // would be double-counted in the original plan series.)
         $originalGen = $firstAdjustedAt
-            ? $allPayments->filter(fn ($p) => $p->created_at && $p->created_at->lte($firstAdjustedAt))->values()
-            : $allPayments->filter(fn ($p) => $p->status !== CreditLinePayment::STATUS_CANCELLED || true)->values();
+            ? $allPayments->filter(fn ($p) => $p->created_at && $p->created_at->lt($firstAdjustedAt))->values()
+            : $allPayments->values();
 
         $originalPlan = $this->cumulativeFromPayments($originalGen, $line->principal_shares);
 

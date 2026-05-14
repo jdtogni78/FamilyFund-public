@@ -34,7 +34,9 @@ class UpdateAccountCreditLineRequest extends FormRequest
             'reminder_lead_days'              => 'required|integer|min:0|max:365',
             'reminder_enabled'                => 'required|boolean',
             'delay_notification_grace_days'   => 'required|integer|min:0|max:365',
-            'delay_notification_repeat_days'  => 'nullable|integer|min:0|max:365',
+            // Wave-2 review: must be >= 1 — ScanLatePaymentsJob divides by this
+            // value (`floor($daysAfterGrace / $repeatDays)`), so 0 = DivisionByZero.
+            'delay_notification_repeat_days'  => 'nullable|integer|min:1|max:365',
             'delay_notification_max_repeats'  => 'required|integer|min:0|max:100',
             'transaction_email_enabled'       => 'required|boolean',
             'mismatch_alert_enabled'          => 'required|boolean',

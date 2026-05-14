@@ -388,6 +388,10 @@ class CreditLineNegativeUITest extends DuskTestCase
                 || str_contains($source, 'Forbidden')
                 || stripos($source, 'unauthorized') !== false;
             $this->assertTrue($blocked, 'Non-admin GET /accounts/{id}/credit-lines should be 403.');
+            // Belt-and-suspenders: a future regression that drops the 403 but
+            // still 200s with the admin UI must NOT leak the "New credit line"
+            // button or any active-line metadata.
+            $browser->assertDontSee('New credit line');
         });
     }
 
@@ -411,6 +415,10 @@ class CreditLineNegativeUITest extends DuskTestCase
                 || str_contains($source, 'Forbidden')
                 || stripos($source, 'unauthorized') !== false;
             $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id} should be 403.');
+            // A regression that returned the show page would leak the
+            // payment-schedule heading and the admin-action panel.
+            $browser->assertDontSee('Payment schedule')
+                ->assertDontSee('Admin actions');
         });
     }
 
@@ -431,6 +439,10 @@ class CreditLineNegativeUITest extends DuskTestCase
                 || str_contains($source, 'Forbidden')
                 || stripos($source, 'unauthorized') !== false;
             $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id}/edit should be 403.');
+            // The edit form's notification-settings group is the admin-only
+            // surface this gate protects.
+            $browser->assertDontSee('Notification settings')
+                ->assertDontSee('reminder_lead_days');
         });
     }
 
@@ -448,6 +460,10 @@ class CreditLineNegativeUITest extends DuskTestCase
                 || str_contains($source, 'Forbidden')
                 || stripos($source, 'unauthorized') !== false;
             $this->assertTrue($blocked, 'Non-admin GET /admin/transactions/create should be 403.');
+            // This form leaks every account nickname + credit-line metadata
+            // via the dropdowns — assert the form scaffolding is absent.
+            $browser->assertDontSee('Create transaction')
+                ->assertDontSee('account_credit_line_id');
         });
     }
 

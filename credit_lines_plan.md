@@ -619,3 +619,30 @@ This design is interest-free by intent. US trust loans below market rate may tri
 ### Reference docs
 
 The bulky per-phase tracking docs that drove the build (one per phase, plus a few audit/bug doc) have been removed now that this section captures the implementation summary. The substantive design notes that the plan references — [`docs/credit_lines/fund_cashflow.md`](docs/credit_lines/fund_cashflow.md) and [`docs/credit_lines/matching_on_repayment.md`](docs/credit_lines/matching_on_repayment.md) — remain in place.
+
+### Deploy note: `applies_to_rep` flip-on for existing rules
+
+> ⚠️ **Deploy note (applies_to_rep):** the migration that introduced `applies_to_rep` on `MatchingRule` sets it to `true` for every existing rule. On the first REP transaction processed after deploy, those rules will start producing `MAT` (matching contribution) transactions valued at `shares × shareValueAsOf` whenever the REP itself has `value = 0`. If you do not want that behaviour for some existing rules, set their `applies_to_rep` to `false` in the database before the first credit-line repayment ships.
+
+### Review fixes (2026-05-14)
+
+Wave-2 review on PR #3 ([review link](https://github.com/jdtogni78/FamilyFund/pull/3#pullrequestreview-4294073848)). Fixed in-PR:
+
+| # | Fix | Commit |
+|---|---|---|
+| 1 | Admin gate on GET endpoints (`AccountCreditLineControllerExt::{index,show,edit}`, `AdminTransactionController::create`) + 4 Dusk negative tests | `0af3a46` |
+| 2 | Deleted temporary `tour-screenshots-2026-05-14/` | `2b09460` |
+| 3 | `UpdateAccountCreditLineRequest`: `delay_notification_repeat_days` rule tightened from `min:0` to `min:1` (was a `DivisionByZero` risk in `ScanLatePaymentsJob`) + feature test | `c1ccf98` |
+| 4 | Added migration `2026_05_14_000001_add_delay_notification_enabled_to_account_credit_lines` and wired `LineNotificationSettings::delayNotificationEnabled()` to the column (was hard-coded `return true;`) + unit tests | `cfd0df3` |
+| 5 | `OutstandingCalculator::updateAggregateBorBalance`: same-day BOR updates rewrite the open row in place instead of close-and-reopen (no more zero-length rows) + unit tests | `2689bb7` |
+| 6 | Doc-only: `applies_to_rep` deploy callout (this section) | this commit |
+
+Filed as follow-up GitHub issues (out of scope for this PR):
+
+| Issue | Summary |
+|---|---|
+| [#4](https://github.com/jdtogni78/FamilyFund/issues/4) | `RepayService::sharesAlreadyPaidOnRow` partial-credit bookkeeping |
+| [#5](https://github.com/jdtogni78/FamilyFund/issues/5) | `FundReceivableCalculator::receivableShares` N+1 → single JOIN |
+| [#6](https://github.com/jdtogni78/FamilyFund/issues/6) | `FundExt::creditLineReceivableValueAsOf` swallows `\Throwable` |
+| [#7](https://github.com/jdtogni78/FamilyFund/issues/7) | Move `ScanLatePaymentsJob` cache counter to a DB ledger |
+| [#8](https://github.com/jdtogni78/FamilyFund/issues/8) | Polish migration `2026_05_13_000007` (`insertOrIgnore`, `command->info`) |

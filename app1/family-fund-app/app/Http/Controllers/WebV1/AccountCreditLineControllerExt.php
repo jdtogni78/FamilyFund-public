@@ -22,6 +22,7 @@ use App\Services\CreditLine\Exceptions\OverBorrowException;
 use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
 use App\Services\CreditLine\Reporting\TrajectoryBuilder;
+use App\Services\CreditLine\Simulation\PaymentSimulator;
 use Carbon\Carbon;
 use Flash;
 use Illuminate\Http\Request;
@@ -206,5 +207,55 @@ class AccountCreditLineControllerExt extends AppBaseController
         Flash::success('Credit line cancelled.');
 
         return redirect(route('credit_lines.show', ['line' => $line->id]));
+    }
+
+    /**
+     * Phase 9: payment simulator — read-only "what if" projection.
+     *
+     * Admin-gated. Renders the simulator view. If a positive
+     * `monthly_payment_usd` is supplied via the query string, runs the
+     * three-scenario simulation (conservative / expected / aggressive)
+     * and passes the results to the view; otherwise renders the form
+     * with no results.
+     */
+    public function simulator($id, Request $request, PaymentSimulator $simulator)
+    {
+        if (!auth()->user()?->is_admin()) {
+            abort(403);
+        }
+
+        $line = AccountCreditLine::findOrFail($id);
+        $account = $line->account()->first();
+
+        $currentShareValue = null;
+        try {
+            $currentShareValue = $account
+                ? (float) $account->shareValueAsOf(Carbon::today()->toDateString())
+                : null;
+        } catch (\Throwable $e) {
+            $currentShareValue = null;
+        }
+
+        $monthlyPaymentUsd = $request->query('monthly_payment_usd');
+        $results = [];
+        $error = null;
+        if ($monthlyPaymentUsd !== null && $monthlyPaymentUsd !== '') {
+            $monthlyPaymentUsd = (float) $monthlyPaymentUsd;
+            try {
+                $results = $simulator->simulateAllScenarios($line, $monthlyPaymentUsd);
+            } catch (InvalidArgumentException $e) {
+                $error = $e->getMessage();
+            }
+        } else {
+            $monthlyPaymentUsd = null;
+        }
+
+        return view('account_credit_lines.simulator')
+            ->with('line', $line)
+            ->with('account', $account)
+            ->with('currentShareValue', $currentShareValue)
+            ->with('monthlyPaymentUsd', $monthlyPaymentUsd)
+            ->with('results', $results)
+            ->with('simError', $error);
     }
 }

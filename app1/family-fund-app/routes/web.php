@@ -240,6 +240,10 @@ Route::middleware('auth')->group(function () {
     Route::post('transactions/{transaction}/reverse',
         [\App\Http\Controllers\WebV1\TransactionReversalController::class, 'store'])
         ->name('credit_lines.reverse');
+    // Phase 9: credit-line payment simulator (admin-gated in controller)
+    Route::get('credit-lines/{line}/simulator',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'simulator'])
+        ->name('credit_lines.simulator');
 
     // Admin: backdated transaction creation (UC-46)
     Route::get('admin/transactions/create',

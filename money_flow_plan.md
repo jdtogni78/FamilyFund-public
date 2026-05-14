@@ -1,7 +1,7 @@
 # Money Flow — Brazil ↔ US Fund — Planning Document
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 5 — simplified v1 scope: Wise → US checking → IBKR with buffers; Paths B/C and BR fintech work explicitly deferred)
+**Last Updated:** 2026-05-13 (rev 6 — folded accepted items from plan_recommendations.md: USD-only booking, pending-attribution state, CashDeposit coexistence plan, line-item reconciliation, RBAC matrix, PII email policy, 1-year idempotency, closure-block extended)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md), [`testing_plan.md`](testing_plan.md) — every MF-* below is mapped to a named test in `testing_plan.md` §4.2 (inbound) and §4.3 (outbound).
 
@@ -75,6 +75,8 @@ ACH checking → Wise → BRL → PIX to recipient
 
 The full vendor evaluation (§3.6), recipient registry (§6), subsystem isolation (§7), and reconciliation reports (§4.4 three-way) all stay in v1 because they apply to the v1 path. The deferred items above are the elaborations that add value once v1 is running.
 
+**Operational counterpart.** Day-to-day operation of the v1 system is documented in the companion [`money_flow_runbook.md`](money_flow_runbook.md) — daily / weekly / monthly task lists plus incident playbooks.
+
 ---
 
 ## 2. What already exists
@@ -114,6 +116,7 @@ The codebase has a working CSV-driven inbound pipeline. Key pieces:
 | The system is family-scale, not commercial. | A single bank/fintech partner per direction is fine. No need for a routing engine. |
 | Brazilian financial regulation (Banco Central) and US compliance (OFAC, FinCEN) are **non-negotiable**. | Out of scope for this doc to design, but the proposal must leave room for KYC, transaction reporting, and per-recipient limits. Flag for legal review before any live deployment. |
 | The money-flow subsystem **never trades securities**. | Outbound draws against existing fund cash only. If insufficient, it blocks and notifies the trader. See §5.0. |
+| **No FX rate is tracked on our side** (rev 6 — per MF-R2). | The system books only the final USD amount that arrives at the checking account. BRL→USD conversion is upstream of our books (Wise's responsibility). `CheckingDeposit.amount` is the USD; beneficiary's share credit is computed from that × current share price. Borrowers can see the BRL→USD detail in their own Wise app; FamilyFund shows what actually arrived. Path B's `WiseTransfer.fx_rate` (if/when added) is informational only. |
 
 ### 3.5 Fund banking topology — three-account model
 
@@ -285,7 +288,10 @@ Each detected event flows through:
    CreditLineMatcher / DepositRequest match → Transaction → §8.6 transaction emails
 ```
 
-**Daily three-way reconciliation** (a new job): sum of `WiseTransfer` outgoing-to-checking ↔ sum of `CheckingDeposit` from-Wise ↔ sum of `CashDeposit` from-checking, all over the same window. Any leg that doesn't match raises an alert.
+**Daily reconciliation** (a new job) runs at two levels:
+
+1. **Balance reconciliation** — sum of `WiseTransfer` outgoing-to-checking ↔ sum of `CheckingDeposit` from-Wise ↔ sum of `CashDeposit` from-checking, all over the same window. Any leg that doesn't match raises an alert.
+2. **Line-item reconciliation** (rev 6 — per MF-R9) — every `CheckingDeposit` row must have a corresponding bank-statement line; every `OutboundTransfer` step (checking-debit, Wise-credit, etc.) has matching debits at each hop. Unmatched line items raise alerts — not just balance gaps. This catches the case where a missing $50 deposit is hidden by an extra $50 elsewhere, which balance-only reconciliation would miss.
 
 ### 4.5 Attribution: how we know which beneficiary sent it
 
@@ -315,6 +321,14 @@ In rev 3, detection moves upstream from IBKR's CSV to the checking-account webho
 ```
 
 Compared to IBKR's view ("from Wise"), we now have: (a) confirmation it's Wise specifically (vs some other sender), (b) the ACH trace id for reconciliation, (c) seconds-latency detection via webhook, (d) likely-better-preserved memo field. But the **upstream BR beneficiary's name and CPF are still not present** — Wise's ACH-out from its USD pool to our checking carries Wise as originator, not the underlying PIX sender. That information lives in *Wise's* system and is only retrievable via Path B (a fund-owned Wise Business account with webhook access).
+
+**Handling deposits without a matching DepositRequest** (rev 6 — per MF-R4). A deposit can arrive without a pre-registered `DepositRequest` (beneficiary forgot, one-off transfer, first-time deposit). In that case:
+
+1. The `CheckingDeposit` row is created with `attribution_status = pending` (new enum column, default `attributed` when the matcher finds a unique `DepositRequest`, otherwise `pending`).
+2. The deposit appears on the operator dashboard with the sender description, amount, date, raw bank payload.
+3. The operator manually assigns it to a beneficiary's account. The beneficiary's shares are credited at that point.
+4. Recipient-registry auto-creation on assign is **not** in v1 — operator can still create the `BrazilianRecipient` row as a separate step if they want subsequent transfers to auto-attribute.
+5. No escalation emails in v1 — pending-attribution items just stay on the dashboard until handled.
 
 **How we bridge the attribution gap in Path A:**
 
@@ -592,6 +606,14 @@ For consistency with §5.0:
 - The trader sees "cash above ceiling" once the buffer exceeds the configured limit and decides whether to sweep some to IBKR and what to buy.
 - For credit-line REPs specifically, the matched repayment increases the beneficiary's OWN shares (or reduces BOR shares per `credit_lines_plan.md` §5 rule 8) regardless of whether the cash is later invested. The investment decision is decoupled from the repayment booking.
 
+### 5.7 Account closure with money in flight (rev 6 — per MF-R14)
+
+Beneficiary account closure (existing FamilyFund flow) is **blocked while the account has any open `DepositRequest`** (pending or partially-attributed). This is the symmetric companion to `credit_lines_plan.md` §5 rule 13 (closure blocked with active credit lines). The combined rule:
+
+> An account cannot be closed if it has **either** an active credit line **or** an open DepositRequest. The operator must wait for both to be resolved (lines paid-off, deposit requests fulfilled or cancelled).
+
+This closes off the edge case where a deposit lands the day after an account is closed — it cannot happen because the closure was blocked while the request was open.
+
 ---
 
 ## 6. Recipient registry (`BrazilianRecipient`)
@@ -715,6 +737,10 @@ A dedicated queue connection `money_flow`. Jobs that talk to external money APIs
 - Webhook signing secrets verified on every request — reject if invalid (no fallback paths).
 - Logs sanitize all PII / financial fields via a Monolog processor.
 - No PII in queue payloads — pass IDs, not values.
+- **Email PII content policy** (rev 6 — per MF-R12):
+  - Beneficiary-facing emails (`transaction received` / `detected` / reminders / delays from `credit_lines_plan.md` §8.6) carry only amount, type, date, and an in-app link. **No CPF, no full account number, no PIX key, no bank-name details about the sender.**
+  - Operator-bound emails (reconciliation failures, attribution alerts, mismatch alerts) may contain **redacted** PII — last 4 of account / masked CPF (e.g., `***.***.***-12`).
+  - Applies to all transaction-event templates. The Monolog log sanitizer (above) and the email-template policy must agree on the redaction set.
 
 ### 7.5 Authorization
 
@@ -723,6 +749,23 @@ A dedicated queue connection `money_flow`. Jobs that talk to external money APIs
 - All inbound detection is system-driven (no user role needed) but the resolve / manual-match UI requires `money_flow_operator`.
 - No silent self-approval — operator and approver must be different users.
 
+**RBAC matrix** (rev 6 — per MF-R11). The four roles in this subsystem mapped to actions. Account-owner is the beneficiary on the FamilyFund side; operator / approver / trader are money-flow-subsystem roles.
+
+| Action | Account owner | Operator | Approver | Trader |
+|---|---|---|---|---|
+| Create `DepositRequest` for own account | ✓ | ✓ (any account) | — | — |
+| View own credit-line and money-flow data | ✓ | ✓ | ✓ | ✓ |
+| Initiate outbound transfer | — | ✓ | — | — |
+| Approve outbound transfer (above threshold or first-time recipient) | — | (only as 2nd approver if distinct) | ✓ | — |
+| Manually attribute / resolve flagged `CheckingDeposit` | — | ✓ | — | — |
+| Sweep IBKR ↔ checking (operator-initiated) | — | ✓ | — | ✓ |
+| Update `BrazilianRecipient` registry | ✓ (own) | ✓ (any) | — | — |
+| Trade securities at IBKR | — | — | — | ✓ |
+| Adjust buffer settings (`checking_cash_floor`/`ceiling`) | — | — | ✓ | — |
+| Reverse a `CheckingDeposit` (per MF-R3, future) | — | ✓ (when shipped) | — | — |
+
+For credit-line actions specifically, see `credit_lines_plan.md` §5 rule 12 — those are admin-only on the borrowing side and are not in this matrix.
+
 ### 7.6 Audit log
 
 `mf_audit_log` is append-only (no UPDATE/DELETE). Fields: `actor_user_id`, `action`, `subject_type`, `subject_id`, `old_state` (encrypted JSON), `new_state` (encrypted JSON), `request_id`, `ip`, `ts`. Every external API call, every state transition, every operator action lands here. Retention: 7 years (typical compliance baseline; confirm with counsel).
@@ -730,6 +773,8 @@ A dedicated queue connection `money_flow`. Jobs that talk to external money APIs
 ### 7.7 Idempotency
 
 Every external write API call (Wise quote, Wise pay, BR fintech) carries an idempotency key tied to a row in `mf_idempotency_keys`. Replays from the queue use the same key; the external service returns the same result.
+
+**Retention** (rev 6 — per MF-R13): idempotency keys are retained for **1 year**. This covers the 60-day ACH return window plus dispute-resolution edge cases. Each row has an `expires_at` field; a daily job purges expired rows.
 
 ---
 
@@ -942,6 +987,15 @@ sequenceDiagram
 | MF-46 | Operator-initiated `sweep IBKR ↔ checking` operations (no auto-sweep)             | P1    | planned |
 | MF-47 | `OutboundTransfer` state machine with explicit reversal paths per stage (§5.5)   | P2    | planned |
 | MF-48 | Per-fund `operating_cash_floor` / `operating_cash_ceiling` settings              | P1    | planned |
+| MF-49 | `CheckingDeposit.attribution_status = pending` flow + operator dashboard surfacing (rev 6 — per MF-R4) | P1 | planned |
+| MF-50 | Daily reconciliation extended to line-item matching (rev 6 — per MF-R9)          | P1    | planned |
+| MF-51 | RBAC matrix codified in code + enforced in controllers (rev 6 — per MF-R11)      | P0    | planned |
+| MF-52 | Beneficiary-facing emails carry no PII; operator emails carry redacted PII (rev 6 — per MF-R12) | P1 | planned |
+| MF-53 | `mf_idempotency_keys` retained 1 year with daily expiration purge (rev 6 — per MF-R13) | P0 | planned |
+| MF-54 | Account closure blocked while open DepositRequest exists (rev 6 — per MF-R14)    | P1    | planned |
+| MF-55 | Two-phase CashDeposit coexistence reconciler links CheckingDeposit ↔ CashDeposit (rev 6 — per MF-R5) | P1 | planned |
+| MF-56 | Operational runbook doc created (`money_flow_runbook.md`) (rev 6 — per MF-R6)    | P0    | planned |
+| MF-57 | Dev-only `/dev/fake-bank/*` service for local webhook simulation (rev 6 — per MF-R8) | P0 | planned |
 
 ---
 
@@ -968,7 +1022,28 @@ These shape the proposal; the answers will tighten phases and the registry schem
 
 ---
 
-## 12. Risks and watch-items
+## 12. Migration plan — coexistence with existing CashDeposit flow (rev 6 — per MF-R5)
+
+The codebase has a working `CashDeposit` flow today, driven by `FetchDeposits` polling IBKR Flex Query CSVs. When the new checking-hub flow lands, the two coexist in two phases:
+
+**Phase 1 (transition, weeks to months).** Both flows live in parallel:
+- Checking-bank webhook creates `CheckingDeposit` rows (new model, new table). This is the primary detection point.
+- `FetchDeposits` continues to run on its 30-minute schedule, creating `CashDeposit` rows from the IBKR CSV.
+- A reconciler **links** the two — every `CheckingDeposit` should eventually have a corresponding `CashDeposit` once the swept funds settle at IBKR (typically 1–3 business days later).
+- Mismatches (a `CheckingDeposit` with no eventual `CashDeposit`, or vice versa) alert the operator via §4.4 reconciliation.
+- During Phase 1, **`CheckingDeposit` is the source of truth for attribution and credit-line matching**; `CashDeposit` is the reconciliation backstop confirming the broker side actually received the swept money.
+
+**Phase 2 (steady state, after 30+ days of clean Phase-1 data).** Detection has moved fully to the `CheckingDeposit` webhook:
+- `CashDeposit` rows from CSV become pure validation — they confirm the IBKR side received the sweep but don't drive attribution.
+- Account-page UI and credit-line matcher read primarily from `CheckingDeposit`, falling back to `CashDeposit` only for historical records pre-dating the cutover.
+
+**Existing pre-feature `CashDeposit` rows stay as-is** — no retroactive backfill into `CheckingDeposit`. The new flow is forward-only.
+
+The cutover from Phase 1 → Phase 2 is operator-decided based on the reconciler's clean-run streak, not code-driven.
+
+---
+
+## 13. Risks and watch-items
 
 - **Bank-side opacity.** IBKR Flex Query is the only window into the broker; if the CSV format changes silently, detection breaks. Mitigate with a daily CSV-shape validation test and an alert on parse-error rate.
 - **FX rate ambiguity.** A BRL payment at 09:00 may convert at one rate and book at IBKR at another. The `WiseTransfer` row captures the rate used; surface this on the beneficiary's account page so they see the actual outcome.

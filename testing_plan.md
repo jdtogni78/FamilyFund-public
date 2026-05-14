@@ -1,7 +1,7 @@
 # Testing Plan — Credit Lines & Money Flow Subsystems
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 2 — balanced coverage across both features; corrected for PHPUnit (not Pest); added §3.5 regression strategy against the existing 164-file suite)
+**Last Updated:** 2026-05-13 (rev 3 — added test cases for the 18 accepted plan-review items: reversal flow, backdated creation, admin-only RBAC, closure-block, loans summary, share-value copy, USD-only booking, pending-attribution, line-item reconciliation, RBAC matrix, PII email policy, idempotency retention, two-phase coexistence)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`credit_lines_plan.md`](credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md), [`test_plan.md`](test_plan.md) (the broader codebase test status).
 
@@ -213,6 +213,8 @@ This doc covers **both planned features in parallel**. The two trackers — `cre
 | **Reconciliation reports & sweeps** | MF-18, 38, 41 | 1 (MF-38, P1) + 2 (MF-18, MF-41, P2) | 2 | 3 | §4.3 + §4.6 |
 | **TOTALS** | 92 IDs | **74 in v1** | **18 deferred** | **104 named tests** | — |
 
+**Rev 3 addition.** The 18 accepted items from `plan_recommendations.md` are appended to §4.1, §4.2, and §4.3 with their own test rows. Net new tests: ~40 across the credit-line side (UC-45..UC-50) and the money-flow side (MF-R2 + MF-49..MF-57). They reflect the simplifications baked in by the user review — admin-only RBAC, USD-only booking, pending-attribution flow, etc. The grand total is now ~144 named tests for the new subsystems.
+
 **Reading guide:**
 
 - **§4.1** is the credit-lines tier — the borrowing feature in `credit_lines_plan.md`. Every UC has at least one test.
@@ -269,6 +271,26 @@ Maps UC-01..UC-44 from `credit_lines_plan.md` §2.
 | UC-42 | `trajectory_chart_renders_n_plus_one_plan_series_for_n_adjustments` | B | Assert SVG element count |
 | UC-43 | `every_successful_readjust_appends_immutable_audit_row` | U + I | |
 | UC-44 | `quarterly_report_includes_adjustments_in_quarter_window` | I | |
+| UC-45 | `admin_reverses_erroneous_rep_marks_transaction_reversed_and_reopens_schedule_rows` | I | Verifies §5 rule 14 reversal flow + immutable `TransactionReversal` audit row |
+| UC-45 | `transaction_reversal_recomputes_outstanding_correctly_when_partially_paid_rows_reopened` | U + I | Math at unit level + flow at integration |
+| UC-45 | `trajectory_chart_renders_reversal_as_downward_step` | B | Visual confirmation in Dusk |
+| UC-45 | `non_admin_user_cannot_reverse_a_transaction` | I | RBAC enforcement |
+| UC-46 | `admin_creates_transaction_from_scratch_with_backdated_timestamp` | I + B | Verifies §5 rule 15 — admin form sets timestamp; matcher uses it |
+| UC-46 | `non_admin_user_cannot_access_create_transaction_form` | I | RBAC enforcement |
+| UC-47 | `account_closure_blocked_when_credit_line_outstanding_nonzero` | I | Verifies §5 rule 13 |
+| UC-47 | `account_closure_succeeds_when_all_lines_paid_off_or_cancelled` | I | The happy path through the block |
+| UC-48 | `non_admin_user_cannot_open_credit_line` | I | RBAC — §5 rule 12 |
+| UC-48 | `non_admin_user_cannot_submit_manual_rep` | I | RBAC — §5 rule 12. Auto-attributed REPs from matcher still work without admin |
+| UC-48 | `non_admin_user_cannot_readjust_line_term` | I | RBAC — §5 rule 12 |
+| UC-48 | `non_admin_user_cannot_resolve_flagged_transaction` | I | RBAC — §5 rule 12 |
+| UC-48 | `non_admin_user_cannot_cancel_line` | I | RBAC — §5 rule 12 |
+| UC-48 | `account_page_hides_write_action_buttons_for_non_admin_users` | B | Visual confirmation that the UI matches the auth |
+| UC-48 | `auto_attributed_rep_from_matcher_bypasses_admin_gate` | I | The system-created REPs from money-flow matcher still process without an admin in the loop |
+| UC-49 | `account_page_renders_loans_summary_card_with_aggregated_totals` | B | Dusk — verifies §8.2 Loans summary card |
+| UC-49 | `loans_summary_aggregates_disbursed_repaid_outstanding_across_lines` | U + I | Math at unit; rendering at integration |
+| UC-49 | `quarterly_account_report_includes_loans_summary_section` | I | §8.4 extension |
+| UC-50 | `account_page_shows_share_value_clarification_copy_near_every_balance` | B | Dusk — verifies §8.2 + §8.6 copy presence |
+| UC-50 | `transaction_event_emails_include_share_value_clarification_copy` | I | `Mail::fake()` + email-body assertion |
 
 ### 4.2 Money flow — inbound (v1: Path A only)
 
@@ -327,6 +349,34 @@ Maps MF-03, MF-38, MF-39, MF-43..MF-48 from `money_flow_plan.md` §10. Plus defe
 | MF-11 | `wise_client_round_trips_quote_and_transfer_with_idempotency` | U + C | Unit stub + nightly sandbox call |
 | MF-12 | `two_user_approval_blocks_self_approval_and_requires_distinct_approver` | I + B | |
 | MF-13 | `outbound_status_polling_advances_state_machine_on_each_event` | I | |
+
+**New tests for rev 6 accepted items (per `plan_recommendations.md`):**
+
+| MF | Test name(s) | Layer | Notes |
+|---|---|---|---|
+| MF-R2 | `checking_deposit_books_only_usd_received_without_storing_fx_rate` | U + I | Verifies the FX-not-tracked decision; no `fx_rate` column read or written on Path A |
+| MF-49 | `unmatched_deposit_enters_pending_attribution_state_not_credited` | I | First-time-sender flow; verifies §4.5.1 (rev 6) |
+| MF-49 | `operator_assigns_pending_deposit_credits_beneficiary_and_clears_status` | I + B | Browser confirms operator dashboard surface |
+| MF-49 | `operator_dashboard_lists_all_pending_attribution_rows_sorted_by_age` | B | UI scan |
+| MF-50 | `daily_reconciliation_detects_missing_bank_statement_line_for_recorded_deposit` | I + R | Per-line drift, not just balance |
+| MF-50 | `daily_reconciliation_detects_extra_bank_statement_line_with_no_matching_deposit` | I + R | The reverse direction |
+| MF-50 | `daily_reconciliation_passes_when_every_line_has_a_matching_pair` | I + R | Happy path |
+| MF-51 | `operator_role_can_initiate_outbound_but_not_approve_own_outbound` | I | RBAC matrix |
+| MF-51 | `approver_role_can_approve_outbound_but_not_initiate` | I | RBAC matrix |
+| MF-51 | `account_owner_can_create_own_deposit_request_but_not_others` | I | RBAC matrix |
+| MF-51 | `trader_can_sweep_between_fund_accounts_but_not_initiate_outbound_to_recipient` | I | RBAC matrix |
+| MF-51 | `arch_test_no_route_bypasses_role_middleware` | Arch | Arch test using PHPUnit-architecture-test |
+| MF-52 | `beneficiary_email_contains_amount_date_type_link_but_no_cpf_or_account_number` | I | `Mail::fake()` + content scan |
+| MF-52 | `operator_email_contains_redacted_pii_last4_and_masked_cpf` | I | `Mail::fake()` + content scan |
+| MF-53 | `idempotency_keys_purged_after_1_year` | I | Time-traveled with `Carbon::setTestNow()` |
+| MF-53 | `replayed_external_call_within_1_year_returns_cached_result` | I | The retention payoff |
+| MF-54 | `account_closure_blocked_when_open_deposit_request_exists` | I | Per MF-R14 — extends CL-R5 rule |
+| MF-55 | `phase_1_reconciler_links_checking_deposit_to_eventual_cash_deposit_within_3_days` | I + R | Two-phase coexistence |
+| MF-55 | `phase_1_reconciler_alerts_when_checking_deposit_never_gets_cash_deposit_peer` | I + R | The failure mode |
+| MF-55 | `pre_feature_cash_deposit_rows_remain_unchanged_after_migration` | M | Migration safety per §9 |
+| MF-56 | (n/a — runbook is doc, not tested) | — | Confirm presence in docs only |
+| MF-57 | `dev_fake_bank_only_responds_when_app_env_is_local` | I | Security check on the local-only service |
+| MF-57 | `dev_fake_bank_webhook_payload_matches_real_vendor_schema` | C | Pinned to the same fixtures used by the real-vendor stubs |
 
 ### 4.4 Recipient registry & attribution (cross-cutting)
 

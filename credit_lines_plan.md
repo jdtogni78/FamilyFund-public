@@ -1,7 +1,7 @@
 # Credit Lines — Planning Document
 
 **Status:** Draft / ideas — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 6 — cross-reference money-flow sub-project)
+**Last Updated:** 2026-05-13 (rev 7 — folded accepted items from plan_recommendations.md: admin-only writes, reversal flow, closure block, tax caveat, loans summary, share-value copy, imputed-interest field)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related sub-projects:**
 - [`money_flow_plan.md`](money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
@@ -104,6 +104,7 @@ A first-class entity (not a pivot) representing one credit facility against one 
 | `payment_frequency` | enum | `monthly` / `quarterly` / `annual` (default monthly). |
 | `status` | enum | `active` / `paid_off` / `cancelled`. (No `defaulted` — see §7.) |
 | `descr` | string | Free-text reason. |
+| `imputed_interest_rate` | decimal nullable | **Informational only** (rev 7 addition per CL-R8). Records the AFR or other rate the trust's accountant uses for tax-reporting on this no-interest loan. Does not affect the share math. |
 | timestamps | | |
 
 No `interest_rate` column — the design is explicitly interest-free. Borrower owes the same share count back; share-price drift is the fund's exposure on the cash leg (see §5).
@@ -175,6 +176,26 @@ Audit row written every time a line is readjusted (§6). Captures what changed, 
 
 **Migration name (suggested):** `create_credit_line_adjustments_table`.
 
+### 4.6 New model: `TransactionReversal` (rev 7 — per CL-R2)
+
+Audit row for every reversed BOR/REP transaction.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | bigint PK | |
+| `transaction_id` | FK → `transactions.id` | The reversed transaction. The transaction row itself gets `reversed = true`. |
+| `original_target_credit_line_id` | FK → `account_credit_lines.id` nullable | The line the original transaction was matched to (if any). Useful for re-applying to a different line. |
+| `reversed_at` | datetime | When the reversal happened. |
+| `reversed_by_user_id` | FK → `users.id` | Audit. Must be an admin per §5 rule 12. |
+| `reason` | string | Free-text (required). |
+| timestamps | | |
+
+`TransactionReversal` rows are **immutable** after creation. If a reversal itself was a mistake, the cure is a fresh forward transaction, not editing the reversal row.
+
+The `transactions` table also gains a `reversed` boolean column (default false). Indexes need a partial unique constraint so a transaction can be reversed at most once.
+
+**Migration name (suggested):** `create_transaction_reversals_table` + `add_reversed_to_transactions`.
+
 ---
 
 ## 5. Business rules
@@ -201,6 +222,16 @@ Audit row written every time a line is readjusted (§6). Captures what changed, 
 9. **Settlement / payoff.** When a line's `outstanding_shares` reaches zero, its status → `paid_off`. The account-level `BOR` balance row only returns to zero when **all** lines on the account are paid off (or cancelled).
 10. **Mismatch flagging is visible.** When `match_status ∈ {unmatched, ambiguous}` the transaction is rendered with a visual flag in transaction lists, and the **account page header shows a persistent alert banner** with the count of flagged transactions and a link to resolve them. The flag clears when the transaction is manually assigned to a line (or cancelled).
 11. **Every transaction triggers an email.** Any BOR or REP transaction — whether **received** (user-submitted) or **detected** (system-created: auto-matcher, scheduled job, draw confirmation, retroactive late-detection) — generates an email to the account owner. Mismatch-flagged REPs generate an *additional* alert email with a link to resolve the assignment. See §8.6.
+12. **All credit-line write actions are admin-only** (rev 7 — per CL-R6 and CL-R7). Opening a line, submitting a manual REP, readjusting term/frequency, resolving an ambiguous/unmatched REP, and cancelling a line all require the `admin` (trustee) role. **Borrowers / account owners have read-only access** to their credit-line views (per-line drill-down, schedule, trajectory chart, adjustment history, loans summary). Auto-attributed REPs created by the matcher when a detected `CheckingDeposit` lands bypass the admin gate — the system created them; admin only intervenes when the matcher flags `ambiguous` or `unmatched`.
+13. **Account closure is blocked while any line is `active`** (rev 7 — per CL-R5). Operator gets a clear "this account has N active credit lines; close them first" error. The trustee override that lets an admin forgive remaining outstanding is a deferred future improvement (see CL-R1 in `plan_recommendations.md`).
+14. **REP transactions are reversible** (rev 7 — per CL-R2). When a REP was matched to the wrong line, or entered in error, an admin can reverse it. The reversal:
+    - Marks the original `Transaction` row `reversed = true` (the row stays — never deleted).
+    - Re-opens any `CreditLinePayment` rows the REP had marked `paid` / `partial` back to `scheduled`.
+    - Recomputes the line's `outstanding_shares`.
+    - Writes an immutable `TransactionReversal` audit row (`transaction_id`, `reversed_at`, `reversed_by_user_id`, `reason`, `original_target_credit_line_id`).
+    - If the admin wants to re-apply to a different line, they create a fresh REP as a separate step. The chained "reverse-and-reapply" UI is a deferred future improvement.
+    - Trajectory chart renders the reversal as a downward step on the actual-repayments line so history stays honest.
+15. **Backdated transactions are supported via the "create from scratch" admin page** (rev 7 — per CL-R3). Instead of a separate `effective_date` column, the admin has a full-control transaction-creation page where every field (including `timestamp`) can be set. The existing matcher and late-detection logic already use `transaction.timestamp`, so a backdated REP correctly clears earlier `due_date` rows. No schema change.
 
 ---
 
@@ -241,7 +272,7 @@ These were initially open questions; the answers below now constrain the impleme
 | Cash flow | Borrow disburses cash *out of the fund* to the borrower. Repayment returns cash *into the fund*. The fund's cash position changes — this is **new behavior** the system does not currently support (§5 rule 2, §11 risks). |
 | Default / penalty | **None.** Missed payments only update the `late` schedule flag and trigger notifications. The debt is not increased, the status is not changed. |
 | Cross-account collateral | **Not a concept.** Each line is against one account's own shares. Multiple lines per person across their accounts is fine; each is independent. |
-| Authorization | (Still to confirm with user — current assumption: account owners can open lines unilaterally; mirror the existing transaction-creation auth.) |
+| Authorization | **Admin-only for all write actions** (rev 7 — per CL-R6/CL-R7). Open / repay / readjust / resolve-flag / cancel all require the `admin` (trustee) role. Borrowers / account owners are read-only. Auto-attributed REPs created by the matcher bypass the admin gate. See §5 rule 12. |
 | Reporting | **Required** on the account page, fund page, and quarterly PDFs for both account and fund. See §8. |
 | Reminders | **Required** with configurable cadence; delay notifications also required. See §8. |
 
@@ -264,12 +295,14 @@ A small chart (cumulative-shares-repaid vs. plan line, x-axis = time) is the can
 
 On the account detail view (extending `AccountControllerExt`):
 - **Header alert banner (top of page, full width)** — shown when this account has any BOR/REP transaction with `credit_line_match_status IN ('ambiguous', 'unmatched')`. The banner shows the count of flagged transactions, the most recent one inline, and a "Resolve" CTA linking to a transaction-by-transaction assignment screen. Banner is persistent (sticky on scroll), styled prominently (red/orange), and dismissable only by resolving the underlying transactions (not by clicking away).
+- **Loans summary card** (rev 7 — per CL-R10) — top of the credit-lines area, above the per-line table. Shows: total disbursed lifetime, total repaid lifetime, net outstanding (sum across active lines), next-due across all lines. One-screen scan of the borrower's credit-line state. Extended into the §8.4 quarterly account report.
 - **Aggregate panel**: total `BOR` shares (sum across lines), available-to-borrow remaining, count of active lines, count behind plan.
 - **Per-line table** listing every credit line on the account: principal, outstanding, status, planned payoff, projected payoff, variance. Sortable; defaults to oldest-first.
 - **Drill-down** to each line showing the full schedule (paid/late/scheduled), the trajectory chart, the **adjustment history** (§8.5), and the per-line reminder settings.
 - **Upcoming due-date callout** merging the next N payments across **all lines** on the account, sorted by `due_date`, each row labeled with which line it belongs to.
 - **Recent transactions list** — flagged transactions (`ambiguous`/`unmatched`) render with a highlight (e.g., red border, warning icon) inline, so flags are visible in context, not only in the header.
-- **New-line button**, disabled when available-to-borrow is zero.
+- **Admin-only actions** (rev 7 — per §5 rule 12): "New credit line", "Record REP", "Readjust", "Resolve flag", "Reverse transaction" buttons appear only for users with the admin role. For non-admin borrowers, the page is read-only.
+- **Share-value clarity copy** (rev 7 — per CL-R11) — near every shares-denominated balance, render: *"You owe N shares (currently valued at $X). The share count is what you owe back — it doesn't change with the market. The dollar value will move up or down with the fund's share price."* Apply to: loans summary card, per-line table headers, trajectory chart caption, per-line drill-down headers, transaction-event email templates (§8.6).
 
 ### 8.3 Fund page
 
@@ -281,7 +314,7 @@ On the fund detail view:
 ### 8.4 Quarterly reports
 
 Add a new section to **both** report templates:
-- **Account quarterly report**: each line's activity in the quarter (payments made, current outstanding, plan vs. projected payoff). **List adjustments made during the quarter** with old → new values and the borrower's `reason` if provided, so the reader can see how the plan evolved within the period.
+- **Account quarterly report**: each line's activity in the quarter (payments made, current outstanding, plan vs. projected payoff). **List adjustments made during the quarter** with old → new values and the borrower's `reason` if provided. **Include the §8.2 Loans summary card** (rev 7 — per CL-R10) at the top of the credit-lines section so the quarterly recipient sees the same holistic state as the web view.
 - **Fund quarterly report**: aggregate disbursements, repayments, outstanding share/cash exposure, a list of lines currently behind plan, and a count of adjustments made in the period (drilling into per-line details on the account report).
 
 Reports are generated via queue jobs and rendered with wkhtmltopdf — extend the existing templates rather than introducing a separate pipeline.
@@ -499,11 +532,18 @@ Insert these steps into the implementation sketch (between §9 step 6 and step 7
 | UC-42 | Trajectory chart overlays multiple plan generations   | Account owner / admin | Open the trajectory chart for a readjusted line   | Original plan (dashed), each historical plan (faded), current active plan (solid), all labeled with `adjusted_at` | §8.1 chart enhancement; one series per `CreditLineAdjustment` row                | planned |
 | UC-43 | Adjustment audit row written on every readjust        | System  | Any successful `readjust(line, new_term, new_frequency)` | One immutable `CreditLineAdjustment` row appended; old `CreditLinePayment` rows marked `cancelled`; new rows generated | §6 readjustment flow + §4.5 model                                                | planned |
 | UC-44 | Quarterly report lists adjustments in the period      | System  | Quarterly report job runs                              | Account section lists each adjustment with old→new diff and reason; fund section shows count | §8.4 extension                                                                   | planned |
+| UC-45 | Admin reverses an erroneous REP                       | Admin   | Open reversed transaction in admin UI, confirm reason  | Transaction marked `reversed`, schedule rows re-opened, outstanding recomputed, audit row written | §5 rule 14 + §4.6 `TransactionReversal` (rev 7)                                  | planned |
+| UC-46 | Admin creates transaction from scratch with backdated timestamp | Admin | "Create transaction" admin form with full field control | Transaction saved with admin-specified timestamp; matcher and late-detection use it correctly | §5 rule 15 (rev 7)                                                               | planned |
+| UC-47 | Account closure blocked when any line is active       | System  | Operator attempts to close an account with active lines | Clear error message; closure blocked; lists the active lines that prevent closure | §5 rule 13 (rev 7)                                                               | planned |
+| UC-48 | Only admin can open / repay / readjust / resolve / cancel | System | Non-admin user attempts a credit-line write action      | Action blocked with auth error; UI hides the buttons for non-admin users           | §5 rule 12 + §7 resolved decisions (rev 7)                                       | planned |
+| UC-49 | Loans summary card visible on account page and in quarterly report | Account owner / admin | Open account page or receive quarterly report | Single card with total disbursed, total repaid, net outstanding, next-due across all lines | §8.2 + §8.4 (rev 7 — per CL-R10)                                                 | planned |
+| UC-50 | Share-value clarification copy near every shares balance | Account owner / admin | View any shares-denominated balance | Inline copy explains share-count is owed, $-value floats with market | §8.2 + §8.6 email templates (rev 7 — per CL-R11)                                 | planned |
 
 ---
 
 ## 11. Risks and watch-items
 
+- **Tax / legal — verify with counsel before real-money deployment** (rev 7 — per CL-R8). This design is interest-free by intent. In the US, no-interest or below-market-rate loans from a family trust to a beneficiary may trigger imputed-interest reporting under IRS §7872 with gift-tax / income-tax implications depending on loan size and relationship. The optional `imputed_interest_rate` field on `AccountCreditLine` (§4.1) is a place to record the accountant's chosen rate for reporting — it does not affect the share math. **Do not deploy real money until a tax advisor signs off on the structure.**
 - **Fund-side cash movement is new.** Today the fund's cash position changes only through portfolio activity (asset purchases/sales) and matching contributions. A credit-line draw moves cash *out of the fund* to a borrower with no corresponding asset purchase. We need a clean way to record this without breaking NAV math (`FundExt::shareValueAsOf()` uses `valueAsOf / sharesAsOf` — if disbursed cash is no longer counted in fund value, NAV will drop on draw). Design choices to evaluate:
   - Treat the outstanding receivable (cash owed back to fund) as an *asset* of the fund so NAV is unchanged at draw, then adjusts as share price drifts during the life of the loan.
   - Treat the disbursement as a real value loss to the fund and a value gain on repayment (simpler but distorts NAV with every draw/repay).

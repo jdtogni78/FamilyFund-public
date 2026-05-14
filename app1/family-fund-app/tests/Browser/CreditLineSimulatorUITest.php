@@ -88,6 +88,57 @@ class CreditLineSimulatorUITest extends DuskTestCase
         });
     }
 
+    public function test_simulator_time_mode_renders(): void
+    {
+        $this->browse(function (Browser $browser) {
+            // Open a fresh line.
+            $descr = 'E2E simulator time mode ' . uniqid();
+            $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
+                ->waitFor('form[action*="/credit-lines"]')
+                ->type('input[name="principal_shares"]', '100')
+                ->clear('input[name="term_months"]')
+                ->type('input[name="term_months"]', '12')
+                ->select('select[name="payment_frequency"]', 'monthly')
+                ->type('input[name="descr"]', $descr)
+                ->press('Open')
+                ->waitUsing(10, 200, function () use ($browser) {
+                    $path = parse_url($browser->driver->getCurrentURL(), PHP_URL_PATH);
+                    return (bool) preg_match('#/credit-lines/\d+$#', $path);
+                });
+
+            $path = parse_url($browser->driver->getCurrentURL(), PHP_URL_PATH);
+            preg_match('#/credit-lines/(\d+)$#', $path, $m);
+            $lineId = (int) $m[1];
+
+            // Use radio() to reliably check the radio + visit URL directly as fallback.
+            $browser->visit('/credit-lines/' . $lineId . '/simulator?mode=time')
+                ->waitForText('Payment simulator')
+                ->radio('mode', 'time')
+                ->pause(200)
+                ->clear('target_months')
+                ->type('target_months', '12')
+                ->press('Simulate')
+                ->waitForText('Scenario summary', 10);
+
+            // The <th> text is uppercased via CSS, so check via DOM source rather than innerText.
+            $html = $browser->driver->getPageSource();
+            $this->assertStringContainsString(
+                'Required monthly payment',
+                $html,
+                'Expected "Required monthly payment" column header in time-mode summary.'
+            );
+            $browser->assertSee('Conservative')
+                ->assertSee('Expected')
+                ->assertSee('Aggressive');
+
+            $browser->script("window.scrollTo(0, 400);");
+            $browser->pause(200);
+            $browser->screenshot('simulator/03_time_mode_with_results');
+
+            $this->cleanupLine($lineId);
+        });
+    }
+
     private function cleanupLine(int $lineId): void
     {
         try {

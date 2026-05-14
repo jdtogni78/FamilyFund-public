@@ -47,20 +47,46 @@
         </div>
     </div>
 
+    @php $mode = $mode ?? 'payment'; @endphp
     <div class="card mb-3">
-        <div class="card-header"><strong>Hypothetical payment</strong></div>
+        <div class="card-header"><strong>Hypothetical scenario</strong></div>
         <div class="card-body">
             <form method="GET" action="{{ route('credit_lines.simulator', ['line' => $line->id]) }}" class="row g-2 align-items-end">
-                <div class="col-md-4">
+                <div class="col-12 mb-2">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="mode" id="mode_payment" value="payment"
+                               {{ $mode === 'payment' ? 'checked' : '' }}
+                               onclick="document.getElementById('payment_input').style.display=''; document.getElementById('time_input').style.display='none';">
+                        <label class="form-check-label" for="mode_payment">Compute payoff from monthly payment</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="mode" id="mode_time" value="time"
+                               {{ $mode === 'time' ? 'checked' : '' }}
+                               onclick="document.getElementById('payment_input').style.display='none'; document.getElementById('time_input').style.display='';">
+                        <label class="form-check-label" for="mode_time">Compute monthly payment from target time</label>
+                    </div>
+                </div>
+                <div class="col-md-4" id="payment_input" style="{{ $mode === 'payment' ? '' : 'display:none;' }}">
                     <label class="form-label" for="monthly_payment_usd">Monthly payment (USD)</label>
                     <input type="number"
                            name="monthly_payment_usd"
                            id="monthly_payment_usd"
                            step="0.01"
                            min="0.01"
-                           required
                            class="form-control"
                            value="{{ $monthlyPaymentUsd !== null ? number_format($monthlyPaymentUsd, 2, '.', '') : '' }}">
+                </div>
+                <div class="col-md-4" id="time_input" style="{{ $mode === 'time' ? '' : 'display:none;' }}">
+                    <label class="form-label" for="target_months">Target payoff time (months)</label>
+                    <input type="number"
+                           name="target_months"
+                           id="target_months"
+                           step="1"
+                           min="1"
+                           max="600"
+                           class="form-control"
+                           value="{{ $targetMonths !== null ? (int) $targetMonths : '' }}">
+                    <small class="text-muted">Integer between 1 and 600.</small>
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary">Simulate</button>
@@ -96,6 +122,9 @@
                         <tr>
                             <th>Scenario</th>
                             <th>Growth rate</th>
+                            @if($mode === 'time')
+                                <th class="text-end">Required monthly payment (USD)</th>
+                            @endif
                             <th>Payoff month</th>
                             <th>Payoff date</th>
                             <th class="text-end">Total paid (USD)</th>
@@ -108,6 +137,9 @@
                         <tr>
                             <td>{!! $labelMap[$key] !!}</td>
                             <td>{{ number_format($r->annual_growth_rate_pct, 2) }}%</td>
+                            @if($mode === 'time')
+                                <td class="text-end"><strong>${{ number_format($solvedPayments[$key] ?? 0, 2) }}</strong></td>
+                            @endif
                             <td>
                                 @if($r->payoff_month === null)
                                     <span class="text-danger">&gt; {{ \App\Services\CreditLine\Simulation\PaymentSimulator::MONTH_CAP }} (capped)</span>
@@ -213,7 +245,12 @@
                     <img src="{{ $chartUrl }}" alt="Three-scenario payment simulation chart" style="max-width:100%; height:auto;">
                 </div>
                 <p class="text-muted small mb-0">
-                    Three scenarios assuming the same ${{ number_format($monthlyPaymentUsd, 2) }}/month payment.
+                    @if($mode === 'time')
+                        Three scenarios — each line uses the per-scenario required monthly payment to hit
+                        the {{ $targetMonths }}-month target.
+                    @else
+                        Three scenarios assuming the same ${{ number_format($monthlyPaymentUsd, 2) }}/month payment.
+                    @endif
                     The line shows shares repaid over time &mdash; not dollars.
                 </p>
             </div>

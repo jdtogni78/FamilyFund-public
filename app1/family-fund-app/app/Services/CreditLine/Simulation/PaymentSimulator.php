@@ -179,4 +179,139 @@ class PaymentSimulator
             'aggressive'   => $this->simulate($line, $monthlyPaymentUsd, $aggressive, $startShareValue),
         ];
     }
+
+    /**
+     * Solve for the monthly USD payment required to pay off the line in
+     * `targetMonths` months under the given annual growth-rate assumption.
+     *
+     * Approach: binary search over payment USD bounded by [0.01, hi], where
+     * hi = outstanding_shares * startShareValue * 10 (very generous — enough
+     * to clear the line in one month even after growth). For each candidate
+     * payment we run `simulate()` and inspect `payoff_month`:
+     *   - payoff_month == target → return candidate.
+     *   - payoff_month < target  → payment too high, search lower half.
+     *   - payoff_month > target or null → payment too low, search upper half.
+     *
+     * Iteration cap: 60. If we never hit the exact target month, return the
+     * smallest payment whose simulate() payoff_month <= target (i.e. pay off
+     * a hair early rather than late). Tolerance: bracket shrinks below $0.01.
+     *
+     * Closed-form geometric-series solution was considered but rejected: the
+     * `simulate()` core rounds shares_paid and outstanding to 4 decimals per
+     * month and caps the final monthly shares_paid at the remaining
+     * outstanding. Those discretisations break the smooth analytic formula
+     * and the binary search converges quickly anyway (≤60 evals).
+     *
+     * @throws InvalidArgumentException When targetMonths <= 0.
+     */
+    public function solveForPayment(
+        AccountCreditLine $line,
+        int $targetMonths,
+        float $annualGrowthRatePct,
+        ?float $startShareValue = null,
+    ): float {
+        if ($targetMonths <= 0) {
+            throw new InvalidArgumentException('target_months must be > 0');
+        }
+
+        // Resolve starting share value for the upper-bound estimate.
+        if ($startShareValue !== null) {
+            $sv = (float) $startShareValue;
+        } else {
+            $account = $line->account()->first();
+            $sv = $account ? (float) $account->shareValueAsOf(Carbon::today()->toDateString()) : 1.0;
+        }
+        if ($sv <= 0) {
+            $sv = 1.0;
+        }
+
+        $outstanding = (float) $line->outstanding_shares;
+        $lo = 0.01;
+        $hi = max($outstanding * $sv * 10.0, 1.0);
+
+        // Track best candidate that pays off in <= target months — fallback if exact match isn't found.
+        $best = null;        // ['payment' => float, 'payoff_month' => int]
+
+        for ($i = 0; $i < 60; $i++) {
+            $mid = ($lo + $hi) / 2.0;
+            $result = $this->simulate($line, $mid, $annualGrowthRatePct, $startShareValue);
+            $payoff = $result->payoff_month;
+
+            if ($payoff !== null && $payoff <= $targetMonths) {
+                // Pays off at or before target — record as candidate, try cheaper.
+                if ($best === null || $mid < $best['payment']) {
+                    $best = ['payment' => $mid, 'payoff_month' => $payoff];
+                }
+                if ($payoff === $targetMonths) {
+                    $hi = $mid; // try slightly lower to find the smallest payment that still hits target
+                } else {
+                    $hi = $mid; // pays off too fast → try lower payment
+                }
+            } else {
+                // Doesn't pay off in time (or capped) — must pay more.
+                $lo = $mid;
+            }
+
+            if ($hi - $lo < 0.01) {
+                break;
+            }
+        }
+
+        if ($best !== null) {
+            return round($best['payment'], 2);
+        }
+
+        // Bracket didn't yield a payoff-in-time — return the high bound as the best guess.
+        return round($hi, 2);
+    }
+
+    /**
+     * Solve for required monthly payment under all three scenarios.
+     *
+     * @return array<string,array{payment: float, result: SimulationResult}>
+     *   Keys: 'conservative', 'expected', 'aggressive'.
+     */
+    public function solveForPaymentAllScenarios(
+        AccountCreditLine $line,
+        int $targetMonths
+    ): array {
+        if ($targetMonths <= 0) {
+            throw new InvalidArgumentException('target_months must be > 0');
+        }
+
+        $expected = 7.0;
+        $account = $line->account()->first();
+        if ($account) {
+            /** @var FundExt|null $fund */
+            $fund = $account->fund()->first();
+            if ($fund) {
+                $expected = (float) $fund->getExpectedGrowthRate();
+            }
+        }
+
+        $conservative = $expected * self::CONSERVATIVE_MULTIPLIER;
+        $aggressive = $expected * self::AGGRESSIVE_MULTIPLIER;
+
+        $startShareValue = null;
+        if ($account) {
+            try {
+                $startShareValue = (float) $account->shareValueAsOf(Carbon::today()->toDateString());
+            } catch (\Throwable $e) {
+                $startShareValue = null;
+            }
+        }
+
+        $out = [];
+        foreach ([
+            'conservative' => $conservative,
+            'expected'     => $expected,
+            'aggressive'   => $aggressive,
+        ] as $key => $rate) {
+            $payment = $this->solveForPayment($line, $targetMonths, $rate, $startShareValue);
+            $result = $this->simulate($line, $payment, $rate, $startShareValue);
+            $out[$key] = ['payment' => $payment, 'result' => $result];
+        }
+
+        return $out;
+    }
 }

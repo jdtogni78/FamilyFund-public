@@ -147,4 +147,65 @@ class PaymentSimulatorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->simulator->simulate($line, -5.0, 7.0, 1.0);
     }
+
+    public function test_solve_for_payment_with_flat_share_value(): void
+    {
+        // outstanding=100 shares, share_value=$1.00, growth=0%, target_months=10
+        //   shares_paid/month = payment/1.00; need 100 shares in 10 months → $10/month.
+        $line = $this->makeLine(100.0);
+        $payment = $this->simulator->solveForPayment($line, 10, 0.0, 1.0);
+
+        $this->assertEqualsWithDelta(10.0, $payment, 0.10);
+    }
+
+    public function test_solve_for_payment_higher_growth_requires_higher_payment(): void
+    {
+        // Same line, same target months; aggressive growth makes shares
+        // more expensive per dollar, so the required monthly payment to
+        // retire the same outstanding share count by the deadline is higher.
+        $line = $this->makeLine(100.0);
+        $expectedRate = 5.0;
+        $aggressiveRate = 50.0;
+
+        $expectedPayment = $this->simulator->solveForPayment($line, 24, $expectedRate, 1.0);
+        $aggressivePayment = $this->simulator->solveForPayment($line, 24, $aggressiveRate, 1.0);
+
+        $this->assertGreaterThan(
+            $expectedPayment,
+            $aggressivePayment,
+            'Aggressive growth should require higher monthly payment to hit the same target.'
+        );
+    }
+
+    public function test_solve_for_payment_roundtrips_through_simulate(): void
+    {
+        // Pick a payment, simulate, then solveForPayment with the resulting
+        // payoff_month — the recovered payment should match the original.
+        $line = $this->makeLine(100.0);
+        $original = 8.0;
+        $result = $this->simulator->simulate($line, $original, 5.0, 1.0);
+        $this->assertNotNull($result->payoff_month);
+
+        $recovered = $this->simulator->solveForPayment(
+            $line,
+            $result->payoff_month,
+            5.0,
+            1.0
+        );
+
+        // Solver returns the smallest payment landing at or before target,
+        // which may be slightly under the original (since the original
+        // probably overshoots a bit). Allow a generous tolerance.
+        $this->assertEqualsWithDelta($original, $recovered, 1.0);
+    }
+
+    public function test_solve_for_payment_handles_too_short_target(): void
+    {
+        // outstanding=100 shares, share_value=$1.00, growth=0%, target_months=1
+        //   need to pay off everything in one month → $100/month.
+        $line = $this->makeLine(100.0);
+        $payment = $this->simulator->solveForPayment($line, 1, 0.0, 1.0);
+
+        $this->assertEqualsWithDelta(100.0, $payment, 0.50);
+    }
 }

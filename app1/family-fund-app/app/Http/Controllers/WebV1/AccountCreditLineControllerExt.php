@@ -236,26 +236,58 @@ class AccountCreditLineControllerExt extends AppBaseController
             $currentShareValue = null;
         }
 
+        $mode = $request->query('mode', 'payment');
+        if (!in_array($mode, ['payment', 'time'], true)) {
+            $mode = 'payment';
+        }
+
         $monthlyPaymentUsd = $request->query('monthly_payment_usd');
+        $targetMonths = $request->query('target_months');
         $results = [];
+        $solvedPayments = [];
         $error = null;
-        if ($monthlyPaymentUsd !== null && $monthlyPaymentUsd !== '') {
-            $monthlyPaymentUsd = (float) $monthlyPaymentUsd;
-            try {
-                $results = $simulator->simulateAllScenarios($line, $monthlyPaymentUsd);
-            } catch (InvalidArgumentException $e) {
-                $error = $e->getMessage();
+
+        if ($mode === 'time') {
+            if ($targetMonths !== null && $targetMonths !== '') {
+                $targetMonths = (int) $targetMonths;
+                if ($targetMonths < 1 || $targetMonths > 600) {
+                    $error = 'target_months must be between 1 and 600';
+                } else {
+                    try {
+                        $all = $simulator->solveForPaymentAllScenarios($line, $targetMonths);
+                        foreach ($all as $k => $row) {
+                            $results[$k] = $row['result'];
+                            $solvedPayments[$k] = $row['payment'];
+                        }
+                    } catch (InvalidArgumentException $e) {
+                        $error = $e->getMessage();
+                    }
+                }
+            } else {
+                $targetMonths = null;
             }
         } else {
-            $monthlyPaymentUsd = null;
+            if ($monthlyPaymentUsd !== null && $monthlyPaymentUsd !== '') {
+                $monthlyPaymentUsd = (float) $monthlyPaymentUsd;
+                try {
+                    $results = $simulator->simulateAllScenarios($line, $monthlyPaymentUsd);
+                } catch (InvalidArgumentException $e) {
+                    $error = $e->getMessage();
+                }
+            } else {
+                $monthlyPaymentUsd = null;
+            }
         }
 
         return view('account_credit_lines.simulator')
             ->with('line', $line)
             ->with('account', $account)
             ->with('currentShareValue', $currentShareValue)
-            ->with('monthlyPaymentUsd', $monthlyPaymentUsd)
+            ->with('mode', $mode)
+            ->with('monthlyPaymentUsd', is_numeric($monthlyPaymentUsd) ? (float) $monthlyPaymentUsd : null)
+            ->with('targetMonths', is_numeric($targetMonths) ? (int) $targetMonths : null)
             ->with('results', $results)
+            ->with('solvedPayments', $solvedPayments)
             ->with('simError', $error);
     }
 }

@@ -10,8 +10,17 @@ URL: `/credit-lines/{line}/simulator` (admin-only).
 ## 01 — Empty form
 <img src="01_empty_form.png" width="380">
 
-## 02 — With results
+## 02 — Payment mode with results
 <img src="02_with_results.png" width="380">
+
+## 03 — Time mode with results (Phase 9b)
+<img src="03_time_mode_with_results.png" width="380">
+
+Trustee picks a target payoff time (e.g. 12 months); the simulator
+back-solves the *required* monthly USD payment under each growth
+scenario. Higher growth makes share price climb faster, so each dollar
+buys fewer shares → conservative scenarios need slightly less per
+month than aggressive ones.
 
 Note: in the screenshot all three scenarios coincide (payoff month 5)
 because the test inputs are short-horizon enough that the rate

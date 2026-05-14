@@ -99,6 +99,20 @@ class CreditLineSimulatorTest extends TestCase
         $response->assertSee('Cumulative-shares-paid projection', false);
     }
 
+    public function test_simulator_time_mode_returns_per_scenario_payment(): void
+    {
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id]) . '?mode=time&target_months=12'
+        );
+
+        $response->assertOk();
+        $response->assertSee('Scenario summary', false);
+        $response->assertSee('Required monthly payment', false);
+        $response->assertSee('Conservative', false);
+        $response->assertSee('Expected', false);
+        $response->assertSee('Aggressive', false);
+    }
+
     public function test_non_admin_blocked(): void
     {
         // Create a second non-admin user.

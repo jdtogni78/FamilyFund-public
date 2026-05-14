@@ -1,7 +1,7 @@
 # Testing Plan — Credit Lines & Money Flow Subsystems
 
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
-**Last Updated:** 2026-05-13 (rev 1)
+**Last Updated:** 2026-05-13 (rev 2 — balanced coverage across both features; corrected for PHPUnit (not Pest); added §3.5 regression strategy against the existing 164-file suite)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related docs:** [`credit_lines_plan.md`](credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md), [`test_plan.md`](test_plan.md) (the broader codebase test status).
 
@@ -51,13 +51,32 @@ Note: the **existing** codebase test_plan.md targets 50% line coverage overall. 
 
 ## 3. Tools and conventions
 
+The repo runs **PHPUnit 11** (no Pest). Tests use the standard `public function test_*()` convention or the PHP 8 `#[Test]` attribute; both are present in the codebase. New tests follow whichever the surrounding file uses.
+
 | Layer | Tool | Where | Naming |
 |---|---|---|---|
-| Unit | Pest 3 (existing) | `tests/Unit/CreditLines/`, `tests/Unit/MoneyFlow/` (new directories) | `*Test.php`, one file per class under test |
-| Integration | Pest 3 (Laravel feature style) | `tests/Feature/CreditLines/`, `tests/Feature/MoneyFlow/` (new) | Verbs in test names: `it_blocks_outbound_when_cash_below_floor` |
-| Browser | Laravel Dusk (new dependency) | `tests/Browser/CreditLines/`, `tests/Browser/MoneyFlow/` (new) | Page-Object pattern; one Dusk test per major user journey |
-| Contract / sandbox | Pest, gated behind `@group sandbox` | `tests/Sandbox/` (new) | Runs only on `--group=sandbox`; nightly CI only |
-| Architecture | Pest arch tests (already supported) | `tests/Arch/` (may exist; new file `MoneyFlowArchTest.php`) | Asserts namespace boundaries (no `use App\Models\Transaction` outside `App\MoneyFlow\Facade`) |
+| Unit | PHPUnit 11 (existing) | `tests/Unit/CreditLines/`, `tests/Unit/MoneyFlow/` (new subdirectories under the existing `Unit/`) | `*Test.php`, one file per class under test |
+| Integration | PHPUnit 11, Laravel feature style (existing `tests/Feature/`) | `tests/Feature/CreditLines/`, `tests/Feature/MoneyFlow/` (new subdirectories) | `test_<what>_<expected_outcome>()`, snake_case, matches repo convention |
+| API | Existing `tests/APIs/` style + `ApiTestTrait` | `tests/APIs/CreditLines/`, `tests/APIs/MoneyFlow/` for new API endpoints | Matches `tests/ApiTestTrait.php` patterns |
+| Repository | Existing `tests/Repositories/` style | `tests/Repositories/CreditLines/`, `tests/Repositories/MoneyFlow/` | One file per repository |
+| Golden data | Existing `tests/GoldenData/` style | Add scenarios to existing `tests/GoldenData/` (don't fork) | |
+| Browser | Laravel Dusk (**new dependency** — not yet installed) | `tests/Browser/CreditLines/`, `tests/Browser/MoneyFlow/` (new) | Page-Object pattern; one Dusk test per major user journey |
+| Contract / sandbox | PHPUnit + `@group sandbox` | `tests/Sandbox/` (new) | Runs only on `--group=sandbox`; nightly CI only |
+| Architecture | PHPUnit-compatible arch lib (e.g. `ta-tikoma/phpunit-architecture-test` or `pestphp/pest-plugin-arch` standalone) — **new dependency** | `tests/Arch/MoneyFlowArchTest.php` | Asserts namespace boundaries (`App\MoneyFlow` internals not importable outside the facade) |
+
+**Test-name shorthand.** Throughout §4 the names are written as descriptive shorthand like `outbound_blocks_when_operating_cash_below_floor`. In code these become `public function test_outbound_blocks_when_operating_cash_below_floor()` (or the `#[Test]` attribute equivalent), matching the existing repo style — see examples in `tests/Unit/AccountExtTest.php` like `test_shares_as_of_returns_shares()`.
+
+**Test class as the UC/MF grouping mechanism.** PHPUnit has no `describe()` block, so the grouping is done at the **test class** level — one class per UC-* / MF-* (or per closely-related cluster). Example layout:
+
+```
+tests/Feature/CreditLines/UC29AmbiguousRepTest.php
+  ├── public function test_flags_transaction_when_two_lines_have_same_shares_due()
+  ├── public function test_shows_mismatch_banner_on_account_page()
+  ├── public function test_sends_mismatch_alert_email_separate_from_received_email()
+  └── public function test_does_not_advance_any_lines_schedule_until_resolved()
+```
+
+Run output (via `--testdox`) reads like a spec keyed by the class name. The traceability table (§11.5) scans for `UC\d{2}` / `MF\d{2}` in class names to map back to the planning docs.
 
 **Command conventions** (matches `CLAUDE.md`):
 
@@ -71,6 +90,9 @@ docker exec familyfund php artisan test --testsuite=Unit
 # Just the new subsystems
 docker exec familyfund php artisan test tests/Unit/CreditLines tests/Feature/CreditLines
 
+# Excluding the existing-suite known-incomplete groups (mirrors CLAUDE.md)
+docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor
+
 # Browser (nightly CI; on-demand local with --group=browser)
 docker exec familyfund php artisan dusk
 
@@ -82,15 +104,120 @@ docker exec familyfund ./vendor/bin/phpunit --coverage-text 2>&1 | grep -E "^  (
 ```
 
 **Data setup.**
-- Existing `tests/DataFactory.php` and per-model factories are the baseline. Extend with new factories for `AccountCreditLine`, `CreditLinePayment`, `CreditLineAdjustment`, `BrazilianRecipient`, `CheckingDeposit`, `WiseTransfer`, `OutboundTransfer`.
-- Each new factory ships a `.realistic()` state that generates plausible test data for golden-data scenarios.
-- Database is per-test refreshed (`RefreshDatabase` trait) for unit + integration; persistent for Dusk (separate DB).
+- Existing `tests/DataFactory.php` is the project's standard data builder — extend it, don't fork. Add factory methods for `AccountCreditLine`, `CreditLinePayment`, `CreditLineAdjustment`, `BrazilianRecipient`, `CheckingDeposit`, `WiseTransfer`, `OutboundTransfer` alongside the existing methods.
+- Per-model Eloquent factories under `database/factories/` for low-level tests that don't need the full `DataFactory` setup.
+- **Database isolation uses `DatabaseTransactions`** (the existing repo standard — every test wraps in a transaction and rolls back), **not** `RefreshDatabase`. This is significantly faster and matches what every other test in the repo does. Dusk is the exception — it needs `DatabaseMigrations` or a dedicated test DB because it runs against the real HTTP server.
+
+---
+
+## 3.5 Existing test suite — what we keep working
+
+The repo already has **164 test files across 5 suites**. The new work must extend this, not duplicate or break it. This section is the regression strategy.
+
+### 3.5.1 Existing suite at a glance
+
+| Suite (`phpunit.xml`) | File count | Style |
+|---|---|---|
+| `Unit` | 36 | Pure model / trait / service tests, no HTTP |
+| `Feature` | 73 | Full HTTP request → controller → DB |
+| `APIs` | 25 | API endpoint tests via `ApiTestTrait` |
+| `Repositories` | 25 | Repository-pattern CRUD |
+| `GoldenData` | 4 | Versioned-dataset integration |
+| `Models` | 1 | (small) |
+| **Total active** | **164** | |
+
+Default exclusions (already in `phpunit.xml`): `@group incomplete`, plus the convention from `CLAUDE.md` of `--exclude-group=incomplete,needs-data-refactor` in development.
+
+`test_plan.md` at the repo root tracks the broader-codebase test status (288 passing as of 2026-01-10, ~45% line coverage). This document does not duplicate or replace it — **`test_plan.md` is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
+
+### 3.5.2 Existing tests that touch code we plan to change
+
+The credit-lines and money-flow work modifies semantics or schema in several places that already have test coverage. Each row is a coordination point: read the existing tests before changing the code, lock them green as the baseline, then extend.
+
+| Code we plan to change | Planned change | Existing tests to preserve / extend |
+|---|---|---|
+| `AccountExt::sharesAsOf()` / `allSharesAsOf()` | OWN − BOR semantics fix (`credit_lines_plan.md` §9 step 1) | `tests/Unit/AccountExtTest.php` (`test_shares_as_of_*` near line 132+), `tests/GoldenData/FundApiGoldenDataTest.php`, `tests/Feature/FundSetupTest.php` |
+| `AccountBalance` (BOR rows used differently) | Aggregated `BOR` row across multiple credit lines | `tests/APIs/AccountBalanceApiTest.php`, `tests/Repositories/AccountBalanceRepositoryTest.php`, `tests/Feature/AccountBalanceControllerTest.php` |
+| `Transaction` model | Adding `account_credit_line_id` FK + `credit_line_match_status` enum | `tests/Unit/TransactionExtTest.php`, `tests/APIs/TransactionApiTest.php` |
+| `TransactionExt` | New credit-line-related logic | `tests/Unit/TransactionExtTest.php` (`test_type_constants_are_defined()` and similar — confirm `BOR` and `REP` constants still pass) |
+| `CashDeposit` / `CashDepositTrait` / `FetchDeposits` job | Extend for the checking-hub webhook flow | `tests/Feature/CashDepositControllerTest.php`, `tests/Feature/CashDepositTraitTest.php` (already has "FROM WISE INC" fixtures — extend, don't rewrite), `tests/Feature/CashDepositControllerExtTest.php` |
+| `TransactionMatching` / `MatchingRule` | Extend for credit-line matcher; possibly add `account_credit_line_id` to `transaction_matchings` | `tests/APIs/MatchingRuleApiTest.php`, `tests/APIs/TransactionMatchingApiTest.php`, `tests/Feature/MatchingRuleControllerExtTest.php`, `tests/Feature/AccountMatchingRuleControllerTest.php` |
+
+**Strategy per row:**
+
+1. Before changing the code, run the existing tests in that file: `docker exec familyfund php artisan test tests/Unit/AccountExtTest.php` (etc.). Confirm they pass.
+2. Note any tests that **document the current behavior**. After the semantics change (especially `sharesAsOf` OWN−BOR), any test asserting the old behavior must be updated *or* renamed to capture the new behavior, with an inline comment naming the migration that flipped the meaning. Never silently delete an existing assertion.
+3. The §9 migration-safety pattern (before/after fixture tests) is mandatory for `sharesAsOf` — the change moves numbers across many reports, and the existing test is our first witness.
+
+### 3.5.3 Existing infrastructure to reuse
+
+| Existing | What to do |
+|---|---|
+| `tests/TestCase.php` | New tests extend this base; don't introduce a parallel base class. |
+| `tests/DataFactory.php` | Extend with credit-line and money-flow builders alongside the existing fund/account/transaction builders. Keep the fluent style. |
+| `tests/CreatesApplication.php` | Already bootstraps the Laravel app for tests; no changes expected. |
+| `tests/ApiTestTrait.php` | API tests in `tests/APIs/CreditLines/` and `tests/APIs/MoneyFlow/` use this trait for assertion helpers; no parallel API helper. |
+| `DatabaseTransactions` trait usage | Match the existing pattern. Don't introduce `RefreshDatabase` in new tests outside of Dusk. |
+| `phpunit.xml` | Add the new directories to existing suites; don't add new top-level suites unless we add a truly new tier (e.g., `Sandbox`). Reuse `@group incomplete` exclusion. |
+| `@group needs-data-refactor` (seen in `tests/Feature/TransactionExtApiTest.php`) | When extending TransactionExt, check if any of these tests need un-flagging. |
+
+### 3.5.4 Known-disabled / incomplete tests to be aware of
+
+Discovered during audit; not blockers, but worth knowing they exist:
+
+| Test | Reason it's disabled |
+|---|---|
+| `tests/Feature/HolidaysSyncApiTest.php` | `markTestIncomplete('Requires HTTP server...')` |
+| `tests/Feature/TwoFactorAuthTest.php` | `markTestSkipped('Requires Livewire...')` |
+| Some `tests/Feature/TransactionControllerExtTest.php` | `markTestSkipped('View has template issues...')` |
+| Various `tests/Feature/PortfolioAssetControllerExtTest.php` | Conditional data-availability skips |
+| `tests/Feature/TransactionExtApiTest.php` | `@group needs-data-refactor` — excluded by `--exclude-group` in CLAUDE.md's recommended invocation |
+
+None of these are on our critical path. The §3.5.2 table is the actual coordination list.
+
+### 3.5.5 Regression strategy in CI
+
+A new CI step **runs the entire existing suite before the new-subsystem tests on every PR.** If any pre-existing test breaks because of our changes, the build fails with a clear message ("regression in existing test X — see commit Y"). This is the protective net.
+
+```yaml
+# pseudocode for the PR workflow
+- name: Existing suite (regression net)
+  run: docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor
+
+- name: New-subsystem suite (credit lines + money flow)
+  run: docker exec familyfund php artisan test tests/Unit/CreditLines tests/Feature/CreditLines tests/Unit/MoneyFlow tests/Feature/MoneyFlow
+```
+
+Local-dev habit: before pushing, run the existing suite at least once per session in addition to your focused new-subsystem tests. The full run is under 5 minutes today.
 
 ---
 
 ## 4. Per-subsystem test plans
 
 Each row maps a UC-* / MF-* to one or more named tests with a layer label. Layers: **U** = Unit, **I** = Integration, **B** = Browser, **C** = Contract, **R** = Reconciliation, **M** = Migration safety.
+
+### 4.0 Balance at a glance — both subsystems covered
+
+This doc covers **both planned features in parallel**. The two trackers — `credit_lines_plan.md` §2 (UC-*) and `money_flow_plan.md` §10 (MF-*) — together are the source of truth for what must be tested. Every ID from those trackers appears in exactly one of the sub-tables below.
+
+| Subsystem | Tracker IDs covered | v1 scope | Deferred | Test rows | Section |
+|---|---|---|---|---|---|
+| **Credit lines** (borrowing feature) | UC-01..UC-44 | 44 | 0 | 49 | §4.1 |
+| **Money flow inbound — Path A (Wise→Checking→IBKR)** | MF-01, 02, 07, 08, 23..28, 34..37, 40, 42 | 18 | 0 | 19 | §4.2 |
+| **Money flow inbound — Path B (Fund Wise Business + webhook)** | MF-09, 10, 29..33 | 0 | 7 | 7 (deferred) | §4.2 + §4.6 |
+| **Money flow inbound — Path C (BR fintech direct PIX)** | MF-21 | 0 | 1 | 1 (deferred) | §4.6 |
+| **Money flow outbound** | MF-03, 11..13, 39, 43..48 | 7 (v1) + 5 (deferred) | 5 | 13 | §4.3 |
+| **Recipient registry & attribution** (cross-cutting) | shared with MF-04..08, 27..33 | covered above | — | 6 | §4.4 |
+| **Subsystem isolation** | MF-14..17 | 4 | 0 | 4 | §4.5 |
+| **Compliance hardening** | MF-19, 20 | 0 | 2 | 2 (deferred) | §4.6 |
+| **Reconciliation reports & sweeps** | MF-18, 38, 41 | 1 (MF-38, P1) + 2 (MF-18, MF-41, P2) | 2 | 3 | §4.3 + §4.6 |
+| **TOTALS** | 92 IDs | **74 in v1** | **18 deferred** | **104 named tests** | — |
+
+**Reading guide:**
+
+- **§4.1** is the credit-lines tier — the borrowing feature in `credit_lines_plan.md`. Every UC has at least one test.
+- **§4.2** through **§4.5** are the money-flow tiers. §4.2 covers the v1 inbound path (Wise → fund US checking → IBKR) at full depth, with the deferred Path B fields kept for visibility. §4.3 covers outbound including the v1 minimum and the v2 Wise-API state machine.
+- **§4.6** (new) collects all explicitly deferred test plans for v2+ work so reviewers can confirm they're not forgotten, just not in v1.
 
 ### 4.1 Credit lines
 
@@ -174,20 +301,32 @@ Maps MF-01..MF-08, MF-23..MF-28, MF-34..MF-37, MF-40, MF-42 from `money_flow_pla
 | MF-40 | `three_way_reconciliation_passes_on_healthy_data_and_fails_on_drift` | R | Inject drift in each leg; assert detection |
 | MF-42 | `kyb_status_check_blocks_outbound_when_account_not_verified` | I | |
 
-### 4.3 Money flow — outbound (v1 minimum)
+### 4.3 Money flow — outbound and sweeps (v1 minimum + deferred state-machine richness)
 
-Maps MF-03, MF-43..MF-48 from `money_flow_plan.md` §10.
+Maps MF-03, MF-38, MF-39, MF-43..MF-48 from `money_flow_plan.md` §10. Plus deferred rows (P2+) noted at the bottom.
+
+| MF | Test name(s) | Layer | Phase | Notes |
+|---|---|---|---|---|
+| MF-03 | `manual_outbound_recording_writes_audit_and_marks_completed` | I + B | P0 | |
+| MF-38 | `scheduled_sweep_checking_to_ibkr_fires_above_threshold` | I | P1 | Time-traveled; also asserts no sweep when balance below threshold |
+| MF-38 | `scheduled_sweep_respects_operating_floor` | I | P1 | Sweep leaves at least floor at checking |
+| MF-39 | `outbound_state_machine_progresses_through_each_stage` | I | P2 | Deferred — full state machine; v1 ships happy path only |
+| MF-43 | `outbound_debits_beneficiary_shares_and_fund_cash_before_external_chain` | I | P1 | Asserts books-first sequence |
+| MF-44 | `outbound_blocks_when_operating_cash_below_floor` | I | P1 | Plus `it_does_not_trigger_any_sell_at_ibkr` (I) |
+| MF-45 | `trader_notification_fires_on_buffer_floor_breach` | I | P1 | `Mail::fake()` |
+| MF-45 | `trader_notification_fires_on_buffer_ceiling_breach` | I | P1 | |
+| MF-46 | `operator_initiated_sweep_ibkr_to_checking_records_ach` | I + B | P1 | Browser: operator's sweep UI |
+| MF-46 | `operator_initiated_sweep_checking_to_ibkr_records_ach` | I + B | P1 | The reverse direction |
+| MF-47 | `outbound_state_machine_rolls_back_books_on_funding_failure` | I | P2 | Deferred — each stage past `books_debited` has a rollback test |
+| MF-48 | `operating_cash_floor_and_ceiling_settings_per_fund_persist` | I + B | P1 | |
+
+**Deferred outbound tests (P2 — listed for visibility):**
 
 | MF | Test name(s) | Layer | Notes |
 |---|---|---|---|
-| MF-03 | `manual_outbound_recording_writes_audit_and_marks_completed` | I + B | |
-| MF-43 | `outbound_debits_beneficiary_shares_and_fund_cash_before_external_chain` | I | Asserts books-first sequence |
-| MF-44 | `outbound_blocks_when_operating_cash_below_floor` | I | Plus `it_does_not_trigger_any_sell_at_ibkr` (I) |
-| MF-45 | `trader_notification_fires_on_buffer_floor_breach` | I | `Mail::fake()` |
-| MF-45 | `trader_notification_fires_on_buffer_ceiling_breach` | I | |
-| MF-46 | `operator_initiated_sweep_ibkr_to_checking_records_ach` | I + B | Browser: operator's sweep UI |
-| MF-47 | `outbound_state_machine_rolls_back_books_on_funding_failure` | I | Each stage past `books_debited` has a rollback test |
-| MF-48 | `operating_cash_floor_and_ceiling_settings_per_fund_persist` | I + B | |
+| MF-11 | `wise_client_round_trips_quote_and_transfer_with_idempotency` | U + C | Unit stub + nightly sandbox call |
+| MF-12 | `two_user_approval_blocks_self_approval_and_requires_distinct_approver` | I + B | |
+| MF-13 | `outbound_status_polling_advances_state_machine_on_each_event` | I | |
 
 ### 4.4 Recipient registry & attribution (cross-cutting)
 
@@ -208,6 +347,52 @@ Maps MF-03, MF-43..MF-48 from `money_flow_plan.md` §10.
 | Queue isolation | `money_flow_jobs_dispatch_to_money_flow_queue` | I | Default queue assertions |
 | Secret isolation | `no_api_key_appears_in_logs_or_queue_payloads` | I | Inject sentinel, scan log files + queue payloads |
 | Idempotency | `external_api_call_with_same_idempotency_key_returns_cached_result` | U + I | Two layers: unit at the client level, integration at the service level |
+
+### 4.6 Deferred test plans — kept here so v2+ isn't forgotten
+
+These tests are **not in the v1 build**. They're listed so reviewers can verify the deferred work in the planning docs has corresponding test coverage planned.
+
+**Money flow inbound — Path B (Wise Business webhook) — P2:**
+
+| MF | Test name(s) | Layer | Maps to plan section |
+|---|---|---|---|
+| MF-09 | `wise_webhook_receiver_verifies_signature_and_creates_wise_transfer` | I | `money_flow_plan.md` §4.2 |
+| MF-10 | `wise_transfer_reconciles_with_checking_deposit_via_amount_and_date` | I + R | §4.2 |
+| MF-29 | `path_b_matcher_attributes_by_wise_sender_profile_id` | U + I | §4.5.2 |
+| MF-30 | `path_b_matcher_fallback_cpf_then_pix_then_reference` | U + I | §4.5.2 |
+| MF-31 | `path_b_first_time_sender_creates_draft_recipient_pending_review` | I + B | §4.5.2 |
+| MF-32 | `successful_match_appends_to_recipient_fingerprints` | U + I | §6 |
+| MF-33 | `recipient_with_match_confidence_review_always_flags_for_human` | I | §6 |
+
+**Money flow inbound — Path C (BR fintech direct PIX) — P4:**
+
+| MF | Test name(s) | Layer | Maps to plan section |
+|---|---|---|---|
+| MF-21 | `br_fintech_webhook_creates_pix_inbound_with_full_sender_block` | I + C | `money_flow_plan.md` §4.3 |
+
+**Money flow outbound — Path C (BR fintech direct PIX outbound) — P4:**
+
+| MF | Test name(s) | Layer | Maps to plan section |
+|---|---|---|---|
+| MF-22 | `br_fintech_outbound_pix_to_recipient_via_partner_api` | I + C | `money_flow_plan.md` §5.3 |
+
+**Reconciliation reports — P2:**
+
+| MF | Test name(s) | Layer | Maps to plan section |
+|---|---|---|---|
+| MF-18 | `daily_reconciliation_report_summarizes_balances_and_emails_operator` | I | `money_flow_plan.md` §4.4 |
+| MF-41 | `operating_balance_auto_replenish_proposes_sweep_when_below_floor` | I | `money_flow_plan.md` §5.4 |
+
+**Compliance hardening — P3:**
+
+| MF | Test name(s) | Layer | Maps to plan section |
+|---|---|---|---|
+| MF-19 | `ofac_screen_blocks_recipient_add_when_match_found` | I + C | §11 risks |
+| MF-19 | `ofac_screen_re_runs_periodically_on_active_recipients` | I | |
+| MF-20 | `per_recipient_outbound_limits_enforced_daily_monthly` | U + I | |
+| MF-20 | `per_period_outbound_limit_blocks_or_requires_extra_approval` | I + B | |
+
+Each of these has a planning-doc anchor so when the work gets prioritized, the test plan is already aligned. None of them count against the v1 coverage target.
 
 ---
 
@@ -314,25 +499,26 @@ This serves as both schema-drift detection and a smoke test that the credentials
 Every webhook handler must be idempotent. Generic test pattern:
 
 ```php
-test('webhook replay produces no duplicate side effects', function () {
-    $payload = WiseWebhookFactory::incomingTransfer()->make();
+public function test_webhook_replay_produces_no_duplicate_side_effects(): void
+{
+    $payload   = WiseWebhookFactory::incomingTransfer()->make();
     $signature = WiseClient::signFake($payload);
 
     Mail::fake();
-    expect(WiseTransfer::count())->toBe(0);
+    $this->assertSame(0, WiseTransfer::count());
 
     // First delivery
     $this->postJson('/money-flow/wise/webhook', $payload, ['Signature' => $signature])
          ->assertOk();
-    expect(WiseTransfer::count())->toBe(1);
+    $this->assertSame(1, WiseTransfer::count());
     Mail::assertSentCount(1);
 
     // Replay
     $this->postJson('/money-flow/wise/webhook', $payload, ['Signature' => $signature])
          ->assertOk();
-    expect(WiseTransfer::count())->toBe(1);     // no duplicate row
+    $this->assertSame(1, WiseTransfer::count()); // no duplicate row
     Mail::assertSentCount(1);                    // no duplicate email
-});
+}
 ```
 
 Apply this pattern to:
@@ -347,19 +533,20 @@ Apply this pattern to:
 Reconciliation produces a report; tests assert the report's correctness on **synthesized** data with known drift.
 
 ```php
-test('three_way_reconciliation_detects_drift_at_each_leg', function () {
-    [$wise, $checking, $ibkr] = seedConsistentTrio(...);
+public function test_three_way_reconciliation_detects_drift_at_each_leg(): void
+{
+    [$wise, $checking, $ibkr] = $this->seedConsistentTrio(/* ... */);
 
-    expect(reconcile($wise, $checking, $ibkr)->ok())->toBeTrue();
+    $this->assertTrue($this->reconcile($wise, $checking, $ibkr)->ok());
 
     // Drift the Wise leg
     $wise->first()->update(['amount_usd' => 99999]);
-    $report = reconcile($wise, $checking, $ibkr);
-    expect($report->ok())->toBeFalse();
-    expect($report->failedLeg())->toBe('wise');
+    $report = $this->reconcile($wise, $checking, $ibkr);
+    $this->assertFalse($report->ok());
+    $this->assertSame('wise', $report->failedLeg());
 
     // ...repeat for checking, then ibkr
-});
+}
 ```
 
 Also: time-window correctness. Reconciliation runs daily; tests assert it correctly excludes in-flight items at the window boundary.
@@ -377,25 +564,27 @@ Three migrations from the plans change behavior on existing data:
 For each, a fixture-based test:
 
 ```php
-test('shares_as_of_after_migration_returns_same_value_when_no_bor', function () {
+public function test_shares_as_of_after_migration_returns_same_value_when_no_bor(): void
+{
     // Seed data representing pre-migration state
     $account = Account::factory()->create();
-    OwnBalance::factory()->shares(100)->forAccount($account)->create();
+    AccountBalance::factory()->type('OWN')->shares(100)->forAccount($account)->create();
 
     $before = $account->sharesAsOf(today());           // pre-migration call: 100
 
     Artisan::call('migrate');                          // apply the migration
 
     $after = $account->sharesAsOf(today());            // post-migration call
-    expect($after)->toBe($before);                     // unchanged when no BOR shares
-});
+    $this->assertSame($before, $after);                // unchanged when no BOR shares
+}
 
-test('shares_as_of_after_migration_subtracts_bor_when_present', function () {
+public function test_shares_as_of_after_migration_subtracts_bor_when_present(): void
+{
     // Seed: 100 OWN + 30 BOR
     // Pre-migration call: 100 (BOR ignored)
     // Post-migration call: 70 (BOR subtracted)
     // Assert the change happens only where intended
-});
+}
 ```
 
 Plus a **shadow-run plan**: before merging, run the credit-line tests against a copy of production data restored to a dev DB. Compare reports (account values, fund NAV) before vs after. Any deltas must be explainable.
@@ -420,47 +609,51 @@ Tests are only useful if a human can scan the results and trust them. This secti
 
 ### 11.1 Test naming as the first line of documentation
 
-Pest's `it_does_x_when_y` naming convention is non-negotiable for integration and browser tests in this project. The test name appears in:
+The repo convention is `test_<what>_<expected_outcome>()` — snake_case, descriptive, complete sentence after the `test_` prefix. See existing examples in `tests/Unit/AccountExtTest.php` (`test_shares_as_of_returns_shares()`, `test_deposited_value_between_calculates_purchases()`). The test name appears in:
 
 - Local `php artisan test` output.
 - CI logs.
 - The generated HTML / Markdown report (§11.4).
 - The traceability table (§11.5).
 
-**Rule:** read the test name out loud. If it's not a complete English sentence describing a behavior, rename it.
+**Rule:** read the method name out loud (drop the `test_` prefix). If what remains isn't a complete English sentence describing a behavior, rename it.
 
-✅ `it_blocks_outbound_when_operating_cash_below_floor`
-❌ `testOutboundBlock`, `cash_floor_test`, `outbound_works`
+✅ `test_outbound_blocks_when_operating_cash_below_floor()`
+❌ `testOutboundBlock()`, `test_cash_floor()`, `test_outbound_works()`
 
 For browser tests, the name is the user journey:
 
-✅ `operator_opens_credit_line_and_sees_aggregate_panel_update`
-❌ `dusk_account_test`
+✅ `test_operator_opens_credit_line_and_sees_aggregate_panel_update()`
+❌ `test_dusk_account()`
 
-### 11.2 Pest `describe` / `it` narration for the integration tier
+### 11.2 One test class per UC-* / MF-* — PHPUnit grouping convention
 
-For every UC-* and MF-* with meaningful business logic, wrap the test in a `describe()` block keyed to the tracker ID. The output reads like a spec:
+PHPUnit has no `describe()` block, so the grouping happens at the **class level**: one test class per UC-* / MF- (or per closely-related cluster). The class name encodes the tracker id, and `--testdox` output reads like a spec:
 
 ```php
-describe('UC-29 ambiguous REP', function () {
-    it('flags the transaction when two lines have the same shares_due', function () { ... });
-    it('shows the mismatch banner on the account page', function () { ... });
-    it('sends a mismatch-alert email separate from the received-email', function () { ... });
-    it('does not advance any line\'s schedule until resolved', function () { ... });
-});
+// tests/Feature/CreditLines/UC29AmbiguousRepTest.php
+class UC29AmbiguousRepTest extends TestCase
+{
+    use DatabaseTransactions;
+
+    public function test_flags_transaction_when_two_lines_have_same_shares_due() { ... }
+    public function test_shows_mismatch_banner_on_account_page() { ... }
+    public function test_sends_mismatch_alert_email_separate_from_received_email() { ... }
+    public function test_does_not_advance_any_lines_schedule_until_resolved() { ... }
+}
 ```
 
-Run output:
+Run output via `php artisan test --testdox` reads as:
 
 ```
-UC-29 ambiguous REP
-  ✓ it flags the transaction when two lines have the same shares_due
-  ✓ it shows the mismatch banner on the account page
-  ✓ it sends a mismatch-alert email separate from the received-email
-  ✓ it does not advance any line's schedule until resolved
+UC29 Ambiguous Rep (Tests\Feature\CreditLines\UC29AmbiguousRep)
+  ✓ Flags transaction when two lines have same shares due
+  ✓ Shows mismatch banner on account page
+  ✓ Sends mismatch alert email separate from received email
+  ✓ Does not advance any lines schedule until resolved
 ```
 
-A reviewer who knows nothing about the code can read this block and verify the behavior is what they expected.
+A reviewer who knows nothing about the code can read the class + test method names and verify the behavior is what they expected. The `UC29` / `MF38` prefix in the class name is what the traceability generator (§11.5) scans for.
 
 ### 11.3 Dusk browser tests — screenshots, narration, and video
 
@@ -534,7 +727,7 @@ Reviewers (and you) can read this single file to see exactly which planned behav
 
 When running locally:
 
-- `php artisan test --testdox` prints behavior-style output (Pest does this out of the box with `--printer`):
+- `php artisan test --testdox` (built-in PHPUnit option) prints behavior-style output:
   ```
   Credit Lines · UC-29 · Ambiguous REP
    ✓ flags the transaction when two lines have the same shares_due
@@ -549,7 +742,7 @@ When running locally:
 A test is done when:
 
 1. **Name** is a complete English sentence.
-2. **It's grouped** in a `describe('UC-NN ...')` or `describe('MF-NN ...')` block.
+2. **It's grouped** in a test class whose name embeds the tracker id, e.g. `UC29AmbiguousRepTest` or `MF38SweepJobTest` (§11.2).
 3. **For browser tests:** the screenshot strip exists and steps.md narrates the journey.
 4. **It runs** in under 3 s for unit, 10 s for integration, 30 s for browser (else flag for refactoring).
 5. **It appears** in the traceability table tied to a UC-* / MF-*.

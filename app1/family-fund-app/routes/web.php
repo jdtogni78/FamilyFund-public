@@ -225,6 +225,9 @@ Route::middleware('auth')->group(function () {
     Route::get('credit-lines/{line}/edit',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'edit'])
         ->name('credit_lines.edit');
+    Route::put('credit-lines/{line}',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'update'])
+        ->name('credit_lines.update');
     Route::post('credit-lines/{line}/repay',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'repay'])
         ->name('credit_lines.repay');
@@ -237,6 +240,14 @@ Route::middleware('auth')->group(function () {
     Route::post('transactions/{transaction}/reverse',
         [\App\Http\Controllers\WebV1\TransactionReversalController::class, 'store'])
         ->name('credit_lines.reverse');
+
+    // Admin: backdated transaction creation (UC-46)
+    Route::get('admin/transactions/create',
+        [\App\Http\Controllers\WebV1\AdminTransactionController::class, 'create'])
+        ->name('admin.transactions.create');
+    Route::post('admin/transactions',
+        [\App\Http\Controllers\WebV1\AdminTransactionController::class, 'store'])
+        ->name('admin.transactions.store');
 
     // Admin: User Role Management (system-admin only - checked in controller)
     Route::get('admin/user-roles', 'App\Http\Controllers\WebV1\UserRoleController@index')

@@ -175,6 +175,27 @@ class AccountController extends AppBaseController
 
         $this->authorize('delete', $account);
 
+        // UC-47: refuse closure while the account still has active credit lines.
+        // The caller must cancel or pay them off first so the receivable on the
+        // fund's books has a defined disposition.
+        if (method_exists($account, 'creditLines')) {
+            $activeLines = $account->creditLines()
+                ->where('status', 'active')
+                ->get(['id', 'descr']);
+            if ($activeLines->isNotEmpty()) {
+                $list = $activeLines
+                    ->map(fn ($l) => '#' . $l->id . ($l->descr ? ' (' . $l->descr . ')' : ''))
+                    ->implode(', ');
+                Flash::error(
+                    'Cannot close account: ' . $activeLines->count() .
+                    ' active credit line(s) remain — ' . $list .
+                    '. Cancel or pay them off first.'
+                );
+
+                return redirect(route('accounts.show', $account->id));
+            }
+        }
+
         $this->accountRepository->delete($id);
 
         Flash::success('Account deleted successfully.');

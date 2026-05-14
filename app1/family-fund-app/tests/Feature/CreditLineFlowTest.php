@@ -138,6 +138,102 @@ class CreditLineFlowTest extends TestCase
         $this->assertEquals(100.0, round((float) $line->outstanding_shares, 4));
     }
 
+    /**
+     * UC-20: admin can edit per-line notification settings via PUT /credit-lines/{line}.
+     */
+    public function test_admin_can_update_credit_line_notification_settings(): void
+    {
+        $account = $this->df->userAccount;
+
+        // Open a line first.
+        $this->actingAs($this->admin)->post(
+            route('credit_lines.store', ['account' => $account->id]),
+            [
+                'account_id'        => $account->id,
+                'principal_shares'  => 50,
+                'term_months'       => 6,
+                'payment_frequency' => 'monthly',
+                'descr'             => 'Settings-test line',
+            ]
+        );
+        $line = AccountCreditLine::where('account_id', $account->id)->latest('id')->first();
+        $this->assertNotNull($line);
+
+        // Defaults from the migration.
+        $this->assertSame(7, (int) $line->reminder_lead_days);
+        $this->assertTrue((bool) $line->reminder_enabled);
+
+        // PUT with new settings (UC-20).
+        $response = $this->actingAs($this->admin)->put(
+            route('credit_lines.update', ['line' => $line->id]),
+            [
+                'reminder_lead_days'              => 14,
+                // reminder_enabled deliberately omitted → checkbox off → false
+                'delay_notification_grace_days'   => 5,
+                'delay_notification_repeat_days'  => 30,
+                'delay_notification_max_repeats'  => 3,
+                'transaction_email_enabled'       => '1',
+                'mismatch_alert_enabled'          => '1',
+            ]
+        );
+        $response->assertRedirect(route('credit_lines.show', ['line' => $line->id]));
+
+        $line->refresh();
+        $this->assertSame(14, (int) $line->reminder_lead_days);
+        $this->assertFalse((bool) $line->reminder_enabled);
+        $this->assertSame(5, (int) $line->delay_notification_grace_days);
+        $this->assertSame(30, (int) $line->delay_notification_repeat_days);
+        $this->assertSame(3, (int) $line->delay_notification_max_repeats);
+        $this->assertTrue((bool) $line->transaction_email_enabled);
+        $this->assertTrue((bool) $line->mismatch_alert_enabled);
+
+        // Verify the edit form renders all 7 fields.
+        $edit = $this->actingAs($this->admin)->get(
+            route('credit_lines.edit', ['line' => $line->id])
+        );
+        $edit->assertOk();
+        $edit->assertSee('reminder_lead_days', false);
+        $edit->assertSee('reminder_enabled', false);
+        $edit->assertSee('delay_notification_grace_days', false);
+        $edit->assertSee('delay_notification_repeat_days', false);
+        $edit->assertSee('delay_notification_max_repeats', false);
+        $edit->assertSee('transaction_email_enabled', false);
+        $edit->assertSee('mismatch_alert_enabled', false);
+    }
+
+    /**
+     * UC-47: account closure must be blocked while an active line remains.
+     */
+    public function test_account_closure_blocked_when_active_credit_line_exists(): void
+    {
+        $account = $this->df->userAccount;
+
+        $this->actingAs($this->admin)->post(
+            route('credit_lines.store', ['account' => $account->id]),
+            [
+                'account_id'        => $account->id,
+                'principal_shares'  => 30,
+                'term_months'       => 6,
+                'payment_frequency' => 'monthly',
+                'descr'             => 'Closure-block-test line',
+            ]
+        );
+        $line = AccountCreditLine::where('account_id', $account->id)->latest('id')->first();
+        $this->assertNotNull($line);
+        $this->assertSame('active', $line->status);
+
+        $response = $this->actingAs($this->admin)->delete(
+            route('accounts.destroy', ['account' => $account->id])
+        );
+        // Either a redirect with flash error or a 4xx — both are acceptable;
+        // what matters is that the account row survives.
+        $this->assertTrue(
+            $response->isRedirect() || $response->status() >= 400,
+            'Expected redirect or 4xx; got ' . $response->status()
+        );
+        $this->assertDatabaseHas('accounts', ['id' => $account->id]);
+    }
+
     private function seedOwnBalance($account, float $shares): void
     {
         $tran = $this->df->createTransaction(

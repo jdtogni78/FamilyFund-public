@@ -186,6 +186,51 @@ class TransactionDetectionServiceTest extends TestCase
         Mail::assertSent(MismatchAlertMail::class);
     }
 
+    /**
+     * UC-37: contribution classifier reports legacy TransactionMatching rows
+     * (no duplication — `processPending`/`createMatching` is the writer).
+     */
+    public function test_contribution_classifier_round_trip_reports_existing_matches(): void
+    {
+        $account = $this->factory->userAccount;
+
+        // Attach a matching rule (createFund alone doesn't create one).
+        $this->factory->createMatching(100, 50);
+
+        // Create a PUR (no matchings written yet).
+        $pur = $this->factory->createTransaction(
+            100,
+            $account,
+            TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_PENDING
+        );
+        $pur = TransactionExt::find($pur->id);
+
+        $classifier = new ContributionClassifier();
+
+        // Step 1: no matchings yet → n/a (acceptable PUR state — see classifier doc).
+        $result1 = $classifier->classify($pur);
+        $this->assertSame(DetectionResult::STATUS_NA, $result1->status);
+
+        // Step 2: simulate the legacy createMatching writer by writing a
+        // TransactionMatching row pointing at this PUR.
+        $accountMatchingRule = $account->accountMatchingRules()->first();
+        $this->assertNotNull($accountMatchingRule, 'createMatching should attach an AccountMatchingRule to the user account');
+
+        $matchTran = $this->factory->createTransaction(
+            50,
+            $account,
+            TransactionExt::TYPE_MATCHING,
+            TransactionExt::STATUS_CLEARED
+        );
+        $this->factory->createTransactionMatching($accountMatchingRule, $matchTran, $pur);
+
+        // Step 3: classifier now reports auto_matched.
+        $result2 = $classifier->classify($pur);
+        $this->assertSame(DetectionResult::STATUS_AUTO_MATCHED, $result2->status);
+        $this->assertFalse($result2->needsReview());
+    }
+
     public function test_ingest_pur_calls_contribution_classifier_but_no_credit_line_email(): void
     {
         Mail::fake();

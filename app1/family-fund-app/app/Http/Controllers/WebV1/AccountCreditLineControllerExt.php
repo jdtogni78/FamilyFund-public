@@ -7,6 +7,7 @@ use App\Http\Requests\CancelCreditLineRequest;
 use App\Http\Requests\CreateAccountCreditLineRequest;
 use App\Http\Requests\ReadjustCreditLineRequest;
 use App\Http\Requests\RepayCreditLineRequest;
+use App\Http\Requests\UpdateAccountCreditLineRequest;
 use App\Models\AccountCreditLine;
 use App\Models\AccountExt;
 use App\Models\UserExt;
@@ -115,6 +116,23 @@ class AccountCreditLineControllerExt extends AppBaseController
 
         return view('account_credit_lines.edit')
             ->with('line', $line);
+    }
+
+    /**
+     * UC-20: persist notification-settings edits.
+     *
+     * Only the 7 reminder / email columns are mutable here. Principal, term,
+     * status, etc. are protected — use Readjust / Cancel for those.
+     */
+    public function update(UpdateAccountCreditLineRequest $request, $id)
+    {
+        $line = AccountCreditLine::findOrFail($id);
+
+        $line->fill($request->validated())->save();
+
+        Flash::success('Notification settings updated for credit line #' . $line->id . '.');
+
+        return redirect(route('credit_lines.show', ['line' => $line->id]));
     }
 
     public function repay(RepayCreditLineRequest $request)

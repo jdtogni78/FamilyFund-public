@@ -9,6 +9,56 @@ This doc is a parking lot for review findings the user will respond to later. Ea
 
 ---
 
+## Status summary (all 26 items reviewed)
+
+**Accepted for v1 — 16 items** (need to be folded into the plan docs):
+
+| ID | Item | Resolution shape |
+|---|---|---|
+| CL-R2 | Reversal of erroneous REPs | Simplified: reverse-only, no chained reapply |
+| CL-R3 | Backdated payments | Different: "create transaction from scratch" page, no new column |
+| CL-R5 | Block account closure with outstanding lines | v1 blocks; trustee override deferred |
+| CL-R6 | Underwriting limits | Different: admin-only line creation, no policy fields |
+| CL-R7 | Authorization model | Admin-only for all credit-line write actions |
+| CL-R8 | Tax / legal caveat | Callout in risks + optional `imputed_interest_rate` field |
+| CL-R10 | Holistic "your loans" statement | Account page + quarterly report |
+| CL-R11 | Share-value clarity | Copy only (no $/share toggle) |
+| MF-R2 | FX rate of record | Simplified: book only the USD that arrives, no FX tracking |
+| MF-R4 | First-time-sender attribution | Simplified: pending-attribution state + operator assigns; no auto-recipient creation |
+| MF-R5 | CashDeposit coexistence | Two-phase: dual-write then converge |
+| MF-R6 | Operational runbook | New sibling doc `money_flow_runbook.md` |
+| MF-R8 | Dev fakes for money APIs | Build `/dev/fake-bank/*` local service |
+| MF-R9 | Line-item reconciliation | Extend daily job to per-line matching |
+| MF-R11 | RBAC matrix | Single table in §7.5 |
+| MF-R12 | PII email policy | No PII to beneficiaries; redacted PII to operators |
+| MF-R13 | Idempotency-key retention | 1 year |
+| MF-R14 | Closed-account in-flight | Resolved by extending CL-R5's closure-block to open DepositRequests |
+
+**Deferred to future improvement — 8 items** (kept in this doc as known backlog):
+
+| ID | Item | Reason |
+|---|---|---|
+| CL-R1 | Cancellation flow with disposition | v1 keeps existing "block if outstanding > 0" |
+| CL-R4 | Concurrency on repayments | Low risk at family-scale; lock added later |
+| CL-R9 | Pre-payment preview | Add if admin friction warrants |
+| CL-R12 | BOR migration | Caveat: rejected per user; listed here for completeness — re-categorize as rejected below |
+| MF-R1 | Fee accounting policy | Track via tolerance window in reconciliation for v1 |
+| MF-R3 | ACH clawback handling | Manual operator handling via CL-R2 reversal |
+| MF-R7 | Production monitoring alerts | Rely on reconciliation report + dashboard for v1 |
+| MF-R10 | Webhook burst async handling | Sync-in-request for v1; async if vendors time out |
+
+**Rejected — 1 item:**
+
+| ID | Item |
+|---|---|
+| CL-R12 | BOR migration (operator confirmed no concern) |
+
+**Net result:** 18 accepted items will be folded into `credit_lines_plan.md` / `money_flow_plan.md` / a new `money_flow_runbook.md`. 7 deferred items stay in this doc as the known v2 backlog. 1 rejected item closed.
+
+---
+
+---
+
 ## Top 6 — would address first if forced to pick
 
 These are the items most likely to bite in production or block v1 launch. Three from each plan.
@@ -28,8 +78,8 @@ These are the items most likely to bite in production or block v1 launch. Three 
 
 ### CL-R1 · Cancellation flow
 
-**Status:** pending
-**Suggested section:** new §5.12 in `credit_lines_plan.md` + tracker entries UC-12 expanded
+**Status:** **future improvement** — v1 keeps the existing UC-12 behavior (block when outstanding > 0). Richer disposition handling (forgiven / force-repaid + admin gate + audit row) is captured below for a future phase.
+**Suggested section (when promoted):** new §5.12 in `credit_lines_plan.md` + tracker entries UC-12 expanded
 
 **What's missing.** UC-12 only covers the happy path ("cancel when outstanding = 0, blocked otherwise"). The plan doesn't say what happens for:
 - Cancelling a line with outstanding shares (write-off? forgiveness? forced repayment?).
@@ -40,8 +90,8 @@ These are the items most likely to bite in production or block v1 launch. Three 
 
 ### CL-R2 · Reversal / refund of erroneous REPs
 
-**Status:** pending
-**Suggested section:** new §5.13 + tracker entries (~UC-45..UC-46)
+**Status:** **accepted (simplified for v1)** — v1 implements reverse-only: operator can reverse a matched REP, which marks the transaction `reversed`, re-opens schedule rows, recomputes outstanding, and writes the audit row. If the operator wants to reapply to a different line, they do it as a separate manual REP. The chained "reverse-and-reapply" UI action is a future improvement.
+**Suggested section:** new §5.13 + UC-45 tracker entry. UC-46 (chained reapply) becomes a future-improvement item.
 
 **What's missing.** No mechanism to undo a REP after it's been auto-matched (or manually assigned). Common failure: operator processes a REP, system matches to line A, borrower says it was for line B.
 
@@ -55,17 +105,17 @@ These are the items most likely to bite in production or block v1 launch. Three 
 
 ### CL-R3 · Backdated payments
 
-**Status:** pending
-**Suggested section:** §4.x (Transaction model) + §6 amortization rules
+**Status:** **accepted (different resolution)** — instead of a separate `effective_date` column, the operator gets a "create transaction from scratch" page with full field control, including the timestamp. The existing matcher and late-detection logic already use `transaction.timestamp`, so backdating works correctly as long as the UI exposes timestamp on create. No schema change.
+**Suggested section:** New UC entry for "operator creates transaction from scratch with full control over timestamp / type / shares / value / account / target line." Add a short note in `credit_lines_plan.md` §8 or wherever the transaction-creation UI is referenced.
 
-**What's missing.** Plan assumes `transaction.timestamp = now`. Operator processes a check the borrower mailed two weeks ago; the system records "today" but the payment was effectively two weeks ago. Late-flag computation, schedule matching, and trajectory all use the wrong date.
+**Original problem.** Plan assumes `transaction.timestamp = now`. Operator processes a check the borrower mailed two weeks ago; the system records "today" but the payment was effectively two weeks ago. Late-flag computation, schedule matching, and trajectory all use the wrong date.
 
-**Suggested resolution.** Add a nullable `effective_date` column on `transactions` (defaults to `timestamp` when absent). The matcher and the late-detection job both prefer `effective_date` when set. UI surfaces it as "Payment effective date" with today as default.
+**Original proposal (superseded).** Add a nullable `effective_date` column. Not needed — letting the operator set `timestamp` on the create form covers the same ground with no new schema.
 
 ### CL-R4 · Concurrency on repayments
 
-**Status:** pending
-**Suggested section:** §11 risks (extend race-conditions item)
+**Status:** **deferred / future improvement** — v1 ships without per-line repayment locking. Risk acknowledged: simultaneous REPs against a single line could double-credit. Mitigation in v1 is low-volume reality. To add later: `SELECT … FOR UPDATE` on the `AccountCreditLine` row at the start of every repayment transaction, plus an integration test for two parallel REPs.
+**Suggested section (when promoted):** §11 risks (extend race-conditions item)
 
 **What's missing.** §11 covers concurrent *draws* with `SELECT … FOR UPDATE`. Concurrent *repayments* could each mark the same `CreditLinePayment` row `paid`, double-decrement outstanding, or split-credit ambiguously.
 
@@ -73,8 +123,8 @@ These are the items most likely to bite in production or block v1 launch. Three 
 
 ### CL-R5 · Account closure with outstanding lines
 
-**Status:** pending
-**Suggested section:** §5 business rules (new rule)
+**Status:** **accepted (v1 blocks; override deferred)** — v1 unconditionally blocks account closure when any credit line has `outstanding > 0`. Operator gets a clear "close lines first" error. The trustee override that lets an admin forgive remaining outstanding becomes a future improvement when CL-R1 ships.
+**Suggested section:** §5 business rules in `credit_lines_plan.md` as a new rule; new UC entry.
 
 **What's missing.** Beneficiary leaves the fund / account is deactivated — what happens to active credit lines?
 
@@ -82,8 +132,8 @@ These are the items most likely to bite in production or block v1 launch. Three 
 
 ### CL-R6 · Underwriting / eligibility limits (per-fund config)
 
-**Status:** pending
-**Suggested section:** new §5.x or a `fund_credit_line_policies` table
+**Status:** **accepted (different resolution)** — instead of machine-enforced limits, **only admins (trustees) can open credit lines**. Borrower self-service is removed; every draw goes through an admin who exercises human judgment on size, frequency, eligibility. Simpler than a policy table and more aligned with how a family trust actually operates. This also resolves CL-R7 (authorization): line creation is admin-gated by default.
+**Suggested section:** §5 business rules (new rule "Line creation requires admin role"). Update §7 resolved decisions for authorization.
 
 **What's missing.** No limits on draw size, concurrent lines, account age, or cool-down. "Any person can borrow against their own shares" is the principle but the implementation needs guardrails.
 
@@ -98,8 +148,18 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R7 · Authorization model resolution
 
-**Status:** pending (already an open question in §7)
-**Suggested section:** §7 resolved decisions
+**Status:** **accepted** — v1 RBAC for credit lines is uniformly **admin-only** for every write action:
+- Open a line: admin only.
+- Submit a REP (manual entry): admin only.
+- Readjust a line's term: admin only.
+- Resolve an ambiguous/unmatched flagged REP: admin only.
+- Cancel a line (existing UC-12 "block when outstanding > 0" path): admin only.
+
+**Borrowers / account owners have read-only access** to their credit-line views (per-line drill-down, schedule, trajectory chart, adjustment history). They don't submit any write action directly.
+
+**Auto-generated REPs** (the matcher attributing a detected `CheckingDeposit` to a line) bypass the admin gate — the system did it, no human action required. Admin involvement only kicks in when the matcher flags `ambiguous` or `unmatched`.
+
+**Suggested section:** §7 resolved decisions — flip "Authorization" from open to closed with the rules above.
 
 **What's missing.** Current assumption is "mirror existing transaction-creation auth." For a family trust, parents likely want approval over kids' draws. Today: undefined.
 
@@ -107,8 +167,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R8 · Tax / legal caveat callout
 
-**Status:** pending
-**Suggested section:** §11 risks (new item) or a top-of-doc disclaimer
+**Status:** **accepted (callout + optional field)** — add the "verify with tax counsel before real-money deployment; no-interest loans may trigger imputed-interest reporting (IRS §7872) and gift/income-tax implications" caveat to §11 risks. Also add an optional nullable `imputed_interest_rate` field on `AccountCreditLine` that's purely informational for tax-reporting purposes — it does **not** affect the share math.
+**Suggested section:** §11 risks (caveat); §4.1 `AccountCreditLine` schema (the optional field).
 
 **What's missing.** No-interest loans from a family trust to a beneficiary have specific US tax treatment (IRS §7872 imputed-interest rules below the AFR, family-trust distribution rules). Plan currently silent.
 
@@ -116,8 +176,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R9 · Pre-payment preview
 
-**Status:** pending
-**Suggested section:** §8.2 account page features
+**Status:** **deferred / future improvement** — v1 ships reactive only. Admins commit REPs and see results post-hoc; mistakes get undone via CL-R2 reversal. Revisit if admin friction warrants.
+**Suggested section (when promoted):** §8.2 account page features
 
 **What's missing.** Before submitting a repayment, the borrower should see "if I pay X shares: payments 3 & 4 marked paid, projected payoff moves to Y, variance becomes Z." Currently the UI is reactive (after-the-fact display only).
 
@@ -125,8 +185,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R10 · Holistic "your loans" statement
 
-**Status:** pending
-**Suggested section:** §8.2 account page
+**Status:** **accepted** — add a "Loans summary" section on the account page (above the per-line table) showing total disbursed lifetime, total repaid lifetime, net outstanding, next-due across all lines, and a per-line summary row. Extend the §8.4 quarterly report (account section) to include the same summary.
+**Suggested section:** §8.2 account page + §8.4 quarterly report extension.
 
 **What's missing.** Trajectory chart is per-line. A borrower with three active lines wants a single summary at the top: total outstanding across lines, total disbursed lifetime, total repaid lifetime, next-due across all lines, total interest paid (n/a; useful as a "shares paid" or "value paid back" figure).
 
@@ -134,8 +194,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R11 · Borrower-facing share-value clarity
 
-**Status:** pending
-**Suggested section:** UI copy / §8.2
+**Status:** **accepted (copy only)** — add explanatory copy near every shares-denominated balance: "You owe N shares (currently valued at $X). The share count is what you owe back — it doesn't change with the market. The dollar value will move up or down with the fund's share price." Apply to account-page balances, trajectory chart caption, per-line drill-down headers, and transaction emails. The dollar/share toggle on the chart becomes a future improvement.
+**Suggested section:** §8.2 account page UI notes + §8.6 email-template updates.
 
 **What's missing.** Math is in shares; the borrower thinks in dollars. When the share price falls, "I owe fewer dollars now" feels like the debt got cheaper (true in dollars, false in shares). Risks confusion and support burden.
 
@@ -143,8 +203,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### CL-R12 · Migration of existing BOR transactions
 
-**Status:** pending
-**Suggested section:** new §12 migration plan
+**Status:** **rejected** — no concern about pre-existing one-off BOR transactions; the operator either knows there are none or doesn't need them migrated. Proceed with the new model without a backfill step.
+**Suggested section (n/a — rejected):** —
 
 **What's missing.** The codebase already supports `BOR` as a transaction type. Any pre-existing one-off BOR transactions in production data — how do they map to the new model? Plan doesn't address.
 
@@ -156,8 +216,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### MF-R1 · Fee accounting policy
 
-**Status:** pending (HIGH priority — v1 blocker for books)
-**Suggested section:** new §5.7 or extend §5.0 buffers
+**Status:** **deferred / future improvement** — v1 records gross amounts only; fees are not first-class. **Knock-on:** the reconciliation job (MF-40 / MF-R9) needs a tolerance window equal to expected fee drift (e.g., 2%) to avoid alerting on every transfer. Without that tolerance, every healthy transfer would look like a reconciliation failure.
+**Suggested section (when promoted):** new §5.7 or extend §5.0 buffers
 
 **What's missing.** Wise charges FX fees (~0.5–1.5%). Mercury / Relay may charge wire fees, sometimes ACH fees. Plan doesn't specify:
 - Where fees are recorded.
@@ -168,8 +228,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### MF-R2 · FX rate of record for accounting
 
-**Status:** pending (HIGH priority — v1 blocker; already open Q5 in §11)
-**Suggested section:** §7 resolved decisions
+**Status:** **accepted (simplified)** — the system books only the **final USD value that arrives at the checking account**. No FX rate is stored on our side; conversion is an upstream Wise-side concern that doesn't affect our books. `CheckingDeposit.amount` is the USD amount; beneficiary's share credit is computed from that USD × current share price. Borrowers can see the BRL→USD detail in their own Wise app; the FamilyFund system shows what actually arrived. This nicely closes Q5 in §11 — no FX rate of record because no FX rate is needed.
+**Suggested section:** §7 resolved decisions ("FX rate: not tracked; the system records only the USD value that arrives at checking. FX conversion is upstream and out of scope.").
 
 **What's missing.** Three candidates for "the rate we book at": Wise's quoted mid-market, the realized conversion rate, daily-fixed BACEN rate. Each gives different fund NAV implications and different beneficiary-statement experiences.
 
@@ -177,8 +237,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### MF-R3 · ACH clawback / NACHA return handling
 
-**Status:** pending (HIGH priority)
-**Suggested section:** new §5.8 + risks
+**Status:** **deferred / future improvement** — v1 treats deposits as final on detection. If an ACH return happens, an operator handles it via CL-R2's manual reversal path (once that ships). **Risk to track:** without listening for the bank's "ACH returned" webhook, a return that arrives outside business hours could go unnoticed; the cash leaves the checking account but the beneficiary's shares remain credited. Mitigation: the daily reconciliation job (when added) catches the balance drift and alerts the operator within 24h.
+**Suggested section (when promoted):** new §5.8 + risks
 
 **What's missing.** NACHA rules let an ACH be reversed up to 60 days after settlement. If a beneficiary's deposit lands → system credits their shares → 30 days later the ACH is reversed → shares already credited, money is gone.
 
@@ -191,8 +251,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### MF-R4 · First-time-sender attribution in Path A (v1)
 
-**Status:** pending (HIGH priority)
-**Suggested section:** §4.5.1 (Path A attribution)
+**Status:** **accepted (simplified for v1)** — Add `attribution_status = pending` state for unmatched `CheckingDeposit` rows and surface them on the operator dashboard. The operator manually assigns to a beneficiary. **No** automatic recipient-registry creation on assign (operator does it as a separate step if useful). **No** escalation emails in v1. Recipient registry auto-creation and the 14-day escalation become future improvements.
+**Suggested section:** Extend §4.5.1 of `money_flow_plan.md` with the pending-attribution state. UC MF-R4a (pending-attribution) goes into the tracker. MF-R4b (auto-create recipient on assign) becomes a future improvement.
 
 **What's missing.** Plan covers Path B's "first-time sender → draft recipient pending operator confirmation." Path A (v1) has no equivalent. Plan implicitly assumes every deposit is pre-registered via a `DepositRequest`. Reality: beneficiaries forget; one-off transfers happen.
 
@@ -204,8 +264,8 @@ All optional / nullable so each fund decides what to enforce.
 
 ### MF-R5 · Backfill / coexistence with existing CashDeposit flow
 
-**Status:** pending
-**Suggested section:** new §13 migration plan
+**Status:** **accepted (two-phase coexistence)** — Phase 1: both flows alive, reconciler links each `CheckingDeposit` to its eventual `CashDeposit` once funds settle at IBKR; mismatches alert the operator. Phase 2 (after 30+ days clean): `CheckingDeposit` is primary; `CashDeposit` becomes pure validation. Existing pre-feature `CashDeposit` rows stay as-is — no retroactive backfill.
+**Suggested section:** new §13 migration plan in `money_flow_plan.md`.
 
 **What's missing.** The codebase has a working `CashDeposit` flow via IBKR CSV today. When the checking-hub flow lands, do existing rows backfill into the new `CheckingDeposit` model? Are both flows alive simultaneously?
 
@@ -217,8 +277,7 @@ Existing pre-feature `CashDeposit` rows: leave as-is, no `CheckingDeposit` peer.
 
 ### MF-R6 · Operational runbook for v1 launch
 
-**Status:** pending
-**Suggested section:** new companion doc `money_flow_runbook.md` (don't bloat the plan)
+**Status:** **accepted** — create `money_flow_runbook.md` as a sibling doc with daily / weekly / monthly task lists + incident playbooks. Light cross-reference from `money_flow_plan.md` §1.5.
 
 **What's missing.** Plan covers what code does, not what humans do. Day-1 of running this — what does the operator do each morning?
 
@@ -230,8 +289,7 @@ Existing pre-feature `CashDeposit` rows: leave as-is, no `CheckingDeposit` peer.
 
 ### MF-R7 · Production monitoring & alerting
 
-**Status:** pending
-**Suggested section:** new §13 or in the runbook
+**Status:** **deferred / future improvement** — v1 relies on the daily reconciliation report + operator dashboard. Explicit alert thresholds + transports come later when there's an on-call rotation.
 
 **What's missing.** Tests catch dev-time issues; alerting catches runtime issues. Plan doesn't list either the metrics or the thresholds.
 
@@ -249,8 +307,8 @@ Transport: email to operator + on-call rotation; severity-high also Slacks.
 
 ### MF-R8 · Dev environment fakes for money APIs
 
-**Status:** pending
-**Suggested section:** §6 external API strategy
+**Status:** **accepted** — build a Laravel-side `/dev/fake-bank/*` service (only when `APP_ENV=local`) with a UI to fire webhook payloads and store fake state. Unblocks local end-to-end development without sandbox credentials.
+**Suggested section:** §6 external API strategy in `money_flow_plan.md`, plus a brief note in the local-dev README.
 
 **What's missing.** Dev stack has MailHog for email. No equivalent "fake Wise" or "fake Mercury" — meaning local development against the webhook flow either hits real sandbox (slow, requires secrets) or stays purely test-driven (no exploratory hands-on).
 
@@ -264,8 +322,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R9 · Line-item reconciliation (not just balance)
 
-**Status:** pending
-**Suggested section:** §4.4 (extend reconciliation)
+**Status:** **accepted** — daily reconciliation job does per-line matching: every `CheckingDeposit` row must have a corresponding bank-statement line; every `OutboundTransfer` step has matching debits at each hop. Unmatched line items raise alerts, not just balance gaps.
+**Suggested section:** §4.4 reconciliation (extend).
 
 **What's missing.** §4.4 mentions three-way balance reconciliation (sum of A ↔ sum of B ↔ sum of C). That catches gross drift but misses per-line drift (a single missing $50 deposit hidden by a single extra $50 elsewhere).
 
@@ -273,8 +331,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R10 · Webhook burst handling
 
-**Status:** pending
-**Suggested section:** §7 isolation / §4.4 detection
+**Status:** **deferred / future improvement** — v1 processes webhooks synchronously in the request handler. Revisit if vendors start timing out our endpoint or volume warrants async queuing. The async design (validate sig sync, persist, return 200, queue) is the planned upgrade path.
+**Suggested section (when promoted):** §4.4 detection + §7.3 queue isolation.
 
 **What's missing.** Plan doesn't say whether webhook processing is synchronous (in the request) or queued (async). Wise can send several status updates back-to-back; bank webhooks for a busy account can burst.
 
@@ -282,8 +340,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R11 · RBAC matrix for the four roles
 
-**Status:** pending
-**Suggested section:** §7.5 authorization
+**Status:** **accepted** — add a single role × action matrix in §7.5 covering account owner / operator / approver / trader for every money-flow action (create DepositRequest, initiate outbound, approve, attribute deposit, sweep, edit registry, trade, adjust buffer settings). Per CL-R7, the credit-line side is admin-only — the money-flow side keeps the existing role separation but is now explicit in one table.
+**Suggested section:** §7.5 authorization (extend with the matrix).
 
 **What's missing.** Roles mentioned: `money_flow_operator`, `money_flow_approver`, `trader`, plus implicitly the account owner (beneficiary). Permissions are scattered across §5.x and §7.5.
 
@@ -302,8 +360,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R12 · PII content policy for notification emails
 
-**Status:** pending
-**Suggested section:** §8.5 or §7.4 secret isolation
+**Status:** **accepted** — beneficiary-facing emails contain amount, type, date, link to the app. No CPF, no full account number, no PIX key. Operator-bound emails (reconciliation, alerts) may contain redacted PII (last-4, masked CPF). Apply to all transaction-event templates.
+**Suggested section:** §7.4 secret isolation + §8.5 reminder/notification templates.
 
 **What's missing.** Beneficiaries get emails when transactions are detected. What goes in them? Full amount? Last-4 of recipient account? CPF?
 
@@ -311,8 +369,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R13 · Idempotency-key retention window
 
-**Status:** pending
-**Suggested section:** §7.7 idempotency
+**Status:** **accepted (1 year)** — idempotency keys retained for 1 year (covers ACH return window plus dispute-resolution edge cases). Stored in `mf_idempotency_keys` with `expires_at`; daily job purges expired rows.
+**Suggested section:** §7.7 idempotency.
 
 **What's missing.** Plan says "idempotent retries" but not for how long the key cache lives.
 
@@ -320,8 +378,8 @@ P0 task because it unblocks all the rest of the local development.
 
 ### MF-R14 · Beneficiary account closure with money in flight
 
-**Status:** pending
-**Suggested section:** §5 business rules
+**Status:** **resolved by closure rule** — instead of handling closed-account deposits at attribution time, **block account closure while any open `DepositRequest` exists** (parallel to CL-R5 blocking closure with outstanding credit lines). Operator must wait for the request to close (or cancel it) before closing the account. The closed-account in-flight scenario can't arise.
+**Suggested section:** extend the same §5 business rule used by CL-R5 to also cover open DepositRequests.
 
 **What's missing.** Beneficiary closes their FamilyFund account; a deposit lands at checking the next day with their old `DepositRequest` matching. What now?
 

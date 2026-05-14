@@ -57,9 +57,11 @@ class LineNotificationSettings
 
     public function delayNotificationEnabled(): bool
     {
-        // No DB column for enabled flag — derived from grace_days >= 0 and always-on by default.
-        // (Phase 2 settings model collapses on/off into the per-job logic; honored via DEFAULT.)
-        return self::DEFAULT_DELAY_NOTIFICATION_ENABLED;
+        // Wave-2 review (2026-05-14): wired to the new `delay_notification_enabled`
+        // column (migration 2026_05_14_000001). Defaults to true when the column
+        // is missing (older rows, or the migration hasn't run yet) so the
+        // existing late-notification behaviour is preserved.
+        return (bool) ($this->line->delay_notification_enabled ?? self::DEFAULT_DELAY_NOTIFICATION_ENABLED);
     }
 
     public function delayNotificationGraceDays(): int

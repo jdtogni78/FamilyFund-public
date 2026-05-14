@@ -142,9 +142,28 @@ class OutstandingCalculator
         if ($totalOutstanding <= 0) {
             // No outstanding — close the BOR row if it exists.
             if ($existing) {
-                $existing->end_dt = $asOf;
-                $existing->save();
+                // Wave-2 review: if the open row opened today and we are now
+                // closing it today, that's a zero-length row. Delete it instead.
+                if ($existing->start_dt && $existing->start_dt->toDateString() === $asOf) {
+                    $existing->delete();
+                } else {
+                    $existing->end_dt = $asOf;
+                    $existing->save();
+                }
             }
+            return;
+        }
+
+        // Wave-2 review (2026-05-14): same-day double-event used to leave a
+        // zero-length BOR row (start_dt=end_dt=today) plus a fresh open row.
+        // If the open row already starts today, update it in place instead of
+        // closing + re-opening — there's only ever one source of truth (the
+        // sum across all active lines), so an in-place update keeps history
+        // clean.
+        if ($existing && $existing->start_dt && $existing->start_dt->toDateString() === $asOf) {
+            $existing->shares = $totalOutstanding;
+            $existing->transaction_id = $triggeringTransactionId;
+            $existing->save();
             return;
         }
 

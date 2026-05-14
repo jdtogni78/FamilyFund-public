@@ -130,7 +130,10 @@
                 ],
             ],
         ];
-        $base = config('quickchart.base_url', 'http://quickchart:3400');
+        // Browser-side embed — use the public URL so the user's browser can
+        // resolve it. SSR / wkhtmltopdf paths use `base_url` and render via
+        // QuickchartUtil to a temp PNG instead, so they're unaffected.
+        $base = config('quickchart.public_url', config('quickchart.base_url', 'http://quickchart:3400'));
         $chartUrl = $base . '/chart?c=' . urlencode(json_encode($chartConfig));
     }
 @endphp

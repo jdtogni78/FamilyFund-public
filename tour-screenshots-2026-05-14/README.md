@@ -6,7 +6,7 @@ Test user: `claude@test.local` (admin). Target account: id 7 (Acct7, ~5391 OWN s
 
 This directory is **temporary** — to be removed in a follow-up commit once reviewed.
 
-> Note: these screenshots were captured *before* the trajectory-math fix in commit `9fbe11b`. The "Original plan" line on the trajectory chart shows 27.0833 increments instead of 20 — that bug is now fixed. A re-run will show the corrected chart. (See `credit_lines_bugs_found.md` #2.)
+> Re-captured after Phase 6 (`1af2c92`). Includes the post-fix trajectory chart (Original plan now steps by 20 as expected), and reflects all UC-20 / UC-37 / UC-46 / UC-47 wiring from Phase 6.
 
 ---
 
@@ -66,7 +66,7 @@ This directory is **temporary** — to be removed in a follow-up commit once rev
 
 ## 18 — Trajectory chart close-up
 <img src="18_trajectory_chart_closeup.png" width="380">
-*Pre-fix: notice "Original plan" steps by 27 (bug #2). After commit `9fbe11b` it should step by 20.*
+*Post-fix: "Original plan" now steps by 20 (correct), reaching 120 by month 6.*
 
 ## 19 — Fund show page, top
 <img src="19_fund_show_top.png" width="380">

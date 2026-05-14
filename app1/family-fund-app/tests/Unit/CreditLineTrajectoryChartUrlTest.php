@@ -14,10 +14,13 @@ use Tests\TestCase;
  */
 class CreditLineTrajectoryChartUrlTest extends TestCase
 {
-    public function test_trajectory_chart_partial_reads_quickchart_base_url_from_config(): void
+    public function test_trajectory_chart_partial_reads_quickchart_public_url_from_config(): void
     {
         // Override the config to a sentinel value.
-        config(['quickchart.base_url' => 'http://example.test:9999']);
+        config([
+            'quickchart.public_url' => 'http://example.test:9999',
+            'quickchart.base_url'   => 'http://quickchart-ssr:3400',
+        ]);
 
         $rendered = view('account_credit_lines._trajectory_chart', [
             'trajectory' => [

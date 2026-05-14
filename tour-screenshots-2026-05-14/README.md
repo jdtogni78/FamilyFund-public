@@ -11,74 +11,74 @@ This directory is **temporary** — to be removed in a follow-up commit once rev
 ---
 
 ## 01 — Account page before any credit line
-![](01_account_page_before.png)
+<img src="01_account_page_before.png" width="380">
 
 ## 01b — Same, widened to 1920px
-![](01b_account_page_before_wide.png)
+<img src="01b_account_page_before_wide.png" width="380">
 
 ## 02 — Credit-lines index (empty for Acct7)
-![](02_credit_lines_index_empty.png)
+<img src="02_credit_lines_index_empty.png" width="380">
 
 ## 03 — "New credit line" form, blank
-![](03_create_form_empty.png)
+<img src="03_create_form_empty.png" width="380">
 
 ## 04 — Form filled (120 shares, 6 months, monthly)
-![](04_create_form_filled.png)
+<img src="04_create_form_filled.png" width="380">
 
 ## 05 — Show page right after open
-![](05_show_page_just_opened.png)
+<img src="05_show_page_just_opened.png" width="380">
 
 ## 06 — Show page scrolled to schedule
-![](06_show_page_schedule_visible.png)
+<img src="06_show_page_schedule_visible.png" width="380">
 
 ## 07 — Show page scrolled to adjustment history (empty until readjust)
-![](07_show_page_adjustment_history.png)
+<img src="07_show_page_adjustment_history.png" width="380">
 
 ## 08 — Account page after the line exists
-![](08_account_page_after_open.png)
+<img src="08_account_page_after_open.png" width="380">
 
 ## 09 — Show page after first repayment (20 shares)
-![](09_show_after_first_repay.png)
+<img src="09_show_after_first_repay.png" width="380">
 
 ## 10 — Show page after second repayment (15 shares, partial)
-![](10_show_after_second_repay.png)
+<img src="10_show_after_second_repay.png" width="380">
 
 ## 11 — Schedule table after two repays
-![](11_schedule_after_two_repays.png)
+<img src="11_schedule_after_two_repays.png" width="380">
 
 ## 12 — Show page after readjust (6 → 12 months)
-![](12_show_after_readjust.png)
+<img src="12_show_after_readjust.png" width="380">
 
 ## 13 — Schedule after readjust: cancelled + new rows by due_date
-![](13_schedule_after_readjust.png)
+<img src="13_schedule_after_readjust.png" width="380">
 
 ## 14 — Adjustment timeline entry with old → new diff
-![](14_adjustment_timeline_with_entry.png)
+<img src="14_adjustment_timeline_with_entry.png" width="380">
 
 ## 15 — Schedule snapshot modal (Phase 4 wiring)
-![](15_schedule_snapshot_modal.png)
+<img src="15_schedule_snapshot_modal.png" width="380">
 
 ## 16 — Trajectory-at-point modal (Phase 4 wiring)
-![](16_trajectory_at_point_modal.png)
+<img src="16_trajectory_at_point_modal.png" width="380">
 
 ## 17 — Show page after reversing the partial REP
-![](17_show_after_reverse.png)
+<img src="17_show_after_reverse.png" width="380">
 
 ## 18 — Trajectory chart close-up
-![](18_trajectory_chart_closeup.png)
+<img src="18_trajectory_chart_closeup.png" width="380">
 *Pre-fix: notice "Original plan" steps by 27 (bug #2). After commit `9fbe11b` it should step by 20.*
 
 ## 19 — Fund show page, top
-![](19_fund_show_top.png)
+<img src="19_fund_show_top.png" width="380">
 
 ## 20 — Fund show page, bottom (admin "Cash position" panel)
-![](20_fund_show_bottom_admin_panel.png)
+<img src="20_fund_show_bottom_admin_panel.png" width="380">
 
 ## 21 — Account quarterly PDF (today)
-![](21_account_quarterly_pdf.png)
+<img src="21_account_quarterly_pdf.png" width="380">
 
 ## 22 — Fund quarterly PDF (today)
-![](22_fund_quarterly_pdf.png)
+<img src="22_fund_quarterly_pdf.png" width="380">
 
 ---
 

@@ -9,6 +9,7 @@ use App\Models\AccountExt;
 use App\Models\TransactionExt;
 use App\Services\CreditLine\Exceptions\OverBorrowException;
 use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
+use App\Services\CreditLine\Support\CreditLineBalanceTracker;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,9 @@ class DrawService
     public function __construct(
         private AmortizationScheduleBuilder $scheduleBuilder,
         private OutstandingCalculator $calculator,
+        private ?CreditLineBalanceTracker $balanceTracker = null,
     ) {
+        $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
     }
 
     /**
@@ -104,6 +107,15 @@ class DrawService
 
             // Update the aggregate BOR balance row on the account.
             $this->calculator->updateAggregateBorBalance($account, $originationDate->toDateString(), $borTransaction->id);
+
+            // Record the initial outstanding-shares balance for historical receivable
+            // reconstruction (Phase 4).
+            $this->balanceTracker->recordChange(
+                $line,
+                (float) $line->outstanding_shares,
+                $borTransaction,
+                $originationDate
+            );
 
             // Refresh so callers see the persisted state.
             $line->refresh();

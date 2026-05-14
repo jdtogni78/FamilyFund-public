@@ -12,6 +12,7 @@ use App\Models\AccountExt;
 use App\Models\UserExt;
 use App\Services\CreditLine\Adjust\AdjustmentHistoryBuilder;
 use App\Services\CreditLine\Adjust\ReadjustService;
+use App\Services\CreditLine\Adjust\ScheduleSnapshotBuilder;
 use App\Services\CreditLine\Cancel\CancelService;
 use App\Services\CreditLine\Draw\DrawService;
 use App\Services\CreditLine\Repay\RepayService;
@@ -70,8 +71,12 @@ class AccountCreditLineControllerExt extends AppBaseController
         return redirect(route('credit_lines.show', ['line' => $line->id]));
     }
 
-    public function show($id, TrajectoryBuilder $trajectoryBuilder, LoansSummaryBuilder $loansSummaryBuilder)
-    {
+    public function show(
+        $id,
+        TrajectoryBuilder $trajectoryBuilder,
+        LoansSummaryBuilder $loansSummaryBuilder,
+        ScheduleSnapshotBuilder $snapshotBuilder
+    ) {
         $line = AccountCreditLine::findOrFail($id);
         $account = $line->account()->first();
         $history = $this->historyBuilder->build($line);
@@ -79,13 +84,29 @@ class AccountCreditLineControllerExt extends AppBaseController
         $trajectory = $trajectoryBuilder->build($line);
         $loansSummary = $account ? $loansSummaryBuilder->forAccount($account) : [];
 
+        // Build per-adjustment schedule snapshots so the timeline can render
+        // an inline "View schedule at this point" modal for each adjustment
+        // (Phase 4, deferred from Phase 3).
+        $scheduleSnapshots = [];
+        foreach ($history as $entry) {
+            if (($entry['kind'] ?? null) !== 'adjustment') {
+                continue;
+            }
+            $adjId = $entry['data']['id'] ?? null;
+            $adjAt = $entry['data']['adjusted_at'] ?? $entry['date'] ?? null;
+            if ($adjId && $adjAt) {
+                $scheduleSnapshots[$adjId] = $snapshotBuilder->snapshotAt($line, $adjAt);
+            }
+        }
+
         return view('account_credit_lines.show')
             ->with('line', $line)
             ->with('account', $account)
             ->with('schedule', $schedule)
             ->with('history', $history)
             ->with('trajectory', $trajectory)
-            ->with('loansSummary', $loansSummary);
+            ->with('loansSummary', $loansSummary)
+            ->with('scheduleSnapshots', $scheduleSnapshots);
     }
 
     public function edit($id)

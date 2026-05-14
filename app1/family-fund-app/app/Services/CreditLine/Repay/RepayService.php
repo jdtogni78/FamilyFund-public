@@ -8,6 +8,7 @@ use App\Models\AccountExt;
 use App\Models\CreditLinePayment;
 use App\Models\TransactionExt;
 use App\Services\CreditLine\Matching\Contracts\ScheduleAdvancer;
+use App\Services\CreditLine\Support\CreditLineBalanceTracker;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,9 @@ class RepayService implements ScheduleAdvancer
 {
     public function __construct(
         private OutstandingCalculator $calculator,
+        private ?CreditLineBalanceTracker $balanceTracker = null,
     ) {
+        $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
     }
 
     /**
@@ -84,6 +87,15 @@ class RepayService implements ScheduleAdvancer
             $account = $line->account()->first();
             $this->calculator->updateAggregateBorBalance($account, $date->toDateString(), $repTransaction->id);
 
+            // Record the new outstanding for historical receivable reconstruction.
+            $line->refresh();
+            $this->balanceTracker->recordChange(
+                $line,
+                (float) $line->outstanding_shares,
+                $repTransaction,
+                $date
+            );
+
             return $repTransaction;
         });
     }
@@ -126,6 +138,15 @@ class RepayService implements ScheduleAdvancer
                     $tran->id
                 );
             }
+
+            // Record the new outstanding for historical receivable reconstruction.
+            $line->refresh();
+            $this->balanceTracker->recordChange(
+                $line,
+                (float) $line->outstanding_shares,
+                $tran,
+                \Carbon\Carbon::parse($tran->timestamp ?? \Carbon\Carbon::today())
+            );
         });
     }
 

@@ -112,6 +112,17 @@ class CreditLineFlowTest extends TestCase
         $line->refresh();
         $this->assertEquals(24, (int) $line->term_months);
 
+        // --- 3b. Verify show page surfaces the adjustment timeline actions
+        // (Phase 4: schedule snapshot + trajectory-through-this-point modals).
+        $showResponse = $this->actingAs($this->admin)->get(
+            route('credit_lines.show', ['line' => $line->id])
+        );
+        $showResponse->assertOk();
+        $showResponse->assertSee('View schedule at this point', false);
+        $showResponse->assertSee('View trajectory through this point', false);
+        $showResponse->assertSee('schedule-snapshot-', false);
+        $showResponse->assertSee('trajectory-through-', false);
+
         // --- 4. Reverse repayment --------------------------------------
         $reverseResponse = $this->actingAs($this->admin)->post(
             route('credit_lines.reverse', ['transaction' => $repTran->id]),

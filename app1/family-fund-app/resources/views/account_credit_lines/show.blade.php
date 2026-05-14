@@ -155,12 +155,30 @@
                         @endphp
                         @if($kind === 'adjustment')
                             <div class="border-start border-3 border-warning ps-3 mb-3">
-                                <div class="small text-muted">
-                                    {{ optional($date)->format('Y-m-d') }}
-                                    @if(!empty($data['adjusted_by']))
-                                        &mdash; by {{ $data['adjusted_by']->email ?? $data['adjusted_by']->name ?? 'admin' }}
-                                    @else
-                                        &mdash; system
+                                <div class="small text-muted d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {{ optional($date)->format('Y-m-d') }}
+                                        @if(!empty($data['adjusted_by']))
+                                            &mdash; by {{ $data['adjusted_by']->email ?? $data['adjusted_by']->name ?? 'admin' }}
+                                        @else
+                                            &mdash; system
+                                        @endif
+                                    </span>
+                                    @if(!empty($data['id']))
+                                        <span>
+                                            <button type="button"
+                                                    class="btn btn-link btn-sm p-0 me-2"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#schedule-snapshot-{{ $data['id'] }}">
+                                                View schedule at this point
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-link btn-sm p-0"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#trajectory-through-{{ $data['id'] }}">
+                                                View trajectory through this point
+                                            </button>
+                                        </span>
                                     @endif
                                 </div>
                                 <div class="row mt-1">
@@ -219,5 +237,80 @@
             @endif
         </div>
     </div>
+
+    {{-- Schedule-snapshot and trajectory-truncated modals per adjustment (Phase 4). --}}
+    @foreach($items as $entry)
+        @php
+            $kind = $entry['kind'] ?? null;
+            $data = $entry['data'] ?? [];
+            $adjId = $data['id'] ?? null;
+            $adjAt = $data['adjusted_at'] ?? $entry['date'] ?? null;
+            $adjAtStr = $adjAt ? \Illuminate\Support\Carbon::parse($adjAt)->format('Y-m-d') : '';
+            $snapshot = ($adjId && isset($scheduleSnapshots[$adjId])) ? $scheduleSnapshots[$adjId] : collect();
+        @endphp
+        @if($kind === 'adjustment' && $adjId)
+            <div class="modal fade"
+                 id="schedule-snapshot-{{ $adjId }}"
+                 tabindex="-1"
+                 aria-labelledby="schedule-snapshot-{{ $adjId }}-label"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="schedule-snapshot-{{ $adjId }}-label">
+                                Schedule as of {{ $adjAtStr }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if($snapshot->isEmpty())
+                                <p class="text-muted mb-0">No schedule rows existed at this point.</p>
+                            @else
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr><th>#</th><th>Due date</th><th>Shares</th><th>Status (then)</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach($snapshot as $row)
+                                        <tr>
+                                            <td>{{ $row->sequence_number ?? $row->id }}</td>
+                                            <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
+                                            <td>{{ number_format($row->shares_due, 4) }}</td>
+                                            <td>{{ $row->status }}</td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade"
+                 id="trajectory-through-{{ $adjId }}"
+                 tabindex="-1"
+                 aria-labelledby="trajectory-through-{{ $adjId }}-label"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="trajectory-through-{{ $adjId }}-label">
+                                Trajectory through {{ $adjAtStr }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @include('account_credit_lines._trajectory_chart', [
+                                'trajectory' => $trajectory ?? [],
+                                'chartUrl' => null,
+                                'truncateAt' => $adjAtStr,
+                            ])
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endforeach
 </div>
 </x-app-layout>

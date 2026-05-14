@@ -9,6 +9,7 @@ use App\Models\TransactionReversal;
 use App\Models\UserExt;
 use App\Services\CreditLine\Reverse\Exceptions\AlreadyReversedException;
 use App\Services\CreditLine\Reverse\Exceptions\NotReversibleTypeException;
+use App\Services\CreditLine\Support\CreditLineBalanceTracker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -52,7 +53,9 @@ class ReverseService
 {
     public function __construct(
         private ReversalOutstandingRecomputer $recomputer,
+        private ?CreditLineBalanceTracker $balanceTracker = null,
     ) {
+        $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
     }
 
     /**
@@ -111,6 +114,16 @@ class ReverseService
                     // auto-set status=paid_off. paid_off is a forward-state-only transition.
                     // The line stays active (or whatever its current status is) — admin
                     // can close it explicitly via CancelService if desired.
+
+                    // Record the post-reversal outstanding for historical receivable
+                    // reconstruction.
+                    $line->refresh();
+                    $this->balanceTracker->recordChange(
+                        $line,
+                        (float) $line->outstanding_shares,
+                        $tran,
+                        Carbon::today()
+                    );
                 }
             }
 

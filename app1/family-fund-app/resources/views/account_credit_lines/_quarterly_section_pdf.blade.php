@@ -6,34 +6,28 @@
       $quarterEnd   – Carbon (optional; defaults to end of current quarter)
 --}}
 @php
-    use App\Models\AccountCreditLine;
-    use App\Models\CreditLineAdjustment;
-    use App\Models\TransactionExt;
-    use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
-    use Carbon\Carbon;
+    $quarterStart = $quarterStart ?? \Carbon\Carbon::now()->startOfQuarter();
+    $quarterEnd   = $quarterEnd   ?? \Carbon\Carbon::now()->endOfQuarter();
 
-    $quarterStart = $quarterStart ?? Carbon::now()->startOfQuarter();
-    $quarterEnd   = $quarterEnd   ?? Carbon::now()->endOfQuarter();
-
-    $lines = AccountCreditLine::where('account_id', $account->id)->get();
+    $lines = \App\Models\AccountCreditLine::where('account_id', $account->id)->get();
     if ($lines->isNotEmpty()) {
         try {
-            $loansSummary = app(LoansSummaryBuilder::class)->forAccount($account);
+            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)->forAccount($account);
         } catch (\Throwable $e) {
             $loansSummary = [];
         }
 
         // Per-line activity in the quarter.
         $lineIds = $lines->pluck('id');
-        $qReps = TransactionExt::where('account_id', $account->id)
-            ->where('type', TransactionExt::TYPE_REPAY)
-            ->where('status', TransactionExt::STATUS_CLEARED)
+        $qReps = \App\Models\TransactionExt::where('account_id', $account->id)
+            ->where('type', \App\Models\TransactionExt::TYPE_REPAY)
+            ->where('status', \App\Models\TransactionExt::STATUS_CLEARED)
             ->where('reversed', false)
             ->whereBetween('timestamp', [$quarterStart, $quarterEnd])
             ->get()
             ->groupBy('account_credit_line_id');
 
-        $qAdjustments = CreditLineAdjustment::whereIn('account_credit_line_id', $lineIds)
+        $qAdjustments = \App\Models\CreditLineAdjustment::whereIn('account_credit_line_id', $lineIds)
             ->whereBetween('adjusted_at', [$quarterStart, $quarterEnd])
             ->orderBy('adjusted_at')
             ->get();

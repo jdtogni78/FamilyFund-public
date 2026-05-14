@@ -8,8 +8,6 @@
                      requiring the controller to pre-render.
 --}}
 @php
-    use App\Services\CreditLine\Reporting\TrajectoryBuilder;
-
     $trajectory = $trajectory ?? [];
     $original   = $trajectory['original_plan']      ?? [];
     $historical = $trajectory['historical_plans']   ?? [];
@@ -18,6 +16,29 @@
     $projected  = $trajectory['projected_payoff_date'] ?? null;
     $planned    = $trajectory['planned_payoff_date']   ?? null;
     $variance   = $trajectory['variance_days']         ?? null;
+
+    // Optional truncation: when set, only include series data points whose
+    // date is on or before $truncateAt (a 'Y-m-d' string). Used by the
+    // "View trajectory through this point" inline action on the adjustment
+    // timeline.
+    $truncateAt = $truncateAt ?? null;
+    if ($truncateAt) {
+        $filterFn = fn ($series) => array_values(array_filter(
+            $series, fn ($p) => isset($p['date']) && $p['date'] <= $truncateAt
+        ));
+        $original   = $filterFn($original);
+        $current    = $filterFn($current);
+        $actual     = $filterFn($actual);
+        $historical = array_values(array_filter(array_map(function ($h) use ($filterFn, $truncateAt) {
+            if (($h['adjusted_at'] ?? null) && $h['adjusted_at'] > $truncateAt) {
+                return null;
+            }
+            $h['series'] = $filterFn($h['series'] ?? []);
+            return $h;
+        }, $historical)));
+        $projected = null;
+        $variance  = null;
+    }
 
     // Collect all unique dates for x-axis labels.
     $allDates = collect()
@@ -57,11 +78,16 @@
             'borderWidth'  => 2,
         ];
     }
+    // Per-generation palette — cycled by generation index so each historical
+    // plan renders with a distinct color while remaining visually subordinate
+    // to the bold "current plan" line.
+    $generationPalette = ['#9999ff', '#9999cc', '#99cccc', '#99cc99', '#cccc99'];
     foreach ($historical as $i => $h) {
+        $color = $generationPalette[$i % count($generationPalette)];
         $datasets[] = [
             'label'       => 'Plan after ' . $h['adjusted_at'],
             'data'        => $alignSeries($h['series']),
-            'borderColor' => 'rgba(160,160,200,0.55)',
+            'borderColor' => $color,
             'borderDash'  => [3, 3],
             'fill'        => false,
             'pointRadius' => 0,

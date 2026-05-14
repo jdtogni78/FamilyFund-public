@@ -1,16 +1,12 @@
 @php
-    use App\Models\AccountCreditLine;
-    use App\Models\TransactionExt;
-    use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
-
-    $lines = AccountCreditLine::where('account_id', $account->id)
+    $lines = \App\Models\AccountCreditLine::where('account_id', $account->id)
         ->orderByDesc('id')
         ->get();
 
-    $flaggedCount = TransactionExt::where('account_id', $account->id)
+    $flaggedCount = \App\Models\TransactionExt::where('account_id', $account->id)
         ->whereIn('credit_line_match_status', [
-            TransactionExt::MATCH_STATUS_AMBIGUOUS,
-            TransactionExt::MATCH_STATUS_UNMATCHED,
+            \App\Models\TransactionExt::MATCH_STATUS_AMBIGUOUS,
+            \App\Models\TransactionExt::MATCH_STATUS_UNMATCHED,
         ])
         ->count();
 
@@ -23,7 +19,7 @@
     $loansSummary = [];
     if ($lines->isNotEmpty()) {
         try {
-            $loansSummary = app(LoansSummaryBuilder::class)->forAccount($account);
+            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)->forAccount($account);
         } catch (\Throwable $e) {
             $loansSummary = [];
         }

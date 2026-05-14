@@ -26,6 +26,13 @@ class AdminTransactionController extends AppBaseController
 {
     public function create()
     {
+        // Wave-2 review (2026-05-14): GET endpoint was auth-protected but not
+        // admin-gated — any logged-in user could pre-fill the form and see the
+        // account / credit-line lists. Match the simulator() gate pattern.
+        if (!auth()->user()?->is_admin()) {
+            abort(403);
+        }
+
         $accounts    = AccountExt::orderBy('nickname')->get(['id', 'nickname']);
         $creditLines = AccountCreditLine::orderByDesc('id')
             ->get(['id', 'account_id', 'descr', 'status']);

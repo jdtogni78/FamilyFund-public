@@ -38,8 +38,24 @@ class AccountCreditLineControllerExt extends AppBaseController
         private readonly AdjustmentHistoryBuilder $historyBuilder,
     ) {}
 
+    /**
+     * Admin gate for read-only credit-line endpoints.
+     *
+     * Wave-2 review (2026-05-14) flagged that index/show/create/edit had no
+     * is_admin() check — only `simulator()` did. A non-admin authenticated
+     * user could GET other accounts' credit-line data. Mirror the simulator
+     * gate pattern here as a shared helper.
+     */
+    private function ensureAdmin(): void
+    {
+        if (!auth()->user()?->is_admin()) {
+            abort(403);
+        }
+    }
+
     public function index($accountId)
     {
+        $this->ensureAdmin();
         $account = AccountExt::findOrFail($accountId);
         $lines = AccountCreditLine::where('account_id', $account->id)
             ->orderByDesc('id')
@@ -52,6 +68,7 @@ class AccountCreditLineControllerExt extends AppBaseController
 
     public function create($accountId)
     {
+        $this->ensureAdmin();
         $account = AccountExt::findOrFail($accountId);
 
         return view('account_credit_lines.create')
@@ -88,6 +105,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         LoansSummaryBuilder $loansSummaryBuilder,
         ScheduleSnapshotBuilder $snapshotBuilder
     ) {
+        $this->ensureAdmin();
         $line = AccountCreditLine::findOrFail($id);
         $account = $line->account()->first();
         $history = $this->historyBuilder->build($line);
@@ -122,6 +140,7 @@ class AccountCreditLineControllerExt extends AppBaseController
 
     public function edit($id)
     {
+        $this->ensureAdmin();
         $line = AccountCreditLine::findOrFail($id);
 
         return view('account_credit_lines.edit')
@@ -220,9 +239,7 @@ class AccountCreditLineControllerExt extends AppBaseController
      */
     public function simulator($id, Request $request, PaymentSimulator $simulator)
     {
-        if (!auth()->user()?->is_admin()) {
-            abort(403);
-        }
+        $this->ensureAdmin();
 
         $line = AccountCreditLine::findOrFail($id);
         $account = $line->account()->first();

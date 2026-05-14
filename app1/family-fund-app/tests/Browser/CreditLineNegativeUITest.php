@@ -374,6 +374,93 @@ class CreditLineNegativeUITest extends DuskTestCase
         return count($browser->elements($selector)) > 0;
     }
 
+    // ---------------------------------------------------------------
+     // Wave-2 review (2026-05-14): admin-gate enforcement on GET endpoints.
+     //
+     // Before the fix, AccountCreditLineControllerExt::{index,show,edit} and
+     // AdminTransactionController::create() were only auth-protected. A non-
+     // admin authenticated user could GET other accounts' credit-line data.
+     // These four tests assert the gate now returns 403 / "Forbidden" /
+     // "unauthorized" for a non-admin user.
+     // ---------------------------------------------------------------
+
+    public function test_non_admin_cannot_get_credit_lines_index(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines')
+                ->pause(500)
+                ->screenshot('negative/gate_index');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /accounts/{id}/credit-lines should be 403.');
+        });
+    }
+
+    public function test_non_admin_cannot_get_credit_line_show(): void
+    {
+        // Find any existing credit line (the dev DB normally has a few from the
+        // happy-path tour; fall back to a synthetic id which will 404 — also a
+        // valid non-200 outcome and still proves the page is not viewable).
+        $line = AccountCreditLine::orderByDesc('id')->first();
+        $lineId = $line?->id ?? 999999;
+
+        $this->browse(function (Browser $browser) use ($lineId) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/credit-lines/' . $lineId)
+                ->pause(500)
+                ->screenshot('negative/gate_show');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id} should be 403.');
+        });
+    }
+
+    public function test_non_admin_cannot_get_credit_line_edit(): void
+    {
+        $line = AccountCreditLine::orderByDesc('id')->first();
+        $lineId = $line?->id ?? 999999;
+
+        $this->browse(function (Browser $browser) use ($lineId) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/credit-lines/' . $lineId . '/edit')
+                ->pause(500)
+                ->screenshot('negative/gate_edit');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id}/edit should be 403.');
+        });
+    }
+
+    public function test_non_admin_cannot_get_admin_transaction_create(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/admin/transactions/create')
+                ->pause(500)
+                ->screenshot('negative/gate_admin_tx_create');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /admin/transactions/create should be 403.');
+        });
+    }
+
     /**
      * Soft-cancel a credit line to avoid polluting dev data.
      */

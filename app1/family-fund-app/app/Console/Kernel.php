@@ -2,6 +2,8 @@
 
 namespace App\Console;
 
+use App\Jobs\CreditLine\ScanLatePaymentsJob;
+use App\Jobs\CreditLine\ScanRemindersJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -24,7 +26,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Credit-line: daily reminder + late-payment scans (Phase 2 wiring).
+        $schedule->call(fn () => ScanRemindersJob::dispatch())
+            ->dailyAt('07:00')
+            ->name('credit_lines.scan_reminders')
+            ->withoutOverlapping();
+
+        $schedule->call(fn () => ScanLatePaymentsJob::dispatch())
+            ->dailyAt('07:15')
+            ->name('credit_lines.scan_late_payments')
+            ->withoutOverlapping();
     }
 
     /**

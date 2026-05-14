@@ -33,6 +33,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('funds._credit_line_exposure', ['fund' => $fund])
         </div>
     </div>
 </x-app-layout>

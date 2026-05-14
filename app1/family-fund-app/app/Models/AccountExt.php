@@ -58,6 +58,11 @@ class AccountExt extends Account
             ->orderBy('timestamp');
     }
 
+    public function creditLines()
+    {
+        return $this->hasMany(\App\Models\AccountCreditLineExt::class, 'account_id');
+    }
+
     public function depositedValueBetween($start, $end)
     {
         $query = TransactionExt::where('account_id', $this->id)
@@ -117,15 +122,9 @@ class AccountExt extends Account
 
     public function sharesAsOf($now) {
         $accountBalances = $this->allSharesAsOf($now);
-//        Log::debug("share val as of $now " .$accountBalances->count());
-        foreach ($accountBalances as $balance) {
-//            Log::debug(json_encode($balance->toArray()));
-            if ($balance->type == 'OWN') {
-                return $balance->shares;
-            }
-            // TODO: discount BORROW!!
-        }
-        return 0;
+        $own = isset($accountBalances['OWN']) ? (float) $accountBalances['OWN']->shares : 0;
+        $bor = isset($accountBalances['BOR']) ? (float) $accountBalances['BOR']->shares : 0;
+        return $own - $bor;
     }
 
     public function valueAsOf($now) {

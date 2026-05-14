@@ -78,6 +78,37 @@ class FundExt extends Fund
         return $value / $shares;
     }
 
+    /**
+     * Dollar value of the credit-line receivable held by this fund as of $now.
+     * See docs/credit_lines/fund_cashflow.md (receivable-as-asset).
+     *
+     * Returns 0 when there are no active credit lines. Safe to call even
+     * before the credit-line tables exist (defensive try/catch).
+     */
+    public function creditLineReceivableValueAsOf($now): float
+    {
+        try {
+            $asOf = $now instanceof \Carbon\Carbon ? $now : Carbon::parse((string) $now);
+            $calc = \App::make(\App\Services\CreditLine\Reporting\FundReceivableCalculator::class);
+            return (float) $calc->receivableValue($this, $asOf);
+        } catch (\Throwable $e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Fund value INCLUDING the credit-line receivable.
+     *
+     * Deliberately separate from valueAsOf(): existing tests, reports, and
+     * NAV history must continue to use the cash+portfolio computation. Use
+     * this method only in reporting that explicitly wants the receivable-as-asset
+     * NAV view. See docs/credit_lines/fund_cashflow.md.
+     */
+    public function valueWithCreditLinesAsOf($now, $verbose = false)
+    {
+        return $this->valueAsOf($now, $verbose) + $this->creditLineReceivableValueAsOf($now);
+    }
+
     public function allocatedShares($now, $inverse=false) {
         $accountRepo = \App::make(AccountRepository::class);
         $query = $accountRepo->makeModel()->newQuery();

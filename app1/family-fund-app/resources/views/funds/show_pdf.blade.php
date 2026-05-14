@@ -464,4 +464,14 @@
             </div>
         </div>
     @endif
+
+    {{-- ============================================== --}}
+    {{-- CREDIT-LINE EXPOSURE (UC-17) --}}
+    {{-- ============================================== --}}
+    @php
+        $fundForCredit = isset($api['id']) ? \App\Models\FundExt::find($api['id']) : null;
+    @endphp
+    @if($fundForCredit)
+        @include('funds._credit_line_exposure_pdf', ['fund' => $fundForCredit])
+    @endif
 @endsection

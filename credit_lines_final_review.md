@@ -33,7 +33,7 @@ original plan**.
 | UC-18 Reminder before due | ✅ | Wave 1d `ScanRemindersJob` |
 | UC-19 Delay notification | ✅ | Wave 1d cap-respecting sweep |
 | UC-20 Configure reminders | ✅ | Phase 6 edit form |
-| UC-21 Historical (as-of) view | ✅ | Phase 4 `account_credit_line_balances` temporal table follows the same `start_dt/end_dt` pattern as the existing `account_balances`. All three write paths (Draw, Repay, Reverse) call `CreditLineBalanceTracker::recordChange`, so undo via reversal also writes a new temporal row. The "partial" caveat in earlier audit docs only applied to hypothetical pre-Phase-4 lines — none exist (the borrowing feature was never used before this build), so no backfill is needed. |
+| UC-21 Historical (as-of) view | ✅ | Phase 4 `account_credit_line_balances` temporal table follows the same `start_dt/end_dt` pattern as the existing `account_balances`. All three write paths (Draw, Repay, Reverse) call `CreditLineBalanceTracker::recordChange`, so undo via reversal also writes a new temporal row. Verified 2026-05-14 by scanning prod + dev backups (`familyfund_*_data_20260419.sql`): 0 BOR / 0 REP transactions, no `account_credit_line*` tables exist — the borrowing feature was genuinely never used before this build, no backfill needed. |
 | UC-22 Fund NAV during life of line | ✅ | Phase 3 receivable-as-asset + Phase 4 historical |
 | UC-23 Multiple accounts | ✅ | Per-account services compose naturally |
 | UC-24 `sharesAsOf` discounts BOR | ✅ | Phase 0 |

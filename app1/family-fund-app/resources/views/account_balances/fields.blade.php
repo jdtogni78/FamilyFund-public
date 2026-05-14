@@ -4,17 +4,19 @@
     }
 </style>
 
-<div class="row">
-    <!-- Account Id Field -->
-    <div class="form-group col-md-6 mb-3">
-        <label for="account_id" class="form-label">
-            <i class="fa fa-user me-1"></i> Account ID <span class="text-danger">*</span>
-        </label>
-        <input type="number" name="account_id" id="account_id" class="form-control"
-               value="{{ $accountBalance->account_id ?? old('account_id') }}" required>
-        <small class="text-body-secondary">ID of the account</small>
-    </div>
+<!-- Fund-filtered Account Selector -->
+@php
+    $selectedAccounts = old('account_id', $accountBalance->account_id ?? null);
+@endphp
+@include('partials.fund_account_selector', [
+    'selectedAccounts' => $selectedAccounts ? [$selectedAccounts] : [],
+    'multiple' => false,
+    'fieldName' => 'account_id'
+])
 
+<hr class="my-3">
+
+<div class="row">
     <!-- Type Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="type" class="form-label">
@@ -24,9 +26,7 @@
                value="{{ $accountBalance->type ?? old('type') }}" required>
         <small class="text-body-secondary">Balance type code (max 3 characters)</small>
     </div>
-</div>
 
-<div class="row">
     <!-- Shares Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="shares" class="form-label">
@@ -36,7 +36,9 @@
                value="{{ $accountBalance->shares ?? old('shares') }}" required>
         <small class="text-body-secondary">Number of shares in this balance</small>
     </div>
+</div>
 
+<div class="row">
     <!-- Transaction Id Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="transaction_id" class="form-label">
@@ -46,11 +48,7 @@
                value="{{ $accountBalance->transaction_id ?? old('transaction_id') }}">
         <small class="text-body-secondary">Linked transaction (if applicable)</small>
     </div>
-</div>
 
-<hr class="my-3">
-
-<div class="row">
     <!-- Previous Balance Id Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="previous_balance_id" class="form-label">
@@ -60,8 +58,6 @@
                value="{{ $accountBalance->previous_balance_id ?? old('previous_balance_id') }}">
         <small class="text-body-secondary">Link to previous balance record</small>
     </div>
-
-    <div class="col-md-6"></div>
 </div>
 
 <div class="row">

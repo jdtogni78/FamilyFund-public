@@ -12,9 +12,7 @@
             <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund(s):</label>
             <p class="mb-0">
                 @forelse($portfolio->funds as $fund)
-                    <a href="{{ route('funds.show', $fund->id) }}" class="badge bg-primary me-1">
-                        {{ $fund->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('funds.show', $fund->id), 'text' => $fund->name, 'class' => 'badge bg-primary me-1'])
                 @empty
                     <span class="text-body-secondary">N/A</span>
                 @endforelse

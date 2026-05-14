@@ -1,0 +1,37 @@
+# Dev2-specific overrides for running alongside main FamilyFund
+# Usage: docker compose -p familyfund-dev2 -f docker-compose.yml -f docker-compose.dev2.yml up -d mariadb familyfund
+# Note: Shares mailhog/quickchart with main instance
+
+services:
+  mariadb:
+    container_name: db-dev2
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - MARIADB_USER=famfun_dev
+      - MARIADB_DATABASE=familyfund_dev2
+      - MARIADB_PASSWORD=1234
+      - MARIADB_ROOT_PASSWORD=123456
+    ports:
+      - 3309:3306
+    volumes:
+      - ./datadir_dev2:/var/lib/mysql
+
+  familyfund:
+    container_name: familyfund-dev2
+    environment:
+      - DB_HOST=mariadb
+      - DB_DATABASE=familyfund_dev2
+      - DB_USERNAME=root
+      - DB_PASSWORD=123456
+      - APP_ENV=local
+      - MAIL_HOST=mail
+      - QUICKCHART_HOST=quickchart
+    ports:
+      - 3002:8000
+    networks:
+      - default
+      - app1_default
+
+networks:
+  app1_default:
+    external: true

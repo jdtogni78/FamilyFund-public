@@ -4,20 +4,19 @@
     }
 </style>
 
-<div class="row">
-    <!-- Account Id Field -->
-    <div class="form-group col-md-6 mb-3">
-        <label for="account_id" class="form-label">
-            <i class="fa fa-user me-1"></i> Account <span class="text-danger">*</span>
-        </label>
-        <select name="account_id" id="account_id" class="form-control form-select" required>
-            @foreach($api['accountMap'] ?? [] as $value => $label)
-                <option value="{{ $value }}" {{ (isset($accountGoal) && $accountGoal->account_id == $value) ? 'selected' : '' }}>{{ $label }}</option>
-            @endforeach
-        </select>
-        <small class="text-body-secondary">Account to link with goal</small>
-    </div>
+<!-- Fund-filtered Account Selector -->
+@php
+    $selectedAccounts = old('account_id', $accountGoal->account_id ?? null);
+@endphp
+@include('partials.fund_account_selector', [
+    'selectedAccounts' => $selectedAccounts ? [$selectedAccounts] : [],
+    'multiple' => false,
+    'fieldName' => 'account_id'
+])
 
+<hr class="my-3">
+
+<div class="row">
     <!-- Goal Id Field -->
     <div class="form-group col-md-6 mb-3">
         <label for="goal_id" class="form-label">
@@ -30,6 +29,8 @@
         </select>
         <small class="text-body-secondary">Goal to assign to account</small>
     </div>
+
+    <div class="col-md-6"></div>
 </div>
 
 <hr class="my-4">

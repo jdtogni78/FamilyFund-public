@@ -13,6 +13,68 @@ class AssetPriceApiTest extends TestCase
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
     #[Test]
+    public function test_index_asset_prices()
+    {
+        // Create multiple asset prices
+        $assetPrice1 = AssetPrice::factory()->create();
+        $assetPrice2 = AssetPrice::factory()->create();
+
+        $this->response = $this->json(
+            'GET',
+            '/api/asset_prices'
+        );
+
+        $this->response->assertStatus(200);
+        $this->response->assertJson(['success' => true]);
+        $responseData = $this->response->json('data');
+        $this->assertIsArray($responseData);
+        $this->assertGreaterThanOrEqual(2, count($responseData));
+    }
+
+    #[Test]
+    public function test_index_asset_prices_with_pagination()
+    {
+        // Create multiple asset prices
+        AssetPrice::factory()->count(5)->create();
+
+        // Test with skip and limit
+        $this->response = $this->json(
+            'GET',
+            '/api/asset_prices?skip=1&limit=2'
+        );
+
+        $this->response->assertStatus(200);
+        $this->response->assertJson(['success' => true]);
+        $responseData = $this->response->json('data');
+        $this->assertIsArray($responseData);
+        $this->assertLessThanOrEqual(2, count($responseData));
+    }
+
+    #[Test]
+    public function test_index_asset_prices_with_filter()
+    {
+        // Create asset with specific price
+        $asset = Asset::factory()->create();
+        $assetPrice = AssetPrice::factory()->create(['asset_id' => $asset->id]);
+
+        // Test filtering by asset_id
+        $this->response = $this->json(
+            'GET',
+            '/api/asset_prices?asset_id=' . $asset->id
+        );
+
+        $this->response->assertStatus(200);
+        $this->response->assertJson(['success' => true]);
+        $responseData = $this->response->json('data');
+        $this->assertIsArray($responseData);
+        $this->assertGreaterThanOrEqual(1, count($responseData));
+        // Verify all returned records belong to the same asset
+        foreach ($responseData as $item) {
+            $this->assertEquals($asset->id, $item['asset_id']);
+        }
+    }
+
+    #[Test]
     public function test_create_asset_price()
     {
         // Create asset first so it exists in the database
@@ -48,6 +110,17 @@ class AssetPriceApiTest extends TestCase
     }
 
     #[Test]
+    public function test_read_asset_price_not_found()
+    {
+        $this->response = $this->json(
+            'GET',
+            '/api/asset_prices/999999'
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
     public function test_update_asset_price()
     {
         $assetPrice = AssetPrice::factory()->create();
@@ -65,6 +138,21 @@ class AssetPriceApiTest extends TestCase
     }
 
     #[Test]
+    public function test_update_asset_price_not_found()
+    {
+        $asset = Asset::factory()->create();
+        $editedAssetPrice = AssetPrice::factory()->make(['asset_id' => $asset->id])->toArray();
+
+        $this->response = $this->json(
+            'PUT',
+            '/api/asset_prices/999999',
+            $editedAssetPrice
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
     public function test_delete_asset_price()
     {
         $assetPrice = AssetPrice::factory()->create();
@@ -78,6 +166,17 @@ class AssetPriceApiTest extends TestCase
         $this->response = $this->json(
             'GET',
             '/api/asset_prices/'.$assetPrice->id
+        );
+
+        $this->response->assertStatus(404);
+    }
+
+    #[Test]
+    public function test_delete_asset_price_not_found()
+    {
+        $this->response = $this->json(
+            'DELETE',
+            '/api/asset_prices/999999'
         );
 
         $this->response->assertStatus(404);

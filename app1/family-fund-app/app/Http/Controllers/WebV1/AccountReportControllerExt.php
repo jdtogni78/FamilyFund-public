@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Controllers\AccountReportController;
+use App\Http\Controllers\Traits\AccountSelectorTrait;
 use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
 use App\Jobs\SendAccountReport;
@@ -17,6 +18,7 @@ use Response;
 
 class AccountReportControllerExt extends AccountReportController
 {
+    use AccountSelectorTrait;
     public function __construct(AccountReportRepository $accountReportRepository)
     {
         parent::__construct($accountReportRepository);
@@ -72,14 +74,29 @@ class AccountReportControllerExt extends AccountReportController
 
     public function create()
     {
-        $api = [
-            'typeMap' => AccountReportExt::$typeMap,
-            'accounts' => Account::with('fund')
-                ->orderBy('nickname')
-                ->get()
-                ->mapWithKeys(fn($a) => [$a->id => $a->nickname . ' (' . ($a->fund->name ?? 'No Fund') . ')']),
-        ];
-        return parent::create()->with('api', $api);
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['typeMap' => AccountReportExt::$typeMap]
+        );
+        return view('account_reports.create')->with('api', $api);
+    }
+
+    public function edit($id)
+    {
+        $accountReport = $this->accountReportRepository->find($id);
+
+        if (empty($accountReport)) {
+            Flash::error('Account Report not found');
+            return redirect(route('accountReports.index'));
+        }
+
+        $api = array_merge(
+            $this->getAccountSelectorData(),
+            ['typeMap' => AccountReportExt::$typeMap]
+        );
+        return view('account_reports.edit')
+            ->with('accountReport', $accountReport)
+            ->with('api', $api);
     }
 
     public function show($id)

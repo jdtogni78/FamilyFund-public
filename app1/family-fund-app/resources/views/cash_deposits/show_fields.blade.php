@@ -20,16 +20,14 @@
             <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Account:</label>
             <p class="mb-0">
                 @if($account)
-                    <a href="{{ route('accounts.show', $account->id) }}" class="fw-bold">
-                        {{ $account->nickname }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname, 'class' => 'fw-bold'])
                     @if($account->code)
                         <span class="text-body-secondary">({{ $account->code }})</span>
                     @endif
                     @if($account->fund)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-landmark me-1"></i>
-                            <a href="{{ route('funds.show', $account->fund_id) }}">{{ $account->fund->name }}</a>
+                            @include('partials.view_link', ['route' => route('funds.show', $account->fund_id), 'text' => $account->fund->name])
                         </small>
                     @endif
                 @else
@@ -88,9 +86,7 @@
             <label class="text-body-secondary"><i class="fa fa-exchange-alt me-1"></i> Transaction:</label>
             <p class="mb-0">
                 @if($transaction)
-                    <a href="{{ route('transactions.show', $transaction->id) }}">
-                        #{{ $transaction->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('transactions.show', $transaction->id), 'text' => '#' . $transaction->id])
                     <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
@@ -127,10 +123,10 @@
             <tbody>
                 @foreach($cashDeposit->depositRequests as $dr)
                 <tr>
-                    <td><a href="{{ route('depositRequests.show', $dr->id) }}">#{{ $dr->id }}</a></td>
+                    <td>@include('partials.view_link', ['route' => route('depositRequests.show', $dr->id), 'text' => '#' . $dr->id])</td>
                     <td>
                         @if($dr->account)
-                            <a href="{{ route('accounts.show', $dr->account_id) }}">{{ $dr->account->nickname }}</a>
+                            @include('partials.view_link', ['route' => route('accounts.show', $dr->account_id), 'text' => $dr->account->nickname])
                         @else
                             #{{ $dr->account_id }}
                         @endif

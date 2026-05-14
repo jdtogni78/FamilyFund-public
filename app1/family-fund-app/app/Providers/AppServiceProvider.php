@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Listeners\LogQueueJobCompletion;
+use App\Models\Transaction;
+use App\Observers\TransactionObserver;
+use App\Services\CreditLine\Matching\Contracts\ScheduleAdvancer;
+use App\Services\CreditLine\Repay\RepayService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
@@ -29,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
 
             return new \App\Services\SnappyPdfWrapper($snappy);
         });
+
+        // Credit-line: bind the ScheduleAdvancer contract (wave 1b → wave 1a).
+        $this->app->bind(ScheduleAdvancer::class, RepayService::class);
     }
 
     /**
@@ -49,6 +56,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register queue job event subscriber
         Event::subscribe(LogQueueJobCompletion::class);
+
+        // Credit-line: observe Transaction saves to drive detection / classification.
+        Transaction::observe(TransactionObserver::class);
 
         // Note: LogSentEmail listener is auto-discovered by Laravel 11
         // based on the MessageSent type-hint in the handle() method

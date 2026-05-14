@@ -42,7 +42,8 @@ class MatchingRule extends Model
         'dollar_range_end',
         'date_start',
         'date_end',
-        'match_percent'
+        'match_percent',
+        'applies_to_rep'
     ];
 
     /**
@@ -57,7 +58,8 @@ class MatchingRule extends Model
         'dollar_range_end' => 'decimal:2',
         'date_start' => 'date',
         'date_end' => 'date',
-        'match_percent' => 'decimal:2'
+        'match_percent' => 'decimal:2',
+        'applies_to_rep' => 'boolean'
     ];
 
     /**
@@ -72,6 +74,7 @@ class MatchingRule extends Model
         'date_start' => 'required',
         'date_end' => 'required',
         'match_percent' => 'required|numeric',
+        'applies_to_rep' => 'nullable|boolean',
         'updated_at' => 'nullable',
         'created_at' => 'nullable'
     ];

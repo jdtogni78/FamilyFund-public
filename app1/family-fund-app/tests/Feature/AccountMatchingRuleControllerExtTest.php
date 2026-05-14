@@ -90,7 +90,7 @@ class AccountMatchingRuleControllerExtTest extends TestCase
         ]);
 
         // Verify email was sent
-        Mail::assertSent(AccountMatchingRuleEmail::class, function ($mail) {
+        Mail::assertQueued(AccountMatchingRuleEmail::class, function ($mail) {
             return $mail->hasTo('test@example.com');
         });
     }
@@ -169,7 +169,7 @@ class AccountMatchingRuleControllerExtTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('flash_notification');
 
-        Mail::assertSent(AccountMatchingRuleEmail::class, function ($mail) {
+        Mail::assertQueued(AccountMatchingRuleEmail::class, function ($mail) {
             return $mail->hasTo('resend@example.com');
         });
     }

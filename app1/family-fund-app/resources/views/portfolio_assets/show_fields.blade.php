@@ -10,13 +10,11 @@
             <label class="text-body-secondary"><i class="fa fa-briefcase me-1"></i> Portfolio:</label>
             <p class="mb-0">
                 @if($portfolio)
-                    <a href="{{ route('portfolios.show', $portfolio->id) }}" class="fw-bold">
-                        {{ $portfolio->source }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('portfolios.show', $portfolio->id), 'text' => $portfolio->source, 'class' => 'fw-bold'])
                     @if($portfolio->fund)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-landmark me-1"></i>
-                            <a href="{{ route('funds.show', $portfolio->fund_id) }}">{{ $portfolio->fund->name }}</a>
+                            @include('partials.view_link', ['route' => route('funds.show', $portfolio->fund_id), 'text' => $portfolio->fund->name])
                         </small>
                     @endif
                 @else
@@ -30,9 +28,7 @@
             <label class="text-body-secondary"><i class="fa fa-coins me-1"></i> Asset:</label>
             <p class="mb-0">
                 @if($asset)
-                    <a href="{{ route('assets.show', $asset->id) }}" class="fw-bold">
-                        {{ $asset->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('assets.show', $asset->id), 'text' => $asset->name, 'class' => 'fw-bold'])
                     <span class="badge bg-secondary ms-1">{{ $asset->type }}</span>
                     @if($asset->source)
                         <br><small class="text-body-secondary">Source: {{ $asset->source }}</small>

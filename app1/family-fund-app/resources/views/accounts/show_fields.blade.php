@@ -22,9 +22,7 @@
             <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund:</label>
             <p class="mb-0">
                 @if($fund)
-                    <a href="{{ route('funds.show', $fund->id) }}" class="fw-bold">
-                        {{ $fund->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('funds.show', $fund->id), 'text' => $fund->name, 'class' => 'fw-bold'])
                 @else
                     <span class="text-body-secondary">N/A</span>
                 @endif
@@ -38,9 +36,7 @@
             <label class="text-body-secondary"><i class="fa fa-user-circle me-1"></i> User:</label>
             <p class="mb-0">
                 @if($user)
-                    <a href="{{ route('users.show', $user->id) }}" class="fw-bold">
-                        {{ $user->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('users.show', $user->id), 'text' => $user->name, 'class' => 'fw-bold'])
                     @if($user->email)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-envelope me-1"></i>{{ $user->email }}

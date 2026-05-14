@@ -39,6 +39,18 @@ class TransactionExt extends Transaction
     public const FLAGS_CASH_ADDED = 'C';
     public const FLAGS_NO_MATCH = 'U';
 
+    public const MATCH_STATUS_AUTO_MATCHED = 'auto_matched';
+    public const MATCH_STATUS_MANUAL = 'manual';
+    public const MATCH_STATUS_AMBIGUOUS = 'ambiguous';
+    public const MATCH_STATUS_UNMATCHED = 'unmatched';
+
+    public static array $matchStatusMap = [
+        self::MATCH_STATUS_AUTO_MATCHED => 'Auto-matched',
+        self::MATCH_STATUS_MANUAL => 'Manual',
+        self::MATCH_STATUS_AMBIGUOUS => 'Ambiguous',
+        self::MATCH_STATUS_UNMATCHED => 'Unmatched',
+    ];
+
     public static array $typeMap = [
         TransactionExt::TYPE_PURCHASE => 'Purchase',
         TransactionExt::TYPE_INITIAL => 'Initial Value',

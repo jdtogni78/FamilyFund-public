@@ -65,9 +65,7 @@
             <label class="text-body-secondary"><i class="fa fa-link me-1"></i> Linked To:</label>
             <p class="mb-0">
                 @if($asset->linkedAsset)
-                    <a href="{{ route('assets.show', $asset->linkedAsset->id) }}" class="badge bg-success text-decoration-none">
-                        <i class="fa fa-home me-1"></i>{{ $asset->linkedAsset->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('assets.show', $asset->linkedAsset->id), 'text' => $asset->linkedAsset->name, 'class' => 'badge bg-success text-decoration-none'])
                 @else
                     <span class="text-muted">-</span>
                 @endif

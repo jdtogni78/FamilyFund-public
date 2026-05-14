@@ -124,7 +124,7 @@ trait ChartBaseTrait
             $shares = $v->balance?->shares ?? 0;
             $data[substr($v->timestamp, 0, 10)] = max(
                 $data[substr($v->timestamp, 0, 10)] ?? 0,
-                $shares * $v->share_price
+                $shares
             );
         }
         // Sort by date (key) not by value

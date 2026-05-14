@@ -144,7 +144,7 @@
             @include('partials.jump_bar', ['sections' => [
                 ['id' => 'section-details', 'icon' => 'fa-user-circle', 'label' => 'Details'],
                 ['id' => 'section-disbursement', 'icon' => 'fa-money-bill-wave', 'label' => 'Disbursement', 'condition' => $account->disbursement_cap !== 0.0],
-                ['id' => 'section-goals', 'icon' => 'fa-bullseye', 'label' => 'Goals', 'condition' => $account->goals->count() > 0],
+                ['id' => 'section-goals', 'icon' => 'fa-bullseye', 'label' => 'Goals'],
                 ['id' => 'section-charts', 'icon' => 'fa-chart-line', 'label' => 'Charts'],
                 ['id' => 'section-forecast', 'icon' => 'fa-chart-area', 'label' => 'Forecast', 'condition' => !empty($api['linear_regression']['predictions']) && $goalsCount > 0],
                 ['id' => 'section-portfolios', 'icon' => 'fa-chart-bar', 'label' => 'Portfolios', 'condition' => isset($api['tradePortfolios']) && $api['tradePortfolios']->count() >= 1],
@@ -171,10 +171,15 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                             <strong><i class="fa fa-bullseye" style="margin-right: 8px;"></i>Goals</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGoals"
-                               role="button" aria-expanded="true" aria-controls="collapseGoals">
-                                <i class="fa fa-chevron-down"></i>
-                            </a>
+                            <div>
+                                <a href="{{ route('goals.create', ['account_id' => $account->id]) }}" class="btn btn-sm btn-outline-light me-2" title="Add Goal">
+                                    <i class="fa fa-plus"></i>
+                                </a>
+                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGoals"
+                                   role="button" aria-expanded="true" aria-controls="collapseGoals">
+                                    <i class="fa fa-chevron-down"></i>
+                                </a>
+                            </div>
                         </div>
                         <div class="collapse show" id="collapseGoals">
                             <div class="card-body">
@@ -182,7 +187,12 @@
                                     <div class="card mb-3 {{ $loop->last ? 'mb-0' : '' }}">
                                         <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
                                             <strong><i class="fa fa-bullseye" style="margin-right: 8px;"></i>{{ $goal->name }}</strong>
-                                            <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">ID: {{ $goal->id }}</span>
+                                            <div>
+                                                <a href="{{ route('goals.edit', $goal->id) }}" class="btn btn-sm btn-outline-light me-1" title="Edit Goal">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">ID: {{ $goal->id }}</span>
+                                            </div>
                                         </div>
                                         <div class="card-body">
                                             @include('goals.progress_summary', ['goal' => $goal, 'format' => 'web'])
@@ -191,6 +201,22 @@
                                     </div>
                                 @endforeach
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @else
+            {{-- Show setup prompt when no goals --}}
+            <div class="row mb-4" id="section-goals">
+                <div class="col">
+                    <div class="card" style="border: 2px dashed #9ca3af;">
+                        <div class="card-body text-center py-4">
+                            <i class="fa fa-bullseye fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Set Up a Goal for This Account</h5>
+                            <p class="text-muted small mb-3">Track progress toward savings targets with 4% rule or total value goals.</p>
+                            <a href="{{ route('goals.create', ['account_id' => $account->id]) }}" class="btn btn-outline-primary">
+                                <i class="fa fa-plus me-1"></i> Configure Goal
+                            </a>
                         </div>
                     </div>
                 </div>

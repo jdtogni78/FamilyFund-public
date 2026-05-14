@@ -11,9 +11,7 @@
             <label class="text-muted small">Account</label>
             <p class="mb-0">
                 @if($account)
-                    <a href="{{ route('accounts.show', $account->id) }}" class="fw-bold">
-                        {{ $account->nickname ?? $account->code }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname ?? $account->code, 'class' => 'fw-bold'])
                     <span class="text-muted">({{ $account->code }})</span>
                 @else
                     ID: {{ $accountReport->account_id }}
@@ -26,7 +24,7 @@
             <label class="text-muted small">Fund</label>
             <p class="mb-0">
                 @if($fund)
-                    <a href="{{ route('funds.show', $fund->id) }}">{{ $fund->name }}</a>
+                    @include('partials.view_link', ['route' => route('funds.show', $fund->id), 'text' => $fund->name])
                 @else
                     -
                 @endif

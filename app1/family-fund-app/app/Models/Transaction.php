@@ -49,6 +49,9 @@ class Transaction extends Model
         'shares',
         'timestamp',
         'account_id',
+        'account_credit_line_id',
+        'credit_line_match_status',
+        'reversed',
         'descr',
         'flags',
         'scheduled_job_id'
@@ -67,6 +70,9 @@ class Transaction extends Model
         'shares' => 'decimal:4',
         'timestamp' => 'datetime',
         'account_id' => 'integer',
+        'account_credit_line_id' => 'integer',
+        'credit_line_match_status' => 'string',
+        'reversed' => 'boolean',
         'descr' => 'string',
         'flags' => 'string',
         'scheduled_job_id' => 'integer'
@@ -109,6 +115,22 @@ class Transaction extends Model
     public function account()
     {
         return $this->belongsTo(\App\Models\AccountExt::class, 'account_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     **/
+    public function accountCreditLine()
+    {
+        return $this->belongsTo(\App\Models\AccountCreditLine::class, 'account_credit_line_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     **/
+    public function reversal()
+    {
+        return $this->hasOne(\App\Models\TransactionReversal::class, 'transaction_id');
     }
 
     /**

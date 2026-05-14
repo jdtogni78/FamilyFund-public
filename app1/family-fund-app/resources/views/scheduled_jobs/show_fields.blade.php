@@ -39,14 +39,10 @@
                         $template = $scheduledJob->fundReportTemplate;
                         $typeName = \App\Models\FundReportExt::$typeMap[$template->type] ?? $template->type;
                     @endphp
-                    <a href="{{ route('fundReports.show', $template->id) }}">
-                        {{ $template->fund->name }} - {{ $typeName }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('fundReports.show', $template->id), 'text' => $template->fund->name . ' - ' . $typeName])
                     <span class="badge bg-info ms-1">Template</span>
                 @elseif($scheduledJob->entity_descr == 'trade_band_report' && $scheduledJob->tradeBandReportTemplate)
-                    <a href="{{ route('tradeBandReports.show', $scheduledJob->tradeBandReportTemplate->id) }}">
-                        {{ $scheduledJob->tradeBandReportTemplate->fund->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('tradeBandReports.show', $scheduledJob->tradeBandReportTemplate->id), 'text' => $scheduledJob->tradeBandReportTemplate->fund->name])
                     <span class="badge bg-info ms-1">Template</span>
                 @elseif($scheduledJob->entity_descr == 'transaction' && $scheduledJob->transactionTemplate)
                     @php
@@ -54,9 +50,7 @@
                         $typeName = \App\Models\TransactionExt::$typeMap[$tran->type] ?? $tran->type;
                         $accountName = $tran->account->nickname ?? 'Acct#' . $tran->account_id;
                     @endphp
-                    <a href="{{ route('transactions.show', $tran->id) }}">
-                        {{ $accountName }} - {{ $typeName }} - ${{ number_format($tran->value, 0) }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('transactions.show', $tran->id), 'text' => $accountName . ' - ' . $typeName . ' - $' . number_format($tran->value, 0)])
                     <span class="badge bg-info ms-1">Template</span>
                 @elseif($scheduledJob->entity_descr == 'matching_reminder')
                     <span class="text-body-secondary">

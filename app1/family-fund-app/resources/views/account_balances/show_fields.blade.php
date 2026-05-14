@@ -12,16 +12,14 @@
             <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Account:</label>
             <p class="mb-0">
                 @if($account)
-                    <a href="{{ route('accounts.show', $account->id) }}" class="fw-bold">
-                        {{ $account->nickname }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname, 'class' => 'fw-bold'])
                     @if($account->code)
                         <span class="text-body-secondary">({{ $account->code }})</span>
                     @endif
                     @if($account->fund)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-landmark me-1"></i>
-                            <a href="{{ route('funds.show', $account->fund_id) }}">{{ $account->fund->name }}</a>
+                            @include('partials.view_link', ['route' => route('funds.show', $account->fund_id), 'text' => $account->fund->name])
                         </small>
                     @endif
                 @else
@@ -43,9 +41,7 @@
             <label class="text-body-secondary"><i class="fa fa-exchange-alt me-1"></i> Transaction:</label>
             <p class="mb-0">
                 @if($transaction)
-                    <a href="{{ route('transactions.show', $transaction->id) }}">
-                        #{{ $transaction->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('transactions.show', $transaction->id), 'text' => '#' . $transaction->id])
                     <span class="{{ $transaction->value >= 0 ? 'badge-positive' : 'badge-negative' }} ms-1">
                         ${{ number_format(abs($transaction->value), 2) }}
                     </span>
@@ -79,9 +75,7 @@
             <label class="text-body-secondary"><i class="fa fa-history me-1"></i> Previous Balance:</label>
             <p class="mb-0">
                 @if($prevBalance)
-                    <a href="{{ route('accountBalances.show', $prevBalance->id) }}">
-                        #{{ $prevBalance->id }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('accountBalances.show', $prevBalance->id), 'text' => '#' . $prevBalance->id])
                     <span class="text-body-secondary">({{ number_format($prevBalance->shares, 4) }} shares)</span>
                 @else
                     <span class="text-body-secondary">Initial balance</span>

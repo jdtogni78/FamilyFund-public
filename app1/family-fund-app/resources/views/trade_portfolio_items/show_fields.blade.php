@@ -11,13 +11,11 @@
             <label class="text-body-secondary"><i class="fa fa-chart-pie me-1"></i> Trade Portfolio:</label>
             <p class="mb-0">
                 @if($tradePortfolio)
-                    <a href="{{ route('tradePortfolios.show', $tradePortfolio->id) }}" class="fw-bold">
-                        {{ $tradePortfolio->account_name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('tradePortfolios.show', $tradePortfolio->id), 'text' => $tradePortfolio->account_name, 'class' => 'fw-bold'])
                     @if($tradePortfolio->portfolio)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-briefcase me-1"></i>
-                            <a href="{{ route('portfolios.show', $tradePortfolio->portfolio_id) }}">{{ $tradePortfolio->portfolio->source }}</a>
+                            @include('partials.view_link', ['route' => route('portfolios.show', $tradePortfolio->portfolio_id), 'text' => $tradePortfolio->portfolio->source])
                         </small>
                     @endif
                 @else

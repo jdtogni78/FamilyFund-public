@@ -7,6 +7,7 @@ use App\Repositories\AccountRepository;
 use App\Repositories\AccountBalanceRepository;
 use App\Models\Utils;
 use App\Repositories\FundRepository;
+use Carbon\Carbon;
 /**
  * Class FundExt
  * @package App\Models
@@ -75,6 +76,37 @@ class FundExt extends Fund
         $shares = $this->sharesAsOf($now);
         if ($shares == 0) return 0;
         return $value / $shares;
+    }
+
+    /**
+     * Dollar value of the credit-line receivable held by this fund as of $now.
+     * See docs/credit_lines/fund_cashflow.md (receivable-as-asset).
+     *
+     * Returns 0 when there are no active credit lines. Safe to call even
+     * before the credit-line tables exist (defensive try/catch).
+     */
+    public function creditLineReceivableValueAsOf($now): float
+    {
+        try {
+            $asOf = $now instanceof \Carbon\Carbon ? $now : Carbon::parse((string) $now);
+            $calc = \App::make(\App\Services\CreditLine\Reporting\FundReceivableCalculator::class);
+            return (float) $calc->receivableValue($this, $asOf);
+        } catch (\Throwable $e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Fund value INCLUDING the credit-line receivable.
+     *
+     * Deliberately separate from valueAsOf(): existing tests, reports, and
+     * NAV history must continue to use the cash+portfolio computation. Use
+     * this method only in reporting that explicitly wants the receivable-as-asset
+     * NAV view. See docs/credit_lines/fund_cashflow.md.
+     */
+    public function valueWithCreditLinesAsOf($now, $verbose = false)
+    {
+        return $this->valueAsOf($now, $verbose) + $this->creditLineReceivableValueAsOf($now);
     }
 
     public function allocatedShares($now, $inverse=false) {
@@ -185,69 +217,194 @@ class FundExt extends Fund
     }
 
     /**
-     * Check if fund has a 4% rule goal configured.
+     * Check if fund has a withdrawal rule goal configured.
      */
-    public function hasFourPctGoal(): bool
+    public function hasWithdrawalGoal(): bool
     {
-        return $this->four_pct_yearly_expenses !== null && $this->four_pct_yearly_expenses > 0;
+        return $this->withdrawal_yearly_expenses !== null && $this->withdrawal_yearly_expenses > 0;
     }
 
     /**
-     * Get the target value for the 4% rule (expenses * 25).
+     * Get the withdrawal rate (default 4%).
      */
-    public function fourPctTargetValue(): float
+    public function getWithdrawalRate(): float
     {
-        if (!$this->hasFourPctGoal()) {
+        return (float) ($this->withdrawal_rate ?? 4.00);
+    }
+
+    /**
+     * Get the expected growth rate (default 7%).
+     */
+    public function getExpectedGrowthRate(): float
+    {
+        return (float) ($this->expected_growth_rate ?? 7.00);
+    }
+
+    /**
+     * Get the independence mode ('perpetual' or 'countdown').
+     * Defaults to 'perpetual' if not set.
+     */
+    public function getIndependenceMode(): string
+    {
+        return $this->independence_mode ?? 'perpetual';
+    }
+
+    /**
+     * Get the independence target date for countdown mode.
+     * Returns null if not in countdown mode or date not set.
+     */
+    public function getIndependenceTargetDate(): ?Carbon
+    {
+        if ($this->getIndependenceMode() !== 'countdown') {
+            return null;
+        }
+        return $this->independence_target_date;
+    }
+
+    /**
+     * Get the years remaining until independence target date.
+     * Returns null if not in countdown mode or no target date set.
+     *
+     * @param string $asOf Current as-of date
+     * @return float|null Years remaining (can be fractional), or null if not applicable
+     */
+    public function getYearsRemaining(string $asOf): ?float
+    {
+        $targetDate = $this->getIndependenceTargetDate();
+        if (!$targetDate) {
+            return null;
+        }
+
+        $currentDate = Carbon::parse($asOf);
+        $diffInDays = $currentDate->diffInDays($targetDate, false);
+
+        // Return fractional years (using 365.25 for accuracy)
+        return $diffInDays / 365.25;
+    }
+
+    /**
+     * Calculate the target value using present value of annuity formula for countdown mode.
+     * Formula: Required = yearly_expenses × [(1 - (1 + growth_rate)^(-years)) / growth_rate]
+     *
+     * @param string $asOf Current as-of date
+     * @return float Target value needed, or 0 if not applicable
+     */
+    public function calculateCountdownTargetValue(string $asOf): float
+    {
+        if (!$this->hasWithdrawalGoal()) {
             return 0;
         }
-        return (float) $this->four_pct_yearly_expenses * 25;
+
+        $yearsRemaining = $this->getYearsRemaining($asOf);
+        if ($yearsRemaining === null || $yearsRemaining <= 0) {
+            return 0;
+        }
+
+        $yearlyExpenses = (float) $this->withdrawal_yearly_expenses;
+        $growthRate = $this->getExpectedGrowthRate() / 100;
+
+        if ($growthRate <= 0) {
+            // Without growth, need simple years × expenses
+            return $yearlyExpenses * $yearsRemaining;
+        }
+
+        // PV of annuity formula: PMT × [(1 - (1 + r)^(-n)) / r]
+        $pvFactor = (1 - pow(1 + $growthRate, -$yearsRemaining)) / $growthRate;
+        return $yearlyExpenses * $pvFactor;
+    }
+
+    /**
+     * Get the countdown mode funding percentage.
+     * Compares current adjusted value to countdown target value.
+     *
+     * @param string $asOf Current as-of date
+     * @return float Funding percentage (0-100+), or 0 if not applicable
+     */
+    public function getCountdownFundingPct(string $asOf): float
+    {
+        $targetValue = $this->calculateCountdownTargetValue($asOf);
+        if ($targetValue <= 0) {
+            return 0;
+        }
+
+        $adjustedValue = $this->withdrawalAdjustedValue($asOf);
+        return ($adjustedValue / $targetValue) * 100;
+    }
+
+    /**
+     * Get the target value for the withdrawal goal.
+     * In perpetual mode: expenses / withdrawal_rate * 100
+     * In countdown mode: uses PV of annuity formula
+     *
+     * @param string|null $asOf Required for countdown mode calculations
+     * @return float Target value needed
+     */
+    public function withdrawalTargetValue(?string $asOf = null): float
+    {
+        if (!$this->hasWithdrawalGoal()) {
+            return 0;
+        }
+
+        // In countdown mode, use PV of annuity calculation
+        if ($this->getIndependenceMode() === 'countdown' && $asOf !== null) {
+            return $this->calculateCountdownTargetValue($asOf);
+        }
+
+        // Perpetual mode: expenses / withdrawal_rate * 100
+        $rate = $this->getWithdrawalRate();
+        if ($rate <= 0) {
+            return 0;
+        }
+        return (float) $this->withdrawal_yearly_expenses / ($rate / 100);
     }
 
     /**
      * Get the net worth percentage to use (default 100%).
      */
-    public function fourPctNetWorthPct(): float
+    public function withdrawalNetWorthPct(): float
     {
-        return (float) ($this->four_pct_net_worth_pct ?? 100.00);
+        return (float) ($this->withdrawal_net_worth_pct ?? 100.00);
     }
 
     /**
      * Get the adjusted fund value based on net worth percentage.
      */
-    public function fourPctAdjustedValue($asOf): float
+    public function withdrawalAdjustedValue($asOf): float
     {
         $fundValue = $this->valueAsOf($asOf);
-        return $fundValue * ($this->fourPctNetWorthPct() / 100);
+        return $fundValue * ($this->withdrawalNetWorthPct() / 100);
     }
 
     /**
-     * Get the current 4% yield from adjusted value.
+     * Get the current yield from adjusted value at the configured withdrawal rate.
      */
-    public function fourPctCurrentYield($asOf): float
+    public function withdrawalCurrentYield($asOf): float
     {
-        return $this->fourPctAdjustedValue($asOf) * 0.04;
+        return $this->withdrawalAdjustedValue($asOf) * ($this->getWithdrawalRate() / 100);
     }
 
     /**
-     * Get complete 4% goal progress data.
+     * Get complete withdrawal goal progress data.
      * Reuses pattern from AccountTrait::getGoalPct()
      */
-    public function fourPctProgress($asOf): array
+    public function withdrawalProgress($asOf): array
     {
-        if (!$this->hasFourPctGoal()) {
+        if (!$this->hasWithdrawalGoal()) {
             return [];
         }
 
-        $targetValue = $this->fourPctTargetValue();
-        $adjustedValue = $this->fourPctAdjustedValue($asOf);
-        $currentYield = $this->fourPctCurrentYield($asOf);
-        $targetYield = (float) $this->four_pct_yearly_expenses;
-        $netWorthPct = $this->fourPctNetWorthPct();
+        $targetValue = $this->withdrawalTargetValue($asOf);
+        $adjustedValue = $this->withdrawalAdjustedValue($asOf);
+        $currentYield = $this->withdrawalCurrentYield($asOf);
+        $targetYield = (float) $this->withdrawal_yearly_expenses;
+        $netWorthPct = $this->withdrawalNetWorthPct();
+        $withdrawalRate = $this->getWithdrawalRate();
+        $independenceMode = $this->getIndependenceMode();
 
         // Progress percentage (capped at 100%)
         $progressPct = $targetValue > 0 ? min(100, ($adjustedValue / $targetValue) * 100) : 0;
 
-        return [
+        $result = [
             'yearly_expenses' => $targetYield,
             'target_value' => $targetValue,
             'net_worth_pct' => $netWorthPct,
@@ -255,6 +412,161 @@ class FundExt extends Fund
             'current_yield' => $currentYield,
             'progress_pct' => $progressPct,
             'is_reached' => $adjustedValue >= $targetValue,
+            'withdrawal_rate' => $withdrawalRate,
+            'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            'independence_mode' => $independenceMode,
+        ];
+
+        // Add countdown-specific fields
+        if ($independenceMode === 'countdown') {
+            $result['independence_target_date'] = $this->getIndependenceTargetDate()?->format('Y-m-d');
+            $result['years_remaining'] = $this->getYearsRemaining($asOf);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Calculate years to reach target accounting for ongoing withdrawals.
+     * Formula: net_rate = growth_rate - withdrawal_rate
+     *          years = log(target / current) / log(1 + net_rate)
+     *
+     * @param string $asOf Current as-of date
+     * @return array|null Target reach projection data, or null if not calculable
+     */
+    public function calculateTargetReachWithWithdrawals(string $asOf): ?array
+    {
+        if (!$this->hasWithdrawalGoal()) {
+            return null;
+        }
+
+        $targetValue = $this->withdrawalTargetValue();
+        $currentValue = $this->withdrawalAdjustedValue($asOf);
+        $growthRate = $this->getExpectedGrowthRate() / 100;
+        $withdrawalRate = $this->getWithdrawalRate() / 100;
+        $netRate = $growthRate - $withdrawalRate;
+
+        // Already reached
+        if ($currentValue >= $targetValue) {
+            return [
+                'reachable' => true,
+                'already_reached' => true,
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Cannot reach if withdrawals >= growth
+        if ($netRate <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => 'withdrawals_exceed_growth',
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Cannot calculate if no current value
+        if ($currentValue <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => 'no_value',
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        // Formula: years = log(target / current) / log(1 + net_rate)
+        $yearsFromNow = log($targetValue / $currentValue) / log(1 + $netRate);
+
+        // If more than 50 years away, mark as distant
+        if ($yearsFromNow > 50) {
+            return [
+                'reachable' => true,
+                'distant' => true,
+                'years_from_now' => round($yearsFromNow, 1),
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+                'withdrawal_rate' => $this->getWithdrawalRate(),
+                'net_growth_rate' => $netRate * 100,
+            ];
+        }
+
+        $estimatedTimestamp = strtotime($asOf) + ($yearsFromNow * 365 * 24 * 3600);
+        $estimatedDate = date('Y-m-d', (int) $estimatedTimestamp);
+        $estimatedDateFormatted = date('M Y', (int) $estimatedTimestamp);
+
+        return [
+            'reachable' => true,
+            'estimated_date' => $estimatedDate,
+            'estimated_date_formatted' => $estimatedDateFormatted,
+            'years_from_now' => round($yearsFromNow, 1),
+            'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            'withdrawal_rate' => $this->getWithdrawalRate(),
+            'net_growth_rate' => $netRate * 100,
+        ];
+    }
+
+    /**
+     * Calculate years to reach target using expected growth rate.
+     * Formula: years = log(target / current) / log(1 + growth_rate)
+     *
+     * @param string $asOf Current as-of date
+     * @return array|null Target reach projection data, or null if already reached or not calculable
+     */
+    public function calculateTargetReachWithGrowthRate(string $asOf): ?array
+    {
+        if (!$this->hasWithdrawalGoal()) {
+            return null;
+        }
+
+        $targetValue = $this->withdrawalTargetValue();
+        $currentValue = $this->withdrawalAdjustedValue($asOf);
+        $growthRate = $this->getExpectedGrowthRate() / 100;
+
+        // Already reached
+        if ($currentValue >= $targetValue) {
+            return [
+                'reachable' => true,
+                'already_reached' => true,
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            ];
+        }
+
+        // Cannot calculate if no growth or no current value
+        if ($growthRate <= 0 || $currentValue <= 0) {
+            return [
+                'reachable' => false,
+                'reason' => $growthRate <= 0 ? 'no_growth' : 'no_value',
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            ];
+        }
+
+        // Formula: years = log(target / current) / log(1 + growth_rate)
+        $yearsFromNow = log($targetValue / $currentValue) / log(1 + $growthRate);
+
+        // If more than 50 years away, mark as distant
+        if ($yearsFromNow > 50) {
+            return [
+                'reachable' => true,
+                'distant' => true,
+                'years_from_now' => round($yearsFromNow, 1),
+                'expected_growth_rate' => $this->getExpectedGrowthRate(),
+            ];
+        }
+
+        $estimatedTimestamp = strtotime($asOf) + ($yearsFromNow * 365 * 24 * 3600);
+        $estimatedDate = date('Y-m-d', (int) $estimatedTimestamp);
+        $estimatedDateFormatted = date('M Y', (int) $estimatedTimestamp);
+
+        return [
+            'reachable' => true,
+            'estimated_date' => $estimatedDate,
+            'estimated_date_formatted' => $estimatedDateFormatted,
+            'years_from_now' => round($yearsFromNow, 1),
+            'expected_growth_rate' => $this->getExpectedGrowthRate(),
         ];
     }
 }

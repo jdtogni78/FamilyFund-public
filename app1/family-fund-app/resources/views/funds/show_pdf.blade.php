@@ -300,7 +300,7 @@
                 <h4 class="card-header-title"><img src="{{ public_path('images/icons/layer-group.svg') }}" class="header-icon">{{ $group }} Group Performance</h4>
             </div>
             <div class="card-body">
-                @php($i = array_search($group, array_keys($api['asset_monthly_performance'])))
+                @php $i = array_search($group, array_keys($api['asset_monthly_performance'])); @endphp
                 <div class="chart-container">
                     <img src="{{ $files['group' . $i . '_monthly_performance.png'] }}" alt="{{ $group }} Performance"/>
                 </div>
@@ -413,7 +413,7 @@
             <h4 class="card-header-title"><img src="{{ public_path('images/icons/calendar.svg') }}" class="header-icon">Yearly Performance Data</h4>
         </div>
         <div class="card-body">
-            @php ($performance_key = 'yearly_performance')
+            @php $performance_key = 'yearly_performance'; @endphp
             @include('funds.performance_table_pdf')
         </div>
     </div>
@@ -423,7 +423,7 @@
             <h4 class="card-header-title"><img src="{{ public_path('images/icons/table.svg') }}" class="header-icon">Monthly Performance Data</h4>
         </div>
         <div class="card-body">
-            @php ($performance_key = 'monthly_performance')
+            @php $performance_key = 'monthly_performance'; @endphp
             @include('funds.performance_table_pdf')
         </div>
     </div>
@@ -463,5 +463,15 @@
                 @include('funds.accounts_table_pdf')
             </div>
         </div>
+    @endif
+
+    {{-- ============================================== --}}
+    {{-- CREDIT-LINE EXPOSURE (UC-17) --}}
+    {{-- ============================================== --}}
+    @php
+        $fundForCredit = isset($api['id']) ? \App\Models\FundExt::find($api['id']) : null;
+    @endphp
+    @if($fundForCredit)
+        @include('funds._credit_line_exposure_pdf', ['fund' => $fundForCredit])
     @endif
 @endsection

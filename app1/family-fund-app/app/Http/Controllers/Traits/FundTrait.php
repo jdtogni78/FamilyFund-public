@@ -337,15 +337,18 @@ Trait FundTrait
         // create a linear regression projection for the next 10 years
         $arr['linear_regression'] = $this->createLinearRegressionResponse($arr['monthly_performance'], $asOf);
 
-        // Add 4% rule goal data if configured
-        if ($fund->hasFourPctGoal()) {
-            $fourPctProgress = $fund->fourPctProgress($asOf);
-            $fourPctProgress['target_reach'] = $this->calculateTargetReachDate(
-                $fourPctProgress['target_value'],
-                $arr['linear_regression'],
-                $asOf
-            );
-            $arr['four_pct_goal'] = $fourPctProgress;
+        // Add withdrawal rule goal data if configured
+        if ($fund->hasWithdrawalGoal()) {
+            $withdrawalProgress = $fund->withdrawalProgress($asOf);
+            // Pure growth projection (without withdrawals)
+            $withdrawalProgress['target_reach'] = $fund->calculateTargetReachWithGrowthRate($asOf);
+            // Net growth projection (with withdrawals deducted from growth)
+            $withdrawalProgress['target_reach_with_withdrawals'] = $fund->calculateTargetReachWithWithdrawals($asOf);
+            // Add countdown-specific funding percentage (not capped at 100%)
+            if ($fund->getIndependenceMode() === 'countdown') {
+                $withdrawalProgress['funding_pct'] = $fund->getCountdownFundingPct($asOf);
+            }
+            $arr['withdrawal_goal'] = $withdrawalProgress;
         }
 
         /** @var TradePortfolioExt $tradePortfolio */

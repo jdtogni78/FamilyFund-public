@@ -9,9 +9,7 @@
             <label class="text-body-secondary"><i class="fa fa-landmark me-1"></i> Fund:</label>
             <p class="mb-0">
                 @if($fundReport->fund)
-                    <a href="{{ route('funds.show', $fundReport->fund_id) }}" class="fw-bold">
-                        {{ $fundReport->fund->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('funds.show', $fundReport->fund_id), 'text' => $fundReport->fund->name, 'class' => 'fw-bold'])
                 @else
                     <span class="text-muted">N/A</span>
                 @endif
@@ -39,9 +37,7 @@
             <label class="text-body-secondary"><i class="fa fa-clock me-1"></i> Scheduled Job:</label>
             <p class="mb-0">
                 @if($fundReport->scheduled_job_id && $fundReport->scheduledJob)
-                    <a href="{{ route('scheduledJobs.show', $fundReport->scheduled_job_id) }}">
-                        #{{ $fundReport->scheduled_job_id }} - {{ $fundReport->scheduledJob->schedule->descr ?? 'N/A' }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('scheduledJobs.show', $fundReport->scheduled_job_id), 'text' => '#' . $fundReport->scheduled_job_id . ' - ' . ($fundReport->scheduledJob->schedule->descr ?? 'N/A')])
                 @elseif($fundReport->scheduled_job_id)
                     #{{ $fundReport->scheduled_job_id }}
                 @else

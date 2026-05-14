@@ -10,16 +10,14 @@
             <label class="text-body-secondary"><i class="fa fa-user me-1"></i> Account:</label>
             <p class="mb-0">
                 @if($account)
-                    <a href="{{ route('accounts.show', $account->id) }}" class="fw-bold">
-                        {{ $account->nickname }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('accounts.show', $account->id), 'text' => $account->nickname, 'class' => 'fw-bold'])
                     @if($account->code)
                         <span class="text-body-secondary">({{ $account->code }})</span>
                     @endif
                     @if($account->fund)
                         <br><small class="text-body-secondary">
                             <i class="fa fa-landmark me-1"></i>
-                            <a href="{{ route('funds.show', $account->fund_id) }}">{{ $account->fund->name }}</a>
+                            @include('partials.view_link', ['route' => route('funds.show', $account->fund_id), 'text' => $account->fund->name])
                         </small>
                     @endif
                 @else
@@ -33,9 +31,7 @@
             <label class="text-body-secondary"><i class="fa fa-link me-1"></i> Matching Rule:</label>
             <p class="mb-0">
                 @if($matchingRule)
-                    <a href="{{ route('matchingRules.show', $matchingRule->id) }}" class="fw-bold">
-                        {{ $matchingRule->name }}
-                    </a>
+                    @include('partials.view_link', ['route' => route('matchingRules.show', $matchingRule->id), 'text' => $matchingRule->name, 'class' => 'fw-bold'])
                     <br><small class="text-body-secondary">
                         {{ number_format($matchingRule->match_percent * 100, 0) }}% match
                     </small>

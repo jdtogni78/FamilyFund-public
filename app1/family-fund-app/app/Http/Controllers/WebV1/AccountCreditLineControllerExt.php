@@ -9,6 +9,7 @@ use App\Http\Requests\ReadjustCreditLineRequest;
 use App\Http\Requests\RepayCreditLineRequest;
 use App\Http\Requests\UpdateAccountCreditLineRequest;
 use App\Models\AccountCreditLine;
+use App\Models\AccountCreditLineExt;
 use App\Models\AccountExt;
 use App\Models\UserExt;
 use App\Services\CreditLine\Adjust\AdjustmentHistoryBuilder;
@@ -41,6 +42,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function index($accountId)
     {
         $account = AccountExt::findOrFail($accountId);
+        $this->authorize('viewAny', [AccountCreditLineExt::class, $account]);
         $lines = AccountCreditLine::where('account_id', $account->id)
             ->orderByDesc('id')
             ->get();
@@ -53,6 +55,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function create($accountId)
     {
         $account = AccountExt::findOrFail($accountId);
+        $this->authorize('create', [AccountCreditLineExt::class, $account]);
 
         return view('account_credit_lines.create')
             ->with('account', $account);
@@ -62,6 +65,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     {
         $data = $request->validated();
         $account = AccountExt::findOrFail($data['account_id']);
+        $this->authorize('create', [AccountCreditLineExt::class, $account]);
 
         try {
             $line = $this->drawService->open(
@@ -89,6 +93,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         ScheduleSnapshotBuilder $snapshotBuilder
     ) {
         $line = AccountCreditLine::findOrFail($id);
+        $this->authorize('view', $line);
         $account = $line->account()->first();
         $history = $this->historyBuilder->build($line);
         $schedule = $line->payments()->orderBy('due_date')->get();
@@ -123,6 +128,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function edit($id)
     {
         $line = AccountCreditLine::findOrFail($id);
+        $this->authorize('update', $line);
 
         return view('account_credit_lines.edit')
             ->with('line', $line);
@@ -137,6 +143,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function update(UpdateAccountCreditLineRequest $request, $id)
     {
         $line = AccountCreditLine::findOrFail($id);
+        $this->authorize('update', $line);
 
         $line->fill($request->validated())->save();
 
@@ -149,6 +156,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     {
         $data = $request->validated();
         $line = AccountCreditLine::findOrFail($data['account_credit_line_id']);
+        $this->authorize('process', $line);
         $date = isset($data['date']) ? Carbon::parse($data['date']) : null;
 
         try {
@@ -167,6 +175,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     {
         $data = $request->validated();
         $line = AccountCreditLine::findOrFail($data['account_credit_line_id']);
+        $this->authorize('process', $line);
 
         /** @var UserExt|null $admin */
         $admin = auth()->user();
@@ -196,6 +205,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     {
         $data = $request->validated();
         $line = AccountCreditLine::findOrFail($data['account_credit_line_id']);
+        $this->authorize('delete', $line);
 
         try {
             $this->cancelService->cancel($line);
@@ -220,11 +230,8 @@ class AccountCreditLineControllerExt extends AppBaseController
      */
     public function simulator($id, Request $request, PaymentSimulator $simulator)
     {
-        if (!auth()->user()?->is_admin()) {
-            abort(403);
-        }
-
         $line = AccountCreditLine::findOrFail($id);
+        $this->authorize('process', $line);
         $account = $line->account()->first();
 
         $currentShareValue = null;

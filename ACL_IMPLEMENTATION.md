@@ -41,6 +41,16 @@ The ACL system uses [Spatie Laravel Permission](https://spatie.be/docs/laravel-p
 | `funds.view` | ✅ | ✅ | ✅ |
 | `funds.update` | ✅ | ❌ | ❌ |
 
+### Credit Line Permissions
+| Permission | Fund Admin | Financial Manager | Beneficiary |
+|------------|:----------:|:-----------------:|:-----------:|
+| `credit-lines.view` | ✅ | ✅ | ❌ |
+| `credit-lines.view-own` | ✅ | ✅ | ✅ |
+| `credit-lines.create` | ✅ | ✅ | ❌ |
+| `credit-lines.update` | ✅ | ❌ | ❌ |
+| `credit-lines.process` | ✅ | ✅ | ❌ |
+| `credit-lines.delete` | ✅ | ❌ | ❌ |
+
 ### Other Permissions
 | Permission | Fund Admin | Financial Manager | Beneficiary |
 |------------|:----------:|:-----------------:|:-----------:|
@@ -80,6 +90,18 @@ The ACL system uses [Spatie Laravel Permission](https://spatie.be/docs/laravel-p
 | Update | ✅ | ✅ | ❌ | ❌ |
 | Delete | ✅ | ❌ | ❌ | ❌ |
 
+### Credit Lines
+| Action | System Admin | Fund Admin | Financial Manager | Beneficiary |
+|--------|:------------:|:----------:|:-----------------:|:-----------:|
+| List (by account) | ✅ | ✅ (fund scoped) | ✅ (fund scoped) | ✅ (own) |
+| View | ✅ | ✅ | ✅ | ✅ (own) |
+| Create | ✅ | ✅ | ✅ | ❌ |
+| Update | ✅ | ✅ | ❌ | ❌ |
+| Process (repay/readjust) | ✅ | ✅ | ✅ | ❌ |
+| Cancel | ✅ | ✅ | ❌ | ❌ |
+| Simulator | ✅ | ✅ | ✅ | ❌ |
+| Resolve Matches | ✅ | ✅ | ✅ | ❌ |
+
 ### User Role Management (`/admin/user-roles/*`)
 | Action | System Admin | Fund Admin | Financial Manager | Beneficiary |
 |--------|:------------:|:----------:|:-----------------:|:-----------:|
@@ -92,6 +114,7 @@ The ACL system uses [Spatie Laravel Permission](https://spatie.be/docs/laravel-p
 Located in `app/Policies/`:
 
 - **AccountPolicy.php** - Controls access to accounts
+- **AccountCreditLinePolicy.php** - Controls access to credit lines
 - **FundPolicy.php** - Controls access to funds
 - **TransactionPolicy.php** - Controls access to transactions
 
@@ -219,6 +242,8 @@ public function destroy($id)
 | `TransactionControllerExt` | ✅ Full authorization |
 | `FundController` | ✅ Full authorization |
 | `FundControllerExt` | ✅ Full authorization |
+| `AccountCreditLineControllerExt` | ✅ Full authorization |
+| `CreditLineMatchResolutionController` | ✅ Full authorization |
 | `UserRoleController` | ✅ System admin check |
 
 ## Route Protection
@@ -360,6 +385,19 @@ docker exec familyfund php artisan test --filter=UserRole
 5. **Login Tracking** - All login attempts are logged with IP, user agent, and status
 
 ## Changelog
+
+### 2026-05-14 - Credit Lines ACL Integration
+
+Added ACL support for Credit Lines feature (PR #3):
+- **New Policy**: `AccountCreditLinePolicy` - Controls access to credit lines
+- **New Permissions**: `credit-lines.view`, `credit-lines.view-own`, `credit-lines.create`, `credit-lines.update`, `credit-lines.process`, `credit-lines.delete`
+- **Updated Seeder**: `RolesAndPermissionsSeeder` - Added credit line permissions to roles
+- **Updated Repository**: `AccountCreditLineRepository` - Added `AuthorizesQueries` trait
+- **Updated Service**: `AuthorizationService` - Added `scopeCreditLinesQuery()` method
+- **Updated Provider**: `AuthServiceProvider` - Registered `AccountCreditLinePolicy`
+- **Controller Authorization**:
+  - `AccountCreditLineControllerExt` - All methods (index, create, store, show, edit, update, repay, readjust, cancel, simulator)
+  - `CreditLineMatchResolutionController` - All methods (index, resolve)
 
 ### 2026-02-01 - Authorization Fixes
 

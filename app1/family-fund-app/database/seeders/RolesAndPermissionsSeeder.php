@@ -54,6 +54,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'users.update',
             'users.delete',
             'users.assign-roles',
+
+            // Credit line permissions
+            'credit-lines.view',
+            'credit-lines.view-own',
+            'credit-lines.create',
+            'credit-lines.update',
+            'credit-lines.process',
+            'credit-lines.delete',
         ];
 
         foreach ($permissions as $permission) {
@@ -89,6 +97,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'reports.generate',
             'users.view',
             'users.assign-roles',
+            'credit-lines.view',
+            'credit-lines.view-own',
+            'credit-lines.create',
+            'credit-lines.update',
+            'credit-lines.process',
+            'credit-lines.delete',
         ];
 
         // Financial Manager - transactions and deposits focus
@@ -101,6 +115,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'portfolios.view',
             'reports.view',
             'reports.generate',
+            'credit-lines.view',
+            'credit-lines.create',
+            'credit-lines.process',
         ];
 
         // Beneficiary - view own account only
@@ -109,6 +126,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'transactions.view-own',
             'funds.view',
             'reports.view',
+            'credit-lines.view-own',
         ];
 
         // Store role templates in a config-style structure for reference
@@ -144,6 +162,12 @@ class RolesAndPermissionsSeeder extends Seeder
                 'reports.generate',
                 'users.view',
                 'users.assign-roles',
+                'credit-lines.view',
+                'credit-lines.view-own',
+                'credit-lines.create',
+                'credit-lines.update',
+                'credit-lines.process',
+                'credit-lines.delete',
             ],
             'financial-manager' => [
                 'accounts.view',
@@ -154,12 +178,16 @@ class RolesAndPermissionsSeeder extends Seeder
                 'portfolios.view',
                 'reports.view',
                 'reports.generate',
+                'credit-lines.view',
+                'credit-lines.create',
+                'credit-lines.process',
             ],
             'beneficiary' => [
                 'accounts.view-own',
                 'transactions.view-own',
                 'funds.view',
                 'reports.view',
+                'credit-lines.view-own',
             ],
             default => [],
         };

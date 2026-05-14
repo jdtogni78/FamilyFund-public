@@ -12,6 +12,7 @@ use App\Services\CreditLine\Support\CreditLineBalanceTracker;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * RepayService — records a repayment against an explicit credit line.
@@ -48,6 +49,20 @@ class RepayService implements ScheduleAdvancer
      */
     public function repay(AccountCreditLine $line, float $shares, ?Carbon $date = null): TransactionExt
     {
+        // Guard: shares must be positive.
+        if ($shares <= 0) {
+            throw new InvalidArgumentException(
+                sprintf('Repayment shares must be positive; got %.4f.', $shares)
+            );
+        }
+
+        // Guard: can only repay against active lines.
+        if ($line->status !== AccountCreditLineExt::STATUS_ACTIVE) {
+            throw new InvalidArgumentException(
+                sprintf('Cannot repay a credit line with status "%s". Only active lines accept repayments.', $line->status)
+            );
+        }
+
         $date = $date ?? Carbon::today();
 
         return DB::transaction(function () use ($line, $shares, $date) {

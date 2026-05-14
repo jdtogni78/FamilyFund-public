@@ -225,6 +225,99 @@ class RepayServiceTest extends TestCase
     }
 
     // -----------------------------------------------------------------
+    // Negative tests: guards added to RepayService
+    // -----------------------------------------------------------------
+
+    public function test_repay_with_negative_shares_throws(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        $line = $this->drawService->open($account, 50.0, 3, 'monthly');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/positive/i');
+
+        $this->repayService->repay($line, -5.0);
+    }
+
+    public function test_repay_with_zero_shares_throws(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        $line = $this->drawService->open($account, 50.0, 3, 'monthly');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/positive/i');
+
+        $this->repayService->repay($line, 0.0);
+    }
+
+    public function test_repay_against_cancelled_line_throws(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        $line = $this->drawService->open($account, 0.0001, 3, 'monthly');
+        // Cancel without any draws (outstanding = 0, so cancel is allowed).
+        $line->outstanding_shares = 0;
+        $line->save();
+        $line->status = AccountCreditLineExt::STATUS_CANCELLED;
+        $line->save();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/cancelled/i');
+
+        $this->repayService->repay($line, 10.0);
+    }
+
+    public function test_repay_against_paid_off_line_throws(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        // Open a line, repay it fully so it becomes paid_off.
+        $line = $this->drawService->open($account, 30.0, 3, 'monthly');
+        $this->repayService->repay($line, 30.0);
+
+        $line->refresh();
+        $this->assertEquals(AccountCreditLineExt::STATUS_PAID_OFF, $line->status);
+
+        // Now trying to repay a paid_off line should throw.
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/active/i');
+
+        $this->repayService->repay($line, 5.0);
+    }
+
+    public function test_repay_overpayment_caps_at_outstanding_and_sets_paid_off(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        $line = $this->drawService->open($account, 10.0, 1, 'monthly');
+
+        // Repay 25 against a line that only has 10 outstanding.
+        $repTran = $this->repayService->repay($line, 25.0);
+
+        $line->refresh();
+
+        // Line should be paid off with no negative outstanding.
+        $this->assertEquals(AccountCreditLineExt::STATUS_PAID_OFF, $line->status);
+        $this->assertEquals(0.0, (float) $line->outstanding_shares);
+
+        // The REP transaction records the full 25 shares passed in.
+        $this->assertEquals(25.0, (float) $repTran->shares);
+
+        // All schedule rows should be paid (none negative).
+        $unpaid = \App\Models\CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->whereNotIn('status', [\App\Models\CreditLinePayment::STATUS_PAID])
+            ->count();
+        $this->assertEquals(0, $unpaid);
+    }
+
+    // -----------------------------------------------------------------
     // Helper
     // -----------------------------------------------------------------
 

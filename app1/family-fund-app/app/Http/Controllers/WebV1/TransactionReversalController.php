@@ -6,6 +6,7 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\ReverseTransactionRequest;
 use App\Models\TransactionExt;
 use App\Models\UserExt;
+use App\Services\CreditLine\Reverse\Exceptions\AlreadyReversedException;
 use App\Services\CreditLine\Reverse\ReverseService;
 use Flash;
 
@@ -25,7 +26,12 @@ class TransactionReversalController extends AppBaseController
             $admin = UserExt::find($admin->id);
         }
 
-        $reversal = $this->reverseService->reverse($tran, $admin, $data['reason']);
+        try {
+            $reversal = $this->reverseService->reverse($tran, $admin, $data['reason']);
+        } catch (AlreadyReversedException $e) {
+            Flash::error($e->getMessage());
+            return redirect()->back();
+        }
 
         Flash::success('Transaction #' . $tran->id . ' reversed (reversal #' . $reversal->id . ').');
 

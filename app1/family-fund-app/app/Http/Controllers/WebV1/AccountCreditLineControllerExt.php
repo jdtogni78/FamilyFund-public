@@ -16,12 +16,16 @@ use App\Services\CreditLine\Adjust\ReadjustService;
 use App\Services\CreditLine\Adjust\ScheduleSnapshotBuilder;
 use App\Services\CreditLine\Cancel\CancelService;
 use App\Services\CreditLine\Draw\DrawService;
+use App\Services\CreditLine\Exceptions\CancelNotAllowedException;
+use App\Services\CreditLine\Exceptions\NoChangeException;
+use App\Services\CreditLine\Exceptions\OverBorrowException;
 use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
 use App\Services\CreditLine\Reporting\TrajectoryBuilder;
 use Carbon\Carbon;
 use Flash;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class AccountCreditLineControllerExt extends AppBaseController
 {
@@ -58,14 +62,19 @@ class AccountCreditLineControllerExt extends AppBaseController
         $data = $request->validated();
         $account = AccountExt::findOrFail($data['account_id']);
 
-        $line = $this->drawService->open(
-            $account,
-            (float) $data['principal_shares'],
-            (int) $data['term_months'],
-            $data['payment_frequency'],
-            $data['descr'] ?? null,
-            null
-        );
+        try {
+            $line = $this->drawService->open(
+                $account,
+                (float) $data['principal_shares'],
+                (int) $data['term_months'],
+                $data['payment_frequency'],
+                $data['descr'] ?? null,
+                null
+            );
+        } catch (OverBorrowException $e) {
+            Flash::error($e->getMessage());
+            return redirect()->back()->withInput();
+        }
 
         Flash::success('Credit line #' . $line->id . ' opened.');
 
@@ -141,7 +150,12 @@ class AccountCreditLineControllerExt extends AppBaseController
         $line = AccountCreditLine::findOrFail($data['account_credit_line_id']);
         $date = isset($data['date']) ? Carbon::parse($data['date']) : null;
 
-        $tran = $this->repayService->repay($line, (float) $data['shares'], $date);
+        try {
+            $tran = $this->repayService->repay($line, (float) $data['shares'], $date);
+        } catch (InvalidArgumentException $e) {
+            Flash::error($e->getMessage());
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
 
         Flash::success('Repayment recorded (txn #' . $tran->id . ').');
 
@@ -159,13 +173,18 @@ class AccountCreditLineControllerExt extends AppBaseController
             $admin = UserExt::find($admin->id);
         }
 
-        $adj = $this->readjustService->readjust(
-            $line,
-            isset($data['new_term_months']) ? (int) $data['new_term_months'] : null,
-            $data['new_payment_frequency'] ?? null,
-            $admin,
-            $data['reason'] ?? null
-        );
+        try {
+            $adj = $this->readjustService->readjust(
+                $line,
+                isset($data['new_term_months']) ? (int) $data['new_term_months'] : null,
+                $data['new_payment_frequency'] ?? null,
+                $admin,
+                $data['reason'] ?? null
+            );
+        } catch (NoChangeException $e) {
+            Flash::error($e->getMessage());
+            return redirect()->back()->withInput();
+        }
 
         Flash::success('Credit line readjusted (adjustment #' . $adj->id . ').');
 
@@ -177,7 +196,12 @@ class AccountCreditLineControllerExt extends AppBaseController
         $data = $request->validated();
         $line = AccountCreditLine::findOrFail($data['account_credit_line_id']);
 
-        $this->cancelService->cancel($line);
+        try {
+            $this->cancelService->cancel($line);
+        } catch (CancelNotAllowedException $e) {
+            Flash::error($e->getMessage());
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
 
         Flash::success('Credit line cancelled.');
 

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\HolidaySyncService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -25,6 +26,14 @@ class ScheduledHolidaySyncTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Prevent any pre-existing scheduled-job side-effects from hitting real SMTP.
+        Mail::fake();
+
+        // Deactivate all pre-existing scheduled jobs from restored dev data so
+        // they don't run alongside the test's job (they may have stale price
+        // data, missing fixtures, or fund-report dependencies that error out).
+        ScheduledJob::query()->update(['end_dt' => '2020-01-01']);
 
         $this->user = User::factory()->create();
     }
@@ -42,8 +51,8 @@ class ScheduledHolidaySyncTest extends TestCase
             'schedule_id' => $schedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 1,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         // Mock the sync service (called 4 times: previous, current, and next 2 years)
@@ -92,8 +101,8 @@ class ScheduledHolidaySyncTest extends TestCase
             'schedule_id' => $schedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 1,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         // Create a previous sync log to mark the job as already run on Feb 1st
@@ -158,16 +167,16 @@ class ScheduledHolidaySyncTest extends TestCase
             'schedule_id' => $monthlySchedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 1,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         $quarterlyJob = ScheduledJob::create([
             'schedule_id' => $quarterlySchedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 2,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         // Mock service (called 8 times: 4 years × 2 jobs)
@@ -213,8 +222,8 @@ class ScheduledHolidaySyncTest extends TestCase
             'schedule_id' => $schedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 1,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         $mockService = $this->getMockBuilder(HolidaySyncService::class)
@@ -281,8 +290,8 @@ class ScheduledHolidaySyncTest extends TestCase
             'schedule_id' => $schedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
             'entity_id' => 1,
-            'start_dt' => Carbon::now()->subMonth(),
-            'end_dt' => Carbon::now()->addYear(),
+            'start_dt' => '2025-01-01',
+            'end_dt' => '2030-12-31',
         ]);
 
         HolidaysSyncLog::create([

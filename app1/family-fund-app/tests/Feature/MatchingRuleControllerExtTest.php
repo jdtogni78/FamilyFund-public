@@ -81,7 +81,7 @@ class MatchingRuleControllerExtTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('flash_notification');
 
-        Mail::assertSent(AccountMatchingRuleEmail::class);
+        Mail::assertQueued(AccountMatchingRuleEmail::class);
     }
 
     public function test_send_all_emails_skips_accounts_without_email()
@@ -98,7 +98,7 @@ class MatchingRuleControllerExtTest extends TestCase
         $response->assertSessionHas('flash_notification');
 
         // Email should not be sent
-        Mail::assertNotSent(AccountMatchingRuleEmail::class);
+        Mail::assertNotQueued(AccountMatchingRuleEmail::class);
     }
 
     public function test_send_all_emails_redirects_when_not_found()

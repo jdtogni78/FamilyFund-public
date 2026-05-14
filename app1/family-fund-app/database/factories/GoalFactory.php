@@ -23,12 +23,12 @@ class GoalFactory extends Factory
     {
         return [
             'name' => $this->faker->word,
-        'description' => $this->faker->word,
-        'start_dt' => $this->faker->word,
-        'end_dt' => $this->faker->word,
-        'target_type' => $this->faker->word,
-        'target_amount' => $this->faker->word,
-        'target_pct' => $this->faker->word,
+            'description' => $this->faker->sentence(6),
+            'start_dt' => '2024-01-01',
+            'end_dt' => '2024-12-31',
+            'target_type' => $this->faker->randomElement([GoalExt::TARGET_TYPE_TOTAL, GoalExt::TARGET_TYPE_4PCT]),
+            'target_amount' => $this->faker->numberBetween(1000, 100000),
+            'target_pct' => $this->faker->randomFloat(2, 0, 100),
         // 'created_at' => $this->faker->date('Y-m-d H:i:s'),
         // 'updated_at' => $this->faker->date('Y-m-d H:i:s'),
         // 'deleted_at' => $this->faker->date('Y-m-d H:i:s')

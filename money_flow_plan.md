@@ -3,7 +3,7 @@
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
 **Last Updated:** 2026-05-13 (rev 5 — simplified v1 scope: Wise → US checking → IBKR with buffers; Paths B/C and BR fintech work explicitly deferred)
 **Branch:** `claude/plan-credit-lines-cCjWG`
-**Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md)
+**Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md), [`testing_plan.md`](testing_plan.md) — every MF-* below is mapped to a named test in `testing_plan.md` §4.2 (inbound) and §4.3 (outbound).
 
 ---
 

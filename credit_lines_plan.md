@@ -3,7 +3,9 @@
 **Status:** Draft / ideas — not yet scoped for implementation
 **Last Updated:** 2026-05-13 (rev 6 — cross-reference money-flow sub-project)
 **Branch:** `claude/plan-credit-lines-cCjWG`
-**Related sub-projects:** [`money_flow_plan.md`](money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
+**Related sub-projects:**
+- [`money_flow_plan.md`](money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
+- [`testing_plan.md`](testing_plan.md) — Test strategy across unit / integration / browser layers, with every UC-* in this doc mapped to a named test in §4.1, plus reviewable-output and traceability conventions.
 
 ---
 

@@ -1,0 +1,1238 @@
+{
+    "routes": {
+        "accountBalances": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountBalances\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountBalances\/{accountBalance}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountBalances\/{accountBalance}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountGoals": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountGoals\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountGoals\/{accountGoal}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountGoals\/{accountGoal}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules\/create_bulk": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules\/{accountMatchingRule}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules\/{accountMatchingRule}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountMatchingRules\/{id}\/resend-email": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "accountReports": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountReports\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountReports\/{accountReport}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accountReports\/{accountReport}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accounts": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accounts\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accounts\/{account}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 302,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accounts\/{account}\/credit-lines": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "accounts\/{account}\/credit-lines\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "accounts\/{account}\/edit": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 302,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "accounts\/{id}\/as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "accounts\/{id}\/pdf_as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "addresses": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "addresses\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "admin\/transactions\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "admin\/user-roles": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 200
+        },
+        "admin\/user-roles\/{id}": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 200
+        },
+        "api\/funds\/{id}\/overview-data": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetChangeLogs": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetChangeLogs\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetPrices": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetPrices\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetPrices\/{assetPrice}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetPrices\/{assetPrice}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assets": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assets\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assets\/{asset}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assets\/{asset}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "cashDeposits": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "cashDeposits\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "cashDeposits\/{id}\/assign": {
+            "anonymous": 302,
+            "unassigned": 404,
+            "beneficiary": 404,
+            "financialManager": 404,
+            "fundAdmin": 404,
+            "systemAdmin": 404
+        },
+        "cashDeposits\/{id}\/resend-email": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "change-password": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "changeLogs": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "changeLogs\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "confirm-password": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "credit-lines\/resolve": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "dashboard": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "depositRequests": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "depositRequests\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "emails": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "exchange-holidays": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "fundReports": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "fundReports\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "fundReports\/{fundReport}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "fundReports\/{fundReport}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "funds\/create-with-setup": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "funds\/{fund}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{fund}\/edit": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/overview": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/pdf_as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/portfolios": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/trade_bands": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/trade_bands_as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/trade_bands_pdf_as_of\/{as_of}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "funds\/{id}\/withdrawal_goal\/edit": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "goals": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "goals\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "goals\/{goal}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "goals\/{goal}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "id_documents": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "id_documents\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "matchingRules": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "matchingRules\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "matchingRules\/{id}\/clone": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "matchingRules\/{id}\/send-all-emails": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "matchingRules\/{matchingRule}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "matchingRules\/{matchingRule}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "operations": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "operations\/validate-portfolio-balances": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 403
+        },
+        "people": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "people\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "persons": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "persons\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "phones": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "phones\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolioAssets": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolioAssets\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolioAssets\/{portfolioAsset}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolioAssets\/{portfolioAsset}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios\/{id}\/rebalance\/{start}\/{end}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios\/{id}\/rebalance_pdf\/{start}\/{end}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios\/{portfolio}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "portfolios\/{portfolio}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "profile": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "scheduledJobs": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "scheduledJobs\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "scheduledJobs\/{id}\/preview\/{asOf}": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "scheduledJobs\/{scheduledJob}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "scheduledJobs\/{scheduledJob}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "schedules": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "schedules\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "schedules\/{schedule}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "schedules\/{schedule}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradeBandReports": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradeBandReports\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradeBandReports\/{id}\/view-pdf": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "tradeBandReports\/{tradeBandReport}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradeBandReports\/{tradeBandReport}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolioItems": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolioItems\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolioItems\/{tradePortfolioItem}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolioItems\/{tradePortfolioItem}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/{id}\/announce": {
+            "anonymous": 302,
+            "unassigned": 404,
+            "beneficiary": 404,
+            "financialManager": 404,
+            "fundAdmin": 404,
+            "systemAdmin": 404
+        },
+        "tradePortfolios\/{id}\/preview_deposits": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/{id}\/rebalance": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/{id}\/rebalance\/{start}\/{end}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/{id}\/show_diff": {
+            "anonymous": 302,
+            "unassigned": 404,
+            "beneficiary": 404,
+            "financialManager": 404,
+            "fundAdmin": 404,
+            "systemAdmin": 404
+        },
+        "tradePortfolios\/{tradePortfolio}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfolios\/{tradePortfolio}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "tradePortfoliosItems\/createWithParams": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactionMatchings": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactionMatchings\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactionMatchings\/{transactionMatching}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactionMatchings\/{transactionMatching}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactions": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactions\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactions\/create_bulk": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactions\/preview_pending\/{id}": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "transactions\/{id}\/clone": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "transactions\/{id}\/resend-email": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "transactions\/{transaction}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 302,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "transactions\/{transaction}\/edit": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 302,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "two-factor": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "two-factor\/recovery-codes": {
+            "anonymous": 302,
+            "unassigned": 302,
+            "beneficiary": 302,
+            "financialManager": 302,
+            "fundAdmin": 302,
+            "systemAdmin": 302
+        },
+        "users": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "users\/create": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "users\/{user}": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "users\/{user}\/edit": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "verify-email": {
+            "anonymous": 302,
+            "unassigned": 200,
+            "beneficiary": 200,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        }
+    },
+    "skipped": {
+        "addresses\/{address}": "unresolved-param:address",
+        "addresses\/{address}\/edit": "unresolved-param:address",
+        "assetChangeLogs\/{assetChangeLog}": "no-data-for:assetChangeLog",
+        "assetChangeLogs\/{assetChangeLog}\/edit": "no-data-for:assetChangeLog",
+        "cashDeposits\/{cashDeposit}": "unresolved-param:cashDeposit",
+        "cashDeposits\/{cashDeposit}\/edit": "unresolved-param:cashDeposit",
+        "changeLogs\/{changeLog}": "unresolved-param:changeLog",
+        "changeLogs\/{changeLog}\/edit": "unresolved-param:changeLog",
+        "credit-lines\/{line}": "unresolved-param:line",
+        "credit-lines\/{line}\/edit": "unresolved-param:line",
+        "credit-lines\/{line}\/simulator": "unresolved-param:line",
+        "depositRequests\/{depositRequest}": "unresolved-param:depositRequest",
+        "depositRequests\/{depositRequest}\/edit": "unresolved-param:depositRequest",
+        "emails\/attachment\/{hash}\/{filename}": "unresolved-param:hash",
+        "emails\/{filename}": "unresolved-param:filename",
+        "id_documents\/{id_document}": "unresolved-param:id_document",
+        "id_documents\/{id_document}\/edit": "unresolved-param:id_document",
+        "people\/{person}": "unresolved-param:person",
+        "people\/{person}\/edit": "unresolved-param:person",
+        "persons\/{person}": "unresolved-param:person",
+        "persons\/{person}\/edit": "unresolved-param:person",
+        "phones\/{phone}": "unresolved-param:phone",
+        "phones\/{phone}\/edit": "unresolved-param:phone",
+        "verify-email\/{id}\/{hash}": "unresolved-param:hash"
+    }
+}

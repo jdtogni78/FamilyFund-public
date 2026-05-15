@@ -153,6 +153,7 @@
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'History'],
                 ['id' => 'section-scheduled', 'icon' => 'fa-calendar-alt', 'label' => 'Scheduled', 'condition' => isset($scheduledTransactionJobs) && $scheduledTransactionJobs->count() > 0],
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
+                ['id' => 'section-credit-lines', 'icon' => 'fa-credit-card', 'label' => 'Credit Lines'],
             ]])
 
             {{-- Disbursement Eligibility --}}
@@ -407,6 +408,13 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Credit Lines Section --}}
+            <div class="row mb-4" id="section-credit-lines">
+                <div class="col">
+                    @include('account_credit_lines._account_summary', ['account' => $account])
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

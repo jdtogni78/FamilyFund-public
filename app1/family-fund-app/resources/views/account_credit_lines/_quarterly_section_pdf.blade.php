@@ -38,11 +38,16 @@
     }
 @endphp
 
-@if($lines->isNotEmpty())
 <div style="page-break-inside: avoid; margin-top: 18px; border: 2px solid #0d9488; border-radius: 8px; overflow: hidden;">
     <div style="background:#f0fdf4; padding:12px 16px; color:#0f766e; font-weight:700; font-size:14px;">
         Credit Lines &mdash; Quarter {{ $quarterStart->format('Y-m-d') }} to {{ $quarterEnd->format('Y-m-d') }}
     </div>
+@if($lines->isEmpty())
+    <div style="padding:16px; background:#ffffff; color:#64748b; font-size:12px;">
+        No credit lines on this account.
+    </div>
+</div>
+@else
     <div style="padding:16px; background:#ffffff;">
 
         {{-- Loans summary card --}}

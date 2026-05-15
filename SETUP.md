@@ -29,7 +29,88 @@ and `rsync` work fine.
 - docker + docker compose v2
 - node 18+ and npm
 - gpg (for decrypting secrets)
-- ssh access to melnick (REDACTED_NAS_HOST) as jdtogni
+- ssh access to melnick (REDACTED_NAS_HOST) as jdtogni — see step 0
+- ssh access to spirit (REDACTED_PROD_HOST) as jdtogni — needed for deploys, see step 0
+
+## 0. Set up internal host access (melnick + spirit)
+
+Two internal hosts are referenced throughout this setup:
+
+| Host | IP | Purpose |
+|---|---|---|
+| `melnick` | REDACTED_NAS_HOST | Synology NAS — holds env bundle + DB dumps (step 2/3) |
+| `spirit`  | REDACTED_PROD_HOST | dstrader server — prod deploy target for FamilyFund |
+
+### a) Add to /etc/hosts
+
+```bash
+sudo tee -a /etc/hosts <<'EOF'
+REDACTED_NAS_HOST	melnick
+REDACTED_PROD_HOST	spirit
+EOF
+```
+
+Verify:
+
+```bash
+ping -c 1 melnick && ping -c 1 spirit
+```
+
+### b) Get the SSH keys onto the new machine
+
+This is a single-operator setup that reuses one identity everywhere
+(melnick, spirit, GitHub, mariadb). The fastest path is to copy the
+existing `~/.ssh` bundle from a machine that already works, rather than
+generating fresh keys.
+
+**Prereq:** sshd must be running on the *new* machine to receive the push
+(macOS: System Settings → General → Sharing → Remote Login, or
+`sudo systemsetup -setremotelogin on`), and the new machine must be in the
+sender's `/etc/hosts` too.
+
+From the **existing** working machine (`~/.ssh`), push the bundle to the
+new machine (here called `macmini`):
+
+```bash
+cd ~/.ssh
+scp dstrader.pem id_* maria* mariapw authorized_keys config \
+    jdtogni@macmini:~/.ssh
+```
+
+That transfers:
+
+| File | Used for |
+|---|---|
+| `id_rsa` / `id_rsa.pub` | melnick + spirit login |
+| `id_github` / `id_github.pub` | `git clone`/push to jdtogni78 repos |
+| `mariadb` / `mariadb.pub` / `mariapw` | DB access keys + password file |
+| `dstrader.pem` | dstrader-aws / EC2 access |
+| `authorized_keys`, `config` | inbound auth + host aliases |
+
+On the **new** machine, lock down permissions (scp does not preserve them
+and ssh refuses world-readable keys):
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_* ~/.ssh/dstrader.pem ~/.ssh/mariadb ~/.ssh/mariapw ~/.ssh/authorized_keys ~/.ssh/config
+chmod 644 ~/.ssh/*.pub
+```
+
+Confirm passwordless login works:
+
+```bash
+ssh jdtogni@melnick 'hostname'
+ssh jdtogni@spirit  'hostname'
+```
+
+> Alternative (fresh key): `ssh-keygen -t ed25519` then
+> `ssh-copy-id jdtogni@melnick` / `ssh-copy-id jdtogni@spirit`. Only do
+> this if you can't reach an existing configured machine — a new key also
+> means re-registering with GitHub and the DB hosts.
+
+If `ssh` fails with `Host key verification failed` after editing `/etc/hosts`, the IP was already in `~/.ssh/known_hosts` with a different key. Either accept the new key on first connect, or remove the stale line: `ssh-keygen -R REDACTED_NAS_HOST` (and `-R melnick`).
+
+You also need the melnick passphrase for the GPG-encrypted secrets bundle (step 2) — that is *not* the SSH password; it was set when the bundle was created. Ask the project owner if you don't have it.
 
 ## 1. Clone the repo
 
@@ -105,42 +186,57 @@ cd ..
 
 ## 7. Load the DB dump
 
+> **DB credentials depend on which stack is running.** A *fresh dev stack*
+> (`docker-compose.dev.yml`, container `mariadb`) uses `famfun_dev` / `1234`.
+> A machine reused from a dstrader **stage** image (container `db`) uses
+> `root` / `123456` and `APP_ENV=stage`. Check with
+> `docker exec <familyfund-container> php artisan tinker --execute 'echo app()->environment();'`
+> and substitute `<dbuser>`/`<dbpass>` below accordingly.
+
+`familyfund_dev_data_20260419.sql` is a **full schema+data dump** (56
+`CREATE TABLE`s + data + a `migrations` snapshot through 2026-04-19). It
+contains no `DROP DATABASE`, so load it into a clean database — don't load
+it on top of an existing schema, and don't separately load the DDL dump
+(the DDL file is schema-reference only):
+
 ```bash
-docker exec -i <mariadb-container> mariadb -u famfun_dev -p1234 familyfund_dev \
-  < ../database/dev/familyfund_dev_data_20260419.sql
+# Wipe + recreate, then load the full dump
+docker exec <mariadb-container> mariadb -u<dbuser> -p<dbpass> -e \
+  "DROP DATABASE IF EXISTS familyfund_dev; CREATE DATABASE familyfund_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+docker exec -i <mariadb-container> mariadb -u<dbuser> -p<dbpass> familyfund_dev \
+  < database/dev/familyfund_dev_data_20260419.sql
 ```
 
-## 8. Reconcile migrations + seed permissions
+## 8. Apply post-April migrations + seed permissions
 
-The dump includes a snapshot of the `migrations` table from April 2026. Newer migrations (credit lines, ACL, etc.) need to be marked or applied:
+The dump's `migrations` snapshot ends at
+`2026_04_19_120000_restore_dev_funds_fixture`. Migrations after that date
+(credit lines, etc.) create tables that are **not** in the dump, so a
+plain `migrate --force` applies them cleanly with no conflicts — there is
+nothing to "mark as already done":
 
 ```bash
-# Try migrating — it will error on existing tables it doesn't know are already there.
-docker exec <familyfund-container> php artisan migrate --force
-
-# If it fails on "table already exists", mark those as done manually:
-docker exec <mariadb-container> mariadb -u famfun_dev -p1234 familyfund_dev -e "
-INSERT INTO migrations (migration, batch) VALUES
-('2026_05_13_000001_create_account_credit_lines_table', 99),
-('2026_05_13_000002_create_credit_line_payments_table', 99),
-('2026_05_13_000003_create_credit_line_adjustments_table', 99),
-('2026_05_13_000004_create_transaction_reversals_table', 99),
-('2026_05_13_000006_add_notification_settings_to_account_credit_lines', 99),
-('2026_05_13_000007_create_account_credit_line_balances_table', 99);"
-
-# Then re-run migrate to apply the genuinely-new ones:
 docker exec <familyfund-container> php artisan migrate --force
 
 # Seed roles and permissions:
 docker exec <familyfund-container> php artisan db:seed --class=RolesAndPermissionsSeeder --force
 
-# Assign claude@test.local the system-admin role (for /dev-login):
+# claude@test.local ships in the dump (~id 170); (re)assign system-admin.
+# firstOrCreate guards the case where a thinner dump lacks the user:
 docker exec <familyfund-container> php artisan tinker --execute "
-\$u = \App\Models\User::where('email','claude@test.local')->first();
+\$u = \App\Models\User::firstOrCreate(['email'=>'claude@test.local'], ['name'=>'Claude Test','password'=>bcrypt('claude-test-2024')]);
 setPermissionsTeamId(0);
 \$u->assignRole('system-admin');
+echo \$u->id.' '.\$u->getRoleNames()->implode(',');
 "
 ```
+
+> **`/dev-login` only works when `APP_ENV` is `dev`/`local`.** On a reused
+> **stage** container it reports `stage` and `/dev-login/...` returns 404 —
+> log in normally at `/login` with `claude@test.local` /
+> `claude-test-2024` instead. To get the dev-only stack (and mailhog +
+> quickchart), bring it up with the dev compose file (step 4) rather than
+> reusing the stage image.
 
 ## 9. Verify
 

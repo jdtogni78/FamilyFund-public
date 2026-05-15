@@ -202,6 +202,42 @@ class CreditLineFlowTest extends TestCase
     }
 
     /**
+     * Wave-2 review: validation must reject delay_notification_repeat_days = 0
+     * because ScanLatePaymentsJob divides by this value.
+     */
+    public function test_delay_notification_repeat_days_zero_fails_validation(): void
+    {
+        $account = $this->df->userAccount;
+
+        $this->actingAs($this->admin)->post(
+            route('credit_lines.store', ['account' => $account->id]),
+            [
+                'account_id'        => $account->id,
+                'principal_shares'  => 25,
+                'term_months'       => 6,
+                'payment_frequency' => 'monthly',
+                'descr'             => 'Validation-test line',
+            ]
+        );
+        $line = AccountCreditLine::where('account_id', $account->id)->latest('id')->first();
+        $this->assertNotNull($line);
+
+        $response = $this->actingAs($this->admin)->put(
+            route('credit_lines.update', ['line' => $line->id]),
+            [
+                'reminder_lead_days'              => 7,
+                'delay_notification_grace_days'   => 3,
+                'delay_notification_repeat_days'  => 0, // <-- must fail
+                'delay_notification_max_repeats'  => 6,
+                'transaction_email_enabled'       => '1',
+                'mismatch_alert_enabled'          => '1',
+            ]
+        );
+
+        $response->assertSessionHasErrors('delay_notification_repeat_days');
+    }
+
+    /**
      * UC-47: account closure must be blocked while an active line remains.
      */
     public function test_account_closure_blocked_when_active_credit_line_exists(): void

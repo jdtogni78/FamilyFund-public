@@ -34,36 +34,26 @@ class CreditLineNegativeUITest extends DuskTestCase
 
     public function test_non_admin_user_cannot_access_credit_line_create_form(): void
     {
+        // Wave-2 review (2026-05-14): GET /create itself is now admin-gated
+        // (ensureAdmin() in the controller), so the form never renders for
+        // non-admins. The assertion is therefore the page-source check, not
+        // a form-submit round trip.
         $this->browse(function (Browser $browser) {
-            // Log in as a non-admin user via Dusk's loginAs helper.
             $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
-            $browser->loginAs($nonAdmin);
+            $browser->loginAs($nonAdmin)
+                ->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
+                ->pause(500)
+                ->screenshot('negative/01a_non_admin_create_attempt');
 
-            // GET /create is accessible to all authenticated users (no route middleware).
-            // The auth gate fires on POST when CreateAccountCreditLineRequest::authorize()
-            // returns false for non-admins. Submit the form and assert it is rejected.
-            $browser->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
-                ->waitFor('form[action*="/credit-lines"]')
-                ->screenshot('negative/01a_non_admin_create_attempt')
-                ->type('input[name="principal_shares"]', '10')
-                ->clear('input[name="term_months"]')
-                ->type('input[name="term_months"]', '3')
-                ->select('select[name="payment_frequency"]', 'monthly')
-                ->press('Open')
-                ->pause(1000)
-                ->screenshot('negative/01b_non_admin_result');
-
-            // The FormRequest returns 403 when authorize() is false.
-            // Laravel renders "This action is unauthorized." by default.
             $pageSource = $browser->driver->getPageSource();
-            $httpStatusIsNot200 = str_contains($pageSource, '403')
+            $blocked = str_contains($pageSource, '403')
                 || str_contains($pageSource, 'unauthorized')
                 || str_contains($pageSource, 'Unauthorized')
                 || str_contains($pageSource, 'Forbidden');
 
             $this->assertTrue(
-                $httpStatusIsNot200,
-                'Non-admin submitting the create form should get a 403/unauthorized response.'
+                $blocked,
+                'Non-admin GET /accounts/{id}/credit-lines/create should be 403.'
             );
         });
     }
@@ -372,6 +362,109 @@ class CreditLineNegativeUITest extends DuskTestCase
     private function elementExists(Browser $browser, string $selector): bool
     {
         return count($browser->elements($selector)) > 0;
+    }
+
+    // ---------------------------------------------------------------
+     // Wave-2 review (2026-05-14): admin-gate enforcement on GET endpoints.
+     //
+     // Before the fix, AccountCreditLineControllerExt::{index,show,edit} and
+     // AdminTransactionController::create() were only auth-protected. A non-
+     // admin authenticated user could GET other accounts' credit-line data.
+     // These four tests assert the gate now returns 403 / "Forbidden" /
+     // "unauthorized" for a non-admin user.
+     // ---------------------------------------------------------------
+
+    public function test_non_admin_cannot_get_credit_lines_index(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/accounts/' . self::ACCOUNT_ID . '/credit-lines')
+                ->pause(500)
+                ->screenshot('negative/gate_index');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /accounts/{id}/credit-lines should be 403.');
+            // Belt-and-suspenders: a future regression that drops the 403 but
+            // still 200s with the admin UI must NOT leak the "New credit line"
+            // button or any active-line metadata.
+            $browser->assertDontSee('New credit line');
+        });
+    }
+
+    public function test_non_admin_cannot_get_credit_line_show(): void
+    {
+        // Find any existing credit line (the dev DB normally has a few from the
+        // happy-path tour; fall back to a synthetic id which will 404 — also a
+        // valid non-200 outcome and still proves the page is not viewable).
+        $line = AccountCreditLine::orderByDesc('id')->first();
+        $lineId = $line?->id ?? 999999;
+
+        $this->browse(function (Browser $browser) use ($lineId) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/credit-lines/' . $lineId)
+                ->pause(500)
+                ->screenshot('negative/gate_show');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id} should be 403.');
+            // A regression that returned the show page would leak the
+            // payment-schedule heading and the admin-action panel.
+            $browser->assertDontSee('Payment schedule')
+                ->assertDontSee('Admin actions');
+        });
+    }
+
+    public function test_non_admin_cannot_get_credit_line_edit(): void
+    {
+        $line = AccountCreditLine::orderByDesc('id')->first();
+        $lineId = $line?->id ?? 999999;
+
+        $this->browse(function (Browser $browser) use ($lineId) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/credit-lines/' . $lineId . '/edit')
+                ->pause(500)
+                ->screenshot('negative/gate_edit');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /credit-lines/{id}/edit should be 403.');
+            // The edit form's notification-settings group is the admin-only
+            // surface this gate protects.
+            $browser->assertDontSee('Notification settings')
+                ->assertDontSee('reminder_lead_days');
+        });
+    }
+
+    public function test_non_admin_cannot_get_admin_transaction_create(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $nonAdmin = User::where('email', 'user1@dev.familyfund.local')->firstOrFail();
+            $browser->loginAs($nonAdmin)
+                ->visit('/admin/transactions/create')
+                ->pause(500)
+                ->screenshot('negative/gate_admin_tx_create');
+
+            $source = $browser->driver->getPageSource();
+            $blocked = str_contains($source, '403')
+                || str_contains($source, 'Forbidden')
+                || stripos($source, 'unauthorized') !== false;
+            $this->assertTrue($blocked, 'Non-admin GET /admin/transactions/create should be 403.');
+            // This form leaks every account nickname + credit-line metadata
+            // via the dropdowns — assert the form scaffolding is absent.
+            $browser->assertDontSee('Create transaction')
+                ->assertDontSee('account_credit_line_id');
+        });
     }
 
     /**

@@ -133,4 +133,35 @@ class OutstandingCalculatorSameDayTest extends TestCase
             }
         }
     }
+
+    /**
+     * Wave-2 re-review (2026-05-15): UC-46 admin "create transaction from
+     * scratch" allows arbitrary timestamps. If an admin backdates a BOR/REP
+     * to before the currently-open BOR balance row's start_dt, the previous
+     * code would close that row with end_dt=$asOf — producing a temporally
+     * inverted row (end_dt < start_dt). Now guarded: refuses loudly.
+     */
+    public function test_backdated_asof_before_existing_start_dt_throws(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        // Draw today → opens a BOR row with start_dt = today.
+        $today = Carbon::today()->toDateString();
+        $this->drawService->open($account, 50.0, 6, 'monthly');
+
+        // Now try to update the aggregate from a date BEFORE today.
+        // The admin in this scenario is creating a backdated REP whose
+        // timestamp predates the existing open BOR row.
+        $backdated = Carbon::today()->subDays(7)->toDateString();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Backdated BOR\/REP rejected/');
+
+        $this->calculator->updateAggregateBorBalance(
+            $account,
+            $backdated,
+            999_999_999  // bogus tx id — won't be used; we expect to throw before insert
+        );
+    }
 }

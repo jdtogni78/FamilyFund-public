@@ -139,6 +139,23 @@ class OutstandingCalculator
             ->whereDate('end_dt', '9999-12-31')
             ->first();
 
+        // Backdate guard (wave-2 follow-up): UC-46 admin "create transaction
+        // from scratch" allows arbitrary timestamps. If a backdated BOR/REP
+        // lands before the currently-open BOR row's start_dt, closing it with
+        // end_dt = $asOf would produce a temporally inverted row
+        // (end_dt < start_dt). Refuse loudly — the admin should target the
+        // correct historical position or fix the timestamp.
+        if ($existing && $existing->start_dt && $asOf < $existing->start_dt->toDateString()) {
+            throw new \InvalidArgumentException(sprintf(
+                'Backdated BOR/REP rejected: asOf=%s is before the open BOR balance row\'s start_dt=%s '
+                . '(account_id=%d, balance_row_id=%d). Update would create a temporally inverted row.',
+                $asOf,
+                $existing->start_dt->toDateString(),
+                $account->id,
+                $existing->id
+            ));
+        }
+
         if ($totalOutstanding <= 0) {
             // No outstanding — close the BOR row if it exists.
             if ($existing) {

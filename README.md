@@ -5,6 +5,9 @@ A simple system to manage fund shares and composition.
 See [V1 Specs](specs/V1.spec.md)
 See [Remaining Specs](specs/V99.spec.md)
 
+**Setting up on a new machine?** See [SETUP.md](SETUP.md) — covers env files,
+DB dump, and shared files on melnick.
+
 ## Docker
 
 See https://hub.docker.com/r/bitnami/laravel/

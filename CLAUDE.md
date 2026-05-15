@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Family Fund is a Laravel 11 financial fund management system for tracking fund shares, portfolios, beneficiary accounts, and transactions. Uses repository pattern with extensive test coverage.
 
+## New-machine setup
+
+See [SETUP.md](SETUP.md). Shared files (env bundle + DB dumps) live on melnick at `~/familyfund_db_backups/` — pull with `scp -O` (Synology drops SFTP).
+
 ## Tech Stack
 
 - **Backend**: Laravel 11, PHP 8.2+
@@ -89,14 +93,19 @@ php artisan queue:listen
 
 **IMPORTANT:** Tests must run in Docker (`docker exec familyfund php artisan test`) - database is not accessible from host.
 
-**Current Status (2026-01-10):** 288 passing (all pass with exclusions)
+**Current Status (2026-05-14):** 1791 passing (excluding incomplete/needs-data-refactor groups).
+
+Prefer the wrapper `app1/family-fund-app/bin/test.sh`: rebuilds Vite assets if stale, autodetects the container name (`$FF_CONTAINER` → `ffacl-familyfund-1` → `familyfund`), then runs `php artisan test`. Pass-through args work (e.g. `bin/test.sh --filter=Foo`).
 
 Tests organized in `tests/`:
 - `Feature/` - Full HTTP request tests
+- `Feature/AclMatrixTest.php` - Discoverable ACL matrix: walks every GET route × every named role, diffs against `tests/golden/acl_matrix.json`. Refresh with `ACL_MATRIX_UPDATE=1`.
+- `Feature/AuthorizationTest.php` - Policy/service unit tests
 - `APIs/` - API endpoint tests (28+ suites)
 - `Repositories/` - Repository pattern tests (30+ suites)
 - `GoldenData/` - Integration tests with versioned datasets
 - `DataFactory.php` - Test data generation
+- `Fixtures/TestFixtures.php` - Higher-level reusable fixtures including `aclUsers(Fund $fund)` (one user per role)
 
 ```bash
 # Run tests in Docker (REQUIRED - do not run locally)

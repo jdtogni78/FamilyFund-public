@@ -12,7 +12,6 @@
     }
 @endphp
 
-@if(!empty($exposure) && ($exposure['total_lines'] ?? 0) > 0)
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
@@ -21,6 +20,7 @@
                 <strong>Credit-line exposure</strong>
             </div>
             <div class="card-body">
+                @if(!empty($exposure) && ($exposure['total_lines'] ?? 0) > 0)
                 <div class="row">
                     <div class="col-md-3">
                         <small class="text-muted">Outstanding (shares)</small>
@@ -50,8 +50,10 @@
                     count is what is owed back to the fund. See <code>docs/credit_lines/fund_cashflow.md</code> for the
                     receivable-as-asset model.
                 </p>
+                @else
+                <p class="text-muted mb-0">No credit lines on this fund.</p>
+                @endif
             </div>
         </div>
     </div>
 </div>
-@endif

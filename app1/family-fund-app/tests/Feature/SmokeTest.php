@@ -613,6 +613,211 @@ class SmokeTest extends TestCase
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str));
     }
 
+    // ==================== Data-Driven Route Discovery ====================
+
+    /**
+     * Number of random sample IDs to try per parameterized route.
+     * Catches data-shape bugs that Model::first() doesn't surface — e.g. a fund
+     * with zero portfolios exposes an "Undefined variable $tradePortfolios" that
+     * the factory fund (with portfolios) never reaches.
+     */
+    private const RANDOM_SAMPLES_PER_ROUTE = 5;
+
+    /**
+     * Default seed for ORDER BY RAND(seed) — keeps the data-driven test
+     * reproducible across runs so flakiness doesn't mask real regressions.
+     * Override at runtime with the SMOKE_TEST_SEED env var to vary coverage
+     * (e.g. nightly CI can rotate seeds to broaden shape exploration).
+     */
+    private const DEFAULT_SAMPLE_SEED = 42;
+
+    private function sampleSeed(): int
+    {
+        return (int) env('SMOKE_TEST_SEED', self::DEFAULT_SAMPLE_SEED);
+    }
+
+    /**
+     * Data-driven variant of the discovery test.
+     * For each GET route with {parameters}, hits the route up to N times with
+     * different RANDOM existing IDs from the DB. Routes with no parameters run
+     * once (identical to the non-data-driven test).
+     */
+    public function test_all_discovered_routes_render_for_random_samples()
+    {
+        $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        $tested = [];
+        $skipped = [];
+        $failed = [];
+
+        $idSamples = $this->getRandomIdSamples(self::RANDOM_SAMPLES_PER_ROUTE);
+        $skippedRoutes = $this->getSkippedRoutes();
+        $routeOverrides = $this->getRouteOverrides();
+
+        foreach ($routes as $route) {
+            if (!in_array('GET', $route->methods())) {
+                continue;
+            }
+
+            $uri = $route->uri();
+
+            if (str_starts_with($uri, 'api/') || str_starts_with($uri, 'api.')
+                || str_starts_with($uri, 'livewire/') || str_starts_with($uri, 'sanctum/')) {
+                continue;
+            }
+
+            if (in_array($uri, $skippedRoutes)) {
+                $skipped[] = $uri . ' (explicit skip)';
+                continue;
+            }
+
+            // Routes with no params only need one sample.
+            preg_match_all('/\{(\w+)\??}/', $uri, $matches);
+            $hasParams = !empty($matches[1]);
+            $iterations = $hasParams ? self::RANDOM_SAMPLES_PER_ROUTE : 1;
+
+            for ($i = 0; $i < $iterations; $i++) {
+                // Build a single-ID resolver for this iteration by picking
+                // the i-th sample (round-robin) for each param.
+                $resolver = [];
+                foreach ($idSamples as $name => $ids) {
+                    if (!empty($ids)) {
+                        $resolver[$name] = $ids[$i % count($ids)];
+                    }
+                }
+
+                $resolvedUri = $this->resolveRouteParameters($uri, $resolver);
+                if ($resolvedUri === null) {
+                    // Only skip once per route — not once per iteration.
+                    if ($i === 0) {
+                        $skipped[] = $uri . ' (unresolved params)';
+                    }
+                    break;
+                }
+
+                $queryString = '';
+                if (isset($routeOverrides[$uri]['query'])) {
+                    $queryString = '?' . http_build_query($routeOverrides[$uri]['query']);
+                }
+
+                try {
+                    $response = $this->actingAs($this->user)->get('/' . ltrim($resolvedUri, '/') . $queryString);
+                    $status = $response->status();
+
+                    if (in_array($status, [200, 302, 301])) {
+                        $tested[] = ['uri' => $resolvedUri, 'status' => $status, 'sample' => $i + 1];
+                    } else {
+                        $error = '';
+                        if ($status === 500) {
+                            $content = $response->getContent();
+                            if (preg_match('/Exception.*?:(.*?)(?:\n|<)/s', $content, $m)) {
+                                $error = trim($m[1]);
+                            }
+                        }
+                        $failed[] = [
+                            'uri' => $resolvedUri,
+                            'status' => $status,
+                            'original' => $uri,
+                            'sample' => $i + 1,
+                            'error' => $error,
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    $failed[] = [
+                        'uri' => $resolvedUri,
+                        'status' => 'exception',
+                        'error' => substr($e->getMessage(), 0, 120),
+                        'original' => $uri,
+                        'sample' => $i + 1,
+                    ];
+                }
+            }
+        }
+
+        $this->addToAssertionCount(count($tested));
+
+        if (!empty($failed)) {
+            $failMessages = array_map(function ($f) {
+                $msg = "[sample {$f['sample']}] '{$f['uri']}' (pattern: {$f['original']}) returned {$f['status']}";
+                if (!empty($f['error'])) {
+                    $msg .= ": " . substr($f['error'], 0, 120);
+                }
+                return $msg;
+            }, $failed);
+
+            // Truncate to first 40 messages — full list in a large DB can be huge.
+            $shown = array_slice($failMessages, 0, 40);
+            $more = count($failMessages) - count($shown);
+            $tail = $more > 0 ? "\n  ... and {$more} more failures" : '';
+
+            $this->fail(
+                "Random-sample discovery found " . count($failed) . " failing URL(s):\n" .
+                implode("\n", $shown) . $tail .
+                "\n\nTested: " . count($tested) . ", Skipped: " . count($skipped)
+            );
+        }
+
+        $this->assertTrue(true, "Tested " . count($tested) . " random samples across routes, skipped " . count($skipped));
+    }
+
+    /**
+     * Pluck up to $limit random IDs per model for each parameter name.
+     * Mirrors getParameterResolvers() but returns arrays instead of single IDs.
+     * Empty arrays are allowed — the caller will skip when no samples exist.
+     */
+    private function getRandomIdSamples(int $limit): array
+    {
+        $seed = $this->sampleSeed();
+        $pluck = fn(string $class) => class_exists($class)
+            ? $class::query()->orderByRaw('RAND(?)', [$seed])->limit($limit)->pluck('id')->all()
+            : [];
+
+        return [
+            'fund' => $pluck(\App\Models\Fund::class),
+            'account' => $pluck(\App\Models\Account::class),
+            'user' => $pluck(\App\Models\User::class),
+            'portfolio' => $pluck(\App\Models\Portfolio::class),
+            'transaction' => $pluck(\App\Models\Transaction::class),
+            'matchingRule' => $pluck(\App\Models\MatchingRule::class),
+            'matching_rule' => $pluck(\App\Models\MatchingRule::class),
+            'asset' => $pluck(\App\Models\Asset::class),
+            'assetPrice' => $pluck(\App\Models\AssetPrice::class),
+            'asset_price' => $pluck(\App\Models\AssetPrice::class),
+            'goal' => $pluck(\App\Models\Goal::class),
+            'tradePortfolio' => $pluck(\App\Models\TradePortfolio::class),
+            'trade_portfolio' => $pluck(\App\Models\TradePortfolio::class),
+            'schedule' => $pluck(\App\Models\Schedule::class),
+            'scheduledJob' => $pluck(\App\Models\ScheduledJob::class),
+            'scheduled_job' => $pluck(\App\Models\ScheduledJob::class),
+            'person' => $pluck(\App\Models\Person::class),
+            'accountBalance' => $pluck(\App\Models\AccountBalance::class),
+            'account_balance' => $pluck(\App\Models\AccountBalance::class),
+            'fundReport' => $pluck(\App\Models\FundReport::class),
+            'fund_report' => $pluck(\App\Models\FundReport::class),
+            'accountReport' => $pluck(\App\Models\AccountReport::class),
+            'account_report' => $pluck(\App\Models\AccountReport::class),
+            'accountMatchingRule' => $pluck(\App\Models\AccountMatchingRule::class),
+            'account_matching_rule' => $pluck(\App\Models\AccountMatchingRule::class),
+            'cashDeposit' => $pluck(\App\Models\CashDeposit::class),
+            'cash_deposit' => $pluck(\App\Models\CashDeposit::class),
+            'depositRequest' => $pluck(\App\Models\DepositRequest::class),
+            'deposit_request' => $pluck(\App\Models\DepositRequest::class),
+            'changeLog' => $pluck(\App\Models\ChangeLog::class),
+            'change_log' => $pluck(\App\Models\ChangeLog::class),
+            'address' => $pluck(\App\Models\Address::class),
+            'phone' => $pluck(\App\Models\Phone::class),
+            'transactionMatching' => $pluck(\App\Models\TransactionMatching::class),
+            'transaction_matching' => $pluck(\App\Models\TransactionMatching::class),
+            'portfolioAsset' => $pluck(\App\Models\PortfolioAsset::class),
+            'portfolio_asset' => $pluck(\App\Models\PortfolioAsset::class),
+            'tradePortfolioItem' => $pluck(\App\Models\TradePortfolioItem::class),
+            'trade_portfolio_item' => $pluck(\App\Models\TradePortfolioItem::class),
+            'accountGoal' => $pluck(\App\Models\AccountGoal::class),
+            'account_goal' => $pluck(\App\Models\AccountGoal::class),
+            'idDocument' => $pluck(\App\Models\IdDocument::class),
+            'id_document' => $pluck(\App\Models\IdDocument::class),
+        ];
+    }
+
     // ==================== POST/PUT Route Discovery ====================
 
     /**

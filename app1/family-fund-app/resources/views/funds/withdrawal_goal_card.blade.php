@@ -116,6 +116,9 @@
                             <div>
                                 <span class="text-muted">Target:</span>
                                 <strong style="color: #0d9488; font-size: 1.25rem;">${{ number_format($targetValue, 0) }}</strong>
+                                @if($netWorthPct < 100)
+                                    <span class="badge bg-secondary ms-2" title="Using {{ number_format($netWorthPct, 0) }}% of fund value (reflecting your allocation)">{{ number_format($netWorthPct, 0) }}% of fund</span>
+                                @endif
                             </div>
                             <div class="text-end">
                                 <span class="text-muted small">to generate</span>
@@ -245,15 +248,8 @@
                     @endif
                 @endif
 
-                {{-- Net Worth Adjustment Note (shown in both modes) --}}
-                @if($netWorthPct < 100)
-                <div class="mt-3 pt-3 border-top">
-                    <small class="text-muted">
-                        <i class="fa fa-info-circle me-1"></i>
-                        Using {{ number_format($netWorthPct, 0) }}% of fund value for this calculation (reflecting your allocation).
-                    </small>
-                </div>
-                @endif
+                {{-- Allocation note now surfaced in the fund header —
+                     see funds/show_ext.blade.php "Total Value" tile. --}}
             </div>
         </div>
     </div>

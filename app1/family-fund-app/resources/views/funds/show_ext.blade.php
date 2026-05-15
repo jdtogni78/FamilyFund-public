@@ -11,6 +11,19 @@
         <div class="animated fadeIn">
             @include('coreui-templates.common.errors')
 
+            {{-- Fund Data Completeness Warnings (no portfolios / no transactions / etc.) --}}
+            @if(!empty($api['data_warnings']))
+                @foreach($api['data_warnings'] as $dw)
+                    <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                        <i class="fa fa-info-circle me-3" style="font-size: 1.25rem;"></i>
+                        <div>
+                            <strong>{{ $dw['title'] }}:</strong>
+                            <span>{{ $dw['message'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+
             {{-- Data Staleness Warning Banner --}}
             @if(isset($api['data_staleness']) && $api['data_staleness']['is_stale'])
             <style>
@@ -36,13 +49,36 @@
 
             {{-- Fund Highlights Card --}}
             @php
-                $totalValueRaw = $api['portfolio']['total_value'] ?? 0;
-                // Remove $ and commas if it's a string, then format properly
+                // Fund total = sum of all portfolio values, not the first
+                // portfolio's total_value (that bug showed $543,448 for
+                // a fund whose real total was $2,649,985).
+                $totalValueRaw = $api['summary']['value'] ?? ($api['current_value'] ?? 0);
                 if (is_string($totalValueRaw)) {
                     $totalValueRaw = floatval(str_replace(['$', ','], '', $totalValueRaw));
                 }
                 $totalValue = '$' . number_format($totalValueRaw, 0);
-                $sharePrice = $api['summary']['share_value'] ?? 0;
+                $sharePriceRaw = $api['summary']['share_value'] ?? 0;
+                if (is_string($sharePriceRaw)) {
+                    $sharePriceRaw = floatval(str_replace(['$', ','], '', $sharePriceRaw));
+                }
+                $sharePrice = $sharePriceRaw;
+                // Networth-aggregator funds have a single share, so share
+                // price == total value. Hide the redundant tile for those.
+                $sharesRaw = $api['summary']['shares'] ?? 0;
+                if (is_string($sharesRaw)) {
+                    $sharesRaw = floatval(str_replace(',', '', $sharesRaw));
+                }
+                $showSharePrice = $sharesRaw > 1.0001;
+
+                // Partial allocation (withdrawal goal uses X% of fund value).
+                // Surface this in the header so users understand why the goal
+                // "Current Value" is less than the fund total.
+                $netWorthPct = null;
+                if (isset($api['withdrawal_goal']) && !empty($api['withdrawal_goal'])) {
+                    $netWorthPct = $api['withdrawal_goal']['net_worth_pct'] ?? null;
+                }
+                $showAllocation = $netWorthPct !== null && $netWorthPct < 100;
+                $allocatedValue = $showAllocation ? $totalValueRaw * ($netWorthPct / 100) : null;
                 $accountsCount = count($api['balances'] ?? []);
 
                 // Calculate true all-time return for fund: (current value - total deposits) / total deposits
@@ -108,10 +144,12 @@
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">{{ $totalValue }}</div>
                                     <div class="text-muted text-uppercase small">Total Value</div>
                                 </div>
+                                @if($showSharePrice)
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
+                                @endif
                                 @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'allTimeOverride' => $allTimeReturn, 'showBorder' => isset($api['admin']) && $accountsCount > 0])
                                 @if(isset($api['admin']) && $accountsCount > 0)
                                 <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">

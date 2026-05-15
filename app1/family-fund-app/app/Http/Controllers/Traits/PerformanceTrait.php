@@ -202,11 +202,13 @@ trait PerformanceTrait
         $this->debug("tran: $tran");
         $this->debug("perfObject: $this->perfObject");
         if ($tran == null) {
-            throw new \Exception("No transactions found");
-        } else {
-            $firstDate = $tran->timestamp->addDay()->format('Y-m-d');
-            $firstYear = substr($firstDate, 0, 4);
+            // No transactions means there's no historical range to iterate;
+            // return whatever partial YTD array we've already built instead of
+            // crashing. Matches createMonthlyPerformanceResponse's tolerance.
+            return $arr;
         }
+        $firstDate = $tran->timestamp->addDay()->format('Y-m-d');
+        $firstYear = substr($firstDate, 0, 4);
 
         $prevYearStart = ($year-1).'-01-01';
         for (; $year > $firstYear; $year--) {

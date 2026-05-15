@@ -351,8 +351,12 @@ Trait FundTrait
             $arr['withdrawal_goal'] = $withdrawalProgress;
         }
 
+        // Annotate every trade portfolio we accumulated across ALL fund portfolios.
+        // Previous code iterated $tradePortfolios (loop-local from the last portfolio),
+        // which silently dropped annotations for multi-portfolio funds and crashed on
+        // zero-portfolio funds.
         /** @var TradePortfolioExt $tradePortfolio */
-        foreach ($tradePortfolios as $tradePortfolio) {
+        foreach ($allTradePortfolios as $tradePortfolio) {
             $items = $tradePortfolio->tradePortfolioItems()->get();
             $tradePortfolio->items = $items;
             $tradePortfolio->annotateAssetsAndGroups();
@@ -364,7 +368,39 @@ Trait FundTrait
         // Add data staleness info for display warning banner
         $arr['data_staleness'] = $this->calculateDataStaleness($asOf);
 
+        // Flag fund-level data-completeness issues so the view can show flash
+        // warnings (rather than the page crashing). Aggregator-style funds are
+        // expected to have 0 portfolios / 0 transactions by design.
+        $arr['data_warnings'] = $this->collectFundDataWarnings($fund, $portfolios, $arr['transactions'] ?? []);
+
         return $arr;
+    }
+
+    /**
+     * Build a list of non-fatal data-completeness warnings for the fund show page.
+     * Returns an array of ['type' => ..., 'title' => ..., 'message' => ...] items.
+     */
+    protected function collectFundDataWarnings($fund, $portfolios, $transactions): array
+    {
+        $warnings = [];
+
+        if ($portfolios->isEmpty()) {
+            $warnings[] = [
+                'type' => 'no_portfolios',
+                'title' => 'No portfolios',
+                'message' => 'This fund has no portfolios configured, so asset-level data is unavailable.',
+            ];
+        }
+
+        if (empty($transactions)) {
+            $warnings[] = [
+                'type' => 'no_transactions',
+                'title' => 'No transactions',
+                'message' => 'This fund has no transactions recorded, so historical performance cannot be computed.',
+            ];
+        }
+
+        return $warnings;
     }
 
     public function sendFundReport($fundReport)

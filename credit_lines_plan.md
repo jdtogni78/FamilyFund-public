@@ -646,3 +646,12 @@ Filed as follow-up GitHub issues (out of scope for this PR):
 | [#6](https://github.com/jdtogni78/FamilyFund/issues/6) | `FundExt::creditLineReceivableValueAsOf` swallows `\Throwable` |
 | [#7](https://github.com/jdtogni78/FamilyFund/issues/7) | Move `ScanLatePaymentsJob` cache counter to a DB ledger |
 | [#8](https://github.com/jdtogni78/FamilyFund/issues/8) | Polish migration `2026_05_13_000007` (`insertOrIgnore`, `command->info`) |
+
+#### Non-actionable advisories (re-review wave 2)
+
+Recorded for future awareness; not bugs, not tracked as issues:
+
+- **Precision.** All credit-line code reads `decimal(19,4)` columns through `(float)` casts. Safe inside PHP's IEEE 754 double precision (~15-17 significant digits) for the current scale — personal-fund share counts live in the hundreds-to-low-thousands range. If balances ever approach `10^14` or single lines accumulate millions of transactions, switch to bcmath / string-decimal math. Grep confirms zero bcmath usage in the codebase today.
+- **`AccountExt::sharesAsOf` return type.** Changed from a model `decimal` attribute to a plain `(float)` in Phase 0 (OWN − BOR). Verified: no `===` comparisons or bcmath calls on the old return type exist anywhere in `app/` or `tests/`. All consumers use float-safe operations (`<` / `>` / arithmetic / `Utils::shares` formatter).
+- **Tax / legal §7872.** Flagged in PR body and §11 (first item). Schema has `imputed_interest_rate` as a reporting hook but does not compute. **Verify with counsel before real money flows.**
+- **Browser-test copy coupling.** The Dusk assertions read flash strings and rendered page text (e.g. `assertSee('New credit line')`, `assertSee('Notification settings')`). If trustee-facing copy is reworded later, those assertions need updates. Acceptable for E2E.

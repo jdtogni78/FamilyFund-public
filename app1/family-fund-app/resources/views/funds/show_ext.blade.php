@@ -722,6 +722,7 @@
                 ['id' => 'section-assets-table', 'icon' => 'fa-coins', 'label' => 'Assets'],
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'Transaction History', 'condition' => isset($api['admin'])],
                 ['id' => 'section-accounts', 'icon' => 'fa-user-friends', 'label' => 'Accounts', 'condition' => isset($api['admin']) && $accountsCount > 0],
+                ['id' => 'section-credit-lines', 'icon' => 'fa-credit-card', 'label' => 'Credit Lines'],
             ]])
 
             {{-- Portfolios Section (only show if multiple portfolios) --}}
@@ -1030,6 +1031,13 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Credit-line Exposure Section --}}
+            <div class="row mb-4" id="section-credit-lines">
+                <div class="col">
+                    @include('funds._credit_line_exposure', ['fund' => $fund ?? \App\Models\FundExt::find($api['id'])])
+                </div>
+            </div>
         </div>
     </div>
 

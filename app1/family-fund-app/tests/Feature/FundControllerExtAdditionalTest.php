@@ -39,6 +39,11 @@ class FundControllerExtAdditionalTest extends TestCase
         // Create a non-admin user for authorization tests
         $this->df->createUser();
         $this->nonAdminUser = $this->df->user;
+
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
     }
 
     protected function tearDown(): void
@@ -193,7 +198,7 @@ class FundControllerExtAdditionalTest extends TestCase
         $response = $this->actingAs($this->nonAdminUser)
             ->get(route('funds.withdrawal_goal.edit', $this->df->fund->id));
 
-        $response->assertRedirect(route('funds.show', $this->df->fund->id));
+        $response->assertForbidden();
     }
 
     public function test_update_withdrawal_goal_updates_fund()
@@ -230,7 +235,7 @@ class FundControllerExtAdditionalTest extends TestCase
                 'withdrawal_yearly_expenses' => 50000,
             ]);
 
-        $response->assertRedirect(route('funds.show', $this->df->fund->id));
+        $response->assertForbidden();
     }
 
     public function test_update_withdrawal_goal_validates_input()

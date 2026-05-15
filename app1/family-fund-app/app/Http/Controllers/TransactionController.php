@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
+use App\Models\TransactionExt;
 use App\Repositories\TransactionRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
@@ -29,7 +30,9 @@ class TransactionController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $transactions = $this->transactionRepository->all()
+        $this->authorize('viewAny', TransactionExt::class);
+
+        $transactions = $this->transactionRepository->withAuthorization()->all()
             ->sortByDesc('id');
 
         return view('transactions.index')
@@ -43,6 +46,8 @@ class TransactionController extends AppBaseController
      */
     public function create()
     {
+        $this->authorize('create', TransactionExt::class);
+
         return view('transactions.create');
     }
 
@@ -55,12 +60,13 @@ class TransactionController extends AppBaseController
      */
     public function store(CreateTransactionRequest $request)
     {
+        $this->authorize('create', TransactionExt::class);
+
         $input = $request->all();
 
         $transaction = $this->transactionRepository->create($input);
 
         Flash::success('Transaction saved successfully.');
-        Log::debug('SHOULD TO BE HERE: Transaction saved successfully.');
 
         return redirect(route('transactions.index'));
     }
@@ -74,13 +80,15 @@ class TransactionController extends AppBaseController
      */
     public function show($id)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
 
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('view', $transaction);
 
         return view('transactions.show')->with('transaction', $transaction);
     }
@@ -94,13 +102,15 @@ class TransactionController extends AppBaseController
      */
     public function edit($id)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
 
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('update', $transaction);
 
         return view('transactions.edit')->with('transaction', $transaction);
     }
@@ -115,13 +125,15 @@ class TransactionController extends AppBaseController
      */
     public function update($id, UpdateTransactionRequest $request)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
 
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('update', $transaction);
 
         $transaction = $this->transactionRepository->update($request->all(), $id);
 
@@ -141,13 +153,15 @@ class TransactionController extends AppBaseController
      */
     public function destroy($id)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
 
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('delete', $transaction);
 
         $this->transactionRepository->delete($id);
 

@@ -29,6 +29,12 @@ class HolidaysSyncApiTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
+
         Mail::fake();
     }
 
@@ -67,7 +73,7 @@ class HolidaysSyncApiTest extends TestCase
 
         // Act: Call the schedule_jobs API endpoint with entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
-            'as_of' => '2026-01-01',
+            'as_of' => Carbon::now()->toDateString(),
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
@@ -121,7 +127,7 @@ class HolidaysSyncApiTest extends TestCase
 
         // Act: Use entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
-            'as_of' => '2026-02-01',
+            'as_of' => Carbon::now()->toDateString(),
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
@@ -170,7 +176,7 @@ class HolidaysSyncApiTest extends TestCase
 
         // Act: Use entity filter to only run holidays_sync
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
-            'as_of' => '2026-03-01',
+            'as_of' => Carbon::now()->toDateString(),
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 
@@ -218,7 +224,7 @@ class HolidaysSyncApiTest extends TestCase
 
         // Act: Call with entity filter
         $response = $this->actingAs($this->user)->postJson('/api/schedule_jobs', [
-            'as_of' => '2026-04-01',
+            'as_of' => Carbon::now()->toDateString(),
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
         ]);
 

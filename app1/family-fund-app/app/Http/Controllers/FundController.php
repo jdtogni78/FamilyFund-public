@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateFundRequest;
 use App\Http\Requests\CreateFundWithSetupRequest;
 use App\Http\Requests\UpdateFundRequest;
+use App\Models\FundExt;
 use App\Repositories\FundRepository;
 use App\Repositories\TransactionRepository;
 use App\Http\Controllers\AppBaseController;
@@ -38,6 +39,8 @@ class FundController extends AppBaseController
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', FundExt::class);
+
         $funds = $this->fundRepository->all();
 
         return view('funds.index')
@@ -51,6 +54,8 @@ class FundController extends AppBaseController
      */
     public function create()
     {
+        $this->authorize('create', FundExt::class);
+
         return view('funds.create');
     }
 
@@ -63,6 +68,8 @@ class FundController extends AppBaseController
      */
     public function store(CreateFundRequest $request)
     {
+        $this->authorize('create', FundExt::class);
+
         $input = $request->all();
 
         $fund = $this->fundRepository->create($input);
@@ -89,6 +96,8 @@ class FundController extends AppBaseController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('view', $fund);
+
         return view('funds.show')->with('fund', $fund);
     }
 
@@ -108,6 +117,8 @@ class FundController extends AppBaseController
 
             return redirect(route('funds.index'));
         }
+
+        $this->authorize('update', $fund);
 
         return view('funds.edit')->with('fund', $fund);
     }
@@ -129,6 +140,8 @@ class FundController extends AppBaseController
 
             return redirect(route('funds.index'));
         }
+
+        $this->authorize('update', $fund);
 
         $fund = $this->fundRepository->update($request->all(), $id);
 
@@ -156,6 +169,8 @@ class FundController extends AppBaseController
             return redirect(route('funds.index'));
         }
 
+        $this->authorize('delete', $fund);
+
         $this->fundRepository->delete($id);
 
         Flash::success('Fund deleted successfully.');
@@ -171,6 +186,8 @@ class FundController extends AppBaseController
      */
     public function createWithSetup()
     {
+        $this->authorize('create', FundExt::class);
+
         return view('funds.create_with_setup');
     }
 
@@ -184,6 +201,8 @@ class FundController extends AppBaseController
      */
     public function storeWithSetup(CreateFundWithSetupRequest $request)
     {
+        $this->authorize('create', FundExt::class);
+
         $input = $request->all();
         $isPreview = $request->input('preview', false);
 

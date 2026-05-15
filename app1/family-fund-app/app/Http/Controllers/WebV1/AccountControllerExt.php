@@ -45,12 +45,14 @@ class AccountControllerExt extends AccountController
      */
     public function showAsOf($id, $asOf)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('view', $account);
 
         $arr = $this->createAccountViewData($asOf, $account);
 
@@ -71,12 +73,14 @@ class AccountControllerExt extends AccountController
 
     public function showPdfAsOf($id, $asOf)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->accountRepository->withAuthorization()->find($id);
 
         if (empty($account)) {
             Flash::error('Account not found');
             return redirect(route('accounts.index'));
         }
+
+        $this->authorize('view', $account);
 
         $arr = $this->createAccountViewData($asOf, $account);
 

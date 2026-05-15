@@ -40,7 +40,10 @@ class TransactionControllerExt extends TransactionController
      */
     public function index(Request $request)
     {
-        $query = Transaction::with(['account.fund']);
+        $this->authorize('viewAny', TransactionExt::class);
+
+        $query = $this->transactionRepository->withAuthorization()->allQuery()
+            ->with(['account.fund']);
 
         // Apply filters
         $filters = [];
@@ -77,6 +80,8 @@ class TransactionControllerExt extends TransactionController
      */
     public function create()
     {
+        $this->authorize('create', TransactionExt::class);
+
         $api = $this->getApi();
         return view('transactions.create')
             ->with('api', $api);
@@ -112,6 +117,8 @@ class TransactionControllerExt extends TransactionController
 
     public function preview(PreviewTransactionRequest $request)
     {
+        $this->authorize('create', TransactionExt::class);
+
         $input = $request->all();
         $tran_status = $input['status'];
 
@@ -144,6 +151,8 @@ class TransactionControllerExt extends TransactionController
      */
     public function store(CreateTransactionRequest $request)
     {
+        $this->authorize('create', TransactionExt::class);
+
         $input = $request->all();
         Log::info('TransactionControllerExt::store: input: ' . json_encode($input));
 
@@ -162,12 +171,14 @@ class TransactionControllerExt extends TransactionController
     public function previewPending($id)
     {
         /** @var TransactionExt $transaction */
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('process', $transaction);
 
         DB::beginTransaction();
         $transaction_data = $transaction->processPending();
@@ -181,12 +192,14 @@ class TransactionControllerExt extends TransactionController
 
     public function processPending($id)
     {
-        $transaction = TransactionExt::find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('process', $transaction);
 
         DB::beginTransaction();
         $transaction_data = $this->processTransaction($transaction, false);
@@ -203,6 +216,8 @@ class TransactionControllerExt extends TransactionController
      */
     public function processAllPending()
     {
+        $this->authorize('create', TransactionExt::class);
+
         $transactions = TransactionExt::where('status', TransactionExt::STATUS_PENDING)
             ->orderBy('timestamp')
             ->orderBy('id')
@@ -255,13 +270,16 @@ class TransactionControllerExt extends TransactionController
      */
     public function edit($id)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
 
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('update', $transaction);
+
         $api = [
             'typeMap' => TransactionExt::$typeMap,
             'statusMap' => TransactionExt::$statusMap,
@@ -282,12 +300,14 @@ class TransactionControllerExt extends TransactionController
      */
     public function clone($id)
     {
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('view', $transaction);
 
         // Create a clone with today's date
         $clonedTransaction = new TransactionExt();
@@ -315,12 +335,14 @@ class TransactionControllerExt extends TransactionController
     public function resendEmail($id)
     {
         /** @var TransactionExt $transaction */
-        $transaction = $this->transactionRepository->find($id);
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
 
         if (empty($transaction)) {
             Flash::error('Transaction not found');
             return redirect(route('transactions.index'));
         }
+
+        $this->authorize('view', $transaction);
 
         // Check if account has email configured
         if (empty($transaction->account->email_cc)) {
@@ -352,6 +374,8 @@ class TransactionControllerExt extends TransactionController
      */
     public function bulkCreate()
     {
+        $this->authorize('create', TransactionExt::class);
+
         $api = $this->getApi();
 
         // Group accounts by fund for easier selection
@@ -404,6 +428,8 @@ class TransactionControllerExt extends TransactionController
             'value' => 'required|numeric',
             'timestamp' => 'required|date',
         ]);
+
+        $this->authorize('create', TransactionExt::class);
 
         $input = $request->all();
         $accountIds = $input['account_ids'];
@@ -495,6 +521,8 @@ class TransactionControllerExt extends TransactionController
             'value' => 'required|numeric',
             'timestamp' => 'required|date',
         ]);
+
+        $this->authorize('create', TransactionExt::class);
 
         $input = $request->all();
         $accountIds = $input['account_ids'];

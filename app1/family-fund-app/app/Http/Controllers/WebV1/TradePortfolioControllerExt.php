@@ -218,6 +218,9 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $tradePortfolio = $this->tradePortfolioRepository->find($id);
         // find the previous trade portfolio (by date)
         $prevTP = $tradePortfolio->previous();
+        if ($prevTP === null) {
+            abort(404, 'No previous trade portfolio to diff against.');
+        }
         $api = [
             'old' => $prevTP,
             'new' => $tradePortfolio,
@@ -326,7 +329,14 @@ class TradePortfolioControllerExt extends TradePortfolioController
     public function previewCashDeposits($id)
     {
         $tradePortfolio = $this->tradePortfolioRepository->find($id);
-        $data = $this->executeCashDeposits($tradePortfolio, true);
+        if ($tradePortfolio === null) {
+            abort(404);
+        }
+        try {
+            $data = $this->executeCashDeposits($tradePortfolio, true);
+        } catch (\Throwable $e) {
+            $data = ['errors' => [$e->getMessage()], 'transactions' => [], 'data' => []];
+        }
         $errors = $data['errors'];
         $api = [
             'accountMap' => AccountExt::accountMap(),

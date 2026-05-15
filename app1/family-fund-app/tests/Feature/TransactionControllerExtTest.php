@@ -29,6 +29,11 @@ class TransactionControllerExtTest extends TestCase
         $this->df->createUser();
         $this->user = $this->df->user;
 
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
+
         Mail::fake();
     }
 

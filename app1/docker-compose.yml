@@ -1,13 +1,11 @@
 services:
   mariadb:
-    container_name: db
     image: mariadb:lts
     environment:
       - ALLOW_EMPTY_PASSWORD=no
 
   familyfund:
     tty: true
-    container_name: familyfund
     build: .
     environment:
       - DB_HOST=mariadb
@@ -21,20 +19,13 @@ services:
 
   mailhog:
     image: mailhog/mailhog
-    container_name: mail
     logging:
-      driver: 'none'  # disable saving logs
+      driver: 'none'
     restart: on-failure
-    ports:
-      - 1025:1025 # smtp server
-      - 8025:8025 # web ui
     volumes:
       - ./mailhog-outgoing.json:/etc/mailhog-outgoing.json:ro
     command: ["-outgoing-smtp", "/etc/mailhog-outgoing.json"]
 
   quickchart:
     image: ianw/quickchart
-    container_name: quickchart
     restart: on-failure
-    ports:
-      - 3400:3400

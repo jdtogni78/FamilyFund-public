@@ -50,6 +50,11 @@ class FundSetupSequentialTest extends TestCase
         // Create test user directly (not via DataFactory since that requires a fund)
         $this->df = new DataFactory();
         $this->user = User::factory()->create();
+
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
     }
 
     // ==================== Multiple Portfolio Scenarios ====================

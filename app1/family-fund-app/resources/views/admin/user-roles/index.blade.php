@@ -14,9 +14,13 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>
-                                <i class="fa fa-users me-2"></i>
+                                <i class="fa fa-user-shield me-2"></i>
                                 <strong>User Role Management</strong>
+                                <span class="badge bg-primary ms-2">{{ count($users) }}</span>
                             </div>
+                            <a class="btn btn-sm btn-primary" href="{{ route('admin.user-roles.index') }}">
+                                <i class="fa fa-sync me-1"></i> Refresh
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -29,7 +33,7 @@
                                             <th>System Admin</th>
                                             <th>Fund Roles</th>
                                             <th>2FA</th>
-                                            <th>Actions</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -69,9 +73,9 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('admin.user-roles.show', $user->id) }}" class="btn btn-ghost-primary btn-sm" title="Manage Roles">
-                                                    <i class="fa fa-edit"></i> Manage
-                                                </a>
+                                                <div class='btn-group'>
+                                                    <a href="{{ route('admin.user-roles.show', $user->id) }}" class='btn btn-ghost-info' title="Manage Roles"><i class="fa fa-edit"></i></a>
+                                                </div>
                                             </td>
                                         </tr>
                                         @endforeach

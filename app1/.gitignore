@@ -1,2 +1,4 @@
 mailhog-outgoing.json
+.dc-ports
+datadir_acl/
 datadir_dev2/

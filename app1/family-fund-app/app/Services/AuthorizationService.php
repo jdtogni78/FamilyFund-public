@@ -91,6 +91,39 @@ class AuthorizationService
     }
 
     /**
+     * Scope a credit lines query to only return credit lines the user can access.
+     */
+    public function scopeCreditLinesQuery(Builder $query): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $accessibleFunds = $this->user->getAccessibleFundIds();
+        $ownAccountIds = $this->user->getOwnAccountIds();
+
+        // User can see credit lines for accounts in funds they have full access to
+        // OR credit lines for their own accounts (as beneficiary)
+        return $query->where(function ($q) use ($accessibleFunds, $ownAccountIds) {
+            // Full access to funds - credit lines through accounts
+            if (!empty($accessibleFunds['full'])) {
+                $q->orWhereHas('account', function ($accountQuery) use ($accessibleFunds) {
+                    $accountQuery->whereIn('fund_id', $accessibleFunds['full']);
+                });
+            }
+
+            // Own accounts' credit lines
+            if (!empty($ownAccountIds)) {
+                $q->orWhereIn('account_id', $ownAccountIds);
+            }
+        });
+    }
+
+    /**
      * Scope a funds query to only return funds the user can access.
      */
     public function scopeFundsQuery(Builder $query): Builder

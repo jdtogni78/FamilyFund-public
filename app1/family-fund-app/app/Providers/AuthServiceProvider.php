@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\AccountCreditLineExt;
 use App\Models\AccountExt;
 use App\Models\FundExt;
 use App\Models\TransactionExt;
+use App\Policies\AccountCreditLinePolicy;
 use App\Policies\AccountPolicy;
 use App\Policies\FundPolicy;
 use App\Policies\TransactionPolicy;
@@ -19,6 +21,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        AccountCreditLineExt::class => AccountCreditLinePolicy::class,
         AccountExt::class => AccountPolicy::class,
         TransactionExt::class => TransactionPolicy::class,
         FundExt::class => FundPolicy::class,

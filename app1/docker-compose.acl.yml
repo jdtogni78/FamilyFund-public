@@ -1,0 +1,37 @@
+# ACL-specific overrides for running alongside main FamilyFund
+# Usage: docker compose -p familyfund-acl -f docker-compose.yml -f docker-compose.acl.yml up -d
+
+services:
+  mariadb:
+    container_name: db-acl
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - MARIADB_USER=famfun_dev
+      - MARIADB_DATABASE=familyfund_acl
+      - MARIADB_PASSWORD=1234
+      - MARIADB_ROOT_PASSWORD=123456
+    ports:
+      - 3307:3306
+    volumes:
+      - ./datadir_acl:/var/lib/mysql
+
+  familyfund:
+    container_name: familyfund-acl
+    environment:
+      - DB_DATABASE=familyfund_acl
+      - DB_USERNAME=root
+      - DB_PASSWORD=123456
+      - APP_ENV=local
+    ports:
+      - 3001:8000
+
+  mailhog:
+    container_name: mail-acl
+    ports:
+      - 1026:1025
+      - 8026:8025
+
+  quickchart:
+    container_name: quickchart-acl
+    ports:
+      - 3401:3400

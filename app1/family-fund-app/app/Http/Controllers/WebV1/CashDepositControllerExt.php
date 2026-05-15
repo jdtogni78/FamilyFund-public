@@ -92,7 +92,7 @@ class CashDepositControllerExt extends CashDepositController
     public function assign($id)
     {
         $api = $this->getApi();
-        $cashDeposit = CashDepositExt::find($id);
+        $cashDeposit = CashDepositExt::findOrFail($id);
         
         $depositRequests = DepositRequestExt::whereNull('cash_deposit_id')
             ->where('status', DepositRequestExt::STATUS_PENDING)

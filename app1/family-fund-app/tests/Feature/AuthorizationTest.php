@@ -16,6 +16,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -40,37 +41,15 @@ class AuthorizationTest extends TestCase
         // Seed permissions (required for permission checks)
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        // Clear Spatie permission cache before each test
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Create a simple fund and account without DataFactory dependencies
         $this->fund = Fund::factory()->create();
-        $this->beneficiary = User::factory()->create();
 
-        // Create an account linked to the beneficiary
-        $this->account = AccountExt::create([
-            'fund_id' => $this->fund->id,
-            'user_id' => $this->beneficiary->id,
-            'code' => 'TEST001',
-            'nickname' => 'Test Account',
-            'type' => 'individual',
-        ]);
-
-        $fundId = $this->fund->id;
-
-        // Create users with different roles
-        $this->systemAdmin = User::factory()->create();
-        $this->makeSystemAdmin($this->systemAdmin);
-
-        $this->fundAdmin = User::factory()->create();
-        $this->assignFundRole($this->fundAdmin, 'fund-admin', $fundId);
-
-        $this->financialManager = User::factory()->create();
-        $this->assignFundRole($this->financialManager, 'financial-manager', $fundId);
-
-        $this->assignFundRole($this->beneficiary, 'beneficiary', $fundId);
-
-        $this->unassignedUser = User::factory()->create();
+        $users = TestFixtures::aclUsers($this->fund);
+        $this->systemAdmin       = $users['systemAdmin'];
+        $this->fundAdmin         = $users['fundAdmin'];
+        $this->financialManager  = $users['financialManager'];
+        $this->beneficiary       = $users['beneficiary'];
+        $this->unassignedUser    = $users['unassigned'];
+        $this->account           = $users['beneficiaryAccount'];
     }
 
     protected function tearDown(): void
@@ -564,43 +543,6 @@ class AuthorizationTest extends TestCase
     }
 
     // ==================== Helper Methods ====================
-
-    private function makeSystemAdmin(User $user): void
-    {
-        // Clear permission cache before creating/assigning role
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // System admin role uses fund_id=0 for global access
-        $role = Role::firstOrCreate([
-            'name' => 'system-admin',
-            'guard_name' => 'web',
-            'fund_id' => 0,
-        ]);
-
-        $originalTeamId = getPermissionsTeamId();
-        setPermissionsTeamId(0);
-        $user->assignRole($role);
-        setPermissionsTeamId($originalTeamId);
-
-        // Force reload of roles relationship
-        $user->load('roles');
-    }
-
-    private function assignFundRole(User $user, string $roleName, int $fundId): void
-    {
-        // Clear permission cache before creating/assigning role
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        $role = RolesAndPermissionsSeeder::createFundRole($roleName, $fundId);
-
-        $originalTeamId = getPermissionsTeamId();
-        setPermissionsTeamId($fundId);
-        $user->assignRole($role);
-        setPermissionsTeamId($originalTeamId);
-
-        // Force reload of roles relationship
-        $user->load('roles');
-    }
 
     private function createTestTransaction(): TransactionExt
     {

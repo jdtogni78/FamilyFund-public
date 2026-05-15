@@ -21,6 +21,11 @@ class TransactionControllerTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
     }
 
     protected function tearDown(): void

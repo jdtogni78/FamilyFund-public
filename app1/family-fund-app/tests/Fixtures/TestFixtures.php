@@ -2,10 +2,15 @@
 
 namespace Tests\Fixtures;
 
+use App\Models\AccountExt;
 use App\Models\CashDepositExt;
 use App\Models\DepositRequestExt;
+use App\Models\Fund;
 use App\Models\TransactionExt;
+use App\Models\User;
 use Carbon\Carbon;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Spatie\Permission\Models\Role;
 use Tests\DataFactory;
 
 /**
@@ -145,5 +150,79 @@ class TestFixtures
         $factory->createUser();
         $factory->createMatching(1000, 50, '2022-01-01', '9999-12-31');
         return $factory;
+    }
+
+    /**
+     * Create one User per ACL role, scoped to the given fund.
+     *
+     * Returns: ['systemAdmin' => User, 'fundAdmin' => User,
+     *           'financialManager' => User, 'beneficiary' => User,
+     *           'unassigned' => User, 'beneficiaryAccount' => AccountExt]
+     *
+     * The beneficiary owns an account in the fund so per-user scoping
+     * (e.g. "view own") has something to read.
+     */
+    public static function aclUsers(Fund $fund): array
+    {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $beneficiary = User::factory()->create();
+        $beneficiaryAccount = AccountExt::create([
+            'fund_id' => $fund->id,
+            'user_id' => $beneficiary->id,
+            'code' => 'ACL-' . $beneficiary->id,
+            'nickname' => 'ACL Beneficiary Account',
+            'type' => 'individual',
+        ]);
+
+        $systemAdmin = User::factory()->create();
+        self::makeSystemAdmin($systemAdmin);
+
+        $fundAdmin = User::factory()->create();
+        self::assignFundRole($fundAdmin, 'fund-admin', $fund->id);
+
+        $financialManager = User::factory()->create();
+        self::assignFundRole($financialManager, 'financial-manager', $fund->id);
+
+        self::assignFundRole($beneficiary, 'beneficiary', $fund->id);
+
+        $unassigned = User::factory()->create();
+
+        return [
+            'systemAdmin' => $systemAdmin,
+            'fundAdmin' => $fundAdmin,
+            'financialManager' => $financialManager,
+            'beneficiary' => $beneficiary,
+            'unassigned' => $unassigned,
+            'beneficiaryAccount' => $beneficiaryAccount,
+        ];
+    }
+
+    private static function makeSystemAdmin(User $user): void
+    {
+        $role = Role::firstOrCreate([
+            'name' => 'system-admin',
+            'guard_name' => 'web',
+            'fund_id' => 0,
+        ]);
+
+        $original = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $user->assignRole($role);
+        setPermissionsTeamId($original);
+
+        $user->load('roles');
+    }
+
+    private static function assignFundRole(User $user, string $roleName, int $fundId): void
+    {
+        $role = RolesAndPermissionsSeeder::createFundRole($roleName, $fundId);
+
+        $original = getPermissionsTeamId();
+        setPermissionsTeamId($fundId);
+        $user->assignRole($role);
+        setPermissionsTeamId($original);
+
+        $user->load('roles');
     }
 }

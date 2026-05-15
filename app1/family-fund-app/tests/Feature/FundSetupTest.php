@@ -41,6 +41,11 @@ class FundSetupTest extends TestCase
         $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
+
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(0);
+        $this->user->assignRole('system-admin');
+        setPermissionsTeamId($originalTeamId);
     }
 
     // ==================== Form Display Tests ====================

@@ -153,6 +153,48 @@ class AccountExtTest extends TestCase
         $this->assertEquals(0, $result);
     }
 
+    public function test_shares_as_of_discounts_borrowed_shares()
+    {
+        $account = $this->factory->userAccount;
+
+        $ownTran = $this->factory->createTransaction(500, $account, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_CLEARED, null, '2022-01-15');
+        $this->factory->createBalance(50, $ownTran, $account, '2022-01-15');
+
+        $borTran = $this->factory->createTransaction(150, $account, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+        \App\Models\AccountBalance::factory()
+            ->for($borTran, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 15,
+            ]);
+
+        $this->assertEquals(35, $account->sharesAsOf('2022-06-01'));
+    }
+
+    public function test_shares_as_of_with_only_borrowed_balance_is_negative()
+    {
+        $account = $this->factory->userAccount;
+
+        $borTran = $this->factory->createTransaction(150, $account, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+        \App\Models\AccountBalance::factory()
+            ->for($borTran, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 10,
+            ]);
+
+        $this->assertEquals(-10, $account->sharesAsOf('2022-06-01'));
+    }
+
     public function test_value_as_of_calculates_correctly()
     {
         $account = $this->factory->userAccount;

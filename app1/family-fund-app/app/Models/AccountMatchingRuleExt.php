@@ -74,20 +74,44 @@ class AccountMatchingRuleExt extends AccountMatchingRule
     public function match(Transaction $tranToMatch) {
         // find unused amount
 //        $this->verbose = false;
+        $mr = $this->matchingRule()->first();
+
+        // Per-rule opt-out for credit-line REP transactions.
+        // See docs/credit_lines/matching_on_repayment.md (§"Proposed feature shape").
+        // Default is TRUE (in principle, REPs match); trustees opt out per rule.
+        if ($tranToMatch->type === TransactionExt::TYPE_REPAY && !$mr->applies_to_rep) {
+            return 0;
+        }
+
         if ($this->isInPeriod($tranToMatch->timestamp, false)) {
             $used = $this->getMatchConsideredAsOf($tranToMatch->timestamp, false);
-            $mr = $this->matchingRule()->first();
             $possible = $mr->dollar_range_end - $mr->dollar_range_start;
             if ($used < $possible) {
                 $account = $this->account()->first();
+
+                // Wave-1a REPs are written with value=0 (cash leg deferred per
+                // fund_cashflow.md). When the trustee wants matching to apply
+                // to repayments, fall back to shares × share-value at the REP
+                // timestamp so the match base is meaningful. Localized here to
+                // keep the blast radius small (Option B in the investigation,
+                // §Q3) — we explicitly do NOT mutate $transaction->value
+                // globally in RepayService.
+                $effectiveValue = (float) $tranToMatch->value;
+                if ($effectiveValue == 0.0
+                    && $tranToMatch->type === TransactionExt::TYPE_REPAY
+                    && (float) $tranToMatch->shares > 0) {
+                    $shareValue = $tranToMatch->account?->shareValueAsOf($tranToMatch->timestamp) ?? 0;
+                    $effectiveValue = (float) $tranToMatch->shares * (float) $shareValue;
+                }
+
                 // I could have used the "used" value, but when is first time we gotta calculate
                 $deposits = $account->depositedValueBetween($mr->date_start, $mr->date_end);
-                $applicable = round($this->applicableValue($deposits, $tranToMatch->value), 2);
+                $applicable = round($this->applicableValue($deposits, $effectiveValue), 2);
                 $matchValue = round($applicable * ($mr->match_percent / 100.0), 2);
                 $this->debug("match: " . json_encode([$used, $possible, $deposits, $applicable,
-                            $tranToMatch->value, $tranToMatch->id, $matchValue]));
-                if ($applicable > $tranToMatch->value) {
-                    throw new Exception("Matching ({$matchValue}) more than the transaction value: ({$tranToMatch->value}) tran id " . $tranToMatch->id);
+                            $effectiveValue, $tranToMatch->id, $matchValue]));
+                if ($applicable > $effectiveValue) {
+                    throw new Exception("Matching ({$matchValue}) more than the transaction value: ({$effectiveValue}) tran id " . $tranToMatch->id);
                 }
                 return $matchValue;
             }

@@ -555,3 +555,103 @@ Insert these steps into the implementation sketch (between §9 step 6 and step 7
 - **Notification spam.** A long-late line with `delay_notification_repeat_days` set will keep emailing forever. Consider a hard cap (e.g., 6 notifications) or a "snooze" action on the account page.
 - **Cash-fallback matcher is fragile.** Priority 2 of the REP matcher (§5 rule 3) compares against `shares_due × share_value_at_transaction_date`. Share-price drift between scheduled-date and payment-date means the cash amount the borrower actually sends may not equal what was originally implied. A small tolerance window (e.g., 1%) helps for honest payments but widens the chance of an ambiguous match across two lines with close `shares_due`. Default to **shares-only matching** in v1; treat cash-fallback as a feature flag that can be enabled per fund.
 - **Email-event reliability.** The `Transaction::saved` hook (§8.6) fires inside the same request as the matcher. If the email queue is down, the transaction still saves but the email may be lost. Use queued mailers and verify retry behavior; consider a daily reconciliation job that emails any transaction created in the last 24h that has no record of email dispatch.
+
+---
+
+## 12. Implementation status (2026-05-14)
+
+**Shipped: 49 of 50 use cases.** Branch `claude/elated-pare-eac2e9`, PR #3.
+
+### Build summary
+
+The plan was implemented across 10 phases over a few sessions:
+
+| Phase | Scope |
+|-------|-------|
+| 0 — Foundation | `AccountExt::sharesAsOf()` OWN−BOR fix (UC-24); migrations for `account_credit_lines`, `credit_line_payments`, `credit_line_adjustments`, `transaction_reversals`; FK + status columns on `transactions`; bare models + repositories; receivable-as-asset design (see [`docs/credit_lines/fund_cashflow.md`](docs/credit_lines/fund_cashflow.md)). |
+| 1 — Services (5 parallel waves) | Draw/Repay/Cancel + amortization (UC-01, 03, 05-07, 12, 13); CreditLineMatcher + MatchResolutionService with all 4 priorities (UC-25-31); ReadjustService + adjustment history (UC-09, 10, 40, 41, 43); TransactionDetectionService + 5 mailables + reminder/late jobs (UC-08, 18-20, 32-38); ReverseService (UC-45). |
+| 2 — Integration | Notification-settings columns; `is_admin()` via Spatie `system-admin`; ScheduleAdvancer binding; `Transaction::saved` observer; scheduler entries; 6 form requests; 3 WebV1 controllers; 11 named routes; `accounts/show` extension; minimal CRUD blade views; admin-only auth gates (UC-48). |
+| 3 — Reporting | TrajectoryBuilder (multi-generation overlay), FundReceivableCalculator, LoansSummaryBuilder, FundExposureBuilder; `FundExt::valueWithCreditLinesAsOf()`; QuickChart trajectory partial; account/fund page extensions; quarterly PDF templates; share-value clarification copy (UC-14-17, 22, 42, 44, 49, 50). |
+| 4 — Polish | New temporal `account_credit_line_balances` table + `CreditLineBalanceTracker` wired into Draw/Repay/Reverse (UC-21); per-generation chart colors; admin-only fund cash-position panel; schedule-snapshot + trajectory-through-this-point modals. |
+| 5 — Browser tests | Laravel Dusk install + Dusk happy-path tests covering UC-01/05/13/09/45/49/42. Bug-hunt during the UI tour caught two real defects (see "Notable issues found and fixed" below). |
+| 6 — Close audit gaps | UC-20 settings UI; UC-47 account closure block; UC-46 admin backdated-tx form; UC-37 contribution-classifier round-trip as a read-only adapter that observes the legacy `TransactionMatching` writer rather than duplicating it. |
+| 7 — Beyond plan | `applies_to_rep` toggle on `MatchingRule` (default `true`) — matching contributions allowed on REPs with `shares × shareValueAsOf` fallback when the REP value is 0. See [`docs/credit_lines/matching_on_repayment.md`](docs/credit_lines/matching_on_repayment.md). |
+| 8 — Negative coverage | Gap-fill RepayService negative tests; 8 Dusk error-path tests (non-admin, validation, over-borrow, cancel-blocked, account-closure-blocked, no-change readjust, double-reverse); 5 exception types caught into flash errors in the controllers. |
+| 9 + 9b — Simulator | New `/credit-lines/{line}/simulator` admin page with two modes: payment-mode ("if I pay $X/mo, when does it pay off?") and time-mode ("if I want it paid off in N months, what $/mo do I need?"). Three growth scenarios using the existing `expected × 0.8 / 1.0 / 1.2` multipliers seen elsewhere in the codebase. |
+
+### Per-UC status
+
+| UC | Status |
+|----|--------|
+| UC-01–10, 12-19, 22-50 (except 21, 39) | ✅ shipped |
+| UC-11 Default line picker on multi-line repay | ⛔ dropped by design — the matcher + `MatchResolutionService` already handle multi-line ambiguity. A free-form repay form would duplicate that flow. |
+| UC-21 Historical (as-of) view | ✅ via the temporal `account_credit_line_balances` table, following the same `start_dt/end_dt` pattern as `account_balances`. All three write paths (Draw/Repay/Reverse) call `CreditLineBalanceTracker::recordChange`, so undo via reversal also writes a new row. **Empirically verified** on 2026-05-14 by scanning both backups (`database/prod/familyfund_prod_data_20260419.sql` and `database/dev/familyfund_dev_data_20260419.sql`): zero BOR/REP transactions and no `account_credit_line*` tables exist in either backup — the borrowing feature was never used in production before this build, so no backfill of legacy history is needed. |
+| UC-39 External CSV/bank feed | ⛔ explicit v2 in §10.5; out of scope for this build. |
+
+### Beyond-plan features
+
+| Feature | Rationale |
+|---|---|
+| `applies_to_rep` toggle on `MatchingRule` | Trustee direction: matching contributions allowed on credit-line repayments in principle, with per-rule opt-out. Default `true`. Match-base falls back to `shares × shareValueAsOf` when REP value is 0 — localized to `AccountMatchingRuleExt::match()` so the wider blast radius (rewriting `RepayService` to populate `value`) is avoided. |
+| Payment simulator (payment mode) | Trustee can model "if I pay $X/mo, when does it pay off?" |
+| Payment simulator (time mode) | Inverse: "if I want to pay off in N months, what $/mo do I need?" Solver uses binary search over the same `simulate()` semantics. |
+| Negative-path tests + controller hardening | Surfaced two silent-acceptance bugs in `RepayService` (negative/zero shares; repaying a cancelled or paid-off line) and made 5 exception types render as flash errors instead of 500s. |
+
+### Notable issues found and fixed
+
+- **`AccountTrait::createTransactionsResponse` DivisionByZeroError** when an account had any BOR/REP transaction (value=0 by design). Guarded the two division sites with `$value != 0` ternaries; performance for zero-value transactions reads 0%.
+- **`TrajectoryBuilder` original-plan double-count.** Filter used `created_at->lte($firstAdjustedAt)`; because `ReadjustService` writes new rows in the same DB transaction, their `created_at` equals `adjusted_at` to second precision and they slipped into the original generation. Changed to strict `lt`. Caught by the new UI-tour Dusk test.
+- **QuickChart URL collision.** A workaround setting `QUICKCHART_URL=http://localhost:3400` for the host browser broke 28 server-side rendering tests (inside the container, `localhost:3400` doesn't resolve to the quickchart container). Resolved by introducing a separate `quickchart.public_url` config key for browser-side embeds; `quickchart.base_url` continues to point at `http://quickchart:3400` for SSR.
+- **Mailable assertSent vs assertQueued.** Three feature tests + one unit test were using `Mail::assertSent` for mailables that implement `ShouldQueue`; under `Mail::fake()` those land in the queued bucket, not sent. Aligned with `assertQueued`.
+
+### Test coverage
+
+| Layer | Approx. count | Status |
+|---|---|---|
+| Unit / Feature in credit-line scope | ~150+ | All green |
+| Dusk browser | 17 (happy 6 + negative 8 + tour 1 + simulator 2) | All green |
+| Full feature suite delta | +28 fixed vs. baseline (1726 → 1754 passed) | 5 remaining failures are pre-existing baseline issues unrelated to credit lines (HolidaysSync API + one golden-data fixture) |
+
+### Tax / legal caveat (re-stated for clarity)
+
+This design is interest-free by intent. US trust loans below market rate may trigger imputed-interest reporting under IRS §7872. `AccountCreditLine.imputed_interest_rate` exists as a reporting hook but does not affect the share math. **Verify with counsel before real-money deployment.** See §11 first item.
+
+### Reference docs
+
+The bulky per-phase tracking docs that drove the build (one per phase, plus a few audit/bug doc) have been removed now that this section captures the implementation summary. The substantive design notes that the plan references — [`docs/credit_lines/fund_cashflow.md`](docs/credit_lines/fund_cashflow.md) and [`docs/credit_lines/matching_on_repayment.md`](docs/credit_lines/matching_on_repayment.md) — remain in place.
+
+### Deploy note: `applies_to_rep` flip-on for existing rules
+
+> ⚠️ **Deploy note (applies_to_rep):** the migration that introduced `applies_to_rep` on `MatchingRule` sets it to `true` for every existing rule. On the first REP transaction processed after deploy, those rules will start producing `MAT` (matching contribution) transactions valued at `shares × shareValueAsOf` whenever the REP itself has `value = 0`. If you do not want that behaviour for some existing rules, set their `applies_to_rep` to `false` in the database before the first credit-line repayment ships.
+
+### Review fixes (2026-05-14)
+
+Wave-2 review on PR #3 ([review link](https://github.com/jdtogni78/FamilyFund/pull/3#pullrequestreview-4294073848)). Fixed in-PR:
+
+| # | Fix | Commit |
+|---|---|---|
+| 1 | Admin gate on GET endpoints (`AccountCreditLineControllerExt::{index,show,edit}`, `AdminTransactionController::create`) + 4 Dusk negative tests | `0af3a46` |
+| 2 | Deleted temporary `tour-screenshots-2026-05-14/` | `2b09460` |
+| 3 | `UpdateAccountCreditLineRequest`: `delay_notification_repeat_days` rule tightened from `min:0` to `min:1` (was a `DivisionByZero` risk in `ScanLatePaymentsJob`) + feature test | `c1ccf98` |
+| 4 | Added migration `2026_05_14_000001_add_delay_notification_enabled_to_account_credit_lines` and wired `LineNotificationSettings::delayNotificationEnabled()` to the column (was hard-coded `return true;`) + unit tests | `cfd0df3` |
+| 5 | `OutstandingCalculator::updateAggregateBorBalance`: same-day BOR updates rewrite the open row in place instead of close-and-reopen (no more zero-length rows) + unit tests | `2689bb7` |
+| 6 | Doc-only: `applies_to_rep` deploy callout (this section) | this commit |
+
+Filed as follow-up GitHub issues (out of scope for this PR):
+
+| Issue | Summary |
+|---|---|
+| [#4](https://github.com/jdtogni78/FamilyFund/issues/4) | `RepayService::sharesAlreadyPaidOnRow` partial-credit bookkeeping |
+| [#5](https://github.com/jdtogni78/FamilyFund/issues/5) | `FundReceivableCalculator::receivableShares` N+1 → single JOIN |
+| [#6](https://github.com/jdtogni78/FamilyFund/issues/6) | `FundExt::creditLineReceivableValueAsOf` swallows `\Throwable` |
+| [#7](https://github.com/jdtogni78/FamilyFund/issues/7) | Move `ScanLatePaymentsJob` cache counter to a DB ledger |
+| [#8](https://github.com/jdtogni78/FamilyFund/issues/8) | Polish migration `2026_05_13_000007` (`insertOrIgnore`, `command->info`) |
+
+#### Non-actionable advisories (re-review wave 2)
+
+Recorded for future awareness; not bugs, not tracked as issues:
+
+- **Precision.** All credit-line code reads `decimal(19,4)` columns through `(float)` casts. Safe inside PHP's IEEE 754 double precision (~15-17 significant digits) for the current scale — personal-fund share counts live in the hundreds-to-low-thousands range. If balances ever approach `10^14` or single lines accumulate millions of transactions, switch to bcmath / string-decimal math. Grep confirms zero bcmath usage in the codebase today.
+- **`AccountExt::sharesAsOf` return type.** Changed from a model `decimal` attribute to a plain `(float)` in Phase 0 (OWN − BOR). Verified: no `===` comparisons or bcmath calls on the old return type exist anywhere in `app/` or `tests/`. All consumers use float-safe operations (`<` / `>` / arithmetic / `Utils::shares` formatter).
+- **Tax / legal §7872.** Flagged in PR body and §11 (first item). Schema has `imputed_interest_rate` as a reporting hook but does not compute. **Verify with counsel before real money flows.**
+- **Browser-test copy coupling.** The Dusk assertions read flash strings and rendered page text (e.g. `assertSee('New credit line')`, `assertSee('Notification settings')`). If trustee-facing copy is reworded later, those assertions need updates. Acceptable for E2E.

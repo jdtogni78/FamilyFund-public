@@ -66,6 +66,8 @@
                 </div>
             </div>
             @endif
+
+            @include('account_credit_lines._account_summary', ['account' => $account])
         </div>
     </div>
 </x-app-layout>

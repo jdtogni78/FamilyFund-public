@@ -478,4 +478,9 @@
         </table>
     @endif
 
+    {{-- ============================================== --}}
+    {{-- CREDIT LINES - Quarterly section (UC-16/44/49) --}}
+    {{-- ============================================== --}}
+    @include('account_credit_lines._quarterly_section_pdf', ['account' => $account])
+
 @endsection

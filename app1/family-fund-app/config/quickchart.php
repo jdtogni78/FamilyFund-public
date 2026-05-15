@@ -15,6 +15,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Browser-side (public) QuickChart URL
+    |--------------------------------------------------------------------------
+    |
+    | Used when a chart is embedded as an <img src="..."> consumed by the
+    | user's browser, not the server. In Docker dev the host-mapped port is
+    | http://localhost:3400; from inside the container `localhost` resolves
+    | to the container itself, so SSR uses `base_url` instead.
+    |
+    | Falls back to `base_url` when not configured.
+    |
+    */
+    'public_url' => env('QUICKCHART_PUBLIC_URL', env('QUICKCHART_URL', 'http://quickchart:3400')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Chart Dimensions
     |--------------------------------------------------------------------------
     */

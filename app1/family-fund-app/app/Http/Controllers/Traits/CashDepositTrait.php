@@ -320,7 +320,11 @@ trait CashDepositTrait
         
         // save response to file, under /storage/app/cash_deposits
         $filename = 'cash_deposits_' . date('Y-m-d_H-i-s') . '.txt';
-        file_put_contents(storage_path('app/cash_deposits/' . $filename), $content); 
+        $dir = storage_path('app/cash_deposits');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        file_put_contents($dir . '/' . $filename, $content);
 
         // delete file after 3 months
         $this->deleteFileAfter($filename, 3 * 30 * 24 * 60 * 60);

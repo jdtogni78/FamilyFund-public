@@ -19,4 +19,15 @@ class UserExt extends User
         return $userMap;
     }
 
+    /**
+     * Convenience admin check used by credit-line authorization (Phase 2).
+     *
+     * Aliases the existing `isSystemAdmin()` method on the base User model so
+     * controller / form-request code can write `auth()->user()?->is_admin()`
+     * without needing to know about the Spatie role machinery.
+     */
+    public function is_admin(): bool
+    {
+        return $this->isSystemAdmin();
+    }
 }

@@ -81,6 +81,29 @@
     </div>
 </div>
 
+<div class="row">
+    <!-- Applies to Credit-Line Repayments Toggle -->
+    <div class="form-group col-md-12 mb-3">
+        {{-- Ensure unchecked posts as "0" instead of being absent. --}}
+        <input type="hidden" name="applies_to_rep" value="0">
+        <div class="form-check">
+            @php
+                $appliesToRepValue = old(
+                    'applies_to_rep',
+                    isset($matchingRule) ? ($matchingRule->applies_to_rep ?? true) : true
+                );
+                $appliesToRepChecked = filter_var($appliesToRepValue, FILTER_VALIDATE_BOOLEAN);
+            @endphp
+            <input type="checkbox" name="applies_to_rep" id="applies_to_rep" value="1"
+                   class="form-check-input" {{ $appliesToRepChecked ? 'checked' : '' }}>
+            <label for="applies_to_rep" class="form-check-label">
+                <i class="fa fa-handshake me-1"></i> Apply to credit-line repayments (REP)
+            </label>
+            <div><small class="text-body-secondary">When enabled, beneficiary REP transactions are eligible for contribution matching under this rule. Default: on.</small></div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script type="text/javascript">
     $('#date_start').datetimepicker({

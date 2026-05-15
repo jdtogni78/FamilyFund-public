@@ -84,7 +84,9 @@ class MailableTest extends TestCase
         $email = new AccountMatchingRuleEmail($accountMatchingRule, $api);
         Mail::to('test@example.com')->send($email);
 
-        Mail::assertSent(AccountMatchingRuleEmail::class, function ($mail) use ($accountMatchingRule) {
+        // AccountMatchingRuleEmail implements ShouldQueue, so it lands in the
+        // queue (under Mail::fake()) rather than the "sent" bucket.
+        Mail::assertQueued(AccountMatchingRuleEmail::class, function ($mail) use ($accountMatchingRule) {
             return $mail->accountMatchingRule->id === $accountMatchingRule->id;
         });
     }

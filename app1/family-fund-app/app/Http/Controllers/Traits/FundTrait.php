@@ -344,6 +344,10 @@ Trait FundTrait
             $withdrawalProgress['target_reach'] = $fund->calculateTargetReachWithGrowthRate($asOf);
             // Net growth projection (with withdrawals deducted from growth)
             $withdrawalProgress['target_reach_with_withdrawals'] = $fund->calculateTargetReachWithWithdrawals($asOf);
+            // Add countdown-specific funding percentage (not capped at 100%)
+            if ($fund->getIndependenceMode() === 'countdown') {
+                $withdrawalProgress['funding_pct'] = $fund->getCountdownFundingPct($asOf);
+            }
             $arr['withdrawal_goal'] = $withdrawalProgress;
         }
 

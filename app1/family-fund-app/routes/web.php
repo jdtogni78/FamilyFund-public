@@ -203,6 +203,56 @@ Route::middleware('auth')->group(function () {
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');
     Route::post('/change-password', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('update-password');
 
+    // Credit Lines (Phase 2 wiring)
+    Route::get('accounts/{account}/credit-lines',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'index'])
+        ->name('credit_lines.index');
+    Route::get('accounts/{account}/credit-lines/create',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'create'])
+        ->name('credit_lines.create');
+    Route::post('accounts/{account}/credit-lines',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'store'])
+        ->name('credit_lines.store');
+    Route::get('credit-lines/resolve',
+        [\App\Http\Controllers\WebV1\CreditLineMatchResolutionController::class, 'index'])
+        ->name('credit_lines.resolve_index');
+    Route::post('credit-lines/resolve/{transaction}',
+        [\App\Http\Controllers\WebV1\CreditLineMatchResolutionController::class, 'resolve'])
+        ->name('credit_lines.resolve');
+    Route::get('credit-lines/{line}',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'show'])
+        ->name('credit_lines.show');
+    Route::get('credit-lines/{line}/edit',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'edit'])
+        ->name('credit_lines.edit');
+    Route::put('credit-lines/{line}',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'update'])
+        ->name('credit_lines.update');
+    Route::post('credit-lines/{line}/repay',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'repay'])
+        ->name('credit_lines.repay');
+    Route::post('credit-lines/{line}/readjust',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'readjust'])
+        ->name('credit_lines.readjust');
+    Route::post('credit-lines/{line}/cancel',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'cancel'])
+        ->name('credit_lines.cancel');
+    Route::post('transactions/{transaction}/reverse',
+        [\App\Http\Controllers\WebV1\TransactionReversalController::class, 'store'])
+        ->name('credit_lines.reverse');
+    // Phase 9: credit-line payment simulator (admin-gated in controller)
+    Route::get('credit-lines/{line}/simulator',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'simulator'])
+        ->name('credit_lines.simulator');
+
+    // Admin: backdated transaction creation (UC-46)
+    Route::get('admin/transactions/create',
+        [\App\Http\Controllers\WebV1\AdminTransactionController::class, 'create'])
+        ->name('admin.transactions.create');
+    Route::post('admin/transactions',
+        [\App\Http\Controllers\WebV1\AdminTransactionController::class, 'store'])
+        ->name('admin.transactions.store');
+
     // Admin: User Role Management (system-admin only - checked in controller)
     Route::get('admin/user-roles', 'App\Http\Controllers\WebV1\UserRoleController@index')
         ->name('admin.user-roles.index');

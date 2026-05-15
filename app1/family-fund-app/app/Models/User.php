@@ -157,6 +157,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias for isSystemAdmin() — used by credit-line authorization (Phase 2).
+     */
+    public function is_admin(): bool
+    {
+        return $this->isSystemAdmin();
+    }
+
+    /**
      * Check if two-factor authentication is enabled and confirmed.
      */
     public function hasTwoFactorEnabled(): bool

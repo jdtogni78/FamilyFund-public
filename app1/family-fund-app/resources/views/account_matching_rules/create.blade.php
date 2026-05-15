@@ -18,7 +18,7 @@
                                 <strong>Create Account Matching Rule</strong>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ route('account-matching-rules.store') }}" class="form-horizontal">
+                                <form method="POST" action="{{ route('accountMatchingRules.store') }}" class="form-horizontal">
                                     @csrf
                                     <div class="form-group">
                                         <label class="col-sm-2 control-label" for="name">Name:</label>

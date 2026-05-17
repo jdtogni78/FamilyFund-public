@@ -20,6 +20,24 @@
                 </span>
             </span>
             <form method="GET" class="d-flex align-items-center gap-2 mb-0">
+                <label for="fund_id" class="text-muted small mb-0">Fund</label>
+                <select name="fund_id" id="fund_id" class="form-select form-select-sm"
+                        onchange="this.form.submit()" style="width:auto">
+                    <option value="">All funds</option>
+                    @foreach($funds as $fund)
+                        <option value="{{ $fund->id }}" @selected((string) $fundId === (string) $fund->id)>{{ $fund->name }}</option>
+                    @endforeach
+                </select>
+
+                <label for="account_id" class="text-muted small mb-0">Account</label>
+                <select name="account_id" id="account_id" class="form-select form-select-sm"
+                        onchange="this.form.submit()" style="width:auto">
+                    <option value="">All accounts</option>
+                    @foreach($accounts as $acctOpt)
+                        <option value="{{ $acctOpt->id }}" @selected((string) $accountId === (string) $acctOpt->id)>{{ $acctOpt->nickname }}</option>
+                    @endforeach
+                </select>
+
                 <label for="status" class="text-muted small mb-0">Status</label>
                 <select name="status" id="status" class="form-select form-select-sm"
                         onchange="this.form.submit()" style="width:auto">

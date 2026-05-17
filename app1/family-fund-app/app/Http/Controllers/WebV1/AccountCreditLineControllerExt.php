@@ -114,9 +114,11 @@ class AccountCreditLineControllerExt extends AppBaseController
 
         // 'open' (default) keeps the original open-receivables view; a
         // specific status narrows to it; 'all' shows everything.
-        $status = $request->query('status', 'open');
+        $status    = $request->query('status', 'open');
+        $accountId = $request->query('account_id');
+        $fundId    = $request->query('fund_id');
 
-        $query = CreditLinePayment::with(['creditLine.account'])
+        $query = CreditLinePayment::with(['creditLine.account.fund'])
             ->orderBy('due_date');
 
         if ($status === 'open') {
@@ -125,10 +127,33 @@ class AccountCreditLineControllerExt extends AppBaseController
             $query->where('status', $status);
         }
 
+        if ($accountId) {
+            $query->whereHas('creditLine', fn ($q) => $q->where('account_id', $accountId));
+        }
+        if ($fundId) {
+            $query->whereHas('creditLine.account', fn ($q) => $q->where('fund_id', $fundId));
+        }
+
+        // Filter option lists: only accounts/funds that actually have
+        // credit lines, so the dropdowns stay scoped to relevant choices.
+        $accounts = AccountExt::whereIn('id', AccountCreditLine::query()->select('account_id'))
+            ->with('fund')
+            ->orderBy('nickname')
+            ->get();
+        $funds = $accounts->pluck('fund')
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+
         return view('account_credit_lines.global_payments')
             ->with('payments', $query->get())
             ->with('status', $status)
             ->with('statusOptions', $allStatuses)
+            ->with('accounts', $accounts)
+            ->with('funds', $funds)
+            ->with('accountId', $accountId)
+            ->with('fundId', $fundId)
             ->with('today', Carbon::today());
     }
 

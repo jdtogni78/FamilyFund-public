@@ -13,6 +13,10 @@
     $historical = $trajectory['historical_plans']   ?? [];
     $current    = $trajectory['current_plan']       ?? [];
     $actual     = $trajectory['actual_repayments']  ?? [];
+    $expected   = $trajectory['expected_to_date']   ?? [];
+    $overdueShares       = $trajectory['overdue_shares']       ?? 0;
+    $overdueInstallments = $trajectory['overdue_installments'] ?? 0;
+    $asOf       = $trajectory['as_of'] ?? null;
     $projected  = $trajectory['projected_payoff_date'] ?? null;
     $planned    = $trajectory['planned_payoff_date']   ?? null;
     $variance   = $trajectory['variance_days']         ?? null;
@@ -29,6 +33,11 @@
         $original   = $filterFn($original);
         $current    = $filterFn($current);
         $actual     = $filterFn($actual);
+        // The delinquency overlay is "as of today" — meaningless in a
+        // through-this-adjustment historical view, so drop it there.
+        $expected   = [];
+        $overdueShares = 0;
+        $overdueInstallments = 0;
         $historical = array_values(array_filter(array_map(function ($h) use ($filterFn, $truncateAt) {
             if (($h['adjusted_at'] ?? null) && $h['adjusted_at'] > $truncateAt) {
                 return null;
@@ -45,6 +54,7 @@
         ->merge(array_column($original, 'date'))
         ->merge(array_column($current,  'date'))
         ->merge(array_column($actual,   'date'))
+        ->merge(array_column($expected, 'date'))
         ->unique()
         ->sort()
         ->values()
@@ -104,6 +114,16 @@
             'borderWidth' => 3,
         ];
     }
+    if (!empty($expected)) {
+        $datasets[] = [
+            'label'       => 'Actual',
+            'data'        => $alignSeries($expected),
+            'borderColor' => '#dc2626',
+            'fill'        => false,
+            'pointRadius' => 0,
+            'borderWidth' => 2,
+        ];
+    }
     if (!empty($actual)) {
         $datasets[] = [
             'label'       => 'Actual repayments',
@@ -147,6 +167,15 @@
             <div class="text-center mb-2">
                 <img src="{{ $chartUrl }}" alt="Payoff trajectory chart" style="max-width:100%; height:auto;">
             </div>
+            @if($overdueInstallments > 0)
+                <div class="alert alert-danger py-2 mb-2 small" role="alert">
+                    <strong>⚠️ Behind schedule:</strong>
+                    {{ $overdueInstallments }} installment{{ $overdueInstallments === 1 ? '' : 's' }} overdue
+                    ({{ number_format($overdueShares, 4) }} shares) as of {{ $asOf ?? 'today' }}.
+                    The red <em>“Actual”</em> line is what the schedule says should
+                    have been repaid by now; the gap to <em>“Actual repayments”</em> is the backlog.
+                </div>
+            @endif
             <div class="row small">
                 <div class="col-md-4">
                     <strong>Planned payoff:</strong> {{ $planned ?? '—' }}

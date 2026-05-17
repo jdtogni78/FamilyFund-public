@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -186,11 +186,11 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 - Email testing via Mailpit in development (compose service `mailhog`, `MAIL_HOST=mailhog`)
 - **Frontend assets**: Run `npm install && npm run build` from `app1/family-fund-app/` after changing Blade templates with new Tailwind classes (Tailwind purges unused classes)
 
-## Claude Testing
+## Codex Testing
 
 A dedicated test user exists for automated testing (created by `prod_to_dev.sql`):
-- **Email**: claude@test.local
-- **Password**: claude-test-2024
+- **Email**: Codex@test.local
+- **Password**: Codex-test-2024
 
 Dev-only auto-login route (local environment only):
 ```

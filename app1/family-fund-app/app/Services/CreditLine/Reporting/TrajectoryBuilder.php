@@ -128,6 +128,40 @@ class TrajectoryBuilder
             ];
         }
 
+        // Delinquency overlay: what the *current* schedule says should have
+        // been repaid by today, plus the overdue backlog. The plan series
+        // above is the static contractual baseline and never reshapes for
+        // lateness — this is the series that makes "behind" visible, even
+        // when nothing has been repaid yet (actual series empty).
+        //
+        // Base set = non-cancelled rows. With no readjustments this is the
+        // whole schedule; after a readjust the superseded rows are cancelled,
+        // so this stays aligned with the live schedule table.
+        $today = Carbon::today();
+        $expected = [];
+        $running = 0.0;
+        $overdueShares = 0.0;
+        $overdueInstallments = 0;
+        foreach ($allPayments as $p) {
+            if ($p->status === CreditLinePayment::STATUS_CANCELLED) {
+                continue;
+            }
+            $due = Carbon::parse($p->due_date);
+            if ($due->gt($today)) {
+                continue;
+            }
+            $running += (float) $p->shares_due;
+            $expected[] = [
+                'date'              => $due->format('Y-m-d'),
+                'cumulative_shares' => round(min($running, (float) $line->principal_shares), 4),
+            ];
+            if ($p->status === CreditLinePayment::STATUS_LATE) {
+                $overdueShares += (float) $p->shares_due;
+                $overdueInstallments++;
+            }
+        }
+        $overdueShares = round($overdueShares, 4);
+
         // Projected payoff: trailing-3-payments average run-rate.
         $projected = $this->projectedPayoffDate($reps, $line);
 
@@ -149,6 +183,10 @@ class TrajectoryBuilder
             'historical_plans'      => $historicalPlans,
             'current_plan'          => $currentPlan,
             'actual_repayments'     => $actual,
+            'expected_to_date'      => $expected,
+            'overdue_shares'        => $overdueShares,
+            'overdue_installments'  => $overdueInstallments,
+            'as_of'                 => $today->format('Y-m-d'),
             'projected_payoff_date' => $projected,
             'planned_payoff_date'   => $planned,
             'variance_days'         => $variance,

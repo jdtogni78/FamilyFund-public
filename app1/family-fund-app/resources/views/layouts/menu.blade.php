@@ -94,6 +94,32 @@
         </li>
     </ul>
 </li>
+<li class="nav-item nav-dropdown {{ Request::is('credit-lines*') ? 'active' : '' }}">
+    <a class="nav-link nav-dropdown-toggle" href="#">
+        <i class="nav-icon fa fa-credit-card"></i>
+        <span>Credit Lines</span>
+    </a>
+    <ul class="nav-dropdown-items">
+        <li class="nav-item {{ Request::is('credit-lines') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('credit_lines.global_index') }}">
+                <i class="nav-icon fa fa-credit-card"></i>
+                <span>All Credit Lines</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('credit-lines/payments') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('credit_lines.global_payments') }}">
+                <i class="nav-icon fa fa-calendar-check-o"></i>
+                <span>Receivables</span>
+            </a>
+        </li>
+        <li class="nav-item {{ Request::is('credit-lines/resolve*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('credit_lines.resolve_index') }}">
+                <i class="nav-icon fa fa-link"></i>
+                <span>Match Resolution</span>
+            </a>
+        </li>
+    </ul>
+</li>
 <li class="nav-item nav-dropdown {{ Request::is('tradePortfolios*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-exchange"></i>

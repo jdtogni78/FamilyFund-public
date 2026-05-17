@@ -69,50 +69,161 @@ class RepayService implements ScheduleAdvancer
             // Lock the line row to prevent concurrent updates.
             DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
 
-            // Create the REP transaction.
-            // credit_line_match_status is NULL — target is explicit (caller provided the line).
-            $repTransaction = TransactionExt::create([
-                'account_id'               => $line->account_id,
-                'account_credit_line_id'   => $line->id,
-                'type'                     => TransactionExt::TYPE_REPAY,
-                'status'                   => TransactionExt::STATUS_CLEARED,
-                'value'                    => 0,  // cash-leg deferred to Phase 5
-                'shares'                   => round($shares, 4),
-                'timestamp'                => $date->toDateTimeString(),
-                'credit_line_match_status' => null,
-                'reversed'                 => false,
-                'descr'                    => 'Credit line repayment',
-            ]);
+            $repTransaction = $this->createRepTransaction(
+                $line,
+                round($shares, 4),
+                $date,
+                'Credit line repayment'
+            );
 
             // Apply shares to the schedule in due-date order.
             $this->applyToScheduleRows($line, $repTransaction, round($shares, 4));
 
-            // Recompute outstanding on the line.
-            $outstanding = $this->calculator->recomputeForLine($line);
-
-            // Mark as paid off when fully repaid (UC-13).
-            if ($outstanding <= 0) {
-                $line->status = AccountCreditLineExt::STATUS_PAID_OFF;
-                $line->outstanding_shares = 0;
-                $line->save();
-            }
-
-            // Update the aggregate BOR balance row.
-            /** @var AccountExt $account */
-            $account = $line->account()->first();
-            $this->calculator->updateAggregateBorBalance($account, $date->toDateString(), $repTransaction->id);
-
-            // Record the new outstanding for historical receivable reconstruction.
-            $line->refresh();
-            $this->balanceTracker->recordChange(
-                $line,
-                (float) $line->outstanding_shares,
-                $repTransaction,
-                $date
-            );
+            $this->finalize($line, $repTransaction, $date);
 
             return $repTransaction;
         });
+    }
+
+    /**
+     * Register a payment against a SPECIFIC schedule row (per-row manual
+     * registration — used to reconcile externally-settled installments).
+     *
+     * The targeted row is satisfied first. If `$shares` exceeds the row's
+     * remaining balance, the overflow cascades to subsequent open rows in
+     * due-date order (same rule as a normal repayment) so an over-payment is
+     * never lost. A short payment marks the row `partial`.
+     *
+     * @param  CreditLinePayment $row    The schedule row being settled.
+     * @param  float             $shares Shares paid (admin-editable; defaults to row's shares_due in the UI).
+     * @param  Carbon|null       $date   Real settlement date (defaults to today).
+     * @return TransactionExt            The created REP transaction.
+     */
+    public function repayRow(CreditLinePayment $row, float $shares, ?Carbon $date = null): TransactionExt
+    {
+        if ($shares <= 0) {
+            throw new InvalidArgumentException(
+                sprintf('Payment shares must be positive; got %.4f.', $shares)
+            );
+        }
+
+        /** @var AccountCreditLine $line */
+        $line = $row->creditLine()->first();
+        if (!$line) {
+            throw new InvalidArgumentException('Schedule row is not attached to a credit line.');
+        }
+
+        if ($line->status !== AccountCreditLineExt::STATUS_ACTIVE) {
+            throw new InvalidArgumentException(
+                sprintf('Cannot register a payment on a credit line with status "%s". Only active lines accept payments.', $line->status)
+            );
+        }
+
+        $openStatuses = [
+            CreditLinePayment::STATUS_SCHEDULED,
+            CreditLinePayment::STATUS_PARTIAL,
+            CreditLinePayment::STATUS_LATE,
+        ];
+        if (!in_array($row->status, $openStatuses, true)) {
+            throw new InvalidArgumentException(
+                sprintf('Schedule row #%d is "%s" and cannot accept a payment.', $row->id, $row->status)
+            );
+        }
+
+        $date   = $date ?? Carbon::today();
+        $shares = round($shares, 4);
+
+        return DB::transaction(function () use ($line, $row, $shares, $date) {
+            DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
+
+            $repTransaction = $this->createRepTransaction(
+                $line,
+                $shares,
+                $date,
+                sprintf('Credit line payment (schedule row #%d, due %s)', $row->id, $row->due_date)
+            );
+
+            // Satisfy the targeted row first; cascade any overflow.
+            $row->refresh();
+            $alreadyPaid  = $this->sharesAlreadyPaidOnRow($row);
+            $rowRemaining = round((float) $row->shares_due - $alreadyPaid, 4);
+            $remaining    = $shares;
+
+            if ($remaining >= $rowRemaining) {
+                $remaining -= $rowRemaining;
+                $row->status              = CreditLinePayment::STATUS_PAID;
+                $row->paid_transaction_id = $repTransaction->id;
+                $row->save();
+
+                // Overflow cascades to the remaining open rows oldest-first.
+                if ($remaining > 0) {
+                    $this->applyToScheduleRows($line, $repTransaction, round($remaining, 4));
+                }
+            } else {
+                $row->status              = CreditLinePayment::STATUS_PARTIAL;
+                $row->paid_transaction_id = $repTransaction->id;
+                $row->save();
+            }
+
+            $this->finalize($line, $repTransaction, $date);
+
+            return $repTransaction;
+        });
+    }
+
+    /**
+     * Create the REP transaction for an explicit-target repayment.
+     *
+     * credit_line_match_status is NULL — the target line is explicit, so the
+     * matcher is not involved.
+     */
+    private function createRepTransaction(
+        AccountCreditLine $line,
+        float $shares,
+        Carbon $date,
+        string $descr
+    ): TransactionExt {
+        return TransactionExt::create([
+            'account_id'               => $line->account_id,
+            'account_credit_line_id'   => $line->id,
+            'type'                     => TransactionExt::TYPE_REPAY,
+            'status'                   => TransactionExt::STATUS_CLEARED,
+            'value'                    => 0,  // cash-leg deferred to Phase 5
+            'shares'                   => round($shares, 4),
+            'timestamp'                => $date->toDateTimeString(),
+            'credit_line_match_status' => null,
+            'reversed'                 => false,
+            'descr'                    => $descr,
+        ]);
+    }
+
+    /**
+     * Shared post-application tail: recompute outstanding, mark paid-off,
+     * refresh the aggregate BOR balance, and record the balance change.
+     */
+    private function finalize(AccountCreditLine $line, TransactionExt $repTransaction, Carbon $date): void
+    {
+        $outstanding = $this->calculator->recomputeForLine($line);
+
+        // Mark as paid off when fully repaid (UC-13).
+        if ($outstanding <= 0) {
+            $line->status = AccountCreditLineExt::STATUS_PAID_OFF;
+            $line->outstanding_shares = 0;
+            $line->save();
+        }
+
+        /** @var AccountExt $account */
+        $account = $line->account()->first();
+        $this->calculator->updateAggregateBorBalance($account, $date->toDateString(), $repTransaction->id);
+
+        // Record the new outstanding for historical receivable reconstruction.
+        $line->refresh();
+        $this->balanceTracker->recordChange(
+            $line,
+            (float) $line->outstanding_shares,
+            $repTransaction,
+            $date
+        );
     }
 
     /**

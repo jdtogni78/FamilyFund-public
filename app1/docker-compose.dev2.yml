@@ -24,7 +24,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=123456
       - APP_ENV=local
-      - MAIL_HOST=mail
+      - MAIL_HOST=mailhog
       - QUICKCHART_HOST=quickchart
     ports:
       - 3002:8000

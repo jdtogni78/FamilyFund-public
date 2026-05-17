@@ -10,6 +10,7 @@ use App\Models\TransactionExt;
 use App\Services\CreditLine\Exceptions\OverBorrowException;
 use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
 use App\Services\CreditLine\Support\CreditLineBalanceTracker;
+use App\Services\CreditLine\Support\LateDetector;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -33,8 +34,10 @@ class DrawService
         private AmortizationScheduleBuilder $scheduleBuilder,
         private OutstandingCalculator $calculator,
         private ?CreditLineBalanceTracker $balanceTracker = null,
+        private ?LateDetector $lateDetector = null,
     ) {
         $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
+        $this->lateDetector  = $this->lateDetector ?? new LateDetector();
     }
 
     /**
@@ -104,6 +107,11 @@ class DrawService
 
             // Build the amortization schedule.
             $this->scheduleBuilder->build($line, $principalShares, $originationDate);
+
+            // Backdated draw: any generated row whose due_date is already in
+            // the past is flagged late immediately, so the overdue backlog is
+            // visible without waiting for a sweep. No-op for a same-day draw.
+            $this->lateDetector->detectForLine($line);
 
             // Update the aggregate BOR balance row on the account.
             $this->calculator->updateAggregateBorBalance($account, $originationDate->toDateString(), $borTransaction->id);

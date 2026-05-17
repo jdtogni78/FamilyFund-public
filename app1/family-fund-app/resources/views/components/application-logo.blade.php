@@ -1,5 +1,7 @@
 <img
     src="{{ asset('images/logo.png') }}"
     alt="Family Fund Logo"
-    {{ $attributes->merge(['class' => 'navbar-brand-full']) }}
+    width="40"
+    height="40"
+    {{ $attributes->merge(['class' => 'rounded-full']) }}
 >

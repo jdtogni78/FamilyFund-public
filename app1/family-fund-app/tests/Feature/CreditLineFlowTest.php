@@ -270,6 +270,20 @@ class CreditLineFlowTest extends TestCase
         $this->assertDatabaseHas('accounts', ['id' => $account->id]);
     }
 
+    public function test_global_create_form_has_fund_filter_and_account_selector(): void
+    {
+        $account = $this->df->userAccount;
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('credit_lines.global_create'));
+
+        $response->assertOk();
+        $response->assertSee('id="fund_filter"', false);
+        $response->assertSee('data-fund-id="' . $account->fund_id . '"', false);
+        // Account option carries the fund id so the JS filter can match it.
+        $response->assertSee('name="account_id"', false);
+    }
+
     private function seedOwnBalance($account, float $shares): void
     {
         $tran = $this->df->createTransaction(

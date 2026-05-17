@@ -17,14 +17,17 @@ services:
       - ./family-fund-app:/app
       - ./family-fund-app/docker_tmp:/tmp
 
+  # Mailpit: arm64-native, drop-in MailHog replacement.
+  # Service key kept as "mailhog" so env overrides + MAIL_HOST=mailhog still resolve.
+  # Same ports as MailHog: 1025 (SMTP), 8025 (web UI).
   mailhog:
-    image: mailhog/mailhog
+    image: axllent/mailpit:latest
     logging:
       driver: 'none'
     restart: on-failure
-    volumes:
-      - ./mailhog-outgoing.json:/etc/mailhog-outgoing.json:ro
-    command: ["-outgoing-smtp", "/etc/mailhog-outgoing.json"]
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
 
   quickchart:
     image: ianw/quickchart

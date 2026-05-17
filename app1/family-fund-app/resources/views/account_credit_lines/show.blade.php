@@ -115,22 +115,101 @@
             @if($schedule->isEmpty())
                 <p class="text-muted mb-0">No schedule rows.</p>
             @else
+            @php
+                $openRowStatuses = ['scheduled', 'partial', 'late'];
+                $canRegister = $isAdmin && $line->status === 'active';
+            @endphp
             <table class="table table-sm">
                 <thead>
-                    <tr><th>#</th><th>Due date</th><th>Shares</th><th>Status</th><th>Paid by tx</th></tr>
+                    <tr>
+                        <th>#</th><th>Due date</th><th>Shares</th><th>Status</th><th>Paid by tx</th>
+                        @if($canRegister)<th></th>@endif
+                    </tr>
                 </thead>
                 <tbody>
                 @foreach($schedule as $row)
+                    @php $isOpen = in_array($row->status, $openRowStatuses, true); @endphp
                     <tr>
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
-                        <td>{{ $row->status }}</td>
+                        <td>
+                            @if($row->status === 'late')
+                                <span class="badge bg-danger">late</span>
+                            @elseif($row->status === 'partial')
+                                <span class="badge bg-warning text-dark">partial</span>
+                            @elseif($row->status === 'paid')
+                                <span class="badge bg-success">paid</span>
+                            @else
+                                {{ $row->status }}
+                            @endif
+                        </td>
                         <td>{{ $row->paid_transaction_id }}</td>
+                        @if($canRegister)
+                        <td class="text-end">
+                            @if($isOpen)
+                            <button type="button" class="btn btn-outline-success btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#register-payment-{{ $row->id }}">
+                                Register payment
+                            </button>
+                            @endif
+                        </td>
+                        @endif
                     </tr>
                 @endforeach
                 </tbody>
             </table>
+
+            @if($canRegister)
+                @foreach($schedule as $row)
+                    @if(in_array($row->status, $openRowStatuses, true))
+                    <div class="modal fade" id="register-payment-{{ $row->id }}" tabindex="-1"
+                         aria-labelledby="register-payment-{{ $row->id }}-label" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST"
+                                      action="{{ route('credit_lines.payments.register', ['line' => $line->id, 'payment' => $row->id]) }}">
+                                    @csrf
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="register-payment-{{ $row->id }}-label">
+                                            Register payment &mdash; row #{{ $row->sequence_number ?? $row->id }}
+                                            (due {{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }})
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Shares paid</label>
+                                            <input type="number" step="0.0001" min="0.0001" name="shares"
+                                                   class="form-control"
+                                                   value="{{ number_format($row->shares_due, 4, '.', '') }}" required>
+                                            <div class="form-text">
+                                                Defaults to the scheduled amount. Edit for an under/over payment;
+                                                overflow cascades to later open rows.
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Settlement date</label>
+                                            <input type="date" name="date" class="form-control"
+                                                   max="{{ \Illuminate\Support\Carbon::today()->toDateString() }}"
+                                                   value="{{ \Illuminate\Support\Carbon::today()->toDateString() }}">
+                                            <div class="form-text">
+                                                The real date the external system settled this payment.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success">Register payment</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                @endforeach
+            @endif
             @endif
         </div>
     </div>

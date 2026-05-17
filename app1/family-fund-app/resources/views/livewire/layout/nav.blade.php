@@ -27,6 +27,14 @@
                 'Deposit Requests' => ['route' => 'depositRequests.index', 'icon' => 'fa fa-download'],
             ],
         ],
+        'Credit Lines' => [
+            'icon' => 'fa fa-credit-card',
+            'items' => [
+                'All Credit Lines' => ['route' => 'credit_lines.global_index', 'icon' => 'fa fa-credit-card'],
+                'Receivables' => ['route' => 'credit_lines.global_payments', 'icon' => 'fa fa-calendar-check-o'],
+                'Match Resolution' => ['route' => 'credit_lines.resolve_index', 'icon' => 'fa fa-link'],
+            ],
+        ],
         'Trading Menu' => [
             'icon' => 'fa fa-exchange',
             'items' => [

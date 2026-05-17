@@ -210,6 +210,9 @@ Route::middleware('auth')->group(function () {
     Route::get('accounts/{account}/credit-lines/create',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'create'])
         ->name('credit_lines.create');
+    Route::get('accounts/{account}/credit-lines/available-shares',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'availableShares'])
+        ->name('credit_lines.available_shares');
     Route::post('accounts/{account}/credit-lines',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'store'])
         ->name('credit_lines.store');
@@ -219,6 +222,25 @@ Route::middleware('auth')->group(function () {
     Route::post('credit-lines/resolve/{transaction}',
         [\App\Http\Controllers\WebV1\CreditLineMatchResolutionController::class, 'resolve'])
         ->name('credit_lines.resolve');
+    // Global (cross-account) listings — must precede credit-lines/{line}
+    // so the static segments aren't captured as a {line} id.
+    Route::get('credit-lines',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalIndex'])
+        ->name('credit_lines.global_index');
+    Route::get('credit-lines/payments',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalPayments'])
+        ->name('credit_lines.global_payments');
+    // Global create flow (no pre-selected account) — static segments must
+    // precede credit-lines/{line} so they aren't captured as a {line} id.
+    Route::get('credit-lines/create',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalCreate'])
+        ->name('credit_lines.global_create');
+    Route::get('credit-lines/available-shares',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalAvailableShares'])
+        ->name('credit_lines.global_available_shares');
+    Route::post('credit-lines',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'store'])
+        ->name('credit_lines.global_store');
     Route::get('credit-lines/{line}',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'show'])
         ->name('credit_lines.show');
@@ -231,6 +253,9 @@ Route::middleware('auth')->group(function () {
     Route::post('credit-lines/{line}/repay',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'repay'])
         ->name('credit_lines.repay');
+    Route::post('credit-lines/{line}/payments/{payment}/register',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPayment'])
+        ->name('credit_lines.payments.register');
     Route::post('credit-lines/{line}/readjust',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'readjust'])
         ->name('credit_lines.readjust');

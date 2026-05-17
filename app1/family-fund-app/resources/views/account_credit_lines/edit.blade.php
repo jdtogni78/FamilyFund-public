@@ -3,6 +3,14 @@
 {{-- Note: matches show.blade.php's pattern; the @section marker is informational,
      content below is rendered into the layout's default slot. --}}
 <ol class="breadcrumb">
+    @if($account)
+    <li class="breadcrumb-item">
+        <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a>
+    </li>
+    @endif
     <li class="breadcrumb-item">
         <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Credit Line #{{ $line->id }}</a>
     </li>
@@ -12,7 +20,17 @@
     @include('flash::message')
 
     <div class="card mb-3">
-        <div class="card-header"><strong>Edit credit line #{{ $line->id }}</strong></div>
+        <div class="card-header">
+            <strong>Edit credit line #{{ $line->id }}</strong>
+            @if($account)
+                <span class="text-body-secondary ms-2">
+                    &mdash; <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
+                    @if($account->fund)
+                        (<a href="{{ route('funds.show', $account->fund_id) }}">{{ $account->fund->name }}</a>)
+                    @endif
+                </span>
+            @endif
+        </div>
         <div class="card-body">
             <p class="text-muted mb-0">
                 Editing principal / origination is not supported after creation. Use

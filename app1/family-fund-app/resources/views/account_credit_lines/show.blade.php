@@ -14,6 +14,19 @@
 <div class="container-fluid">
     @include('coreui-templates.common.errors')
 
+    @if($isAdmin)
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        @if($line->status === 'active')
+            <a href="{{ route('credit_lines.actions', ['line' => $line->id]) }}"
+               class="btn btn-primary btn-sm">Admin actions</a>
+        @endif
+        <a href="{{ route('credit_lines.simulator', ['line' => $line->id]) }}"
+           class="btn btn-outline-secondary btn-sm">Payment simulator</a>
+        <a href="{{ route('credit_lines.edit', ['line' => $line->id]) }}"
+           class="btn btn-outline-secondary btn-sm">Notification settings</a>
+    </div>
+    @endif
+
     @if(!empty($loansSummary ?? []))
         @include('account_credit_lines._loans_summary_card', ['loansSummary' => $loansSummary])
     @endif
@@ -63,52 +76,6 @@
         @include('account_credit_lines._trajectory_chart', ['trajectory' => $trajectory, 'chartUrl' => null])
     @endif
 
-    @if($isAdmin && $line->status === 'active')
-    <div class="card mb-3">
-        <div class="card-header"><strong>Admin actions</strong></div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <form method="POST" action="{{ route('credit_lines.repay', ['line' => $line->id]) }}">
-                        @csrf
-                        <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
-                        <label class="form-label">Repay (shares)</label>
-                        <input type="number" step="0.0001" name="shares" required class="form-control mb-2">
-                        <button type="submit" class="btn btn-success btn-sm">Record repayment</button>
-                    </form>
-                </div>
-                <div class="col-md-4">
-                    <form method="POST" action="{{ route('credit_lines.readjust', ['line' => $line->id]) }}">
-                        @csrf
-                        <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
-                        <label class="form-label">New term (months)</label>
-                        <input type="number" name="new_term_months" class="form-control mb-2">
-                        <label class="form-label">New frequency</label>
-                        <select name="new_payment_frequency" class="form-select mb-2">
-                            <option value="">— unchanged —</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="quarterly">Quarterly</option>
-                            <option value="annual">Annual</option>
-                        </select>
-                        <input type="text" name="reason" class="form-control mb-2" placeholder="Reason (optional)">
-                        <button type="submit" class="btn btn-warning btn-sm">Readjust</button>
-                    </form>
-                </div>
-                <div class="col-md-4">
-                    <form method="POST"
-                          action="{{ route('credit_lines.cancel', ['line' => $line->id]) }}"
-                          onsubmit="return confirm('Cancel this credit line?');">
-                        @csrf
-                        <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
-                        <label class="form-label">Danger zone</label>
-                        <button type="submit" class="btn btn-danger btn-sm d-block">Cancel line</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
     <div class="card mb-3">
         <div class="card-header"><strong>Payment schedule</strong></div>
         <div class="card-body">
@@ -148,11 +115,10 @@
                         @if($canRegister)
                         <td class="text-end">
                             @if($isOpen)
-                            <button type="button" class="btn btn-outline-success btn-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#register-payment-{{ $row->id }}">
+                            <a class="btn btn-outline-success btn-sm"
+                               href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}">
                                 Register payment
-                            </button>
+                            </a>
                             @endif
                         </td>
                         @endif
@@ -160,56 +126,6 @@
                 @endforeach
                 </tbody>
             </table>
-
-            @if($canRegister)
-                @foreach($schedule as $row)
-                    @if(in_array($row->status, $openRowStatuses, true))
-                    <div class="modal fade" id="register-payment-{{ $row->id }}" tabindex="-1"
-                         aria-labelledby="register-payment-{{ $row->id }}-label" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="POST"
-                                      action="{{ route('credit_lines.payments.register', ['line' => $line->id, 'payment' => $row->id]) }}">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="register-payment-{{ $row->id }}-label">
-                                            Register payment &mdash; row #{{ $row->sequence_number ?? $row->id }}
-                                            (due {{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }})
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Shares paid</label>
-                                            <input type="number" step="0.0001" min="0.0001" name="shares"
-                                                   class="form-control"
-                                                   value="{{ number_format($row->shares_due, 4, '.', '') }}" required>
-                                            <div class="form-text">
-                                                Defaults to the scheduled amount. Edit for an under/over payment;
-                                                overflow cascades to later open rows.
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Settlement date</label>
-                                            <input type="date" name="date" class="form-control"
-                                                   max="{{ \Illuminate\Support\Carbon::today()->toDateString() }}"
-                                                   value="{{ \Illuminate\Support\Carbon::today()->toDateString() }}">
-                                            <div class="form-text">
-                                                The real date the external system settled this payment.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-success">Register payment</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                @endforeach
-            @endif
             @endif
         </div>
     </div>

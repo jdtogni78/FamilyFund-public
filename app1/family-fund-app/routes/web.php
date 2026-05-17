@@ -244,6 +244,9 @@ Route::middleware('auth')->group(function () {
     Route::get('credit-lines/{line}',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'show'])
         ->name('credit_lines.show');
+    Route::get('credit-lines/{line}/actions',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'actions'])
+        ->name('credit_lines.actions');
     Route::get('credit-lines/{line}/edit',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'edit'])
         ->name('credit_lines.edit');
@@ -253,6 +256,9 @@ Route::middleware('auth')->group(function () {
     Route::post('credit-lines/{line}/repay',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'repay'])
         ->name('credit_lines.repay');
+    Route::get('credit-lines/{line}/payments/{payment}/register',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPaymentForm'])
+        ->name('credit_lines.payments.register_form');
     Route::post('credit-lines/{line}/payments/{payment}/register',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPayment'])
         ->name('credit_lines.payments.register');

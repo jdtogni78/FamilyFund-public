@@ -19,14 +19,30 @@
                 @if($account)
                     <input type="hidden" name="account_id" value="{{ $account->id }}">
                 @else
-                <div class="mb-3">
-                    <label class="form-label">Account</label>
-                    <select class="form-select" name="account_id" id="account_id" required>
-                        <option value="">— select an account —</option>
-                        @foreach($accounts as $acct)
-                            <option value="{{ $acct->id }}" @selected(old('account_id') == $acct->id)>{{ $acct->nickname }}</option>
-                        @endforeach
-                    </select>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="fund_filter">Fund (Filter)</label>
+                        <select class="form-select" id="fund_filter">
+                            @foreach($fundMap as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="account_id">Account</label>
+                        <select class="form-select" name="account_id" id="account_id" required>
+                            <option value="">— select an account —</option>
+                            @foreach($accounts as $acct)
+                                @php
+                                    $acctLabel = $acct->nickname;
+                                    if ($acct->code) { $acctLabel .= ' (' . $acct->code . ')'; }
+                                    if ($acct->user) { $acctLabel .= ' - ' . $acct->user->name; }
+                                @endphp
+                                <option value="{{ $acct->id }}" data-fund-id="{{ $acct->fund_id }}"
+                                        @selected(old('account_id') == $acct->id)>{{ $acctLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 @endif
                 <div class="mb-3">
@@ -94,6 +110,42 @@
         var overWarn   = document.getElementById('over-borrow-warning');
         var submitBtn  = document.getElementById('submit-btn');
         var accountSel = document.getElementById('account_id'); // null in per-account mode
+        var fundSel    = document.getElementById('fund_filter'); // null in per-account mode
+
+        // Snapshot all account options so the fund filter can rebuild the
+        // list (hiding <option>s is unreliable across browsers).
+        var allAccountOptions = [];
+        if (accountSel) {
+            Array.prototype.forEach.call(accountSel.options, function (o) {
+                allAccountOptions.push({
+                    value:  o.value,
+                    text:   o.text,
+                    fundId: o.getAttribute('data-fund-id') || ''
+                });
+            });
+        }
+
+        function filterAccountsByFund() {
+            if (!accountSel || !fundSel) return;
+            var fund = fundSel.value;
+            var current = accountSel.value;
+            accountSel.innerHTML = '';
+            var keptCurrent = false;
+            allAccountOptions.forEach(function (opt) {
+                if (!opt.value || !fund || opt.fundId == fund) {
+                    var el = document.createElement('option');
+                    el.value = opt.value;
+                    el.text = opt.text;
+                    el.setAttribute('data-fund-id', opt.fundId);
+                    if (opt.value && opt.value == current) {
+                        el.selected = true;
+                        keptCurrent = true;
+                    }
+                    accountSel.appendChild(el);
+                }
+            });
+            if (!keptCurrent) accountSel.value = '';
+        }
         var today      = '{{ \Illuminate\Support\Carbon::today()->toDateString() }}';
         @if($account)
         var availUrl   = '{{ route('credit_lines.available_shares', ['account' => $account->id]) }}';
@@ -150,6 +202,13 @@
         }
         if (accountSel) {
             accountSel.addEventListener('change', fetchAvailable);
+        }
+        if (fundSel) {
+            fundSel.addEventListener('change', function () {
+                filterAccountsByFund();
+                fetchAvailable();
+            });
+            filterAccountsByFund();
         }
         syncWarning();
         syncOverBorrow();

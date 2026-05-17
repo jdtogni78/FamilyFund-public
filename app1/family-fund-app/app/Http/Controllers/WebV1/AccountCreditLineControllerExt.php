@@ -165,11 +165,14 @@ class AccountCreditLineControllerExt extends AppBaseController
     {
         $this->ensureAdmin();
 
-        $accounts = AccountExt::orderBy('nickname')->get(['id', 'nickname']);
+        $accounts = AccountExt::with('user')
+            ->orderBy('nickname')
+            ->get(['id', 'nickname', 'code', 'fund_id', 'user_id']);
 
         return view('account_credit_lines.create')
             ->with('account', null)
             ->with('accounts', $accounts)
+            ->with('fundMap', \App\Models\FundExt::fundMap())
             ->with('available', 0.0);
     }
 

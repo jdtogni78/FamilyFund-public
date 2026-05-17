@@ -262,6 +262,9 @@ Route::middleware('auth')->group(function () {
     Route::post('credit-lines/{line}/payments/{payment}/register',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPayment'])
         ->name('credit_lines.payments.register');
+    Route::post('credit-lines/{line}/payments/{payment}/reverse',
+        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'reversePayment'])
+        ->name('credit_lines.payments.reverse');
     Route::post('credit-lines/{line}/readjust',
         [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'readjust'])
         ->name('credit_lines.readjust');

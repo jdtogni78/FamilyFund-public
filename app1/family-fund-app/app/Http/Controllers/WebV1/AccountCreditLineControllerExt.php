@@ -13,6 +13,7 @@ use App\Models\AccountCreditLine;
 use App\Models\AccountCreditLineExt;
 use App\Models\AccountExt;
 use App\Models\CreditLinePayment;
+use App\Models\TransactionExt;
 use App\Models\UserExt;
 use App\Services\CreditLine\Adjust\AdjustmentHistoryBuilder;
 use App\Services\CreditLine\Adjust\ReadjustService;
@@ -25,6 +26,8 @@ use App\Services\CreditLine\Exceptions\OverBorrowException;
 use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
 use App\Services\CreditLine\Reporting\TrajectoryBuilder;
+use App\Services\CreditLine\Reverse\Exceptions\AlreadyReversedException;
+use App\Services\CreditLine\Reverse\ReverseService;
 use App\Services\CreditLine\Simulation\PaymentSimulator;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
@@ -40,6 +43,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         private readonly ReadjustService $readjustService,
         private readonly CancelService $cancelService,
         private readonly AdjustmentHistoryBuilder $historyBuilder,
+        private readonly ReverseService $reverseService,
     ) {}
 
     /**
@@ -473,6 +477,69 @@ class AccountCreditLineControllerExt extends AppBaseController
         );
 
         return redirect(route('credit_lines.show', ['line' => $line->id]));
+    }
+
+    /**
+     * Reverse a registered payment on a schedule row (the "Delete" / "Edit"
+     * controls on the schedule and Receivables lists).
+     *
+     * Reverses the row's REP transaction via ReverseService — which re-opens
+     * every row that transaction had satisfied (a cascaded over-payment can
+     * touch several) and restores the line's outstanding. With `then=edit`
+     * the admin is sent straight to the register form to re-enter correct
+     * values; otherwise we return to the page they came from.
+     */
+    public function reversePayment(Request $request, $lineId, $paymentId)
+    {
+        $this->ensureAdmin();
+        $line = AccountCreditLineExt::findOrFail($lineId);
+        $this->authorize('process', $line);
+
+        $row = CreditLinePayment::where('id', $paymentId)
+            ->where('account_credit_line_id', $line->id)
+            ->firstOrFail();
+
+        if (!$row->paid_transaction_id) {
+            Flash::error('Schedule row #' . $row->id . ' has no registered payment to reverse.');
+            return redirect()->back();
+        }
+
+        $tran = TransactionExt::findOrFail($row->paid_transaction_id);
+
+        /** @var UserExt|null $admin */
+        $admin = auth()->user();
+        if ($admin && !$admin instanceof UserExt) {
+            $admin = UserExt::find($admin->id);
+        }
+
+        $isEdit = $request->input('then') === 'edit';
+        $reason = trim((string) $request->input('reason'));
+        if ($reason === '') {
+            $reason = $isEdit
+                ? 'Editing mis-registered payment on schedule row #' . $row->id . ' (reverse + re-register).'
+                : 'Deleting mis-registered payment on schedule row #' . $row->id . '.';
+        }
+
+        try {
+            $reversal = $this->reverseService->reverse($tran, $admin, $reason);
+        } catch (AlreadyReversedException $e) {
+            Flash::error($e->getMessage());
+            return redirect()->back();
+        }
+
+        Flash::success(
+            'Payment on schedule row #' . $row->id
+            . ' reversed (txn #' . $tran->id . ', reversal #' . $reversal->id . ').'
+        );
+
+        if ($isEdit) {
+            return redirect(route('credit_lines.payments.register_form', [
+                'line'    => $line->id,
+                'payment' => $row->id,
+            ]));
+        }
+
+        return redirect()->back();
     }
 
     public function readjust(ReadjustCreditLineRequest $request)

@@ -65,7 +65,8 @@
                     @php
                         $line = $row->creditLine;
                         $acct = $line?->account;
-                        $overdue = \Illuminate\Support\Carbon::parse($row->due_date)->lt($today);
+                        $openRow = in_array($row->status, ['scheduled', 'partial', 'late'], true);
+                        $overdue = $openRow && \Illuminate\Support\Carbon::parse($row->due_date)->lt($today);
                     @endphp
                     <tr @class(['table-danger' => $row->status === 'late' || $overdue])>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>

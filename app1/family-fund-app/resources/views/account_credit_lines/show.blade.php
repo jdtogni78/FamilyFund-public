@@ -82,20 +82,15 @@
             @if($schedule->isEmpty())
                 <p class="text-muted mb-0">No schedule rows.</p>
             @else
-            @php
-                $openRowStatuses = ['scheduled', 'partial', 'late'];
-                $canRegister = $isAdmin && $line->status === 'active';
-            @endphp
             <table class="table table-sm">
                 <thead>
                     <tr>
                         <th>#</th><th>Due date</th><th>Shares</th><th>Status</th><th>Paid by tx</th>
-                        @if($canRegister)<th></th>@endif
+                        @if($isAdmin)<th></th>@endif
                     </tr>
                 </thead>
                 <tbody>
                 @foreach($schedule as $row)
-                    @php $isOpen = in_array($row->status, $openRowStatuses, true); @endphp
                     <tr>
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
@@ -112,14 +107,9 @@
                             @endif
                         </td>
                         <td>{{ $row->paid_transaction_id }}</td>
-                        @if($canRegister)
+                        @if($isAdmin)
                         <td class="text-end">
-                            @if($isOpen)
-                            <a class="btn btn-outline-success btn-sm"
-                               href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}">
-                                Register payment
-                            </a>
-                            @endif
+                            @include('account_credit_lines._payment_row_actions', ['line' => $line, 'row' => $row])
                         </td>
                         @endif
                     </tr>

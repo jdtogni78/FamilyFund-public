@@ -17,6 +17,7 @@ use Carbon\Carbon;
  *
  * Output shape:
  *   [
+ *     'origination_date'     => 'Y-m-d' | null, // anchors the chart at (date, 0)
  *     'original_plan'        => [ ['date' => 'Y-m-d', 'cumulative_shares' => float], ... ],
  *     'historical_plans'     => [
  *         [
@@ -179,6 +180,9 @@ class TrajectoryBuilder
         }
 
         return [
+            'origination_date'      => $line->origination_date
+                ? Carbon::parse($line->origination_date)->format('Y-m-d')
+                : null,
             'original_plan'         => $originalPlan,
             'historical_plans'      => $historicalPlans,
             'current_plan'          => $currentPlan,

@@ -185,6 +185,76 @@ class CreditLineTrajectorySingleLineTest extends TestCase
     }
 
     /**
+     * Both lines must be anchored at (origination_date, 0): at origination
+     * nothing has been repaid, so the chart should start from the origin
+     * rather than jumping in at the first installment / first repayment.
+     */
+    public function test_lines_are_anchored_at_origination_zero_point(): void
+    {
+        $datasets = $this->datasets([
+            'origination_date' => '2026-01-01',
+            'original_plan' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+            ],
+            'historical_plans' => [],
+            'current_plan' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+            ],
+            'actual_repayments' => [
+                ['date' => '2026-02-15', 'cumulative_shares' => 15],
+            ],
+            'expected_to_date' => [],
+            'overdue_shares' => 0,
+            'overdue_installments' => 0,
+            'as_of' => '2026-03-05',
+            'projected_payoff_date' => null,
+            'planned_payoff_date' => '2026-03-01',
+            'variance_days' => null,
+        ]);
+
+        $byLabel = array_column($datasets, 'data', 'label');
+
+        // x-axis = origination + sorted union of plan + actual dates:
+        // 2026-01-01, 02-01, 02-15, 03-01
+        // Plan starts at the origination 0, then 20, carried to 02-15, then 40.
+        $this->assertSame([0, 20, 20, 40], $byLabel['Scheduled plan']);
+        // Actual also anchored at the origination 0, flat until the repayment.
+        $this->assertSame([0, 0, 15, 15], $byLabel['Actual repayments']);
+    }
+
+    /**
+     * Without an origination_date in the trajectory (legacy callers) the
+     * series must be left untouched — no synthetic zero point.
+     */
+    public function test_no_origination_date_leaves_series_unanchored(): void
+    {
+        $datasets = $this->datasets([
+            'original_plan' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+            ],
+            'historical_plans' => [],
+            'current_plan' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+            ],
+            'actual_repayments' => [],
+            'expected_to_date' => [],
+            'overdue_shares' => 0,
+            'overdue_installments' => 0,
+            'as_of' => '2026-03-05',
+            'projected_payoff_date' => null,
+            'planned_payoff_date' => '2026-03-01',
+            'variance_days' => null,
+        ]);
+
+        $byLabel = array_column($datasets, 'data', 'label');
+        $this->assertSame([20, 40], $byLabel['Scheduled plan']);
+    }
+
+    /**
      * With no adjustments and no repayments yet there is a single plan line
      * and nothing else — never the old red overlay.
      */

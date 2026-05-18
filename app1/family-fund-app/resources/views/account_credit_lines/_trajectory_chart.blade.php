@@ -16,6 +16,7 @@
     $expected   = $trajectory['expected_to_date']   ?? [];
     $overdueShares       = $trajectory['overdue_shares']       ?? 0;
     $overdueInstallments = $trajectory['overdue_installments'] ?? 0;
+    $origination = $trajectory['origination_date'] ?? null;
     $asOf       = $trajectory['as_of'] ?? null;
     $projected  = $trajectory['projected_payoff_date'] ?? null;
     $planned    = $trajectory['planned_payoff_date']   ?? null;
@@ -88,6 +89,21 @@
         $plan = array_values(array_filter(
             $plan, fn ($p) => isset($p['date']) && $p['date'] <= $truncateAt
         ));
+    }
+
+    // Anchor both lines at the loan's origination: at that instant nothing
+    // has been repaid, so cumulative shares = 0. Without this the chart
+    // starts at the first installment / first repayment instead of at the
+    // origin, hiding the (origination, 0) baseline. Only prepend when the
+    // existing series actually starts after origination.
+    if ($origination) {
+        $zeroPoint = ['date' => $origination, 'cumulative_shares' => 0];
+        if (!empty($plan) && ($plan[0]['date'] ?? '') > $origination) {
+            array_unshift($plan, $zeroPoint);
+        }
+        if (!empty($actual) && ($actual[0]['date'] ?? '') > $origination) {
+            array_unshift($actual, $zeroPoint);
+        }
     }
 
     // Collect all unique dates for x-axis labels.

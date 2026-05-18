@@ -14,7 +14,7 @@
 @elseif($status === 'paid')
     <span class="badge bg-success">paid</span>
 @elseif($status === 'cancelled')
-    <span class="badge bg-secondary text-decoration-line-through">cancelled</span>
+    <span class="badge text-bg-secondary text-decoration-line-through">cancelled</span>
 @else
-    <span class="badge bg-secondary">scheduled</span>
+    <span class="badge text-bg-secondary">scheduled</span>
 @endif

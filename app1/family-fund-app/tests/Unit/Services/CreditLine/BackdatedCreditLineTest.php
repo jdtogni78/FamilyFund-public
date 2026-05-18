@@ -8,6 +8,7 @@ use App\Models\CreditLinePayment;
 use App\Models\TransactionExt;
 use App\Services\CreditLine\Draw\DrawService;
 use App\Services\CreditLine\Repay\RepayService;
+use App\Services\CreditLine\Reporting\TrajectoryBuilder;
 use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
 use App\Services\CreditLine\Support\LateDetector;
 use App\Services\CreditLine\Support\OutstandingCalculator;
@@ -174,6 +175,53 @@ class BackdatedCreditLineTest extends TestCase
 
         $this->assertEquals(CreditLinePayment::STATUS_PAID, $rows[0]->fresh()->status);
         $this->assertEquals(CreditLinePayment::STATUS_PAID, $rows[1]->fresh()->status);
+    }
+
+    public function test_trajectory_overdue_backlog_counts_partial_row_remainder(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalanceFrom($account, 400, Carbon::today()->subYears(2));
+
+        // Originate 4 months ago: the earliest monthly rows are past-due and
+        // flagged LATE on open; later rows are future SCHEDULED rows.
+        $origination = Carbon::today()->subMonths(4);
+        $line = $this->drawService->open($account, 120.0, 12, 'monthly', null, $origination);
+
+        $rows = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->orderBy('due_date')->get();
+
+        $lateRows = $rows->where('status', CreditLinePayment::STATUS_LATE)->values();
+        $this->assertGreaterThanOrEqual(
+            2,
+            $lateRows->count(),
+            'need at least two past-due rows to exercise partial + full backlog'
+        );
+
+        // Partially settle the oldest past-due row: pay 40% of what it owes.
+        $partialRow = $lateRows[0];
+        $due  = (float) $partialRow->shares_due;
+        $paid = round($due * 0.4, 4);
+        $this->repayService->repayRow($partialRow, $paid, Carbon::today());
+        $this->assertEquals(CreditLinePayment::STATUS_PARTIAL, $partialRow->fresh()->status);
+
+        $trajectory = (new TrajectoryBuilder())->build($line->fresh());
+
+        // Every past-due installment is still behind: the partial row counts
+        // too (it's underpaid), so the tally is the full late-row count — the
+        // partial row is not silently dropped.
+        $this->assertEquals($lateRows->count(), $trajectory['overdue_installments']);
+
+        // Backlog = the *unpaid remainder* of the partial row plus the whole
+        // shares_due of every still-untouched LATE row — the real diff, with
+        // the partial payment netted out (not the full first installment).
+        $remainingLate = $lateRows->slice(1)->sum(fn ($r) => (float) $r->shares_due);
+        $expectedBacklog = round(($due - $paid) + $remainingLate, 4);
+        $this->assertEqualsWithDelta(
+            $expectedBacklog,
+            $trajectory['overdue_shares'],
+            0.0001,
+            'overdue backlog must net out the partial payment, not count the full installment'
+        );
     }
 
     /**

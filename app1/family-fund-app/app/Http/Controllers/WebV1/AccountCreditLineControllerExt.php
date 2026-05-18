@@ -359,30 +359,7 @@ class AccountCreditLineControllerExt extends AppBaseController
             }
         }
 
-        // $-value of each schedule row at the share price of its due date
-        // ("price of the day"). Only for rows whose due date has already
-        // passed — a future row's price isn't known yet. Cached per distinct
-        // date so a 480-row schedule doesn't fan out one query per row.
-        $today = Carbon::today();
-        $priceCache = [];
-        $scheduleDollars = [];
-        foreach ($schedule as $scheduleRow) {
-            $due = Carbon::parse($scheduleRow->due_date);
-            if ($due->gt($today)) {
-                continue;
-            }
-            $key = $due->toDateString();
-            if (!array_key_exists($key, $priceCache)) {
-                try {
-                    $priceCache[$key] = (float) ($account?->shareValueAsOf($key) ?? 0);
-                } catch (\Throwable $e) {
-                    $priceCache[$key] = 0.0;
-                }
-            }
-            if ($priceCache[$key] > 0) {
-                $scheduleDollars[$scheduleRow->id] = $scheduleRow->shares_due * $priceCache[$key];
-            }
-        }
+        $scheduleDollars = $this->scheduleDollars($account, $schedule);
 
         return view('account_credit_lines.show')
             ->with('line', $line)
@@ -413,7 +390,42 @@ class AccountCreditLineControllerExt extends AppBaseController
         return view('account_credit_lines.actions')
             ->with('line', $line)
             ->with('account', $account)
-            ->with('schedule', $schedule);
+            ->with('schedule', $schedule)
+            ->with('scheduleDollars', $this->scheduleDollars($account, $schedule));
+    }
+
+    /**
+     * $-value of each schedule row at the share price of its due date
+     * ("price of the day"). Only for rows whose due date has already
+     * passed — a future row's price isn't known yet. Cached per distinct
+     * date so a 480-row schedule doesn't fan out one query per row.
+     *
+     * @return array<int, float> keyed by CreditLinePayment id
+     */
+    private function scheduleDollars(?AccountExt $account, $schedule): array
+    {
+        $today = Carbon::today();
+        $priceCache = [];
+        $scheduleDollars = [];
+        foreach ($schedule as $scheduleRow) {
+            $due = Carbon::parse($scheduleRow->due_date);
+            if ($due->gt($today)) {
+                continue;
+            }
+            $key = $due->toDateString();
+            if (!array_key_exists($key, $priceCache)) {
+                try {
+                    $priceCache[$key] = (float) ($account?->shareValueAsOf($key) ?? 0);
+                } catch (\Throwable $e) {
+                    $priceCache[$key] = 0.0;
+                }
+            }
+            if ($priceCache[$key] > 0) {
+                $scheduleDollars[$scheduleRow->id] = $scheduleRow->shares_due * $priceCache[$key];
+            }
+        }
+
+        return $scheduleDollars;
     }
 
     public function edit($id)

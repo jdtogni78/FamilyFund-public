@@ -147,7 +147,7 @@
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>#</th><th>Due date</th><th>Shares</th><th>Status</th><th>Paid by tx</th>
+                        <th>#</th><th>Due date</th><th>Shares</th><th class="text-end">$ Amount</th><th>Status</th><th>Paid by tx</th>
                         @if($isAdmin)<th></th>@endif
                     </tr>
                 </thead>
@@ -157,6 +157,13 @@
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
+                        <td class="text-end">
+                            @if(isset($scheduleDollars[$row->id]))
+                                ${{ number_format($scheduleDollars[$row->id], 2) }}
+                            @else
+                                <span class="text-muted">&mdash;</span>
+                            @endif
+                        </td>
                         <td>
                             @include('account_credit_lines._payment_status_badge', ['status' => $row->status])
                         </td>

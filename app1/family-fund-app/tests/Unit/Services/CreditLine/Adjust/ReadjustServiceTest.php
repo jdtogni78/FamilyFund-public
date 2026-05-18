@@ -55,6 +55,20 @@ class ReadjustServiceTest extends TestCase
         $this->service         = new ReadjustService($outstandingCalc, $scheduleBuilder);
         $this->historyBuilder  = new AdjustmentHistoryBuilder();
         $this->snapshotBuilder = new ScheduleSnapshotBuilder();
+
+        // Freeze "today" to the default origination date so a readjust with no
+        // explicit effective date (effective = today) lands on/before every
+        // installment in the initial schedule. Otherwise the wall clock would
+        // make the cancelled-vs-preserved split (rows due >= effective date)
+        // non-deterministic. Tests that exercise effective dating set their own
+        // Carbon::setTestNow and/or pass an explicit effective date.
+        Carbon::setTestNow(Carbon::parse('2026-01-01'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow(null);
+        parent::tearDown();
     }
 
     // -------------------------------------------------------------------------
@@ -335,9 +349,31 @@ class ReadjustServiceTest extends TestCase
         $line->refresh();
         $this->assertEquals('2027-08-01', $line->maturity_date->toDateString());
 
-        // First new payment falls one month after the start date.
+        // Forward-dated reschedule must NOT cancel installments due before the
+        // effective date — the old plan stays in force until the new one
+        // starts. Initial schedule (origination 2026-01-01, 12 monthly) runs
+        // 2026-02-01 … 2027-01-01.
+        $preEffectiveStillScheduled = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->whereDate('due_date', '<', '2026-08-01')
+            ->count();
+        // 2026-02-01 … 2026-07-01 = 6 rows preserved in force.
+        $this->assertEquals(6, $preEffectiveStillScheduled);
+
+        // Old rows due on/after the effective date are superseded → cancelled.
+        $cancelled = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_CANCELLED)
+            ->get();
+        $this->assertCount(6, $cancelled); // 2026-08-01 … 2027-01-01
+        foreach ($cancelled as $c) {
+            $this->assertTrue(Carbon::parse($c->due_date)->gte(Carbon::parse('2026-08-01')));
+        }
+
+        // The new schedule's first payment falls one month after the start
+        // date — i.e. the earliest scheduled row on/after the effective date.
         $firstNew = CreditLinePayment::where('account_credit_line_id', $line->id)
             ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->whereDate('due_date', '>=', '2026-08-01')
             ->orderBy('due_date')
             ->first();
         $this->assertEquals('2026-09-01', Carbon::parse($firstNew->due_date)->toDateString());
@@ -345,11 +381,18 @@ class ReadjustServiceTest extends TestCase
 
     /**
      * Supplying only an effective date (term + frequency unchanged) is a valid
-     * reschedule — it must NOT throw NoChangeException, and old rows are
-     * preserved as cancelled so history stays intact.
+     * reschedule — it must NOT throw NoChangeException. Forward-dating pushes
+     * the plan out from the effective date: installments due before it stay in
+     * force (the borrower still owes them under the old plan until the new one
+     * starts); only rows due on/after it are superseded and cancelled.
+     *
+     * Regression: previously every old row was cancelled regardless of due
+     * date, leaving the pre-effective-date window with no obligation at all
+     * (the "gap" visible on the payoff-trajectory chart).
      */
-    public function test_redate_only_is_allowed_and_preserves_history()
+    public function test_redate_only_preserves_pre_effective_installments_in_force()
     {
+        // Origination 2026-01-01, 12 monthly → due 2026-02-01 … 2027-01-01.
         $line = $this->makeCreditLine(60.0, 12, AccountCreditLineExt::FREQUENCY_MONTHLY);
         $this->createBorTransaction($line, 60.0);
         $this->buildInitialSchedule($line);
@@ -367,17 +410,48 @@ class ReadjustServiceTest extends TestCase
         $this->assertEquals(12, $adjustment->new_term_months);
         $this->assertEquals('2026-10-01', $adjustment->effective_date->toDateString());
 
-        // Original 12 rows preserved as cancelled; 12 fresh scheduled rows.
+        // Old rows due BEFORE the effective date stay scheduled & in force:
+        // 2026-02-01 … 2026-09-01 = 8 rows.
+        $preEffective = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->whereDate('due_date', '<', '2026-10-01')
+            ->get();
+        $this->assertCount(8, $preEffective);
+
+        // Old rows due ON/AFTER the effective date are superseded → cancelled:
+        // 2026-10-01 … 2027-01-01 = 4 rows. Preserved (not deleted) for history.
         $cancelled = CreditLinePayment::where('account_credit_line_id', $line->id)
             ->where('status', CreditLinePayment::STATUS_CANCELLED)
-            ->count();
-        $this->assertEquals(12, $cancelled);
-
-        $scheduled = CreditLinePayment::where('account_credit_line_id', $line->id)
-            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
             ->get();
-        $this->assertCount(12, $scheduled);
-        $this->assertEquals(60.0, round($scheduled->sum('shares_due'), 4));
+        $this->assertCount(4, $cancelled);
+        foreach ($cancelled as $c) {
+            $this->assertTrue(Carbon::parse($c->due_date)->gte(Carbon::parse('2026-10-01')));
+        }
+
+        // Fresh schedule (12 monthly) anchored to the effective date, all due
+        // strictly after it (first = 2026-11-01).
+        $newRows = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->whereDate('due_date', '>=', '2026-10-01')
+            ->orderBy('due_date')
+            ->get();
+        $this->assertCount(12, $newRows);
+        $this->assertEquals('2026-11-01', Carbon::parse($newRows->first()->due_date)->toDateString());
+        $this->assertEquals(60.0, round($newRows->sum('shares_due'), 4));
+
+        // The bug was a multi-month void in the pre-effective window because
+        // every old row got cancelled. Assert that window is now an unbroken
+        // monthly run: 2026-02-01 … 2026-09-01, 8 consecutive months.
+        $preEffectiveDates = $preEffective
+            ->pluck('due_date')
+            ->map(fn ($d) => Carbon::parse($d)->toDateString())
+            ->sort()
+            ->values()
+            ->all();
+        $this->assertEquals([
+            '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01',
+            '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01',
+        ], $preEffectiveDates);
     }
 
     // -------------------------------------------------------------------------

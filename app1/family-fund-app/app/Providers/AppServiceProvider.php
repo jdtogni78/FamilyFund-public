@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use App\Services\CreditLine\Matching\Contracts\ScheduleAdvancer;
 use App\Services\CreditLine\Repay\RepayService;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
@@ -43,6 +44,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // `php artisan serve` only forwards a whitelist of env vars to the dev
+        // server subprocess, so docker-compose.env.yml's per-nickname overrides
+        // were being dropped over HTTP — non-`dev` stacks silently fell back to
+        // .env's familyfund_dev. Pass the per-stack overrides + preview-build
+        // identity (config/build.php) through so each worktree stack uses its
+        // own DB and shows its branch/build banner.
+        if (class_exists(ServeCommand::class)) {
+            ServeCommand::$passthroughVariables = array_merge(
+                ServeCommand::$passthroughVariables,
+                ['DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD', 'FF_NICKNAME', 'FF_BUILD_REF', 'FF_BUILD_LABEL']
+            );
+        }
+
         // Use Bootstrap 5 pagination styling
         Paginator::useBootstrapFive();
 

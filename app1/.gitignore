@@ -1,4 +1,4 @@
 mailhog-outgoing.json
 .dc-ports
-datadir_acl/
-datadir_dev2/
+.ff-label
+datadir_*/

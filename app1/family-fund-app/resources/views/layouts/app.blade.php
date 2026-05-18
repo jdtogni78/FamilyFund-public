@@ -250,6 +250,7 @@
                 {{ $slot }}
             </main>
         </div>
+        @include('partials.build-banner')
         @stack('scripts')
     </body>
 </html>

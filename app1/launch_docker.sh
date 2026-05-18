@@ -88,11 +88,25 @@ export FF_CHART_PORT="${CHART_PORT}"
 export FF_DB_NAME="familyfund_${NICKNAME}"
 export FF_DATADIR="./datadir_${NICKNAME}"
 
+# Build identity for the in-app preview banner (see config/build.php).
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
+GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
+export FF_BUILD_REF="${GIT_BRANCH}@${GIT_SHA}"
+
+# Optional human label for the banner: first line of .ff-label (gitignored,
+# per-worktree), overridable by an FF_LABEL env var for a one-off launch.
+if [ -z "${FF_LABEL:-}" ] && [ -f ".ff-label" ]; then
+    FF_LABEL=$(head -n1 .ff-label | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+fi
+export FF_BUILD_LABEL="${FF_LABEL:-}"
+
 echo "Environment: ${NICKNAME}"
 echo "  App:       http://localhost:${APP_PORT}"
 echo "  DB:        localhost:${DB_PORT}"
 echo "  Mail UI:   http://localhost:${MAIL_UI_PORT}"
 echo "  Database:  ${FF_DB_NAME}"
+echo "  Build:     ${FF_BUILD_REF}"
+[ -n "${FF_BUILD_LABEL}" ] && echo "  Label:     ${FF_BUILD_LABEL}"
 echo ""
 
 docker compose -f docker-compose.yml -f docker-compose.env.yml "$@"

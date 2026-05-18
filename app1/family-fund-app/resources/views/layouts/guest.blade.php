@@ -117,5 +117,6 @@
                 </div>
             </div>
         </div>
+        @include('partials.build-banner')
     </body>
 </html>

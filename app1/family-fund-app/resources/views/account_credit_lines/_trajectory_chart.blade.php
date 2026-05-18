@@ -115,49 +115,18 @@
         return $out;
     };
 
+    // Exactly two series: the single effective plan (spliced across
+    // generations above) and the actual repayments. Earlier revisions drew
+    // one line per plan generation ("Original plan", "Plan after …",
+    // "Current plan") plus a red expected-to-date "Actual" overlay — 4+
+    // parallel lines for what is conceptually one plan vs. one actual.
     $datasets = [];
-    if (!empty($original)) {
+    if (!empty($plan)) {
         $datasets[] = [
-            'label'        => 'Original plan',
-            'data'         => $alignSeries($original),
-            'borderColor'  => 'rgba(120,120,120,0.7)',
-            'borderDash'   => [6, 4],
-            'fill'         => false,
-            'pointRadius'  => 0,
-            'borderWidth'  => 2,
-        ];
-    }
-    // Per-generation palette — cycled by generation index so each historical
-    // plan renders with a distinct color while remaining visually subordinate
-    // to the bold "current plan" line.
-    $generationPalette = ['#9999ff', '#9999cc', '#99cccc', '#99cc99', '#cccc99'];
-    foreach ($historical as $i => $h) {
-        $color = $generationPalette[$i % count($generationPalette)];
-        $datasets[] = [
-            'label'       => 'Plan after ' . $h['adjusted_at'],
-            'data'        => $alignSeries($h['series']),
-            'borderColor' => $color,
-            'borderDash'  => [3, 3],
-            'fill'        => false,
-            'pointRadius' => 0,
-            'borderWidth' => 2,
-        ];
-    }
-    if (!empty($current) && (empty($historical) || $current !== ($historical[count($historical) - 1]['series'] ?? null))) {
-        $datasets[] = [
-            'label'       => 'Current plan',
-            'data'        => $alignSeries($current),
+            'label'       => 'Scheduled plan',
+            'data'        => $alignSeries($plan),
             'borderColor' => '#2563eb',
-            'fill'        => false,
-            'pointRadius' => 0,
-            'borderWidth' => 3,
-        ];
-    }
-    if (!empty($expected)) {
-        $datasets[] = [
-            'label'       => 'Actual',
-            'data'        => $alignSeries($expected),
-            'borderColor' => '#dc2626',
+            'borderDash'  => [6, 4],
             'fill'        => false,
             'pointRadius' => 0,
             'borderWidth' => 2,
@@ -211,8 +180,8 @@
                     <strong>⚠️ Behind schedule:</strong>
                     {{ $overdueInstallments }} installment{{ $overdueInstallments === 1 ? '' : 's' }} overdue
                     ({{ number_format($overdueShares, 4) }} shares) as of {{ $asOf ?? 'today' }}.
-                    The red <em>“Actual”</em> line is what the schedule says should
-                    have been repaid by now; the gap to <em>“Actual repayments”</em> is the backlog.
+                    The gap between the <em>“Scheduled plan”</em> and
+                    <em>“Actual repayments”</em> lines is the backlog.
                 </div>
             @endif
             <div class="row small">

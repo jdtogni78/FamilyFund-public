@@ -89,30 +89,27 @@
         <div class="card-header"><strong>Register a scheduled payment</strong></div>
         <div class="card-body">
             @php
-                $openRowStatuses = ['scheduled', 'partial', 'late'];
-                $openRows = $schedule->filter(fn($r) => in_array($r->status, $openRowStatuses, true));
+                // Open rows (registrable) plus paid rows (reversible) — admins
+                // need both surfaces here; _payment_row_actions gates the
+                // controls per row. Cancelled rows stay hidden.
+                $shownRowStatuses = ['scheduled', 'partial', 'late', 'paid'];
+                $shownRows = $schedule->filter(fn($r) => in_array($r->status, $shownRowStatuses, true));
             @endphp
-            @if($openRows->isEmpty())
-                <p class="text-muted mb-0">No open schedule rows.</p>
+            @if($shownRows->isEmpty())
+                <p class="text-muted mb-0">No schedule rows.</p>
             @else
             <table class="table table-sm mb-0">
                 <thead>
                     <tr><th>#</th><th>Due date</th><th>Shares</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody>
-                @foreach($openRows as $row)
+                @foreach($shownRows as $row)
                     <tr>
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
                         <td>
-                            @if($row->status === 'late')
-                                <span class="badge bg-danger">late</span>
-                            @elseif($row->status === 'partial')
-                                <span class="badge bg-warning text-dark">partial</span>
-                            @else
-                                {{ $row->status }}
-                            @endif
+                            @include('account_credit_lines._payment_status_badge', ['status' => $row->status])
                         </td>
                         <td class="text-end">
                             @include('account_credit_lines._payment_row_actions', ['line' => $line, 'row' => $row])

@@ -158,17 +158,7 @@
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
                         <td>
-                            @if($row->status === 'late')
-                                <span class="badge bg-danger">late</span>
-                            @elseif($row->status === 'partial')
-                                <span class="badge bg-warning text-dark">partial</span>
-                            @elseif($row->status === 'paid')
-                                <span class="badge bg-success">paid</span>
-                            @elseif($row->status === 'cancelled')
-                                <span class="badge text-decoration-line-through" style="background-color:#6b7280;">cancelled</span>
-                            @else
-                                <span class="badge bg-primary">scheduled</span>
-                            @endif
+                            @include('account_credit_lines._payment_status_badge', ['status' => $row->status])
                         </td>
                         <td>
                             @if($row->paid_transaction_id)

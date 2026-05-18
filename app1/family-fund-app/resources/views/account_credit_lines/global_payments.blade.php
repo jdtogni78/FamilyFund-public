@@ -94,17 +94,7 @@
                         </td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
                         <td>
-                            @if($row->status === 'late')
-                                <span class="badge bg-danger">late</span>
-                            @elseif($row->status === 'partial')
-                                <span class="badge bg-warning text-dark">partial</span>
-                            @elseif($row->status === 'paid')
-                                <span class="badge bg-success">paid</span>
-                            @elseif($row->status === 'cancelled')
-                                <span class="badge bg-secondary text-decoration-line-through">cancelled</span>
-                            @else
-                                <span class="badge bg-secondary">scheduled</span>
-                            @endif
+                            @include('account_credit_lines._payment_status_badge', ['status' => $row->status])
                         </td>
                         <td class="text-end">
                             @if($line)

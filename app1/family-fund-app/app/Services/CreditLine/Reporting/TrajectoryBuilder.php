@@ -155,9 +155,20 @@ class TrajectoryBuilder
                 'date'              => $due->format('Y-m-d'),
                 'cumulative_shares' => round(min($running, (float) $line->principal_shares), 4),
             ];
-            if ($p->status === CreditLinePayment::STATUS_LATE) {
-                $overdueShares += (float) $p->shares_due;
-                $overdueInstallments++;
+
+            // Overdue backlog = the *unpaid remainder* of every past-due row
+            // that isn't fully settled — i.e. the whole diff, not the whole
+            // installment. A LATE row contributes its full shares_due (no
+            // payment ever landed on it). A PARTIAL row that is past due was
+            // underpaid: only the missing slice (shares_due minus the shares
+            // its linked partial payment covered) is still behind schedule.
+            if ($p->status === CreditLinePayment::STATUS_LATE
+                || ($p->status === CreditLinePayment::STATUS_PARTIAL && $due->lt($today))) {
+                $remaining = round((float) $p->shares_due - $this->sharesPaidOnRow($p), 4);
+                if ($remaining > 0) {
+                    $overdueShares += $remaining;
+                    $overdueInstallments++;
+                }
             }
         }
         $overdueShares = round($overdueShares, 4);
@@ -191,6 +202,24 @@ class TrajectoryBuilder
             'planned_payoff_date'   => $planned,
             'variance_days'         => $variance,
         ];
+    }
+
+    /**
+     * Shares already credited against a partially-paid row.
+     *
+     * Mirrors RepayService's partial-credit model: a row tracks only its
+     * latest partial transaction via paid_transaction_id, so the covered
+     * shares are that transaction's shares. LATE/SCHEDULED rows have no
+     * partial credit (a partial payment would have set status = partial).
+     */
+    private function sharesPaidOnRow(CreditLinePayment $row): float
+    {
+        if ($row->status !== CreditLinePayment::STATUS_PARTIAL || !$row->paid_transaction_id) {
+            return 0.0;
+        }
+
+        $tran = TransactionExt::find($row->paid_transaction_id);
+        return $tran ? (float) $tran->shares : 0.0;
     }
 
     /**

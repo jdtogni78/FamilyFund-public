@@ -180,8 +180,6 @@
                     <strong>⚠️ Behind schedule:</strong>
                     {{ $overdueInstallments }} installment{{ $overdueInstallments === 1 ? '' : 's' }} overdue
                     ({{ number_format($overdueShares, 4) }} shares) as of {{ $asOf ?? 'today' }}.
-                    The gap between the <em>“Scheduled plan”</em> and
-                    <em>“Actual repayments”</em> lines is the backlog.
                 </div>
             @endif
             <div class="row small">

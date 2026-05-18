@@ -313,6 +313,73 @@ class ReadjustServiceTest extends TestCase
         $this->assertEquals('2028-05-13', $line->maturity_date->toDateString());
     }
 
+    /**
+     * An explicit effective (start) date anchors the new schedule and maturity
+     * to that date instead of "today", and is recorded on the audit row.
+     */
+    public function test_readjust_honors_explicit_effective_date()
+    {
+        $line = $this->makeCreditLine(120.0, 12, AccountCreditLineExt::FREQUENCY_MONTHLY);
+        $this->createBorTransaction($line, 120.0);
+        $this->buildInitialSchedule($line);
+
+        Carbon::setTestNow('2026-05-17');
+        $start = Carbon::parse('2026-08-01');
+        $adjustment = $this->service->readjust($line, 12, null, null, 'start later', $start);
+        Carbon::setTestNow(null);
+
+        // Audit row records the chosen start date.
+        $this->assertEquals('2026-08-01', $adjustment->effective_date->toDateString());
+
+        // Maturity anchored to start + term, not today + term.
+        $line->refresh();
+        $this->assertEquals('2027-08-01', $line->maturity_date->toDateString());
+
+        // First new payment falls one month after the start date.
+        $firstNew = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->orderBy('due_date')
+            ->first();
+        $this->assertEquals('2026-09-01', Carbon::parse($firstNew->due_date)->toDateString());
+    }
+
+    /**
+     * Supplying only an effective date (term + frequency unchanged) is a valid
+     * reschedule — it must NOT throw NoChangeException, and old rows are
+     * preserved as cancelled so history stays intact.
+     */
+    public function test_redate_only_is_allowed_and_preserves_history()
+    {
+        $line = $this->makeCreditLine(60.0, 12, AccountCreditLineExt::FREQUENCY_MONTHLY);
+        $this->createBorTransaction($line, 60.0);
+        $this->buildInitialSchedule($line);
+
+        $adjustment = $this->service->readjust(
+            $line,
+            null,
+            null,
+            null,
+            'push the whole plan out',
+            Carbon::parse('2026-10-01')
+        );
+
+        $this->assertEquals(12, $adjustment->old_term_months);
+        $this->assertEquals(12, $adjustment->new_term_months);
+        $this->assertEquals('2026-10-01', $adjustment->effective_date->toDateString());
+
+        // Original 12 rows preserved as cancelled; 12 fresh scheduled rows.
+        $cancelled = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_CANCELLED)
+            ->count();
+        $this->assertEquals(12, $cancelled);
+
+        $scheduled = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->get();
+        $this->assertCount(12, $scheduled);
+        $this->assertEquals(60.0, round($scheduled->sum('shares_due'), 4));
+    }
+
     // -------------------------------------------------------------------------
     // AdjustmentHistoryBuilder tests (UC-40)
     // -------------------------------------------------------------------------

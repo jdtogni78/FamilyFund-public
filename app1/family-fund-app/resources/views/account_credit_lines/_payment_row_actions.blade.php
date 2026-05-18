@@ -5,8 +5,10 @@
       $line  — AccountCreditLine the row belongs to
       $row   — CreditLinePayment schedule row
 
-    Renders, for an admin, the Register / Edit / Delete controls. Only
-    active lines accept changes (mirrors RepayService / show-page gating).
+    Renders, for an admin, the Register / Edit / Delete controls using the
+    app-standard btn-group + btn-ghost-* icon buttons (see transactions
+    table.blade.php). Only active lines accept changes (mirrors RepayService
+    / show-page gating).
 --}}
 @php
     $openStatuses = ['scheduled', 'partial', 'late'];
@@ -15,29 +17,31 @@
     $hasPayment   = !empty($row->paid_transaction_id);
 @endphp
 @if($lineActive && $line)
-    <div class="btn-group btn-group-sm" role="group">
+    <div class="btn-group">
         @if($isOpen)
-            <a class="btn btn-outline-success"
-               href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}">
-                Register payment
+            <a href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}"
+               class="btn btn-ghost-success" title="Register payment">
+                <i class="fa fa-money-bill"></i>
             </a>
         @endif
         @if($hasPayment)
-            <form method="POST" class="d-inline"
-                  action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}">
+            <form action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}"
+                  method="POST" class="d-inline">
                 @csrf
                 <input type="hidden" name="then" value="edit">
-                <button type="submit" class="btn btn-outline-primary"
-                        onclick="return confirm('Reverse this payment (txn #{{ $row->paid_transaction_id }}) and re-register it? The schedule row will reopen and you\'ll be taken to the register form.');">
-                    Edit
+                <button type="submit" class="btn btn-ghost-info"
+                        title="Edit — reverse this payment (txn #{{ $row->paid_transaction_id }}) and re-register"
+                        onclick="return confirm('Reverse this payment (txn #{{ $row->paid_transaction_id }}) and re-register it? The schedule row reopens and you\'ll be taken to the register form.')">
+                    <i class="fa fa-edit"></i>
                 </button>
             </form>
-            <form method="POST" class="d-inline"
-                  action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}">
+            <form action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}"
+                  method="POST" class="d-inline">
                 @csrf
-                <button type="submit" class="btn btn-outline-danger"
-                        onclick="return confirm('Delete (reverse) the registered payment on row #{{ $row->id }} (txn #{{ $row->paid_transaction_id }})? This reopens the schedule row and restores outstanding.');">
-                    Delete
+                <button type="submit" class="btn btn-ghost-danger"
+                        title="Delete — reverse the registered payment (txn #{{ $row->paid_transaction_id }})"
+                        onclick="return confirm('Delete (reverse) the registered payment on row #{{ $row->id }} (txn #{{ $row->paid_transaction_id }})? This reopens the schedule row and restores outstanding.')">
+                    <i class="fa fa-trash"></i>
                 </button>
             </form>
         @endif

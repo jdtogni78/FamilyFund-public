@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int $id
  * @property int $account_credit_line_id
  * @property string $adjusted_at
+ * @property string $effective_date
  * @property int|null $adjusted_by_user_id
  * @property float $outstanding_shares_at_adjustment
  * @property int $old_term_months
@@ -37,6 +38,7 @@ class CreditLineAdjustment extends Model
 
     protected $dates = [
         'adjusted_at',
+        'effective_date',
         'old_maturity_date',
         'new_maturity_date',
         'old_planned_payoff_date',
@@ -46,6 +48,7 @@ class CreditLineAdjustment extends Model
     public $fillable = [
         'account_credit_line_id',
         'adjusted_at',
+        'effective_date',
         'adjusted_by_user_id',
         'outstanding_shares_at_adjustment',
         'old_term_months',
@@ -63,6 +66,7 @@ class CreditLineAdjustment extends Model
         'id' => 'integer',
         'account_credit_line_id' => 'integer',
         'adjusted_at' => 'datetime',
+        'effective_date' => 'date',
         'adjusted_by_user_id' => 'integer',
         'outstanding_shares_at_adjustment' => 'float',
         'old_term_months' => 'integer',

@@ -49,21 +49,42 @@ class CreditLineBalanceTracker
                 ->lockForUpdate()
                 ->first();
 
+            // Backdate clamp: this is a single open-ended "current state"
+            // projection, mirroring OutstandingCalculator::updateAggregateBorBalance.
+            // A backdated settlement (e.g. a late-payment reconciliation dated
+            // before the open row) cannot rewrite already-closed history;
+            // closing the open row with end_dt < its start_dt would invert it.
+            // Recognise the change at the open row's start_dt instead.
+            $effectiveStr = $effectiveDate->toDateString();
+            if ($latest && $latest->start_dt && $effectiveStr < $latest->start_dt->toDateString()) {
+                $effectiveStr = $latest->start_dt->toDateString();
+            }
+
             if ($latest && (float) $latest->outstanding_shares === $newOutstanding) {
                 // Idempotent: same outstanding already recorded — nothing to do.
                 return;
             }
 
+            // If the open row already starts on the effective date, update it
+            // in place rather than closing it (which would leave a zero-length
+            // start_dt==end_dt row) and re-opening.
+            if ($latest && $latest->start_dt && $latest->start_dt->toDateString() === $effectiveStr) {
+                $latest->outstanding_shares = $newOutstanding;
+                $latest->transaction_id     = $causingTran?->id;
+                $latest->save();
+                return;
+            }
+
             if ($latest) {
                 // Close the prior active row at the effective date.
-                $latest->end_dt = $effectiveDate->toDateString();
+                $latest->end_dt = $effectiveStr;
                 $latest->save();
             }
 
             AccountCreditLineBalance::create([
                 'account_credit_line_id' => $line->id,
                 'outstanding_shares'     => $newOutstanding,
-                'start_dt'               => $effectiveDate->toDateString(),
+                'start_dt'               => $effectiveStr,
                 'end_dt'                 => '9999-12-31',
                 'transaction_id'         => $causingTran?->id,
             ]);

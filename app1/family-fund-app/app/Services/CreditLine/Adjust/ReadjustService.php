@@ -17,13 +17,21 @@ use Illuminate\Support\Facades\DB;
  * Orchestrates a credit-line readjustment (UC-09, UC-10, UC-43).
  *
  * Sequence (all inside a single DB transaction):
- *  1. Guard: if neither term nor frequency changed, throw NoChangeException.
+ *  1. Guard: if term, frequency and start date are all unchanged, throw NoChangeException.
  *  2. Capture old values and compute oldPlannedPayoffDate.
  *  3. Recompute outstanding_shares from BOR/REP transactions via OutstandingCalculator.
  *  4. Apply new values to the line (term_months, payment_frequency, maturity_date).
  *  5. Cancel all existing `scheduled` CreditLinePayment rows (do NOT delete).
- *  6. Generate fresh schedule via AmortizationScheduleBuilder.
+ *  6. Generate fresh schedule via AmortizationScheduleBuilder, anchored to the
+ *     caller-supplied effective date (defaults to today).
  *  7. Write an immutable CreditLineAdjustment audit row.
+ *
+ * History preservation: old schedule rows are cancelled, never deleted, and each
+ * adjustment is an append-only audit row that now also records the effective
+ * (start) date used. ScheduleSnapshotBuilder keys snapshots off `created_at`
+ * (wall-clock write time), which is independent of the chosen effective date —
+ * so backdating/forward-dating the new schedule never rewrites what an earlier
+ * point in history showed.
  *
  * Phase 2 dependency: Authorization (admin-only) is enforced at the controller layer,
  * not here. This service is intentionally callable from any context.
@@ -43,23 +51,31 @@ class ReadjustService
      * @param  string|null        $newFrequency   New frequency (null = keep current).
      * @param  UserExt|null       $adminUser      Who triggered it (null = system).
      * @param  string|null        $reason         Optional free-text reason.
+     * @param  Carbon|null        $effectiveDate  Start date the new schedule is
+     *                                             anchored to (null = today).
      * @return CreditLineAdjustment               The written audit row.
      *
-     * @throws NoChangeException When neither term nor frequency actually changes.
+     * @throws NoChangeException When term, frequency and start date are all unchanged.
      */
     public function readjust(
         AccountCreditLine $line,
         ?int $newTermMonths,
         ?string $newFrequency,
         ?UserExt $adminUser,
-        ?string $reason = null
+        ?string $reason = null,
+        ?Carbon $effectiveDate = null
     ): CreditLineAdjustment {
         // Resolve effective new values, defaulting to current.
         $effectiveNewTerm      = $newTermMonths ?? $line->term_months;
         $effectiveNewFrequency = $newFrequency  ?? $line->payment_frequency;
+        $startDate             = ($effectiveDate ?? Carbon::today())->copy()->startOfDay();
 
-        // Guard: no-op check.
-        if ($effectiveNewTerm === $line->term_months && $effectiveNewFrequency === $line->payment_frequency) {
+        // Guard: no-op check. A caller-supplied start date is itself an
+        // intentional reschedule (it re-anchors every future payment), so a
+        // bare re-date is allowed through even when term/frequency are equal.
+        if ($effectiveDate === null
+            && $effectiveNewTerm === $line->term_months
+            && $effectiveNewFrequency === $line->payment_frequency) {
             throw new NoChangeException();
         }
 
@@ -68,7 +84,8 @@ class ReadjustService
             $effectiveNewTerm,
             $effectiveNewFrequency,
             $adminUser,
-            $reason
+            $reason,
+            $startDate
         ) {
             // Step 1 — Capture old values.
             $oldTermMonths       = $line->term_months;
@@ -91,7 +108,7 @@ class ReadjustService
             // Step 3 — Apply new values to the line.
             $line->term_months       = $effectiveNewTerm;
             $line->payment_frequency = $effectiveNewFrequency;
-            $line->maturity_date     = Carbon::today()->addMonths($effectiveNewTerm)->toDateString();
+            $line->maturity_date     = $startDate->copy()->addMonths($effectiveNewTerm)->toDateString();
             $line->save();
 
             // Step 4 — Cancel existing scheduled payments (preserve them).
@@ -99,8 +116,8 @@ class ReadjustService
                 ->where('status', CreditLinePayment::STATUS_SCHEDULED)
                 ->update(['status' => CreditLinePayment::STATUS_CANCELLED]);
 
-            // Step 5 — Generate fresh schedule from today.
-            $newPayments = $this->scheduleBuilder->build($line, $outstandingShares, Carbon::today());
+            // Step 5 — Generate fresh schedule anchored to the effective date.
+            $newPayments = $this->scheduleBuilder->build($line, $outstandingShares, $startDate);
 
             // Compute new planned payoff date from the last new payment row.
             $newPlannedPayoffDate = !empty($newPayments)
@@ -111,6 +128,7 @@ class ReadjustService
             $adjustment = CreditLineAdjustment::create([
                 'account_credit_line_id'          => $line->id,
                 'adjusted_at'                     => now(),
+                'effective_date'                  => $startDate->toDateString(),
                 'adjusted_by_user_id'             => $adminUser?->id,
                 'outstanding_shares_at_adjustment'=> $outstandingShares,
                 'old_term_months'                 => $oldTermMonths,

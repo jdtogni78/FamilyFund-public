@@ -33,7 +33,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Credit Line #{{ $line->id }}</strong>
+            <strong>Credit Line #{{ $line->id }} — {{ $line->nickname }}</strong>
             <span class="badge bg-info">{{ $line->status }}</span>
         </div>
         <div class="card-body">
@@ -77,7 +77,19 @@
     @endif
 
     <div class="card mb-3">
-        <div class="card-header"><strong>Payment schedule</strong></div>
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <strong>Payment schedule</strong>
+            @unless($schedule->isEmpty())
+            <div class="btn-group btn-group-sm" role="group" aria-label="Filter schedule by status" id="schedule-status-filter">
+                @php $statuses = ['all' => 'All', 'scheduled' => 'Scheduled', 'late' => 'Late', 'partial' => 'Partial', 'paid' => 'Paid', 'cancelled' => 'Cancelled']; @endphp
+                @foreach($statuses as $value => $label)
+                    <button type="button"
+                            class="btn btn-outline-secondary {{ $value === 'all' ? 'active' : '' }}"
+                            data-status-filter="{{ $value }}">{{ $label }}</button>
+                @endforeach
+            </div>
+            @endunless
+        </div>
         <div class="card-body">
             @if($schedule->isEmpty())
                 <p class="text-muted mb-0">No schedule rows.</p>
@@ -91,7 +103,7 @@
                 </thead>
                 <tbody>
                 @foreach($schedule as $row)
-                    <tr>
+                    <tr data-status="{{ $row->status }}">
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
@@ -102,11 +114,17 @@
                                 <span class="badge bg-warning text-dark">partial</span>
                             @elseif($row->status === 'paid')
                                 <span class="badge bg-success">paid</span>
+                            @elseif($row->status === 'cancelled')
+                                <span class="badge text-decoration-line-through" style="background-color:#6b7280;">cancelled</span>
                             @else
-                                {{ $row->status }}
+                                <span class="badge bg-primary">scheduled</span>
                             @endif
                         </td>
-                        <td>{{ $row->paid_transaction_id }}</td>
+                        <td>
+                            @if($row->paid_transaction_id)
+                                <a href="{{ route('transactions.show', $row->paid_transaction_id) }}">#{{ $row->paid_transaction_id }}</a>
+                            @endif
+                        </td>
                         @if($isAdmin)
                         <td class="text-end">
                             @include('account_credit_lines._payment_row_actions', ['line' => $line, 'row' => $row])
@@ -119,6 +137,24 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function () {
+            var bar = document.getElementById('schedule-status-filter');
+            if (!bar) return;
+            bar.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-status-filter]');
+                if (!btn) return;
+                var want = btn.getAttribute('data-status-filter');
+                bar.querySelectorAll('[data-status-filter]').forEach(function (b) {
+                    b.classList.toggle('active', b === btn);
+                });
+                document.querySelectorAll('tr[data-status]').forEach(function (tr) {
+                    tr.style.display = (want === 'all' || tr.getAttribute('data-status') === want) ? '' : 'none';
+                });
+            });
+        })();
+    </script>
 
     <div class="card mb-3">
         <div class="card-header"><strong>Adjustment history</strong></div>
@@ -193,6 +229,12 @@
                                         {{ optional($data['old_planned_payoff_date'] ?? null)->format('Y-m-d') }}
                                         &rarr; {{ optional($data['new_planned_payoff_date'] ?? null)->format('Y-m-d') }}
                                     </div>
+                                    @if(!empty($data['effective_date']))
+                                    <div class="col-sm-6">
+                                        <strong class="text-muted">Schedule start:</strong>
+                                        {{ optional($data['effective_date'])->format('Y-m-d') }}
+                                    </div>
+                                    @endif
                                 </div>
                                 <div class="small text-muted mt-1">
                                     Outstanding at change: {{ number_format($data['outstanding_shares_at_adjustment'] ?? 0, 4) }} shares

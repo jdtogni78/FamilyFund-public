@@ -92,6 +92,9 @@ class AdjustmentHistoryBuilder
         return [
             'id'                               => $adj->id,
             'adjusted_at'                      => Carbon::parse($adj->adjusted_at),
+            'effective_date'                   => $adj->effective_date
+                ? Carbon::parse($adj->effective_date)
+                : null,
             'old_term_months'                  => $adj->old_term_months,
             'new_term_months'                  => $adj->new_term_months,
             'old_payment_frequency'            => $adj->old_payment_frequency,

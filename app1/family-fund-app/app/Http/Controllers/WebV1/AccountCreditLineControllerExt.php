@@ -61,34 +61,43 @@ class AccountCreditLineControllerExt extends AppBaseController
         }
     }
 
-    public function index($accountId)
+    public function index($accountId, Request $request)
     {
         $this->ensureAdmin();
         $account = AccountExt::findOrFail($accountId);
         $this->authorize('viewAny', [AccountCreditLineExt::class, $account]);
+
+        $nickname = trim((string) $request->query('nickname', ''));
+
         $lines = AccountCreditLine::where('account_id', $account->id)
+            ->when($nickname !== '', fn ($q) => $q->where('nickname', 'like', '%' . $nickname . '%'))
             ->orderByDesc('id')
             ->get();
 
         return view('account_credit_lines.index')
             ->with('account', $account)
-            ->with('lines', $lines);
+            ->with('lines', $lines)
+            ->with('nickname', $nickname);
     }
 
     /**
      * Global (cross-account) credit-line listing. Admin-only.
      */
-    public function globalIndex()
+    public function globalIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $nickname = trim((string) $request->query('nickname', ''));
+
         $lines = AccountCreditLine::with('account')
+            ->when($nickname !== '', fn ($q) => $q->where('nickname', 'like', '%' . $nickname . '%'))
             ->orderByRaw("FIELD(status, 'active') DESC")
             ->orderByDesc('id')
             ->get();
 
         return view('account_credit_lines.global_index')
-            ->with('lines', $lines);
+            ->with('lines', $lines)
+            ->with('nickname', $nickname);
     }
 
     /**
@@ -121,6 +130,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         $status    = $request->query('status', 'open');
         $accountId = $request->query('account_id');
         $fundId    = $request->query('fund_id');
+        $nickname  = trim((string) $request->query('nickname', ''));
 
         $query = CreditLinePayment::with(['creditLine.account.fund'])
             ->orderBy('due_date');
@@ -131,6 +141,9 @@ class AccountCreditLineControllerExt extends AppBaseController
             $query->where('status', $status);
         }
 
+        if ($nickname !== '') {
+            $query->whereHas('creditLine', fn ($q) => $q->where('nickname', 'like', '%' . $nickname . '%'));
+        }
         if ($accountId) {
             $query->whereHas('creditLine', fn ($q) => $q->where('account_id', $accountId));
         }
@@ -158,6 +171,7 @@ class AccountCreditLineControllerExt extends AppBaseController
             ->with('funds', $funds)
             ->with('accountId', $accountId)
             ->with('fundId', $fundId)
+            ->with('nickname', $nickname)
             ->with('today', Carbon::today());
     }
 
@@ -269,7 +283,8 @@ class AccountCreditLineControllerExt extends AppBaseController
                 (int) $data['term_months'],
                 $data['payment_frequency'],
                 $data['descr'] ?? null,
-                $originationDate
+                $originationDate,
+                $data['nickname']
             );
         } catch (OverBorrowException $e) {
             Flash::error($e->getMessage());
@@ -333,10 +348,36 @@ class AccountCreditLineControllerExt extends AppBaseController
             }
         }
 
+        // $-value of each schedule row at the share price of its due date
+        // ("price of the day"). Only for rows whose due date has already
+        // passed — a future row's price isn't known yet. Cached per distinct
+        // date so a 480-row schedule doesn't fan out one query per row.
+        $today = Carbon::today();
+        $priceCache = [];
+        $scheduleDollars = [];
+        foreach ($schedule as $scheduleRow) {
+            $due = Carbon::parse($scheduleRow->due_date);
+            if ($due->gt($today)) {
+                continue;
+            }
+            $key = $due->toDateString();
+            if (!array_key_exists($key, $priceCache)) {
+                try {
+                    $priceCache[$key] = (float) ($account?->shareValueAsOf($key) ?? 0);
+                } catch (\Throwable $e) {
+                    $priceCache[$key] = 0.0;
+                }
+            }
+            if ($priceCache[$key] > 0) {
+                $scheduleDollars[$scheduleRow->id] = $scheduleRow->shares_due * $priceCache[$key];
+            }
+        }
+
         return view('account_credit_lines.show')
             ->with('line', $line)
             ->with('account', $account)
             ->with('schedule', $schedule)
+            ->with('scheduleDollars', $scheduleDollars)
             ->with('history', $history)
             ->with('trajectory', $trajectory)
             ->with('loansSummary', $loansSummary)
@@ -560,7 +601,8 @@ class AccountCreditLineControllerExt extends AppBaseController
                 isset($data['new_term_months']) ? (int) $data['new_term_months'] : null,
                 $data['new_payment_frequency'] ?? null,
                 $admin,
-                $data['reason'] ?? null
+                $data['reason'] ?? null,
+                !empty($data['effective_date']) ? Carbon::parse($data['effective_date']) : null
             );
         } catch (NoChangeException $e) {
             Flash::error($e->getMessage());

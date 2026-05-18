@@ -57,6 +57,16 @@
                             <option value="quarterly">Quarterly</option>
                             <option value="annual">Annual</option>
                         </select>
+                        <label class="form-label">Start date</label>
+                        <input type="date" name="effective_date"
+                               value="{{ old('effective_date') }}"
+                               placeholder="defaults to today"
+                               class="form-control mb-1">
+                        <small class="text-muted d-block mb-2">
+                            Optional — leave blank to start today. The new schedule is
+                            anchored here; first payment falls one period after. Prior
+                            schedule rows are kept (cancelled) for history.
+                        </small>
                         <input type="text" name="reason" class="form-control mb-2" placeholder="Reason (optional)">
                         <button type="submit" class="btn btn-warning btn-sm">Readjust</button>
                     </form>
@@ -105,10 +115,7 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <a class="btn btn-outline-success btn-sm"
-                               href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}">
-                                Register payment
-                            </a>
+                            @include('account_credit_lines._payment_row_actions', ['line' => $line, 'row' => $row])
                         </td>
                     </tr>
                 @endforeach

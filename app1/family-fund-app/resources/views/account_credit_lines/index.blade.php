@@ -15,13 +15,27 @@
             @endif
         </div>
         <div class="card-body">
+            <form method="GET" class="row g-2 mb-3"
+                  action="{{ route('credit_lines.index', ['account' => $account->id]) }}">
+                <div class="col-auto">
+                    <input type="text" name="nickname" class="form-control form-control-sm"
+                           value="{{ $nickname }}" placeholder="Filter by nickname">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
+                    @if($nickname !== '')
+                        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}"
+                           class="btn btn-sm btn-outline-secondary">Clear</a>
+                    @endif
+                </div>
+            </form>
             @if($lines->isEmpty())
                 <p class="text-muted mb-0">No credit lines.</p>
             @else
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>#</th><th>Status</th><th>Principal</th><th>Outstanding</th>
+                        <th>#</th><th>Nickname</th><th>Status</th><th>Principal</th><th>Outstanding</th>
                         <th>Term</th><th>Frequency</th><th>Origination</th><th>Maturity</th><th></th>
                     </tr>
                 </thead>
@@ -29,6 +43,7 @@
                 @foreach($lines as $line)
                     <tr>
                         <td>{{ $line->id }}</td>
+                        <td>{{ $line->nickname }}</td>
                         <td>{{ $line->status }}</td>
                         <td>{{ number_format($line->principal_shares, 4) }}</td>
                         <td>{{ number_format($line->outstanding_shares, 4) }}</td>

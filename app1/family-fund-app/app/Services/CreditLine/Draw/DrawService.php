@@ -49,6 +49,7 @@ class DrawService
      * @param  string       $frequency        Payment frequency: monthly | quarterly | annual.
      * @param  string|null  $descr            Optional free-text description.
      * @param  Carbon|null  $originationDate  Defaults to today.
+     * @param  string|null  $nickname         Human-friendly label for the line.
      * @return AccountCreditLine              The newly created (and persisted) credit line.
      *
      * @throws OverBorrowException  If principalShares > available-to-borrow.
@@ -59,11 +60,12 @@ class DrawService
         int $termMonths,
         string $frequency,
         ?string $descr = null,
-        ?Carbon $originationDate = null
+        ?Carbon $originationDate = null,
+        ?string $nickname = null
     ): AccountCreditLine {
         $originationDate = $originationDate ?? Carbon::today();
 
-        return DB::transaction(function () use ($account, $principalShares, $termMonths, $frequency, $descr, $originationDate) {
+        return DB::transaction(function () use ($account, $principalShares, $termMonths, $frequency, $descr, $originationDate, $nickname) {
             // Lock the account row to prevent concurrent draws exceeding the cap (UC-04).
             DB::table('accounts')->where('id', $account->id)->lockForUpdate()->first();
 
@@ -78,6 +80,7 @@ class DrawService
             // Create the credit line record.
             $line = AccountCreditLine::create([
                 'account_id'         => $account->id,
+                'nickname'           => $nickname ?? ('Credit line for ' . $account->nickname),
                 'principal_shares'   => round($principalShares, 4),
                 'outstanding_shares' => round($principalShares, 4),
                 'term_months'        => $termMonths,
@@ -114,7 +117,10 @@ class DrawService
             $this->lateDetector->detectForLine($line);
 
             // Update the aggregate BOR balance row on the account.
-            $this->calculator->updateAggregateBorBalance($account, $originationDate->toDateString(), $borTransaction->id);
+            // Draw path: a backdated origination spliced before existing
+            // borrow history mis-states historical capacity — refuse loudly
+            // rather than clamp (unlike the Repay/late-payment path).
+            $this->calculator->updateAggregateBorBalance($account, $originationDate->toDateString(), $borTransaction->id, rejectBackdate: true);
 
             // Record the initial outstanding-shares balance for historical receivable
             // reconstruction (Phase 4).

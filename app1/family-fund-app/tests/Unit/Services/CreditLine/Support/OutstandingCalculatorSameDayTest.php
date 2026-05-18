@@ -135,33 +135,47 @@ class OutstandingCalculatorSameDayTest extends TestCase
     }
 
     /**
-     * Wave-2 re-review (2026-05-15): UC-46 admin "create transaction from
-     * scratch" allows arbitrary timestamps. If an admin backdates a BOR/REP
-     * to before the currently-open BOR balance row's start_dt, the previous
-     * code would close that row with end_dt=$asOf — producing a temporally
-     * inverted row (end_dt < start_dt). Now guarded: refuses loudly.
+     * Wave-2 re-review (2026-05-17): UC-46 admin "create transaction from
+     * scratch" and routine late-payment reconciliation legitimately carry a
+     * settlement date in the past. The aggregate BOR row is a single
+     * open-ended "current state" projection and cannot rewrite its closed
+     * history, so a backdated $asOf before the open row's start_dt is
+     * *clamped forward* to that start_dt (rather than refused or allowed to
+     * invert the row). Exactly one open row survives, with the recomputed
+     * total and no temporally inverted (end_dt < start_dt) rows.
      */
-    public function test_backdated_asof_before_existing_start_dt_throws(): void
+    public function test_backdated_asof_before_existing_start_dt_clamps_forward(): void
     {
         $account = $this->factory->userAccount;
         $this->seedOwnBalance($account, 100.0);
 
         // Draw today → opens a BOR row with start_dt = today.
         $today = Carbon::today()->toDateString();
-        $this->drawService->open($account, 50.0, 6, 'monthly');
+        $line  = $this->drawService->open($account, 50.0, 6, 'monthly');
 
-        // Now try to update the aggregate from a date BEFORE today.
-        // The admin in this scenario is creating a backdated REP whose
-        // timestamp predates the existing open BOR row.
+        // A backdated REP whose settlement date predates the open BOR row.
         $backdated = Carbon::today()->subDays(7)->toDateString();
+        $this->repayService->repay($line, 20.0, Carbon::parse($backdated));
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/Backdated BOR\/REP rejected/');
+        $borRows = AccountBalance::where('account_id', $account->id)
+            ->where('type', 'BOR')
+            ->get();
 
-        $this->calculator->updateAggregateBorBalance(
-            $account,
-            $backdated,
-            999_999_999  // bogus tx id — won't be used; we expect to throw before insert
-        );
+        // Exactly one open row, clamped to today's start_dt, total = 30.
+        $open = $borRows->filter(fn ($r) => $r->end_dt && $r->end_dt->toDateString() === '9999-12-31')->values();
+        $this->assertCount(1, $open, 'Should have exactly one open BOR row after a backdated repay.');
+        $this->assertEquals($today, $open[0]->start_dt->toDateString(), 'Open BOR row start_dt clamped forward, not backdated.');
+        $this->assertEquals(30.0, round((float) $open[0]->shares, 4));
+
+        // No temporally inverted rows.
+        foreach ($borRows as $row) {
+            $endIsSentinel = $row->end_dt && $row->end_dt->toDateString() === '9999-12-31';
+            if (!$endIsSentinel) {
+                $this->assertTrue(
+                    $row->end_dt->toDateString() >= $row->start_dt->toDateString(),
+                    'No BOR row should be temporally inverted (end_dt < start_dt).'
+                );
+            }
+        }
     }
 }

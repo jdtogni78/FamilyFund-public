@@ -69,6 +69,7 @@ class CreditLineFlowTest extends TestCase
             route('credit_lines.store', ['account' => $account->id]),
             [
                 'account_id'        => $account->id,
+                'nickname'          => 'Feature-test line',
                 'principal_shares'  => 100,
                 'term_months'       => 12,
                 'payment_frequency' => 'monthly',
@@ -150,6 +151,7 @@ class CreditLineFlowTest extends TestCase
             route('credit_lines.store', ['account' => $account->id]),
             [
                 'account_id'        => $account->id,
+                'nickname'          => 'Settings-test line',
                 'principal_shares'  => 50,
                 'term_months'       => 6,
                 'payment_frequency' => 'monthly',
@@ -213,6 +215,7 @@ class CreditLineFlowTest extends TestCase
             route('credit_lines.store', ['account' => $account->id]),
             [
                 'account_id'        => $account->id,
+                'nickname'          => 'Validation-test line',
                 'principal_shares'  => 25,
                 'term_months'       => 6,
                 'payment_frequency' => 'monthly',
@@ -248,6 +251,7 @@ class CreditLineFlowTest extends TestCase
             route('credit_lines.store', ['account' => $account->id]),
             [
                 'account_id'        => $account->id,
+                'nickname'          => 'Closure-block-test line',
                 'principal_shares'  => 30,
                 'term_months'       => 6,
                 'payment_frequency' => 'monthly',

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *
  * @property int $id
  * @property int $account_id
+ * @property string $nickname
  * @property float $principal_shares
  * @property float $outstanding_shares
  * @property int $term_months
@@ -36,6 +37,7 @@ class AccountCreditLine extends Model
 
     public $fillable = [
         'account_id',
+        'nickname',
         'principal_shares',
         'outstanding_shares',
         'term_months',
@@ -57,6 +59,7 @@ class AccountCreditLine extends Model
     protected $casts = [
         'id' => 'integer',
         'account_id' => 'integer',
+        'nickname' => 'string',
         'principal_shares' => 'float',
         'outstanding_shares' => 'float',
         'term_months' => 'integer',
@@ -77,6 +80,7 @@ class AccountCreditLine extends Model
 
     public static $rules = [
         'account_id' => 'required',
+        'nickname' => 'required|string|max:255',
         'principal_shares' => 'required|numeric|min:0',
         'outstanding_shares' => 'required|numeric|min:0',
         'term_months' => 'required|integer|min:1',

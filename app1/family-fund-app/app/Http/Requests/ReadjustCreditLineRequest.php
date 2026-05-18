@@ -17,6 +17,7 @@ class ReadjustCreditLineRequest extends FormRequest
             'account_credit_line_id' => 'required|integer|exists:account_credit_lines,id',
             'new_term_months'        => 'nullable|integer|min:1|max:480',
             'new_payment_frequency'  => 'nullable|in:monthly,quarterly,annual',
+            'effective_date'         => 'nullable|date',
             'reason'                 => 'nullable|string|max:1000',
         ];
     }

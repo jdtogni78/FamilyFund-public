@@ -38,6 +38,12 @@
                     @endforeach
                 </select>
 
+                <label for="nickname" class="text-muted small mb-0">Nickname</label>
+                <input type="text" name="nickname" id="nickname"
+                       class="form-control form-control-sm" style="width:auto"
+                       value="{{ $nickname }}" placeholder="Filter by nickname"
+                       onchange="this.form.submit()">
+
                 <label for="status" class="text-muted small mb-0">Status</label>
                 <select name="status" id="status" class="form-select form-select-sm"
                         onchange="this.form.submit()" style="width:auto">
@@ -80,7 +86,7 @@
                         <td>
                             @if($line)
                                 <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">
-                                    #{{ $line->id }}
+                                    #{{ $line->id }} — {{ $line->nickname }}
                                 </a>
                             @else
                                 &mdash;
@@ -100,10 +106,9 @@
                                 <span class="badge bg-secondary">scheduled</span>
                             @endif
                         </td>
-                        <td>
-                            @if($line && in_array($row->status, ['scheduled', 'partial', 'late']))
-                            <a href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}"
-                               class="btn btn-sm btn-outline-success">Register payment</a>
+                        <td class="text-end">
+                            @if($line)
+                                @include('account_credit_lines._payment_row_actions', ['line' => $line, 'row' => $row])
                             @endif
                         </td>
                     </tr>

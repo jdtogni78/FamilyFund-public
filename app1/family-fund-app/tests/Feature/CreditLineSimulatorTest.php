@@ -53,6 +53,7 @@ class CreditLineSimulatorTest extends TestCase
             route('credit_lines.store', ['account' => $this->df->userAccount->id]),
             [
                 'account_id'        => $this->df->userAccount->id,
+                'nickname'          => 'Simulator feature-test line',
                 'principal_shares'  => 100,
                 'term_months'       => 12,
                 'payment_frequency' => 'monthly',

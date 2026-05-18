@@ -124,9 +124,18 @@ class OutstandingCalculator
      * @param  AccountExt $account
      * @param  string     $asOf    Date string for balance start_dt (usually today).
      * @param  int        $triggeringTransactionId  The BOR/REP transaction that caused the update.
+     * @param  bool       $rejectBackdate  When true, a settlement date before the
+     *         open BOR row's start_dt is refused loudly (used by the Draw path:
+     *         a backdated origination spliced before existing borrow history
+     *         mis-states historical capacity). When false (Repay path: routine
+     *         late-payment reconciliation) it is clamped forward instead.
      */
-    public function updateAggregateBorBalance(AccountExt $account, string $asOf, int $triggeringTransactionId): void
-    {
+    public function updateAggregateBorBalance(
+        AccountExt $account,
+        string $asOf,
+        int $triggeringTransactionId,
+        bool $rejectBackdate = false
+    ): void {
         $totalOutstanding = (float) AccountCreditLine::where('account_id', $account->id)
             ->whereIn('status', [AccountCreditLineExt::STATUS_ACTIVE])
             ->sum('outstanding_shares');
@@ -139,21 +148,31 @@ class OutstandingCalculator
             ->whereDate('end_dt', '9999-12-31')
             ->first();
 
-        // Backdate guard (wave-2 follow-up): UC-46 admin "create transaction
-        // from scratch" allows arbitrary timestamps. If a backdated BOR/REP
-        // lands before the currently-open BOR row's start_dt, closing it with
-        // end_dt = $asOf would produce a temporally inverted row
-        // (end_dt < start_dt). Refuse loudly — the admin should target the
-        // correct historical position or fix the timestamp.
+        // Backdate clamp (wave-2 follow-up): UC-46 admin "create transaction
+        // from scratch" — and routine late-payment reconciliation — allow a
+        // settlement date in the past. The aggregate BOR row is a single
+        // open-ended "current state" projection (it always recomputes the
+        // total from the *current* outstanding across active lines, not an
+        // as-of reconstruction), so it cannot rewrite its already-closed
+        // history. If the settlement date lands before the open row's
+        // start_dt, closing that row with end_dt = $asOf would produce a
+        // temporally inverted row (end_dt < start_dt). Instead we recognise
+        // the balance change at the earliest representable point that does
+        // not invert history — the open row's start_dt. The REP/BOR
+        // transaction itself still carries the admin's real settlement date,
+        // and the per-line schedule reconciliation is unaffected.
         if ($existing && $existing->start_dt && $asOf < $existing->start_dt->toDateString()) {
-            throw new \InvalidArgumentException(sprintf(
-                'Backdated BOR/REP rejected: asOf=%s is before the open BOR balance row\'s start_dt=%s '
-                . '(account_id=%d, balance_row_id=%d). Update would create a temporally inverted row.',
-                $asOf,
-                $existing->start_dt->toDateString(),
-                $account->id,
-                $existing->id
-            ));
+            if ($rejectBackdate) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Backdated BOR/REP rejected: asOf=%s is before the open BOR balance row\'s start_dt=%s '
+                    . '(account_id=%d, balance_row_id=%d). Update would create a temporally inverted row.',
+                    $asOf,
+                    $existing->start_dt->toDateString(),
+                    $account->id,
+                    $existing->id
+                ));
+            }
+            $asOf = $existing->start_dt->toDateString();
         }
 
         if ($totalOutstanding <= 0) {

@@ -12,6 +12,7 @@ class AccountCreditLineRepository extends BaseRepository
     use AuthorizesQueries;
     protected $fieldSearchable = [
         'account_id',
+        'nickname',
         'status',
         'payment_frequency',
     ];

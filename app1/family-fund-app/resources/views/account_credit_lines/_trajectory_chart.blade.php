@@ -49,12 +49,51 @@
         $variance  = null;
     }
 
+    // Build a SINGLE effective plan line: the schedule that was actually in
+    // force over time — the original plan until the first adjustment, then
+    // each successive generation's plan until the next adjustment, ending
+    // with the latest. Replaces the old original + per-generation + current
+    // overlay, which drew several parallel full-length plan lines for what
+    // is conceptually one evolving plan.
+    $plan = (function () use ($original, $historical, $current) {
+        if (empty($historical)) {
+            return !empty($current) ? $current : $original;
+        }
+        $eff = [];
+        $firstBoundary = $historical[0]['adjusted_at'] ?? null;
+        foreach ($original as $p) {
+            // Original schedule is expected only until the change takes place.
+            if ($firstBoundary !== null && ($p['date'] ?? '') >= $firstBoundary) {
+                break;
+            }
+            $eff[] = $p;
+        }
+        foreach ($historical as $i => $h) {
+            $start = $h['adjusted_at'] ?? null;
+            $end   = $historical[$i + 1]['adjusted_at'] ?? null;
+            foreach (($h['series'] ?? []) as $p) {
+                $d = $p['date'] ?? '';
+                if ($start !== null && $d < $start) {
+                    continue;
+                }
+                if ($end !== null && $d >= $end) {
+                    continue;
+                }
+                $eff[] = $p;
+            }
+        }
+        return $eff;
+    })();
+    if ($truncateAt) {
+        $plan = array_values(array_filter(
+            $plan, fn ($p) => isset($p['date']) && $p['date'] <= $truncateAt
+        ));
+    }
+
     // Collect all unique dates for x-axis labels.
     $allDates = collect()
-        ->merge(array_column($original, 'date'))
-        ->merge(array_column($current,  'date'))
-        ->merge(array_column($actual,   'date'))
-        ->merge(array_column($expected, 'date'))
+        ->merge(array_column($plan,   'date'))
+        ->merge(array_column($actual, 'date'))
         ->unique()
         ->sort()
         ->values()

@@ -63,6 +63,7 @@ class CreditLineMessyHistoryTest extends TestCase
             ->from(route('credit_lines.create', ['account' => $account->id]))
             ->post(route('credit_lines.store', ['account' => $account->id]), [
                 'account_id'        => $account->id,
+                'nickname'          => 'Over-borrow attempt',
                 'principal_shares'  => 9999,             // far beyond anything available
                 'term_months'       => 12,
                 'payment_frequency' => 'monthly',
@@ -99,6 +100,7 @@ class CreditLineMessyHistoryTest extends TestCase
             ->from(route('credit_lines.create', ['account' => $account->id]))
             ->post(route('credit_lines.store', ['account' => $account->id]), [
                 'account_id'        => $account->id,
+                'nickname'          => 'Backdate before history',
                 'principal_shares'  => 10,
                 'term_months'       => 6,
                 'payment_frequency' => 'monthly',
@@ -232,6 +234,7 @@ class CreditLineMessyHistoryTest extends TestCase
         $response = $this->actingAs($this->scenario->admin)
             ->post(route('credit_lines.store', ['account' => $account->id]), [
                 'account_id'        => $account->id,
+                'nickname'          => 'Backdated with backlog',
                 'principal_shares'  => 120,
                 'term_months'       => 12,
                 'payment_frequency' => 'monthly',

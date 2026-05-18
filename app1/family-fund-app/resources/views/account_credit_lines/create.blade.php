@@ -46,6 +46,12 @@
                 </div>
                 @endif
                 <div class="mb-3">
+                    <label class="form-label" for="nickname">Nickname</label>
+                    <input type="text" class="form-control" name="nickname" id="nickname"
+                           maxlength="255" required value="{{ old('nickname') }}"
+                           placeholder="e.g. Kitchen renovation loan">
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Origination date</label>
                     <input type="date" class="form-control" name="origination_date"
                            id="origination_date"

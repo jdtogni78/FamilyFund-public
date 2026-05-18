@@ -19,6 +19,7 @@ class CreateAccountCreditLineRequest extends FormRequest
     {
         return [
             'account_id'            => 'required|integer|exists:accounts,id',
+            'nickname'              => 'required|string|max:255',
             'principal_shares'      => 'required|numeric|min:0.0001',
             'term_months'           => 'required|integer|min:1|max:480',
             'payment_frequency'     => 'required|in:monthly,quarterly,annual',

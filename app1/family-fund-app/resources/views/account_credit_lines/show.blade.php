@@ -44,6 +44,15 @@
         $repaid      = max(0.0, $principal - $outstanding);
         $repaidPct   = $principal > 0 ? min(100, round($repaid / $principal * 100)) : 0;
 
+        // What the current schedule says should have been repaid by today
+        // (last cumulative point of the trajectory's expected-to-date series),
+        // and how the borrower is tracking against it.
+        $expectedSeries = $trajectory['expected_to_date'] ?? [];
+        $expected = !empty($expectedSeries)
+            ? (float) end($expectedSeries)['cumulative_shares']
+            : 0.0;
+        $repayDiff = $repaid - $expected;
+
         $sv = 0;
         try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
     @endphp
@@ -70,6 +79,17 @@
                 <div class="col-md-3 mb-3">
                     <small class="text-muted">Repaid (shares)</small>
                     <div class="h5 mb-0 text-success">{{ number_format($repaid, 4) }}</div>
+                    <small class="text-muted">
+                        expected {{ number_format($expected, 4) }}
+                        @if(abs($repayDiff) >= 0.00005)
+                            <span class="{{ $repayDiff >= 0 ? 'text-success' : 'text-danger' }}">
+                                ({{ $repayDiff >= 0 ? '+' : '−' }}{{ number_format(abs($repayDiff), 4) }}
+                                {{ $repayDiff >= 0 ? 'ahead' : 'behind' }})
+                            </span>
+                        @else
+                            <span class="text-success">(on track)</span>
+                        @endif
+                    </small>
                 </div>
                 <div class="col-md-3 mb-3">
                     <small class="text-muted">Outstanding (shares)</small>

@@ -377,6 +377,11 @@ class SmokeTest extends TestCase
             'transactions/create_bulk' => [
                 'query' => ['fund_id' => $this->factory->fund->id],
             ],
+            // JSON helper for the global-create form's account picker; requires
+            // ?account=<id>. Without it the endpoint correctly returns 422.
+            'credit-lines/available-shares' => [
+                'query' => ['account' => $this->factory->userAccount->id],
+            ],
         ];
     }
 

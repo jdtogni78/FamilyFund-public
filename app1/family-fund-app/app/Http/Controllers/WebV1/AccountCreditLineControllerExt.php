@@ -198,23 +198,17 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function availableShares($accountId, Request $request, OutstandingCalculator $calculator)
     {
         $this->ensureAdmin();
-        $account = AccountExt::findOrFail($accountId);
+
+        if ($accountId === null || $accountId === '') {
+            return response()->json(['error' => 'An account is required.'], 422);
+        }
+        $account = AccountExt::find($accountId);
+        if ($account === null) {
+            return response()->json(['error' => "Account [{$accountId}] not found."], 404);
+        }
         $this->authorize('create', [AccountCreditLineExt::class, $account]);
 
-        $asOf = $request->query('as_of');
-        try {
-            $date = !empty($asOf) ? Carbon::parse($asOf) : Carbon::today();
-        } catch (\Throwable $e) {
-            $date = Carbon::today();
-        }
-        if ($date->gt(Carbon::today())) {
-            $date = Carbon::today();
-        }
-
-        return response()->json([
-            'as_of'     => $date->toDateString(),
-            'available' => round($calculator->availableToBorrow($account, $date), 4),
-        ]);
+        return $this->availableSharesResponse($account, $request, $calculator);
     }
 
     /**
@@ -245,9 +239,26 @@ class AccountCreditLineControllerExt extends AppBaseController
     public function globalAvailableShares(Request $request, OutstandingCalculator $calculator)
     {
         $this->ensureAdmin();
-        $account = AccountExt::findOrFail($request->query('account'));
+
+        $accountId = $request->query('account');
+        if ($accountId === null || $accountId === '') {
+            return response()->json(['error' => 'The account query parameter is required.'], 422);
+        }
+        $account = AccountExt::find($accountId);
+        if ($account === null) {
+            return response()->json(['error' => "Account [{$accountId}] not found."], 404);
+        }
         $this->authorize('create', [AccountCreditLineExt::class, $account]);
 
+        return $this->availableSharesResponse($account, $request, $calculator);
+    }
+
+    /**
+     * Shared JSON payload for the two available-shares endpoints: resolves the
+     * (optional, never-future) as_of date and returns available-to-borrow shares.
+     */
+    private function availableSharesResponse(AccountExt $account, Request $request, OutstandingCalculator $calculator)
+    {
         $asOf = $request->query('as_of');
         try {
             $date = !empty($asOf) ? Carbon::parse($asOf) : Carbon::today();

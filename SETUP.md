@@ -254,6 +254,47 @@ open http://localhost:3001
 
 Auto-login for dev: `http://localhost:3001/dev-login/dashboard` (logs you in as `claude@test.local`).
 
+## Running the suite isolated from a live dev DB
+
+The suite has **no `RefreshDatabase` and no separate test DB connection** —
+`phpunit.xml` only sets `APP_ENV=testing`, so `php artisan test` runs
+against whatever DB the container's `.env` points at. Running it in the
+dev container therefore writes test rows into `familyfund_dev`. To run it
+without touching dev, stand up a parallel stack with its own DB:
+
+```bash
+cd app1
+
+# Parallel compose project on port offset 1 (app 3001, db 3307, mail 8026,
+# chart 3401). Offsets persist in app1/.dc-ports.
+./launch_docker.sh test up -d
+```
+
+Point the test stack at its own DB and key. In the
+`family-fund-app/` that the `familyfund-test` container mounts at `/app`,
+create `.env.test` (copy of `.env.dev`) with `APP_ENV=testing` and
+`DB_DATABASE=familyfund_test`, then symlink it:
+
+```bash
+cd family-fund-app && ln -sfn .env.test .env && cd ..
+```
+
+> **Reuse the dev `APP_KEY` in `.env.test`.** The test DB is cloned from
+> dev (below); a fresh key makes cloned encrypted columns undecryptable.
+
+Seed `familyfund_test` by cloning the running dev DB (the `db-*`
+containers ship the `mariadb`/`mariadb-dump` clients, not `mysql`;
+root/123456):
+
+```bash
+docker exec db-dev mariadb-dump -uroot -p123456 --single-transaction \
+  --quick --no-tablespaces familyfund_dev \
+  | docker exec -i db-test mariadb -uroot -p123456 familyfund_test
+```
+
+Re-run that clone whenever you want a clean baseline. (`docker` may not be
+on a non-interactive shell's PATH — prefix `export PATH=/usr/local/bin:$PATH`.)
+
 ## Troubleshooting
 
 - **Vite manifest not found**: `cd app1/family-fund-app && npm run build`

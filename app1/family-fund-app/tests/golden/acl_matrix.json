@@ -176,6 +176,14 @@
             "fundAdmin": 403,
             "systemAdmin": 200
         },
+        "accounts\/{account}\/credit-lines\/available-shares": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
         "accounts\/{account}\/credit-lines\/create": {
             "anonymous": 302,
             "unassigned": 403,
@@ -398,6 +406,38 @@
             "beneficiary": 200,
             "financialManager": 200,
             "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "credit-lines": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "credit-lines\/available-shares": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 422
+        },
+        "credit-lines\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
+            "systemAdmin": 200
+        },
+        "credit-lines\/payments": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 403,
+            "fundAdmin": 403,
             "systemAdmin": 200
         },
         "credit-lines\/resolve": {
@@ -1219,7 +1259,9 @@
         "changeLogs\/{changeLog}": "unresolved-param:changeLog",
         "changeLogs\/{changeLog}\/edit": "unresolved-param:changeLog",
         "credit-lines\/{line}": "unresolved-param:line",
+        "credit-lines\/{line}\/actions": "unresolved-param:line",
         "credit-lines\/{line}\/edit": "unresolved-param:line",
+        "credit-lines\/{line}\/payments\/{payment}\/register": "unresolved-param:line",
         "credit-lines\/{line}\/simulator": "unresolved-param:line",
         "depositRequests\/{depositRequest}": "unresolved-param:depositRequest",
         "depositRequests\/{depositRequest}\/edit": "unresolved-param:depositRequest",

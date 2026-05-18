@@ -75,11 +75,13 @@ class ScanJobsTest extends TestCase
 
         $line    = $this->makeActiveLine();
         $dueDate = Carbon::today()->addDays(7)->toDateString(); // exactly leadDays (default=7) away
-        $this->makePayment($line, $dueDate);
+        $payment = $this->makePayment($line, $dueDate);
 
         (new ScanRemindersJob(Carbon::today()))->handle();
 
-        Mail::assertSent(ReminderMail::class);
+        // Scope to this test's own payment: the job scans the whole table, and a
+        // populated (e.g. cloned-from-dev) DB may contain unrelated due payments.
+        Mail::assertSent(ReminderMail::class, fn ($m) => $m->payment->id === $payment->id);
     }
 
     public function test_scan_reminders_does_not_send_when_not_lead_day(): void
@@ -88,11 +90,11 @@ class ScanJobsTest extends TestCase
 
         $line    = $this->makeActiveLine();
         $dueDate = Carbon::today()->addDays(5)->toDateString(); // 5 days — not the default lead of 7
-        $this->makePayment($line, $dueDate);
+        $payment = $this->makePayment($line, $dueDate);
 
         (new ScanRemindersJob(Carbon::today()))->handle();
 
-        Mail::assertNotSent(ReminderMail::class);
+        Mail::assertNotSent(ReminderMail::class, fn ($m) => $m->payment->id === $payment->id);
     }
 
     // ── ScanLatePaymentsJob ───────────────────────────────────────────────────
@@ -112,7 +114,7 @@ class ScanJobsTest extends TestCase
         $payment->refresh();
         $this->assertSame(CreditLinePayment::STATUS_LATE, $payment->status);
 
-        Mail::assertSent(DelayNotificationMail::class);
+        Mail::assertSent(DelayNotificationMail::class, fn ($m) => $m->payment->id === $payment->id);
     }
 
     public function test_scan_late_payments_respects_repeat_cap(): void
@@ -130,8 +132,9 @@ class ScanJobsTest extends TestCase
 
         (new ScanLatePaymentsJob(Carbon::today()))->handle();
 
-        // No additional email should be sent
-        Mail::assertNotSent(DelayNotificationMail::class);
+        // No additional email should be sent for this capped payment. Scope to it:
+        // the job scans the whole table and a populated DB may hold other late rows.
+        Mail::assertNotSent(DelayNotificationMail::class, fn ($m) => $m->payment->id === $payment->id);
     }
 
     public function test_scan_late_payments_increments_notification_count(): void
@@ -149,8 +152,8 @@ class ScanJobsTest extends TestCase
         $cacheKey = "credit_line_delay_count_{$payment->id}";
         $this->assertSame(1, (int) Cache::get($cacheKey));
 
-        Mail::assertSent(DelayNotificationMail::class, function ($mail) {
-            return $mail->notificationCount === 1;
+        Mail::assertSent(DelayNotificationMail::class, function ($mail) use ($payment) {
+            return $mail->payment->id === $payment->id && $mail->notificationCount === 1;
         });
     }
 }

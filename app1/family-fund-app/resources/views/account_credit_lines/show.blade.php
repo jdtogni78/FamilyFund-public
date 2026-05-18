@@ -31,41 +31,91 @@
         @include('account_credit_lines._loans_summary_card', ['loansSummary' => $loansSummary])
     @endif
 
+    @php
+        $statusBadge = [
+            'active'     => ['bg-success',   'fa-circle-play'],
+            'paid_off'   => ['bg-secondary', 'fa-circle-check'],
+            'cancelled'  => ['bg-dark',      'fa-circle-xmark'],
+        ][$line->status] ?? ['bg-info', 'fa-circle-info'];
+        $statusLabel = \App\Models\AccountCreditLineExt::$statusMap[$line->status] ?? ucfirst(str_replace('_', ' ', $line->status));
+
+        $principal   = (float) $line->principal_shares;
+        $outstanding = (float) $line->outstanding_shares;
+        $repaid      = max(0.0, $principal - $outstanding);
+        $repaidPct   = $principal > 0 ? min(100, round($repaid / $principal * 100)) : 0;
+
+        $sv = 0;
+        try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
+    @endphp
+
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Credit Line #{{ $line->id }} — {{ $line->nickname }}</strong>
-            <span class="badge bg-info">{{ $line->status }}</span>
+            <div>
+                <i class="fa fa-credit-card me-2"></i>
+                <strong>Credit Line #{{ $line->id }}</strong>
+                @if($line->nickname)
+                    <span class="text-body-secondary ms-2">{{ $line->nickname }}</span>
+                @endif
+            </div>
+            <span class="badge {{ $statusBadge[0] }}">
+                <i class="fa {{ $statusBadge[1] }} me-1"></i>{{ $statusLabel }}
+            </span>
         </div>
         <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Principal (shares)</dt>
-                <dd class="col-sm-3">{{ number_format($line->principal_shares, 4) }}</dd>
-                <dt class="col-sm-3">Outstanding (shares)</dt>
-                <dd class="col-sm-3">{{ number_format($line->outstanding_shares, 4) }}</dd>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted">Principal (shares)</small>
+                    <div class="h5 mb-0">{{ number_format($principal, 4) }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted">Repaid (shares)</small>
+                    <div class="h5 mb-0 text-success">{{ number_format($repaid, 4) }}</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted">Outstanding (shares)</small>
+                    <div class="h5 mb-0">{{ number_format($outstanding, 4) }}</div>
+                    @if($sv > 0)
+                        <small class="text-muted">≈ ${{ number_format($outstanding * $sv, 2) }} today</small>
+                    @endif
+                </div>
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted">Term &middot; Frequency</small>
+                    <div class="h5 mb-0">{{ $line->term_months }} mo</div>
+                    <small class="text-muted">{{ $line->payment_frequency }}</small>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Term</dt>
-                <dd class="col-sm-3">{{ $line->term_months }} months</dd>
-                <dt class="col-sm-3">Frequency</dt>
-                <dd class="col-sm-3">{{ $line->payment_frequency }}</dd>
+            <div class="mb-1 d-flex justify-content-between small text-muted">
+                <span>Repayment progress</span>
+                <span>{{ $repaidPct }}% &mdash; {{ number_format($repaid, 4) }} of {{ number_format($principal, 4) }} shares</span>
+            </div>
+            <div class="progress mb-3" style="height: 10px;" role="progressbar"
+                 aria-valuenow="{{ $repaidPct }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success" style="width: {{ $repaidPct }}%;"></div>
+            </div>
 
-                <dt class="col-sm-3">Origination</dt>
-                <dd class="col-sm-3">{{ optional($line->origination_date)->format('Y-m-d') }}</dd>
-                <dt class="col-sm-3">Maturity</dt>
-                <dd class="col-sm-3">{{ optional($line->maturity_date)->format('Y-m-d') }}</dd>
-
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <small class="text-muted d-block"><i class="fa fa-calendar-plus me-1"></i>Origination</small>
+                    {{ optional($line->origination_date)->format('Y-m-d') ?? '—' }}
+                </div>
+                <div class="col-md-3 mb-2">
+                    <small class="text-muted d-block"><i class="fa fa-calendar-check me-1"></i>Maturity</small>
+                    {{ optional($line->maturity_date)->format('Y-m-d') ?? '—' }}
+                </div>
                 @if($line->descr)
-                <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9">{{ $line->descr }}</dd>
+                <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block"><i class="fa fa-note-sticky me-1"></i>Description</small>
+                    {{ $line->descr }}
+                </div>
                 @endif
-            </dl>
-            <p class="text-muted small mt-3 mb-0">
-                You owe {{ number_format($line->outstanding_shares, 4) }} shares
-                @php
-                    $sv = 0;
-                    try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
-                @endphp
+            </div>
+
+            <p class="text-muted small mt-2 mb-0 border-top pt-2">
+                <i class="fa fa-circle-info me-1"></i>
+                You owe {{ number_format($outstanding, 4) }} shares
                 @if($sv > 0)
-                    (currently valued at ${{ number_format($line->outstanding_shares * $sv, 2) }})
+                    (currently valued at ${{ number_format($outstanding * $sv, 2) }})
                 @endif. The share count is what you owe back &mdash; it doesn't change with the market.
                 The dollar value will move up or down with the fund's share price.
             </p>
@@ -78,7 +128,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <strong>Payment schedule</strong>
+            <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
             @unless($schedule->isEmpty())
             <div class="btn-group btn-group-sm" role="group" aria-label="Filter schedule by status" id="schedule-status-filter">
                 @php $statuses = ['all' => 'All', 'scheduled' => 'Scheduled', 'late' => 'Late', 'partial' => 'Partial', 'paid' => 'Paid', 'cancelled' => 'Cancelled']; @endphp
@@ -157,7 +207,7 @@
     </script>
 
     <div class="card mb-3">
-        <div class="card-header"><strong>Adjustment history</strong></div>
+        <div class="card-header"><strong><i class="fa fa-clock-rotate-left me-2"></i>Adjustment history</strong></div>
         <div class="card-body">
             @php
                 $items = $history ?? [];

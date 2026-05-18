@@ -85,8 +85,13 @@ export FF_DB_PORT="${DB_PORT}"
 export FF_MAIL_SMTP_PORT="${MAIL_SMTP_PORT}"
 export FF_MAIL_UI_PORT="${MAIL_UI_PORT}"
 export FF_CHART_PORT="${CHART_PORT}"
-export FF_DB_NAME="familyfund_${NICKNAME}"
-export FF_DATADIR="./datadir_${NICKNAME}"
+# DB connection is param-based: pre-set FF_DB_NAME / FF_DATADIR / FF_DB_HOST /
+# FF_DB_CONN_PORT to point a stack at a SHARED database (e.g. reuse the dev
+# stack's db-dev). Unset → per-nickname defaults (own isolated DB).
+export FF_DB_NAME="${FF_DB_NAME:-familyfund_${NICKNAME}}"
+export FF_DATADIR="${FF_DATADIR:-./datadir_${NICKNAME}}"
+export FF_DB_HOST="${FF_DB_HOST:-mariadb}"
+export FF_DB_CONN_PORT="${FF_DB_CONN_PORT:-3306}"
 
 # Build identity for the in-app preview banner (see config/build.php).
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
@@ -104,7 +109,7 @@ echo "Environment: ${NICKNAME}"
 echo "  App:       http://localhost:${APP_PORT}"
 echo "  DB:        localhost:${DB_PORT}"
 echo "  Mail UI:   http://localhost:${MAIL_UI_PORT}"
-echo "  Database:  ${FF_DB_NAME}"
+echo "  Database:  ${FF_DB_NAME} (app connects to ${FF_DB_HOST}:${FF_DB_CONN_PORT})"
 echo "  Build:     ${FF_BUILD_REF}"
 [ -n "${FF_BUILD_LABEL}" ] && echo "  Label:     ${FF_BUILD_LABEL}"
 echo ""

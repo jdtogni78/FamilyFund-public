@@ -8,7 +8,7 @@ services:
     tty: true
     build: .
     environment:
-      - DB_HOST=mariadb
+      - DB_HOST=${FF_DB_HOST:-mariadb}
     depends_on:
       - mariadb
     extra_hosts:

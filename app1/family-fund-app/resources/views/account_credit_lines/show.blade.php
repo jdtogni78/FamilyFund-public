@@ -156,7 +156,18 @@
             @if(empty($items))
                 <p class="text-muted mb-0">No history.</p>
             @else
-                <div class="timeline">
+                <div class="table-responsive-sm timeline">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Changes</th>
+                            <th class="text-end">Outstanding</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     @foreach($items as $entry)
                         @php
                             $kind = $entry['kind'] ?? null;
@@ -165,91 +176,89 @@
                             $diff = $data['diff'] ?? [];
                         @endphp
                         @if($kind === 'adjustment')
-                            <div class="border-start border-3 border-warning ps-3 mb-3">
-                                <div class="small text-muted d-flex justify-content-between align-items-center">
-                                    <span>
-                                        {{ optional($date)->format('Y-m-d') }}
+                            <tr data-kind="adjustment">
+                                <td class="text-nowrap">
+                                    {{ optional($date)->format('Y-m-d') }}
+                                    <div class="small text-muted">
                                         @if(!empty($data['adjusted_by']))
-                                            &mdash; by {{ $data['adjusted_by']->email ?? $data['adjusted_by']->name ?? 'admin' }}
+                                            by {{ $data['adjusted_by']->email ?? $data['adjusted_by']->name ?? 'admin' }}
                                         @else
-                                            &mdash; system
+                                            system
                                         @endif
-                                    </span>
-                                    @if(!empty($data['id']))
-                                        <span>
-                                            <button type="button"
-                                                    class="btn btn-link btn-sm p-0 me-2"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#schedule-snapshot-{{ $data['id'] }}">
-                                                View schedule at this point
-                                            </button>
-                                            <button type="button"
-                                                    class="btn btn-link btn-sm p-0"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#trajectory-through-{{ $data['id'] }}">
-                                                View trajectory through this point
-                                            </button>
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="row mt-1">
-                                    <div class="col-sm-6">
-                                        <strong class="{{ in_array('term_months', $diff) ? 'text-danger' : 'text-muted' }}">
-                                            Term:
-                                        </strong>
+                                    </div>
+                                </td>
+                                <td class="text-nowrap">Adjustment</td>
+                                <td>
+                                    <div>
+                                        <span class="{{ in_array('term_months', $diff) ? 'text-danger fw-bold' : 'text-muted' }}">Term:</span>
                                         {{ $data['old_term_months'] ?? '' }} &rarr; {{ $data['new_term_months'] ?? '' }} mo
                                     </div>
-                                    <div class="col-sm-6">
-                                        <strong class="{{ in_array('payment_frequency', $diff) ? 'text-danger' : 'text-muted' }}">
-                                            Frequency:
-                                        </strong>
+                                    <div>
+                                        <span class="{{ in_array('payment_frequency', $diff) ? 'text-danger fw-bold' : 'text-muted' }}">Frequency:</span>
                                         {{ $data['old_payment_frequency'] ?? '' }} &rarr; {{ $data['new_payment_frequency'] ?? '' }}
                                     </div>
-                                    <div class="col-sm-6">
-                                        <strong class="{{ in_array('maturity_date', $diff) ? 'text-danger' : 'text-muted' }}">
-                                            Maturity:
-                                        </strong>
+                                    <div>
+                                        <span class="{{ in_array('maturity_date', $diff) ? 'text-danger fw-bold' : 'text-muted' }}">Maturity:</span>
                                         {{ optional($data['old_maturity_date'] ?? null)->format('Y-m-d') }}
                                         &rarr; {{ optional($data['new_maturity_date'] ?? null)->format('Y-m-d') }}
                                     </div>
-                                    <div class="col-sm-6">
-                                        <strong class="{{ in_array('planned_payoff_date', $diff) ? 'text-danger' : 'text-muted' }}">
-                                            Planned payoff:
-                                        </strong>
+                                    <div>
+                                        <span class="{{ in_array('planned_payoff_date', $diff) ? 'text-danger fw-bold' : 'text-muted' }}">Planned payoff:</span>
                                         {{ optional($data['old_planned_payoff_date'] ?? null)->format('Y-m-d') }}
                                         &rarr; {{ optional($data['new_planned_payoff_date'] ?? null)->format('Y-m-d') }}
                                     </div>
                                     @if(!empty($data['effective_date']))
-                                    <div class="col-sm-6">
-                                        <strong class="text-muted">Schedule start:</strong>
+                                    <div>
+                                        <span class="text-muted">Schedule start:</span>
                                         {{ optional($data['effective_date'])->format('Y-m-d') }}
                                     </div>
                                     @endif
-                                </div>
-                                <div class="small text-muted mt-1">
-                                    Outstanding at change: {{ number_format($data['outstanding_shares_at_adjustment'] ?? 0, 4) }} shares
                                     @if(!empty($data['reason']))
-                                        &mdash; <em>"{{ $data['reason'] }}"</em>
+                                        <div class="small text-muted fst-italic">"{{ $data['reason'] }}"</div>
                                     @endif
-                                </div>
-                            </div>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    {{ number_format($data['outstanding_shares_at_adjustment'] ?? 0, 4) }}
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    @if(!empty($data['id']))
+                                        <button type="button"
+                                                class="btn btn-link btn-sm p-0 d-block ms-auto"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#schedule-snapshot-{{ $data['id'] }}">
+                                            View schedule at this point
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-link btn-sm p-0 d-block ms-auto"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#trajectory-through-{{ $data['id'] }}">
+                                            View trajectory through this point
+                                        </button>
+                                    @endif
+                                </td>
+                            </tr>
                         @else
-                            <div class="border-start border-3 border-secondary ps-3 mb-3">
-                                <div class="small text-muted">
-                                    {{ optional($date)->format('Y-m-d') }} &mdash; origination
-                                </div>
-                                <div>
+                            <tr data-kind="origination">
+                                <td class="text-nowrap">{{ optional($date)->format('Y-m-d') }}</td>
+                                <td class="text-nowrap text-muted">Origination</td>
+                                <td>
                                     Principal {{ number_format($data['principal_shares'] ?? 0, 4) }} shares
                                     &middot; {{ $data['term_months'] ?? '' }} mo
                                     &middot; {{ $data['payment_frequency'] ?? '' }}
                                     &middot; matures {{ optional($data['maturity_date'] ?? null)->format('Y-m-d') }}
-                                </div>
-                            </div>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    {{ number_format($data['principal_shares'] ?? 0, 4) }}
+                                </td>
+                                <td></td>
+                            </tr>
                         @endif
                     @endforeach
+                    </tbody>
+                </table>
                 </div>
                 @if(!$hasAdjustments)
-                    <p class="text-muted small mb-0">(no adjustments yet)</p>
+                    <p class="text-muted small mt-2 mb-0">(no adjustments yet)</p>
                 @endif
             @endif
         </div>

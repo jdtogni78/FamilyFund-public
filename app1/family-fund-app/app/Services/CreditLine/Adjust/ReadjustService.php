@@ -21,7 +21,9 @@ use Illuminate\Support\Facades\DB;
  *  2. Capture old values and compute oldPlannedPayoffDate.
  *  3. Recompute outstanding_shares from BOR/REP transactions via OutstandingCalculator.
  *  4. Apply new values to the line (term_months, payment_frequency, maturity_date).
- *  5. Cancel all existing `scheduled` CreditLinePayment rows (do NOT delete).
+ *  5. Cancel `scheduled` CreditLinePayment rows due on/after the effective
+ *     date (do NOT delete). Rows due before it stay in force — the old plan
+ *     governs until the new schedule starts (matters for forward-dating).
  *  6. Generate fresh schedule via AmortizationScheduleBuilder, anchored to the
  *     caller-supplied effective date (defaults to today).
  *  7. Write an immutable CreditLineAdjustment audit row.
@@ -111,9 +113,16 @@ class ReadjustService
             $line->maturity_date     = $startDate->copy()->addMonths($effectiveNewTerm)->toDateString();
             $line->save();
 
-            // Step 4 — Cancel existing scheduled payments (preserve them).
+            // Step 4 — Cancel existing scheduled payments that the new schedule
+            // supersedes (preserve them, never delete). Only rows due *on or
+            // after* the effective date are cancelled: when the new plan is
+            // forward-dated, the old plan stays in force until it starts, so
+            // installments due before the effective date must remain scheduled
+            // (otherwise they vanish, leaving a gap with no obligation in the
+            // pre-effective-date window).
             CreditLinePayment::where('account_credit_line_id', $line->id)
                 ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+                ->whereDate('due_date', '>=', $startDate->toDateString())
                 ->update(['status' => CreditLinePayment::STATUS_CANCELLED]);
 
             // Step 5 — Generate fresh schedule anchored to the effective date.

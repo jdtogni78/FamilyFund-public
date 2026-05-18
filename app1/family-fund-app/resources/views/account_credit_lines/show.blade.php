@@ -44,6 +44,15 @@
         $repaid      = max(0.0, $principal - $outstanding);
         $repaidPct   = $principal > 0 ? min(100, round($repaid / $principal * 100)) : 0;
 
+        // What the current schedule says should have been repaid by today
+        // (last cumulative point of the trajectory's expected-to-date series),
+        // and how the borrower is tracking against it.
+        $expectedSeries = $trajectory['expected_to_date'] ?? [];
+        $expected = !empty($expectedSeries)
+            ? (float) end($expectedSeries)['cumulative_shares']
+            : 0.0;
+        $repayDiff = $repaid - $expected;
+
         $sv = 0;
         try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
     @endphp
@@ -70,6 +79,17 @@
                 <div class="col-md-3 mb-3">
                     <small class="text-muted">Repaid (shares)</small>
                     <div class="h5 mb-0 text-success">{{ number_format($repaid, 4) }}</div>
+                    <small class="text-muted">
+                        expected {{ number_format($expected, 4) }}
+                        @if(abs($repayDiff) >= 0.00005)
+                            <span class="{{ $repayDiff >= 0 ? 'text-success' : 'text-danger' }}">
+                                ({{ $repayDiff >= 0 ? '+' : '−' }}{{ number_format(abs($repayDiff), 4) }}
+                                {{ $repayDiff >= 0 ? 'ahead' : 'behind' }})
+                            </span>
+                        @else
+                            <span class="text-success">(on track)</span>
+                        @endif
+                    </small>
                 </div>
                 <div class="col-md-3 mb-3">
                     <small class="text-muted">Outstanding (shares)</small>
@@ -130,13 +150,26 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
             @unless($schedule->isEmpty())
-            <div class="btn-group btn-group-sm" role="group" aria-label="Filter schedule by status" id="schedule-status-filter">
-                @php $statuses = ['all' => 'All', 'scheduled' => 'Scheduled', 'late' => 'Late', 'partial' => 'Partial', 'paid' => 'Paid', 'cancelled' => 'Cancelled']; @endphp
-                @foreach($statuses as $value => $label)
-                    <button type="button"
-                            class="btn btn-outline-secondary {{ $value === 'all' ? 'active' : '' }}"
-                            data-status-filter="{{ $value }}">{{ $label }}</button>
-                @endforeach
+            <div class="d-flex align-items-center flex-wrap gap-2" id="schedule-filter">
+                <div class="schedule-filter-group" role="group" aria-label="Filter schedule by status (multi-select)" id="schedule-status-filter">
+                    @php $statuses = ['all' => 'All', 'scheduled' => 'Scheduled', 'late' => 'Late', 'partial' => 'Partial', 'paid' => 'Paid', 'cancelled' => 'Cancelled']; @endphp
+                    @foreach($statuses as $value => $label)
+                        <button type="button"
+                                class="schedule-filter-btn {{ $value === 'all' ? 'is-active' : '' }}"
+                                data-status-filter="{{ $value }}"
+                                aria-pressed="{{ $value === 'all' ? 'true' : 'false' }}">{{ $label }}</button>
+                    @endforeach
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <label for="schedule-date-from" class="text-muted small mb-0">Due</label>
+                    <input type="date" id="schedule-date-from" class="form-control form-control-sm"
+                           style="width:auto" aria-label="Due date from">
+                    <span class="text-muted small">–</span>
+                    <input type="date" id="schedule-date-to" class="form-control form-control-sm"
+                           style="width:auto" aria-label="Due date to">
+                    <button type="button" id="schedule-filter-clear"
+                            class="schedule-filter-btn" title="Clear all filters">Clear</button>
+                </div>
             </div>
             @endunless
         </div>
@@ -153,7 +186,7 @@
                 </thead>
                 <tbody>
                 @foreach($schedule as $row)
-                    <tr data-status="{{ $row->status }}">
+                    <tr data-status="{{ $row->status }}" data-due="{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}">
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
@@ -187,18 +220,60 @@
 
     <script>
         (function () {
-            var bar = document.getElementById('schedule-status-filter');
-            if (!bar) return;
-            bar.addEventListener('click', function (e) {
+            var root = document.getElementById('schedule-filter');
+            if (!root) return;
+            var statusBar = document.getElementById('schedule-status-filter');
+            var allBtn = statusBar.querySelector('[data-status-filter="all"]');
+            var statusBtns = statusBar.querySelectorAll('[data-status-filter]');
+            var fromInput = document.getElementById('schedule-date-from');
+            var toInput = document.getElementById('schedule-date-to');
+            var clearBtn = document.getElementById('schedule-filter-clear');
+
+            function setActive(btn, on) {
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+
+            function activeStatuses() {
+                var set = [];
+                statusBtns.forEach(function (b) {
+                    var v = b.getAttribute('data-status-filter');
+                    if (v !== 'all' && b.classList.contains('is-active')) set.push(v);
+                });
+                return set;
+            }
+
+            function apply() {
+                var wanted = activeStatuses();
+                // No specific status picked => "All" is the effective filter.
+                setActive(allBtn, wanted.length === 0);
+                var from = fromInput.value;
+                var to = toInput.value;
+                document.querySelectorAll('tr[data-status]').forEach(function (tr) {
+                    var statusOk = wanted.length === 0 || wanted.indexOf(tr.getAttribute('data-status')) !== -1;
+                    var due = tr.getAttribute('data-due'); // YYYY-MM-DD: lexical compare is chronological
+                    var dateOk = (!from || due >= from) && (!to || due <= to);
+                    tr.style.display = (statusOk && dateOk) ? '' : 'none';
+                });
+            }
+
+            statusBar.addEventListener('click', function (e) {
                 var btn = e.target.closest('[data-status-filter]');
                 if (!btn) return;
-                var want = btn.getAttribute('data-status-filter');
-                bar.querySelectorAll('[data-status-filter]').forEach(function (b) {
-                    b.classList.toggle('active', b === btn);
-                });
-                document.querySelectorAll('tr[data-status]').forEach(function (tr) {
-                    tr.style.display = (want === 'all' || tr.getAttribute('data-status') === want) ? '' : 'none';
-                });
+                if (btn === allBtn) {
+                    statusBtns.forEach(function (b) { setActive(b, false); });
+                } else {
+                    setActive(btn, !btn.classList.contains('is-active'));
+                }
+                apply();
+            });
+            fromInput.addEventListener('change', apply);
+            toInput.addEventListener('change', apply);
+            clearBtn.addEventListener('click', function () {
+                statusBtns.forEach(function (b) { setActive(b, false); });
+                fromInput.value = '';
+                toInput.value = '';
+                apply();
             });
         })();
     </script>

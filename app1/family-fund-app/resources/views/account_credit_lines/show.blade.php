@@ -130,11 +130,11 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
             @unless($schedule->isEmpty())
-            <div class="btn-group btn-group-sm" role="group" aria-label="Filter schedule by status" id="schedule-status-filter">
+            <div class="schedule-filter-group" role="group" aria-label="Filter schedule by status" id="schedule-status-filter">
                 @php $statuses = ['all' => 'All', 'scheduled' => 'Scheduled', 'late' => 'Late', 'partial' => 'Partial', 'paid' => 'Paid', 'cancelled' => 'Cancelled']; @endphp
                 @foreach($statuses as $value => $label)
                     <button type="button"
-                            class="btn btn-outline-secondary {{ $value === 'all' ? 'active' : '' }}"
+                            class="schedule-filter-btn {{ $value === 'all' ? 'is-active' : '' }}"
                             data-status-filter="{{ $value }}">{{ $label }}</button>
                 @endforeach
             </div>
@@ -187,7 +187,7 @@
                 if (!btn) return;
                 var want = btn.getAttribute('data-status-filter');
                 bar.querySelectorAll('[data-status-filter]').forEach(function (b) {
-                    b.classList.toggle('active', b === btn);
+                    b.classList.toggle('is-active', b === btn);
                 });
                 document.querySelectorAll('tr[data-status]').forEach(function (tr) {
                     tr.style.display = (want === 'all' || tr.getAttribute('data-status') === want) ? '' : 'none';

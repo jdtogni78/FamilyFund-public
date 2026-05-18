@@ -91,6 +91,21 @@
         @apply p-2;
     }
 
+    /* Schedule status filter pills (credit-line payment schedule).
+       Theme-consistent replacement for Bootstrap .btn-group/.btn-outline-secondary,
+       which this Tailwind theme does not style. */
+    .schedule-filter-group {
+        @apply inline-flex flex-wrap gap-1;
+    }
+
+    .schedule-filter-btn {
+        @apply px-3 py-1.5 text-xs font-medium rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer;
+    }
+
+    .schedule-filter-btn.is-active {
+        @apply bg-teal-600 border-teal-600 text-white hover:bg-teal-700 hover:text-white dark:bg-teal-500 dark:border-teal-500;
+    }
+
     /* Header button - high contrast white on teal headers */
     .btn-header-light {
         background: white !important;

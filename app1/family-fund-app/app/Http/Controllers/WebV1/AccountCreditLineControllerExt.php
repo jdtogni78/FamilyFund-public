@@ -33,6 +33,7 @@ use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Flash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class AccountCreditLineControllerExt extends AppBaseController
@@ -538,6 +539,115 @@ class AccountCreditLineControllerExt extends AppBaseController
         Flash::success(
             'Payment registered on schedule row #' . $row->id
             . ' (txn #' . $tran->id . ').'
+        );
+
+        return redirect(route('credit_lines.show', ['line' => $line->id]));
+    }
+
+    /**
+     * Edit-payment page — opens the register form *pre-filled* with the
+     * currently registered payment's shares and settlement date.
+     *
+     * Crucially this is a GET: clicking "Edit" mutates nothing. The row stays
+     * registered until the admin actually submits the new values (see
+     * updatePayment()), which fixes the old "deregisters too early" bug where
+     * the reverse fired the instant Edit was clicked.
+     */
+    public function editPaymentForm($lineId, $paymentId)
+    {
+        $this->ensureAdmin();
+        $line = AccountCreditLineExt::findOrFail($lineId);
+        $this->authorize('process', $line);
+
+        $row = CreditLinePayment::where('id', $paymentId)
+            ->where('account_credit_line_id', $line->id)
+            ->firstOrFail();
+
+        if (!$row->paid_transaction_id) {
+            Flash::error('Schedule row #' . $row->id . ' has no registered payment to edit.');
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
+
+        $editTran = TransactionExt::findOrFail($row->paid_transaction_id);
+        $account  = $line->account()->with('fund')->first();
+
+        $shareValue = 0.0;
+        try {
+            $shareValue = (float) $account?->shareValueAsOf(Carbon::today()->toDateString());
+        } catch (\Throwable $e) {
+            // share price unavailable — page still renders, $ amount hidden
+        }
+
+        return view('account_credit_lines.register_payment')
+            ->with('line', $line)
+            ->with('row', $row)
+            ->with('account', $account)
+            ->with('shareValue', $shareValue)
+            ->with('editTran', $editTran);
+    }
+
+    /**
+     * Apply an edit to an already-registered payment.
+     *
+     * Reverse (de-register) and re-register run inside a single DB transaction,
+     * so the schedule row is only ever deregistered as part of the same commit
+     * that re-registers it with the corrected values. If anything fails — or
+     * the admin never reaches this endpoint — the original payment is untouched.
+     */
+    public function updatePayment(RegisterCreditLinePaymentRequest $request, $lineId, $paymentId)
+    {
+        $this->ensureAdmin();
+        $line = AccountCreditLineExt::findOrFail($lineId);
+        $this->authorize('process', $line);
+
+        $row = CreditLinePayment::where('id', $paymentId)
+            ->where('account_credit_line_id', $line->id)
+            ->firstOrFail();
+
+        if (!$row->paid_transaction_id) {
+            Flash::error('Schedule row #' . $row->id . ' has no registered payment to edit.');
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
+
+        $oldTran = TransactionExt::findOrFail($row->paid_transaction_id);
+
+        /** @var UserExt|null $admin */
+        $admin = auth()->user();
+        if ($admin && !$admin instanceof UserExt) {
+            $admin = UserExt::find($admin->id);
+        }
+
+        $data = $request->validated();
+        $date = !empty($data['date']) ? Carbon::parse($data['date']) : null;
+
+        $reason = trim((string) $request->input('reason'));
+        if ($reason === '') {
+            $reason = 'Editing registered payment on schedule row #' . $row->id
+                . ' (atomic reverse + re-register).';
+        }
+
+        try {
+            $newTran = DB::transaction(function () use ($oldTran, $admin, $reason, $row, $data, $date) {
+                $this->reverseService->reverse($oldTran, $admin, $reason);
+                // Row state was reopened by the reverse above; re-register with
+                // the corrected values in the same transaction.
+                $row->refresh();
+                return $this->repayService->repayRow($row, (float) $data['shares'], $date);
+            });
+        } catch (AlreadyReversedException $e) {
+            Flash::error($e->getMessage());
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        } catch (InvalidArgumentException $e) {
+            Flash::error($e->getMessage());
+            return redirect(route('credit_lines.payments.edit_form', [
+                'line'    => $line->id,
+                'payment' => $row->id,
+            ]));
+        }
+
+        Flash::success(
+            'Payment on schedule row #' . $row->id
+            . ' updated (was txn #' . $oldTran->id . ', now txn #' . $newTran->id . ').'
         );
 
         return redirect(route('credit_lines.show', ['line' => $line->id]));

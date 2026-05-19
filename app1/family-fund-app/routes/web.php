@@ -14,11 +14,26 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Dev-only auto-login route for CLI testing
+// Dev-only auto-login route for CLI testing.
+// Default user is claude@test.local; override with ?as=<email> or a role alias
+// (admin / fund-admin / financial-manager / beneficiary -> canonical qa-* users
+// seeded by QaTestUsersSeeder).
 if (app()->environment('local', 'dev')) {
-    Route::get('/dev-login/{redirect?}', function ($redirect = '/') {
-        Auth::loginUsingId(\App\Models\User::where('email', 'claude@test.local')->first()->id);
-        return redirect('/' . $redirect);
+    Route::get('/dev-login/{redirect?}', function (\Illuminate\Http\Request $request, $redirect = '') {
+        $aliases = [
+            'admin' => 'admin@dev.familyfund.local',
+            'system-admin' => 'admin@dev.familyfund.local',
+            'fund-admin' => 'qa-fund-admin@test.local',
+            'financial-manager' => 'qa-financial-manager@test.local',
+            'beneficiary' => 'qa-beneficiary@test.local',
+        ];
+        $as = (string) $request->query('as', 'claude@test.local');
+        $email = $aliases[$as] ?? $as;
+        $user = \App\Models\User::where('email', $email)->first();
+        abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+        Auth::loginUsingId($user->id);
+        // ltrim guards against '//' protocol-relative redirects when $redirect is empty
+        return redirect('/' . ltrim($redirect, '/'));
     })->where('redirect', '.*');
 }
 

@@ -32,6 +32,7 @@ class LineNotificationSettings
     public const DEFAULT_DELAY_NOTIFICATION_REPEAT_DAYS = 14;
     public const DEFAULT_DELAY_NOTIFICATION_MAX         = 6;
     public const DEFAULT_TRANSACTION_EMAIL_ENABLED      = true;
+    public const DEFAULT_STATUS_UPDATE_ENABLED          = true;
 
     private AccountCreditLine $line;
 
@@ -87,5 +88,15 @@ class LineNotificationSettings
     public function mismatchAlertEnabled(): bool
     {
         return (bool) ($this->line->mismatch_alert_enabled ?? true);
+    }
+
+    /**
+     * Whether this line is included in the periodic (quarterly) status-update
+     * digest. Defaults to true when the column is missing (older rows / before
+     * the Phase 2 schema change). See the column table in the class docblock.
+     */
+    public function statusUpdateEnabled(): bool
+    {
+        return (bool) ($this->line->status_update_enabled ?? self::DEFAULT_STATUS_UPDATE_ENABLED);
     }
 }

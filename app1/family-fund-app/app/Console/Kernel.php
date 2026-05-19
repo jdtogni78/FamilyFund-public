@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Jobs\CreditLine\ScanLatePaymentsJob;
 use App\Jobs\CreditLine\ScanRemindersJob;
+use App\Jobs\CreditLine\SendStatusUpdateJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -35,6 +36,13 @@ class Kernel extends ConsoleKernel
         $schedule->call(fn () => ScanLatePaymentsJob::dispatch())
             ->dailyAt('07:15')
             ->name('credit_lines.scan_late_payments')
+            ->withoutOverlapping();
+
+        // Credit-line: quarterly per-account status digest + trajectory forecast.
+        $schedule->call(fn () => SendStatusUpdateJob::dispatch())
+            ->quarterly()
+            ->at('07:30')
+            ->name('credit_lines.send_status_update')
             ->withoutOverlapping();
     }
 

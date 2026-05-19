@@ -1261,6 +1261,7 @@
         "credit-lines\/{line}": "unresolved-param:line",
         "credit-lines\/{line}\/actions": "unresolved-param:line",
         "credit-lines\/{line}\/edit": "unresolved-param:line",
+        "credit-lines\/{line}\/payments\/{payment}\/edit": "unresolved-param:line",
         "credit-lines\/{line}\/payments\/{payment}\/register": "unresolved-param:line",
         "credit-lines\/{line}\/simulator": "unresolved-param:line",
         "depositRequests\/{depositRequest}": "unresolved-param:depositRequest",

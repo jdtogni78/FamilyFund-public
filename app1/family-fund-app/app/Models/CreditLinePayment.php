@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property float $shares_due
  * @property string $status
  * @property int|null $paid_transaction_id
+ * @property int|null $credit_line_adjustment_id  Owning generation: the
+ *           CreditLineAdjustment that generated this row. NULL == the
+ *           origination generation (the schedule built at draw time).
  */
 class CreditLinePayment extends Model
 {
@@ -39,6 +42,7 @@ class CreditLinePayment extends Model
         'shares_due',
         'status',
         'paid_transaction_id',
+        'credit_line_adjustment_id',
     ];
 
     protected $casts = [
@@ -48,6 +52,7 @@ class CreditLinePayment extends Model
         'shares_due' => 'float',
         'status' => 'string',
         'paid_transaction_id' => 'integer',
+        'credit_line_adjustment_id' => 'integer',
     ];
 
     public static $rules = [
@@ -65,5 +70,14 @@ class CreditLinePayment extends Model
     public function paidTransaction()
     {
         return $this->belongsTo(\App\Models\TransactionExt::class, 'paid_transaction_id');
+    }
+
+    /**
+     * The adjustment generation that owns this row. NULL relation == the
+     * origination generation (schedule built at draw time, no adjustment).
+     */
+    public function adjustment()
+    {
+        return $this->belongsTo(\App\Models\CreditLineAdjustment::class, 'credit_line_adjustment_id');
     }
 }

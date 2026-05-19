@@ -27,6 +27,20 @@ use Illuminate\Support\Facades\DB;
  *  6. Generate fresh schedule via AmortizationScheduleBuilder, anchored to the
  *     caller-supplied effective date (defaults to today).
  *  7. Write an immutable CreditLineAdjustment audit row.
+ *  8. Stamp every fresh schedule row with that adjustment's id — its owning
+ *     generation. Superseded rows keep their previous generation stamp
+ *     (origination rows stay NULL).
+ *
+ * Generation / supersession model: every CreditLinePayment carries
+ * credit_line_adjustment_id identifying the generation that produced it
+ * (NULL == the origination generation built at draw time). Generations are
+ * chained in adjustment write order; a row is `cancelled` iff a later
+ * generation supersedes its slot (its due_date is on/after the next
+ * adjustment's effective_date). Old rows are cancelled, never deleted, so the
+ * plan in force on any date D is the generation whose effective window
+ * [effective_date, nextGeneration.effective_date) contains D — deterministic
+ * without created_at heuristics. {@see PaymentGenerationRepairer} is the
+ * idempotent enforcer of this invariant for legacy/repair paths.
  *
  * History preservation: old schedule rows are cancelled, never deleted, and each
  * adjustment is an append-only audit row that now also records the effective
@@ -133,7 +147,8 @@ class ReadjustService
                 ? Carbon::parse(end($newPayments)->due_date)
                 : Carbon::parse($line->maturity_date);
 
-            // Step 6 — Write immutable adjustment audit row.
+            // Step 6 — Write immutable adjustment audit row. This row IS the
+            // new generation's identity.
             $adjustment = CreditLineAdjustment::create([
                 'account_credit_line_id'          => $line->id,
                 'adjusted_at'                     => now(),
@@ -150,6 +165,15 @@ class ReadjustService
                 'new_planned_payoff_date'         => $newPlannedPayoffDate->toDateString(),
                 'reason'                          => $reason,
             ]);
+
+            // Step 7 — Stamp the fresh rows with their owning generation so
+            // supersession is unambiguous (origination/superseded rows keep
+            // their existing stamp; origination stays NULL).
+            $newPaymentIds = array_map(fn ($p) => $p->id, $newPayments);
+            if (!empty($newPaymentIds)) {
+                CreditLinePayment::whereIn('id', $newPaymentIds)
+                    ->update(['credit_line_adjustment_id' => $adjustment->id]);
+            }
 
             return $adjustment;
         });

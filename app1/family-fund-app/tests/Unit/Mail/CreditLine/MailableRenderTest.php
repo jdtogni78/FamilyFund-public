@@ -5,12 +5,16 @@ namespace Tests\Unit\Mail\CreditLine;
 use App\Mail\CreditLine\DelayNotificationMail;
 use App\Mail\CreditLine\MismatchAlertMail;
 use App\Mail\CreditLine\ReminderMail;
+use App\Mail\CreditLine\StatusUpdateMail;
 use App\Mail\CreditLine\TransactionDetectedMail;
 use App\Mail\CreditLine\TransactionReceivedMail;
 use App\Models\AccountCreditLine;
 use App\Models\AccountCreditLineExt;
+use App\Models\AccountExt;
 use App\Models\CreditLinePayment;
 use App\Models\TransactionExt;
+use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
+use App\Services\CreditLine\Reporting\TrajectoryBuilder;
 use App\Services\Detection\DetectionResult;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -133,5 +137,20 @@ class MailableRenderTest extends TestCase
         $rendered = $mail->build();
         $this->assertNotNull($rendered);
         $this->assertSame(1, $mail->notificationCount);
+    }
+
+    public function test_status_update_mail_renders(): void
+    {
+        $line    = $this->makeActiveLine();
+        $this->makePayment($line);
+        $account = AccountExt::find($this->factory->userAccount->id);
+
+        $summary = (new LoansSummaryBuilder())->forAccount($account);
+        $lines   = [['line' => $line, 'trajectory' => (new TrajectoryBuilder())->build($line)]];
+        $mail    = new StatusUpdateMail($account, $summary, $lines, Carbon::today()->toDateString());
+
+        $rendered = $mail->build();
+        $this->assertNotNull($rendered);
+        $this->assertStringContainsString('status update', strtolower($mail->subject));
     }
 }

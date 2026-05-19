@@ -3,10 +3,10 @@
 namespace App\Services\CreditLine\Reverse;
 
 use App\Models\AccountCreditLineExt;
-use App\Models\CreditLinePayment;
 use App\Models\TransactionExt;
 use App\Models\TransactionReversal;
 use App\Models\UserExt;
+use App\Services\CreditLine\Repay\PaymentAllocator;
 use App\Services\CreditLine\Reverse\Exceptions\AlreadyReversedException;
 use App\Services\CreditLine\Reverse\Exceptions\NotReversibleTypeException;
 use App\Services\CreditLine\Support\CreditLineBalanceTracker;
@@ -54,8 +54,10 @@ class ReverseService
     public function __construct(
         private ReversalOutstandingRecomputer $recomputer,
         private ?CreditLineBalanceTracker $balanceTracker = null,
+        private ?PaymentAllocator $allocator = null,
     ) {
         $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
+        $this->allocator = $this->allocator ?? new PaymentAllocator();
     }
 
     /**
@@ -164,33 +166,17 @@ class ReverseService
     }
 
     /**
-     * Re-open any CreditLinePayment rows that were marked paid or partial by this REP.
+     * Remove this REP's allocations from the schedule and re-derive every row
+     * it touched.
      *
-     * Per §5 rule 14:
-     *  - `paid`    → reverted back to `scheduled` (or `late` if due_date is past).
-     *  - `partial` → reverted back to `scheduled` (or `late` if due_date is past).
-     *
-     * The paid_transaction_id FK is cleared so the row is available for re-payment.
+     * Per §5 rule 14, a fully or partly satisfied row reverts to `scheduled`
+     * (or `late` if past due). The allocation ledger makes this exact: a row
+     * co-funded by another, non-reversed payment correctly stays `partial`
+     * instead of being wrongly reset — only this transaction's contribution
+     * is withdrawn.
      */
     private function reopenPaymentRows(TransactionExt $repTran): void
     {
-        $today = Carbon::today();
-
-        $rows = CreditLinePayment::where('paid_transaction_id', $repTran->id)
-            ->whereIn('status', [CreditLinePayment::STATUS_PAID, CreditLinePayment::STATUS_PARTIAL])
-            ->get();
-
-        foreach ($rows as $row) {
-            $dueDate = $row->due_date instanceof Carbon
-                ? $row->due_date
-                : Carbon::parse($row->due_date);
-
-            $row->status = $dueDate->lt($today)
-                ? CreditLinePayment::STATUS_LATE
-                : CreditLinePayment::STATUS_SCHEDULED;
-
-            $row->paid_transaction_id = null;
-            $row->save();
-        }
+        $this->allocator->deallocate($repTran);
     }
 }

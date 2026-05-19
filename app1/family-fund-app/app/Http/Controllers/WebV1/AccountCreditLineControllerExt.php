@@ -23,6 +23,7 @@ use App\Services\CreditLine\Draw\DrawService;
 use App\Services\CreditLine\Exceptions\CancelNotAllowedException;
 use App\Services\CreditLine\Exceptions\NoChangeException;
 use App\Services\CreditLine\Exceptions\OverBorrowException;
+use App\Services\CreditLine\Repay\PaymentAllocator;
 use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Reporting\LoansSummaryBuilder;
 use App\Services\CreditLine\Reporting\TrajectoryBuilder;
@@ -45,6 +46,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         private readonly CancelService $cancelService,
         private readonly AdjustmentHistoryBuilder $historyBuilder,
         private readonly ReverseService $reverseService,
+        private readonly PaymentAllocator $allocator,
     ) {}
 
     /**
@@ -341,7 +343,10 @@ class AccountCreditLineControllerExt extends AppBaseController
         $this->authorize('view', $line);
         $account = $line->account()->first();
         $history = $this->historyBuilder->build($line);
-        $schedule = $line->payments()->orderBy('due_date')->get();
+        $schedule = $line->payments()
+            ->with('allocations.transaction')
+            ->orderBy('due_date')
+            ->get();
         $trajectory = $trajectoryBuilder->build($line);
         $loansSummary = $account ? $loansSummaryBuilder->forAccount($account) : [];
 
@@ -714,6 +719,126 @@ class AccountCreditLineControllerExt extends AppBaseController
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Form to manually (re-)allocate a REP transaction's shares across the
+     * line's schedule rows.
+     *
+     * Used when a payment can't be matched 1:1 to an installment (an
+     * intentional split, or an unmatched payment the operator must place by
+     * hand). Submitting replaces this transaction's existing allocations.
+     */
+    public function allocateForm($lineId, $transactionId)
+    {
+        $this->ensureAdmin();
+        $line = AccountCreditLineExt::findOrFail($lineId);
+        $this->authorize('process', $line);
+
+        $tran = TransactionExt::where('id', $transactionId)
+            ->where('account_credit_line_id', $line->id)
+            ->where('type', TransactionExt::TYPE_REPAY)
+            ->firstOrFail();
+
+        if ($tran->reversed) {
+            Flash::error('Transaction #' . $tran->id . ' is reversed and cannot be allocated.');
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
+
+        $rows = $line->payments()
+            ->where('status', '!=', CreditLinePayment::STATUS_CANCELLED)
+            ->orderBy('due_date')
+            ->get();
+
+        $currentAlloc = $tran->creditLineAllocations()
+            ->pluck('shares', 'credit_line_payment_id')
+            ->toArray();
+
+        $account = $line->account()->with('fund')->first();
+
+        return view('account_credit_lines.allocate_payment')
+            ->with('line', $line)
+            ->with('tran', $tran)
+            ->with('rows', $rows)
+            ->with('currentAlloc', $currentAlloc)
+            ->with('account', $account);
+    }
+
+    /**
+     * Apply a manual (re-)allocation: replace this transaction's allocations
+     * with the admin-entered per-row split.
+     *
+     * outstanding_shares is transaction-based and untouched; only the row
+     * provenance/status changes (re-derived by PaymentAllocator).
+     */
+    public function allocate(Request $request, $lineId, $transactionId)
+    {
+        $this->ensureAdmin();
+        $line = AccountCreditLineExt::findOrFail($lineId);
+        $this->authorize('process', $line);
+
+        $tran = TransactionExt::where('id', $transactionId)
+            ->where('account_credit_line_id', $line->id)
+            ->where('type', TransactionExt::TYPE_REPAY)
+            ->firstOrFail();
+
+        if ($tran->reversed) {
+            Flash::error('Transaction #' . $tran->id . ' is reversed and cannot be allocated.');
+            return redirect(route('credit_lines.show', ['line' => $line->id]));
+        }
+
+        $request->validate([
+            'allocations'   => 'array',
+            'allocations.*' => 'nullable|numeric|min:0',
+        ]);
+
+        // Keep only positive entries for rows that belong to this line and
+        // are not cancelled.
+        $validRowIds = $line->payments()
+            ->where('status', '!=', CreditLinePayment::STATUS_CANCELLED)
+            ->pluck('id')
+            ->all();
+
+        $split = [];
+        foreach ((array) $request->input('allocations', []) as $rowId => $shares) {
+            $shares = round((float) $shares, 4);
+            if ($shares > 0 && in_array((int) $rowId, $validRowIds, true)) {
+                $split[(int) $rowId] = $shares;
+            }
+        }
+
+        $total = round(array_sum($split), 4);
+        if ($total <= 0) {
+            Flash::error('Enter at least one positive allocation.');
+            return redirect(route('credit_lines.payments.allocate_form', [
+                'line' => $line->id, 'transaction' => $tran->id,
+            ]));
+        }
+
+        $tranShares = round((float) $tran->shares, 4);
+        if ($total > $tranShares + 1e-4) {
+            Flash::error(sprintf(
+                'Allocations total %.4f exceeds the transaction\'s %.4f shares.',
+                $total, $tranShares
+            ));
+            return redirect(route('credit_lines.payments.allocate_form', [
+                'line' => $line->id, 'transaction' => $tran->id,
+            ]));
+        }
+
+        DB::transaction(function () use ($tran, $line, $split) {
+            // Re-allocation semantics: drop this tx's prior allocations, then
+            // apply the new split (a no-op deallocate is harmless).
+            $this->allocator->deallocate($tran);
+            $this->allocator->allocate($tran, $line, null, $split);
+        });
+
+        Flash::success(sprintf(
+            'Allocated %.4f of txn #%d\'s %.4f shares across %d row(s).',
+            $total, $tran->id, $tranShares, count($split)
+        ));
+
+        return redirect(route('credit_lines.show', ['line' => $line->id]));
     }
 
     public function readjust(ReadjustCreditLineRequest $request)

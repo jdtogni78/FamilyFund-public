@@ -80,4 +80,14 @@ class CreditLinePayment extends Model
     {
         return $this->belongsTo(\App\Models\CreditLineAdjustment::class, 'credit_line_adjustment_id');
     }
+
+    /**
+     * Per-transaction allocations applied to this schedule row. The unit of
+     * truth for how much has been paid; `status`/`paid_transaction_id` are
+     * derived from this.
+     */
+    public function allocations()
+    {
+        return $this->hasMany(\App\Models\CreditLinePaymentAllocation::class, 'credit_line_payment_id');
+    }
 }

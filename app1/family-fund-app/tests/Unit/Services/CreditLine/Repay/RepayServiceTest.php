@@ -318,6 +318,64 @@ class RepayServiceTest extends TestCase
     }
 
     // -----------------------------------------------------------------
+    // Regression: cascading overflow must not orphan an earlier partial
+    // -----------------------------------------------------------------
+
+    /**
+     * Reproduces the credit-line-2 incident: an "expected" payment, then a
+     * short payment that marks a row partial, then a larger payment whose
+     * overflow cascades back onto that partial row.
+     *
+     * With the allocation ledger the earlier partial payment is never
+     * orphaned: its allocation on row 2 stays put and the cascading overflow
+     * is *added* alongside it (co-funding the row), rather than overwriting
+     * the link as the old single-paid_transaction_id model did.
+     */
+    public function test_cascading_overflow_does_not_orphan_earlier_partial_payment(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 300.0);
+
+        // 3 rows of ~33.3333 each.
+        $line = $this->drawService->open($account, 100.0, 3, 'monthly');
+
+        $rows = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->orderBy('due_date')
+            ->get();
+        [$r1, $r2, $r3] = [$rows[0], $rows[1], $rows[2]];
+
+        // 1) Expected payment fully settles row 1.
+        $this->repayService->repayRow($r1, (float) $r1->shares_due);
+
+        // 2) Short payment on row 2 → partial.
+        $partialTran = $this->repayService->repayRow($r2, 20.0);
+
+        // 3) Larger payment on row 3: covers row 3 (~33.33) and overflows;
+        //    the overflow cascades back toward the oldest open row (row 2).
+        $overflowTran = $this->repayService->repayRow($r3, 50.0);
+
+        $r2->refresh();
+        $r3->refresh();
+        $partialTran->refresh();
+
+        // The earlier short payment is NOT orphaned: it still has its
+        // allocation on row 2, and the overflow is recorded alongside it.
+        $r2Txs = \App\Models\CreditLinePaymentAllocation::where('credit_line_payment_id', $r2->id)
+            ->pluck('transaction_id')
+            ->all();
+        $this->assertContains($partialTran->id, $r2Txs, 'Earlier partial payment was orphaned from row 2.');
+        $this->assertContains($overflowTran->id, $r2Txs, 'Overflow was not recorded on row 2.');
+
+        // Row 2 is now fully covered by the two payments combined (20 + 13.33).
+        $this->assertEquals(CreditLinePayment::STATUS_PAID, $r2->status);
+        $this->assertFalse((bool) $partialTran->reversed);
+
+        // Row 3 is paid by its own payment.
+        $this->assertNotNull($r3->paid_transaction_id);
+        $this->assertEquals(CreditLinePayment::STATUS_PAID, $r3->status);
+    }
+
+    // -----------------------------------------------------------------
     // Helper
     // -----------------------------------------------------------------
 

@@ -35,8 +35,10 @@ class RepayService implements ScheduleAdvancer
     public function __construct(
         private OutstandingCalculator $calculator,
         private ?CreditLineBalanceTracker $balanceTracker = null,
+        private ?PaymentAllocator $allocator = null,
     ) {
         $this->balanceTracker = $this->balanceTracker ?? new CreditLineBalanceTracker();
+        $this->allocator = $this->allocator ?? new PaymentAllocator();
     }
 
     /**
@@ -76,8 +78,8 @@ class RepayService implements ScheduleAdvancer
                 'Credit line repayment'
             );
 
-            // Apply shares to the schedule in due-date order.
-            $this->applyToScheduleRows($line, $repTransaction, round($shares, 4));
+            // Distribute shares onto the schedule (oldest open row first).
+            $this->allocator->allocate($repTransaction, $line);
 
             $this->finalize($line, $repTransaction, $date);
 
@@ -143,27 +145,12 @@ class RepayService implements ScheduleAdvancer
                 sprintf('Credit line payment (schedule row #%d, due %s)', $row->id, $row->due_date)
             );
 
-            // Satisfy the targeted row first; cascade any overflow.
+            // Satisfy the targeted row first; cascade any overflow onto the
+            // oldest open rows. The allocation ledger records exactly which
+            // shares of this tx landed on which row, so a partial row can be
+            // co-funded by several payments without orphaning any of them.
             $row->refresh();
-            $alreadyPaid  = $this->sharesAlreadyPaidOnRow($row);
-            $rowRemaining = round((float) $row->shares_due - $alreadyPaid, 4);
-            $remaining    = $shares;
-
-            if ($remaining >= $rowRemaining) {
-                $remaining -= $rowRemaining;
-                $row->status              = CreditLinePayment::STATUS_PAID;
-                $row->paid_transaction_id = $repTransaction->id;
-                $row->save();
-
-                // Overflow cascades to the remaining open rows oldest-first.
-                if ($remaining > 0) {
-                    $this->applyToScheduleRows($line, $repTransaction, round($remaining, 4));
-                }
-            } else {
-                $row->status              = CreditLinePayment::STATUS_PARTIAL;
-                $row->paid_transaction_id = $repTransaction->id;
-                $row->save();
-            }
+            $this->allocator->allocate($repTransaction, $line, $row);
 
             $this->finalize($line, $repTransaction, $date);
 
@@ -245,7 +232,7 @@ class RepayService implements ScheduleAdvancer
         DB::transaction(function () use ($tran, $line) {
             DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
 
-            $this->applyToScheduleRows($line, $tran, round((float) $tran->shares, 4));
+            $this->allocator->allocate($tran, $line);
 
             $outstanding = $this->calculator->recomputeForLine($line);
 
@@ -283,82 +270,5 @@ class RepayService implements ScheduleAdvancer
     public function advance(TransactionExt $tran, AccountCreditLine $line): void
     {
         $this->applyToSchedule($tran, $line);
-    }
-
-    /**
-     * Apply the repayment amount to CreditLinePayment rows in due-date order.
-     *
-     * Rules:
-     * - Apply shares to the earliest open (scheduled/partial/late) rows first.
-     * - If the row's shares_due is fully covered → status = paid; set paid_transaction_id.
-     * - If partial coverage → status = partial; leftover balance moves to next row.
-     * - If extra (more than all open rows) → remaining is over-payment; all rows paid; line paid_off.
-     */
-    private function applyToScheduleRows(AccountCreditLine $line, TransactionExt $repTransaction, float $remainingShares): void
-    {
-        $openStatuses = [
-            CreditLinePayment::STATUS_SCHEDULED,
-            CreditLinePayment::STATUS_PARTIAL,
-            CreditLinePayment::STATUS_LATE,
-        ];
-
-        $rows = CreditLinePayment::where('account_credit_line_id', $line->id)
-            ->whereIn('status', $openStatuses)
-            ->orderBy('due_date', 'asc')
-            ->get();
-
-        foreach ($rows as $row) {
-            if ($remainingShares <= 0) {
-                break;
-            }
-
-            // How much of this row has already been credited by prior partial payments?
-            $alreadyPaid = $this->sharesAlreadyPaidOnRow($row);
-            $rowRemaining = round($row->shares_due - $alreadyPaid, 4);
-
-            if ($rowRemaining <= 0) {
-                // Row was already fully covered by a prior partial; close it.
-                $row->status             = CreditLinePayment::STATUS_PAID;
-                $row->paid_transaction_id = $repTransaction->id;
-                $row->save();
-                continue;
-            }
-
-            if ($remainingShares >= $rowRemaining) {
-                // This payment fully covers the remaining balance on this row.
-                $remainingShares -= $rowRemaining;
-                $row->status              = CreditLinePayment::STATUS_PAID;
-                $row->paid_transaction_id = $repTransaction->id;
-                $row->save();
-            } else {
-                // Partial payment: covers some but not all of this row.
-                $row->status              = CreditLinePayment::STATUS_PARTIAL;
-                $row->paid_transaction_id = $repTransaction->id;
-                $row->save();
-                $remainingShares = 0;
-            }
-        }
-    }
-
-    /**
-     * Sum shares already credited against a payment row by prior REP transactions.
-     *
-     * We identify prior transactions by looking at REP transactions that targeted this row
-     * (i.e. they share the same credit line and have a timestamp before the current repayment).
-     * Since a row can only have one paid_transaction_id, for partial rows we sum the shares
-     * of the single transaction that set the partial status.
-     *
-     * Simplified model: each payment row tracks only its latest partial transaction.
-     * If more complex partial tracking is needed, a separate partial-credit ledger would be required.
-     * For now: if status=partial and paid_transaction_id is set, credit those shares.
-     */
-    private function sharesAlreadyPaidOnRow(CreditLinePayment $row): float
-    {
-        if ($row->status !== CreditLinePayment::STATUS_PARTIAL || !$row->paid_transaction_id) {
-            return 0.0;
-        }
-
-        $tran = TransactionExt::find($row->paid_transaction_id);
-        return $tran ? (float) $tran->shares : 0.0;
     }
 }

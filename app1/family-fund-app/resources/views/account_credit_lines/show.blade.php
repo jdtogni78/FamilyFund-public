@@ -180,7 +180,7 @@
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>#</th><th>Due date</th><th>Shares</th><th class="text-end">$ Amount</th><th>Status</th><th>Paid by tx</th>
+                        <th>#</th><th>Due date</th><th>Shares</th><th class="text-end">$ Amount</th><th>Status</th><th>Payments</th>
                         @if($isAdmin)<th></th>@endif
                     </tr>
                 </thead>
@@ -201,9 +201,22 @@
                             @include('account_credit_lines._payment_status_badge', ['status' => $row->status])
                         </td>
                         <td>
-                            @if($row->paid_transaction_id)
-                                <a href="{{ route('transactions.show', $row->paid_transaction_id) }}">#{{ $row->paid_transaction_id }}</a>
-                            @endif
+                            @forelse($row->allocations as $alloc)
+                                <div class="small">
+                                    <a href="{{ route('transactions.show', $alloc->transaction_id) }}">#{{ $alloc->transaction_id }}</a>
+                                    <span class="text-muted">{{ number_format($alloc->shares, 4) }} sh</span>
+                                    @if($isAdmin && $line->status === 'active')
+                                        <a href="{{ route('credit_lines.payments.allocate_form', ['line' => $line->id, 'transaction' => $alloc->transaction_id]) }}"
+                                           class="text-decoration-none" title="Re-allocate txn #{{ $alloc->transaction_id }}">
+                                            <i class="fa fa-sliders"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            @empty
+                                @if($row->paid_transaction_id)
+                                    <a href="{{ route('transactions.show', $row->paid_transaction_id) }}">#{{ $row->paid_transaction_id }}</a>
+                                @endif
+                            @endforelse
                         </td>
                         @if($isAdmin)
                         <td class="text-end">

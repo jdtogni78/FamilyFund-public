@@ -117,11 +117,11 @@
                 <tbody>
                 @foreach($qAdjustments as $a)
                     <tr style="border-bottom:1px solid #eee;">
-                        <td>{{ Carbon::parse($a->adjusted_at)->format('Y-m-d') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($a->adjusted_at)->format('Y-m-d') }}</td>
                         <td>#{{ $a->account_credit_line_id }}</td>
                         <td>{{ $a->old_term_months }} &rarr; {{ $a->new_term_months }} mo</td>
                         <td>{{ $a->old_payment_frequency }} &rarr; {{ $a->new_payment_frequency }}</td>
-                        <td>{{ Carbon::parse($a->old_maturity_date)->format('Y-m-d') }} &rarr; {{ Carbon::parse($a->new_maturity_date)->format('Y-m-d') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($a->old_maturity_date)->format('Y-m-d') }} &rarr; {{ \Carbon\Carbon::parse($a->new_maturity_date)->format('Y-m-d') }}</td>
                         <td>{{ $a->reason }}</td>
                     </tr>
                 @endforeach

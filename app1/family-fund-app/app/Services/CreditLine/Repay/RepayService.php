@@ -312,6 +312,20 @@ class RepayService implements ScheduleAdvancer
                 break;
             }
 
+            // A row records exactly one paid_transaction_id. If this row is
+            // already linked to a *different* non-reversed payment (typically
+            // an earlier partial), do NOT overwrite that link: doing so would
+            // silently orphan the earlier payment from the schedule. Skip the
+            // row and let the overflow cascade onward to the next genuinely
+            // open row instead.
+            if ($row->paid_transaction_id
+                && $row->paid_transaction_id !== $repTransaction->id) {
+                $linked = TransactionExt::find($row->paid_transaction_id);
+                if ($linked && !$linked->reversed) {
+                    continue;
+                }
+            }
+
             // How much of this row has already been credited by prior partial payments?
             $alreadyPaid = $this->sharesAlreadyPaidOnRow($row);
             $rowRemaining = round($row->shares_due - $alreadyPaid, 4);

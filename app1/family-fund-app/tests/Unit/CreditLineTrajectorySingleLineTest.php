@@ -134,54 +134,79 @@ class CreditLineTrajectorySingleLineTest extends TestCase
     }
 
     /**
-     * The single plan line must be the schedule actually in force over time:
-     * the original plan until the first adjustment, then the adjusted
-     * generation's schedule — not the original running its full length.
+     * The single plan line is the builder's pre-spliced effective_plan —
+     * the schedule actually in force over time, one continuous monotonic
+     * series keyed on due_date that switches generations at each
+     * adjustment's effective_date and carries its running cumulative across
+     * the boundary. The blade just draws it (anchored at origination and
+     * carried forward over the merged x-axis); it must NOT re-derive a plan
+     * by splicing original_plan + historical_plans on adjusted_at — the old
+     * behaviour that mixed two time axes and two cumulative baselines,
+     * producing the dip-then-climb / sawtooth.
      */
-    public function test_scheduled_plan_splices_original_then_adjusted_generation(): void
+    public function test_scheduled_plan_uses_continuous_effective_plan_not_adjusted_at_splice(): void
     {
         $datasets = $this->datasets([
-            'original_plan' => [
-                ['date' => '2026-01-01', 'cumulative_shares' => 0],
+            'origination_date' => '2026-01-01',
+            // The builder already spliced this: original rows (20, 40) then
+            // the post-readjust generation continuing from 40 (+10, +10) —
+            // monotonic, no reset to principal − outstanding.
+            'effective_plan' => [
                 ['date' => '2026-02-01', 'cumulative_shares' => 20],
                 ['date' => '2026-03-01', 'cumulative_shares' => 40],
+                ['date' => '2026-05-01', 'cumulative_shares' => 50],
+                ['date' => '2026-06-01', 'cumulative_shares' => 60],
+            ],
+            // Legacy per-generation series with the mismatched baseline that
+            // the OLD blade splice would have drawn as 40 → 30 (a dip). The
+            // blade must ignore these in favour of effective_plan.
+            'original_plan' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+                ['date' => '2026-04-01', 'cumulative_shares' => 60],
             ],
             'historical_plans' => [
-                ['adjusted_at' => '2026-02-15', 'series' => [
-                    ['date' => '2026-02-15', 'cumulative_shares' => 30],
-                    ['date' => '2026-03-15', 'cumulative_shares' => 55],
-                    ['date' => '2026-04-15', 'cumulative_shares' => 80],
+                ['adjusted_at' => '2026-03-20', 'series' => [
+                    ['date' => '2026-05-01', 'cumulative_shares' => 30],
+                    ['date' => '2026-06-01', 'cumulative_shares' => 40],
                 ]],
             ],
             'current_plan' => [
-                ['date' => '2026-02-15', 'cumulative_shares' => 30],
-                ['date' => '2026-03-15', 'cumulative_shares' => 55],
-                ['date' => '2026-04-15', 'cumulative_shares' => 80],
+                ['date' => '2026-05-01', 'cumulative_shares' => 30],
+                ['date' => '2026-06-01', 'cumulative_shares' => 40],
             ],
             'actual_repayments' => [
-                ['date' => '2026-02-01', 'cumulative_shares' => 20],
-                ['date' => '2026-03-10', 'cumulative_shares' => 35],
+                ['date' => '2026-02-10', 'cumulative_shares' => 20],
             ],
             'expected_to_date' => [],
             'overdue_shares' => 0,
             'overdue_installments' => 0,
-            'as_of' => '2026-04-20',
+            'as_of' => '2026-06-10',
             'projected_payoff_date' => null,
-            'planned_payoff_date' => '2026-04-15',
+            'planned_payoff_date' => '2026-06-01',
             'variance_days' => null,
         ]);
 
         $byLabel = array_column($datasets, 'data', 'label');
 
-        // x-axis = sorted union of plan + actual dates:
-        // 2026-01-01, 02-01, 02-15, 03-10, 03-15, 04-15
-        // Plan: original until the 2026-02-15 adjustment (0, 20), then the
-        // adjusted generation (30, …, 55, 80), carried forward across gaps.
-        $this->assertSame([0, 20, 30, 30, 55, 80], $byLabel['Scheduled plan']);
-        // Original's full-length 40-share point on 2026-03-01 must NOT appear.
-        $this->assertNotContains(40, $byLabel['Scheduled plan']);
-        // Actual repayments carried forward independently.
-        $this->assertSame([null, 20, 20, 35, 35, 35], $byLabel['Actual repayments']);
+        // x-axis = origination + sorted union of plan + actual dates:
+        // 2026-01-01, 02-01, 02-10, 03-01, 05-01, 06-01
+        // Plan: anchored at origination 0, then the continuous effective_plan
+        // (20, 40, 50, 60) carried forward across the gaps.
+        $plan = $byLabel['Scheduled plan'];
+        $this->assertSame([0, 20, 20, 40, 50, 60], $plan);
+
+        // Monotonic non-decreasing — the readjust must not introduce a dip.
+        $prev = -INF;
+        foreach ($plan as $v) {
+            $this->assertGreaterThanOrEqual($prev, $v, 'plan line must never dip');
+            $prev = $v;
+        }
+        // The legacy adjusted_at-spliced baseline (40 → 30) must NOT appear.
+        $this->assertNotContains(30, $plan);
+
+        // Actual repayments anchored at origination 0, carried forward.
+        $this->assertSame([0, 0, 20, 20, 20, 20], $byLabel['Actual repayments']);
     }
 
     /**

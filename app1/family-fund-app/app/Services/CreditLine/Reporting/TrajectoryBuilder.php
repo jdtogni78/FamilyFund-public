@@ -111,6 +111,20 @@ class TrajectoryBuilder
                 : $originalPlan;
         }
 
+        // Effective plan = the single, continuous schedule that was actually
+        // in force over time. ReadjustService cancels payment rows due on/after
+        // an adjustment's effective_date and inserts the new generation from
+        // there, leaving the pre-effective rows in force. So the set of
+        // non-cancelled rows IS the spliced-across-generations plan: walking
+        // them in due_date order with ONE running cumulative gives a monotonic
+        // non-decreasing line with no gaps that switches generations at each
+        // effective_date (never adjusted_at) and never resets its baseline to
+        // principal − outstanding_at_adjustment. This is what the chart draws.
+        $inForce = $allPayments
+            ->filter(fn ($p) => $p->status !== CreditLinePayment::STATUS_CANCELLED)
+            ->values();
+        $effectivePlan = $this->cumulativeFromPayments($inForce, $line->principal_shares);
+
         // Actual repayments: cleared REP transactions, not reversed.
         $reps = TransactionExt::where('account_credit_line_id', $line->id)
             ->where('type', TransactionExt::TYPE_REPAY)
@@ -197,6 +211,7 @@ class TrajectoryBuilder
             'original_plan'         => $originalPlan,
             'historical_plans'      => $historicalPlans,
             'current_plan'          => $currentPlan,
+            'effective_plan'        => $effectivePlan,
             'actual_repayments'     => $actual,
             'expected_to_date'      => $expected,
             'overdue_shares'        => $overdueShares,

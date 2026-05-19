@@ -50,41 +50,22 @@
         $variance  = null;
     }
 
-    // Build a SINGLE effective plan line: the schedule that was actually in
-    // force over time — the original plan until the first adjustment, then
-    // each successive generation's plan until the next adjustment, ending
-    // with the latest. Replaces the old original + per-generation + current
-    // overlay, which drew several parallel full-length plan lines for what
-    // is conceptually one evolving plan.
-    $plan = (function () use ($original, $historical, $current) {
-        if (empty($historical)) {
-            return !empty($current) ? $current : $original;
-        }
-        $eff = [];
-        $firstBoundary = $historical[0]['adjusted_at'] ?? null;
-        foreach ($original as $p) {
-            // Original schedule is expected only until the change takes place.
-            if ($firstBoundary !== null && ($p['date'] ?? '') >= $firstBoundary) {
-                break;
-            }
-            $eff[] = $p;
-        }
-        foreach ($historical as $i => $h) {
-            $start = $h['adjusted_at'] ?? null;
-            $end   = $historical[$i + 1]['adjusted_at'] ?? null;
-            foreach (($h['series'] ?? []) as $p) {
-                $d = $p['date'] ?? '';
-                if ($start !== null && $d < $start) {
-                    continue;
-                }
-                if ($end !== null && $d >= $end) {
-                    continue;
-                }
-                $eff[] = $p;
-            }
-        }
-        return $eff;
-    })();
+    // A SINGLE effective plan line: the schedule that was actually in force
+    // over time. TrajectoryBuilder already splices this across generations
+    // (cumulative over the non-cancelled rows, keyed on due_date, switching
+    // at each adjustment's effective_date) and hands it over as
+    // `effective_plan` — one continuous monotonic series. The blade just
+    // draws it. We must NOT re-splice original_plan + historical_plans on
+    // adjusted_at here: that mixed two time axes and two cumulative
+    // baselines, producing the dip-then-climb / sawtooth this fix removes.
+    // Legacy / synthetic callers without an effective_plan fall back to the
+    // current plan (then the original) as-is — never a re-splice.
+    $effective = $trajectory['effective_plan'] ?? null;
+    if (is_array($effective) && !empty($effective)) {
+        $plan = $effective;
+    } else {
+        $plan = !empty($current) ? $current : $original;
+    }
     if ($truncateAt) {
         $plan = array_values(array_filter(
             $plan, fn ($p) => isset($p['date']) && $p['date'] <= $truncateAt

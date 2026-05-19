@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(ServeCommand::class)) {
             ServeCommand::$passthroughVariables = array_merge(
                 ServeCommand::$passthroughVariables,
-                ['DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD', 'FF_NICKNAME', 'FF_BUILD_REF', 'FF_BUILD_LABEL']
+                ['DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD', 'FF_NICKNAME', 'FF_BUILD_REF', 'FF_BUILD_LABEL']
             );
         }
 

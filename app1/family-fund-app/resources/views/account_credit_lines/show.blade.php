@@ -205,6 +205,12 @@
                                 <div class="small">
                                     <a href="{{ route('transactions.show', $alloc->transaction_id) }}">#{{ $alloc->transaction_id }}</a>
                                     <span class="text-muted">{{ number_format($alloc->shares, 4) }} sh</span>
+                                    @if($isAdmin && $line->status === 'active')
+                                        <a href="{{ route('credit_lines.payments.allocate_form', ['line' => $line->id, 'transaction' => $alloc->transaction_id]) }}"
+                                           class="text-decoration-none" title="Re-allocate txn #{{ $alloc->transaction_id }}">
+                                            <i class="fa fa-sliders"></i>
+                                        </a>
+                                    @endif
                                 </div>
                             @empty
                                 @if($row->paid_transaction_id)

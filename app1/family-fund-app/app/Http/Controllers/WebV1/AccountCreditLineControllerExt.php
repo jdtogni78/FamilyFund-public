@@ -341,7 +341,10 @@ class AccountCreditLineControllerExt extends AppBaseController
         $this->authorize('view', $line);
         $account = $line->account()->first();
         $history = $this->historyBuilder->build($line);
-        $schedule = $line->payments()->orderBy('due_date')->get();
+        $schedule = $line->payments()
+            ->with('allocations.transaction')
+            ->orderBy('due_date')
+            ->get();
         $trajectory = $trajectoryBuilder->build($line);
         $loansSummary = $account ? $loansSummaryBuilder->forAccount($account) : [];
 

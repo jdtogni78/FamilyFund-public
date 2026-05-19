@@ -318,6 +318,58 @@ class RepayServiceTest extends TestCase
     }
 
     // -----------------------------------------------------------------
+    // Regression: cascading overflow must not orphan an earlier partial
+    // -----------------------------------------------------------------
+
+    /**
+     * Reproduces the credit-line-2 incident: an "expected" payment, then a
+     * short payment that marks a row partial, then a larger payment whose
+     * overflow cascades back onto that partial row. The overflow must NOT
+     * overwrite (orphan) the earlier partial payment's link.
+     */
+    public function test_cascading_overflow_does_not_orphan_earlier_partial_payment(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 300.0);
+
+        // 3 rows of ~33.3333 each.
+        $line = $this->drawService->open($account, 100.0, 3, 'monthly');
+
+        $rows = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->orderBy('due_date')
+            ->get();
+        [$r1, $r2, $r3] = [$rows[0], $rows[1], $rows[2]];
+
+        // 1) Expected payment fully settles row 1.
+        $this->repayService->repayRow($r1, (float) $r1->shares_due);
+
+        // 2) Short payment on row 2 → partial, linked to its own tx.
+        $partialTran = $this->repayService->repayRow($r2, 20.0);
+
+        // 3) Larger payment on row 3: covers row 3 (~33.33) and overflows;
+        //    the overflow cascades back toward the oldest open row (row 2).
+        $this->repayService->repayRow($r3, 50.0);
+
+        $r2->refresh();
+        $r3->refresh();
+        $partialTran->refresh();
+
+        // The earlier partial payment must still own row 2 (not orphaned).
+        $this->assertEquals(
+            $partialTran->id,
+            $r2->paid_transaction_id,
+            'Cascading overflow overwrote the earlier partial payment link (orphaned it).'
+        );
+        $this->assertEquals(CreditLinePayment::STATUS_PARTIAL, $r2->status);
+        $this->assertFalse((bool) $partialTran->reversed);
+
+        // Row 3 keeps its own (different) paying transaction.
+        $this->assertNotNull($r3->paid_transaction_id);
+        $this->assertNotEquals($partialTran->id, $r3->paid_transaction_id);
+        $this->assertEquals(CreditLinePayment::STATUS_PAID, $r3->status);
+    }
+
+    // -----------------------------------------------------------------
     // Helper
     // -----------------------------------------------------------------
 

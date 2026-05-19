@@ -126,6 +126,17 @@ class Transaction extends Model
     }
 
     /**
+     * Allocations recording how this (REP) transaction's shares were
+     * distributed across credit-line schedule rows.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     **/
+    public function creditLineAllocations()
+    {
+        return $this->hasMany(\App\Models\CreditLinePaymentAllocation::class, 'transaction_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      **/
     public function reversal()

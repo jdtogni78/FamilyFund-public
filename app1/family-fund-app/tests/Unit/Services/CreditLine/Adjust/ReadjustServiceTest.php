@@ -455,6 +455,133 @@ class ReadjustServiceTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // Generation / supersession model
+    // -------------------------------------------------------------------------
+
+    /**
+     * Generation contract: every payment row is stamped with the adjustment
+     * that generated it. The fresh schedule rows carry the new adjustment's
+     * id; the superseded origination rows keep credit_line_adjustment_id = NULL
+     * (NULL == the origination generation). Nothing is deleted.
+     */
+    public function test_readjust_stamps_new_rows_and_leaves_origination_generation_null()
+    {
+        $line = $this->makeCreditLine(100.0, 12);
+        $this->createBorTransaction($line, 100.0);
+        $originationRows = $this->buildInitialSchedule($line);
+        $originationIds  = array_map(fn ($p) => $p->id, $originationRows);
+
+        $adjustment = $this->service->readjust($line, 24, null, null, 'extend');
+
+        // Origination rows: still present (never deleted), cancelled, NULL stamp.
+        $origination = CreditLinePayment::whereIn('id', $originationIds)->get();
+        $this->assertCount(12, $origination);
+        foreach ($origination as $row) {
+            $this->assertSame(CreditLinePayment::STATUS_CANCELLED, $row->status);
+            $this->assertNull(
+                $row->credit_line_adjustment_id,
+                'origination rows belong to the NULL (origination) generation'
+            );
+        }
+
+        // Fresh schedule rows: all stamped with the owning adjustment.
+        $fresh = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->where('status', CreditLinePayment::STATUS_SCHEDULED)
+            ->get();
+        $this->assertCount(24, $fresh);
+        foreach ($fresh as $row) {
+            $this->assertEquals(
+                $adjustment->id,
+                $row->credit_line_adjustment_id,
+                'every fresh row is stamped with the adjustment that generated it'
+            );
+        }
+    }
+
+    /**
+     * Back-to-back readjusts: each generation stays independently
+     * attributable, so "which plan was in force on date D" is deterministic.
+     *
+     * Origination 2026-01-01, 12 monthly (NULL generation).
+     * Adj#1 effective 2026-04-01 (term 24)  → generation = adj1->id.
+     * Adj#2 effective 2026-09-01 (term 36)  → generation = adj2->id.
+     *
+     * Invariant asserted:
+     *  - every row carries a generation stamp in {null, adj1, adj2};
+     *  - exactly the generated counts are stamped to each adjustment;
+     *  - no two live (non-cancelled) rows share a due_date;
+     *  - every live row's due_date falls inside its generation's effective
+     *    window [gen.effective_date, nextGen.effective_date).
+     */
+    public function test_back_to_back_readjusts_keep_each_generation_attributable()
+    {
+        $line = $this->makeCreditLine(120.0, 12, AccountCreditLineExt::FREQUENCY_MONTHLY);
+        $this->createBorTransaction($line, 120.0);
+        $this->buildInitialSchedule($line);
+
+        Carbon::setTestNow('2026-03-15');
+        $adj1 = $this->service->readjust($line, 24, null, null, 'first', Carbon::parse('2026-04-01'));
+
+        Carbon::setTestNow('2026-08-15');
+        $adj2 = $this->service->readjust($line->refresh(), 36, null, null, 'second', Carbon::parse('2026-09-01'));
+        Carbon::setTestNow('2026-01-01');
+
+        $all = CreditLinePayment::where('account_credit_line_id', $line->id)->get();
+
+        // Nothing deleted: origination(12) + adj1(24) + adj2(36) = 72 rows.
+        $this->assertCount(72, $all);
+
+        // Every stamp is one of the three known generations.
+        foreach ($all as $r) {
+            $this->assertContains(
+                $r->credit_line_adjustment_id,
+                [null, $adj1->id, $adj2->id],
+                "row {$r->id} has an unknown generation stamp"
+            );
+        }
+
+        // Exactly the generated counts are attributed to each adjustment.
+        $this->assertSame(12, $all->whereNull('credit_line_adjustment_id')->count());
+        $this->assertSame(24, $all->where('credit_line_adjustment_id', $adj1->id)->count());
+        $this->assertSame(36, $all->where('credit_line_adjustment_id', $adj2->id)->count());
+
+        // Effective windows per generation.
+        $windows = [
+            'orig' => ['from' => Carbon::parse('2026-01-01'), 'to' => Carbon::parse($adj1->effective_date)],
+            'a1'   => ['from' => Carbon::parse($adj1->effective_date), 'to' => Carbon::parse($adj2->effective_date)],
+            'a2'   => ['from' => Carbon::parse($adj2->effective_date), 'to' => null],
+        ];
+
+        $live = $all->whereNotIn('status', [CreditLinePayment::STATUS_CANCELLED]);
+
+        // No two live rows share a due_date (no double obligation).
+        $liveDates = $live->map(fn ($r) => Carbon::parse($r->due_date)->toDateString())->values()->all();
+        $this->assertSame(
+            count($liveDates),
+            count(array_unique($liveDates)),
+            'no two live rows may share a due_date'
+        );
+
+        // Every live row sits inside its own generation's effective window —
+        // so the plan in force on any date is deterministically resolvable.
+        foreach ($live as $r) {
+            $key = $r->credit_line_adjustment_id === null ? 'orig'
+                 : ($r->credit_line_adjustment_id === $adj1->id ? 'a1' : 'a2');
+            $due = Carbon::parse($r->due_date);
+            $this->assertTrue(
+                $due->gte($windows[$key]['from']),
+                "live row {$r->id} (gen {$key}) due {$due->toDateString()} precedes its generation window"
+            );
+            if ($windows[$key]['to'] !== null) {
+                $this->assertTrue(
+                    $due->lt($windows[$key]['to']),
+                    "live row {$r->id} (gen {$key}) due {$due->toDateString()} leaks past its generation window"
+                );
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // AdjustmentHistoryBuilder tests (UC-40)
     // -------------------------------------------------------------------------
 

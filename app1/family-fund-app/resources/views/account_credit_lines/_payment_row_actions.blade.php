@@ -25,16 +25,11 @@
             </a>
         @endif
         @if($hasPayment)
-            <form action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}"
-                  method="POST" class="d-inline">
-                @csrf
-                <input type="hidden" name="then" value="edit">
-                <button type="submit" class="btn btn-ghost-info"
-                        title="Edit — reverse this payment (txn #{{ $row->paid_transaction_id }}) and re-register"
-                        onclick="return confirm('Reverse this payment (txn #{{ $row->paid_transaction_id }}) and re-register it? The schedule row reopens and you\'ll be taken to the register form.')">
-                    <i class="fa fa-edit"></i>
-                </button>
-            </form>
+            <a href="{{ route('credit_lines.payments.edit_form', ['line' => $line->id, 'payment' => $row->id]) }}"
+               class="btn btn-ghost-info"
+               title="Edit this payment (txn #{{ $row->paid_transaction_id }})">
+                <i class="fa fa-edit"></i>
+            </a>
             <form action="{{ route('credit_lines.payments.reverse', ['line' => $line->id, 'payment' => $row->id]) }}"
                   method="POST" class="d-inline">
                 @csrf

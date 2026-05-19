@@ -493,6 +493,23 @@ class ShowPage extends Page {
 
 **Visual regression** (optional, P2): consider snapshot-style tests for the trajectory chart SVG once it stabilizes. Out of scope for v1.
 
+### 5.1 Running the UI tour on an isolated test DB (not dev)
+
+The Dusk tour (`CreditLineUITourTest`) mutates data (opens/repays/reverses/cancels credit lines) and depends on hardcoded `ACCOUNT_ID=7` / `FUND_ID=1`, with no `RefreshDatabase`/transaction trait. Running it against the dev stack therefore **pollutes `familyfund_dev`**. It must run against an isolated, baseline-restored test-pool slot instead:
+
+```bash
+# from a worktree's app1/  — auto-claims a slot if this worktree owns none
+~/.familyfund-pool/testpool.sh tour            # runs only CreditLineUITourTest
+~/.familyfund-pool/testpool.sh tour -- tests/Browser   # all Browser tests
+```
+
+`testpool tour` (sibling of `testpool run`, which is `php artisan test`):
+- ensures a leased slot (each slot = its own DB, dropped+restored fresh from the committed `database/test/test-baseline.sql.gz` on claim — account 7 / fund 1 come from that baseline);
+- the familyfund image ships **no browser**, so it stands up a `seleniarm/standalone-chromium` sidecar on the slot's compose network and runs in-container `php artisan dusk` against it via `DUSK_DRIVER_URL` (with `LARAVEL_SAIL=1` so `DuskTestCase` skips its local chromedriver, and `APP_URL=http://familyfund-<slot>:8000` so the sidecar browser can reach the app);
+- screenshots land in `<worktree>/family-fund-app/tests/Browser/screenshots/tour/*.png`.
+
+The Browser suite is intentionally **not** in `phpunit.xml`, so `php artisan test` / `testpool run` never picks it up — the tour is always an explicit `testpool tour` step.
+
 ---
 
 ## 6. External API testing strategy

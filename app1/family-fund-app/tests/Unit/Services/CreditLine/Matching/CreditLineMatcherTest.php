@@ -184,13 +184,9 @@ class CreditLineMatcherTest extends TestCase
 
     public function test_uc27_cash_fallback_matches_one_line(): void
     {
-        // Cash fallback depends on AccountExt::shareValueAsOf() returning > 0.
-        // The dev DB lacks the portfolio/asset price seed data needed for that;
-        // this is a pre-existing baseline issue (see also test_value_as_of_calculates_correctly).
-        // Skip until baseline seed is restored.
-        if ($this->factory->userAccount->shareValueAsOf('2022-01-01') <= 0) {
-            $this->markTestSkipped('shareValueAsOf returns 0 — baseline DB seed missing.');
-        }
+        // DataFactory::createFund seeds a cash PortfolioAsset (position=1000) and a
+        // 1000-share INITIAL transaction, so shareValueAsOf returns 1.0 here.
+        $this->assertGreaterThan(0, $this->factory->userAccount->shareValueAsOf('2022-01-01'));
         // Use a share value we can control via the fund's portfolio value.
         // Fund was seeded at value=1000 / shares=1000 → shareValue = 1.0
         // We pick shares_due = 5.0 → expectedCash = 5.0

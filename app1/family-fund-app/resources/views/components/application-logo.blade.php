@@ -1,5 +1,7 @@
 <img
     src="{{ asset('images/logo.png') }}"
     alt="Family Fund Logo"
-    {{ $attributes->merge(['class' => 'rounded-full object-cover']) }}
+    width="40"
+    height="40"
+    {{ $attributes->merge(['class' => 'rounded-full']) }}
 >

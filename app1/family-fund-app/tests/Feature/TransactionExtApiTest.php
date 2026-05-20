@@ -255,52 +255,52 @@ class TransactionExtApiTest extends TestCase
         $this->assertEquals($transactions->count(), 3); // no matching was created
     }
 
-    /**
-     * @group needs-data-refactor
-     * TODO: Matching rule calculations changed - needs investigation
-     */
     public function test_multi_matching()
     {
+        // Orchestration (see TransactionExt::createMatching):
+        //   - Rules are processed by date_end asc, then id asc
+        //     (expiring rules get priority).
+        //   - $remainingValueToMatch starts at the deposit value and each
+        //     match decrements it; rules with capacity are skipped once it
+        //     hits 0 — "don't match more than deposited".
         $factory = $this->factory;
         $timestamp = now()->subDay()->format('Y-m-d');
         $timestamp2 = now()->format('Y-m-d');
         $year = now()->year;
         $transactions = $factory->userAccount->transactions();
 
-        // add matching
+        // MR1: $0..100 @ 100%, expires 9999-12-31
         $factory->createMatching(100, 100);
-
-        // add matching
+        // MR2: $0..10 @ 200%, expires 9999-12-31
         $factory->createMatching(10, 200);
-
-        // add matching
+        // MR3: $50..100 @ 50%, expires (year+1)-01-01 — earliest, runs first
         $mr3 = $factory->createMatching(100, 50, '2000-01-01', ($year+1).'-01-01', 50);
 
-        // pending tran with match
-        //   (extra pending tran to be ignored)
-//        $factory->dumpTransactions();
-//        $factory->dumpBalances();
-
+        // ── $30 deposit ─────────────────────────────────────────────────────
+        // MR3: applicable = min(0+30, 100) - max(0, 50) = 0 → no match
+        // MR1: applicable = 30 → $30 match, consumes the entire $30 deposit
+        // MR2: skipped, $remainingValueToMatch == 0
         $this->postPurchase(30, 30, null, $timestamp);
-//        $factory->dumpTransactions();
-        // Changed from 3 to 2 - matching logic appears to have changed
-        // or the second matching rule ($0-$10 at 200%) is not being triggered
-        $this->assertEquals($transactions->count(), 2);
+        $this->assertEquals(2, $transactions->count(), 'purchase + 1 match');
         $tm = $this->tranRes->referenceTransactionMatching()->get();
-        if ($tm->count() > 0) {
-            $this->validateTran($tm[0]->transaction()->first(), 30, 30, 60, TransactionExt::STATUS_CLEARED);
-        }
-        if ($tm->count() > 1) {
-            $this->validateTran($tm[1]->transaction()->first(), 20, 20, 80);
-        }
+        $this->assertCount(1, $tm, 'MR1 only; MR2 skipped by deposit-cap');
+        $this->validateTran($tm[0]->transaction()->first(), 30, 30, 60, TransactionExt::STATUS_CLEARED);
 
+        // ── $100 deposit ────────────────────────────────────────────────────
+        // Prior deposits in MRs' date ranges: $30.
+        // MR3 runs first (earliest date_end):
+        //   applicable = min(30+100, 100) - max(30, 50) = 50 → match = 50*50% = $25
+        // MR1: used=$30 from prior, applicable = min(30+100, 100) - max(30, 0) = 70
+        //   → match = $70 (capped at remaining 75)
+        // MR2: applicable = min(30+100, 10) - max(30, 0) = -20 → 0 (range exhausted)
         $this->postPurchase(100, 100, null, $timestamp2);
-//        $this->dumpTrans();
-        // Adjusted from 6 to 5 - matching behavior changed with transaction rollback fix
-        $this->assertEquals($transactions->count(), 5);
+        $this->assertEquals(5, $transactions->count(), 'prior 2 + purchase + 2 matches');
         $tm = $this->tranRes->referenceTransactionMatching()->get();
-        $this->validateTran($tm[0]->transaction()->first(), 70, 70, 250, TransactionExt::STATUS_CLEARED, $timestamp2);
-        $this->validateTran($tm[1]->transaction()->first(), 25, 25, 275);
+        $this->assertCount(2, $tm);
+        // tm[0]'s balance row is superseded by tm[1]'s (same day) → end_dt = $timestamp2.
+        // tm[1] is the last balance → end_dt defaults to 9999-12-31.
+        $this->validateTran($tm[0]->transaction()->first(), 25, 25, 185, TransactionExt::STATUS_CLEARED, $timestamp2);
+        $this->validateTran($tm[1]->transaction()->first(), 70, 70, 255);
     }
 
     public function test_periods()

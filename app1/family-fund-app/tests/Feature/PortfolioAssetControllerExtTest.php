@@ -19,6 +19,9 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     protected DataFactory $df;
     protected User $user;
+    protected Asset $assetA;
+    protected Asset $assetB;
+    protected PortfolioAsset $portfolioAssetA;
 
     protected function setUp(): void
     {
@@ -29,7 +32,10 @@ class PortfolioAssetControllerExtTest extends TestCase
         $this->df->createUser();
         $this->user = $this->df->user;
 
-        // Give user admin access
+        $this->assetA = $this->df->createAssetWithPrice();
+        $this->portfolioAssetA = $this->df->portfolioAsset;
+        $this->assetB = $this->df->createAssetWithPrice();
+
         $originalTeamId = getPermissionsTeamId();
         setPermissionsTeamId(0);
         $this->user->assignRole('system-admin');
@@ -65,12 +71,7 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_index_filters_by_asset()
     {
-        $asset = Asset::first();
-        if (!$asset) {
-            $this->markTestSkipped('No assets in database');
-        }
-
-        $response = $this->actingAs($this->user)->get('/portfolioAssets?asset_id=' . $asset->id);
+        $response = $this->actingAs($this->user)->get('/portfolioAssets?asset_id=' . $this->assetA->id);
 
         $response->assertStatus(200);
         $response->assertViewHas('portfolioAssets');
@@ -89,13 +90,8 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_index_handles_multiple_asset_filter()
     {
-        $assets = Asset::take(2)->get();
-        if ($assets->count() < 2) {
-            $this->markTestSkipped('Not enough assets in database');
-        }
-
-        $assetIds = $assets->pluck('id')->toArray();
-        $response = $this->actingAs($this->user)->get('/portfolioAssets?asset_id[]=' . $assetIds[0] . '&asset_id[]=' . $assetIds[1]);
+        $response = $this->actingAs($this->user)
+            ->get('/portfolioAssets?asset_id[]=' . $this->assetA->id . '&asset_id[]=' . $this->assetB->id);
 
         $response->assertStatus(200);
         $response->assertViewHas('portfolioAssets');
@@ -163,12 +159,7 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_edit_displays_form_with_api_data()
     {
-        $portfolioAsset = PortfolioAsset::first();
-        if (!$portfolioAsset) {
-            $this->markTestSkipped('No portfolio assets in database');
-        }
-
-        $response = $this->actingAs($this->user)->get('/portfolioAssets/' . $portfolioAsset->id . '/edit');
+        $response = $this->actingAs($this->user)->get('/portfolioAssets/' . $this->portfolioAssetA->id . '/edit');
 
         $response->assertStatus(200);
         $response->assertViewHas('portfolioAsset');
@@ -186,12 +177,7 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_show_displays_portfolio_asset()
     {
-        $portfolioAsset = PortfolioAsset::first();
-        if (!$portfolioAsset) {
-            $this->markTestSkipped('No portfolio assets in database');
-        }
-
-        $response = $this->actingAs($this->user)->get('/portfolioAssets/' . $portfolioAsset->id);
+        $response = $this->actingAs($this->user)->get('/portfolioAssets/' . $this->portfolioAssetA->id);
 
         $response->assertStatus(200);
         $response->assertViewHas('portfolioAsset');
@@ -206,14 +192,11 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_store_creates_new_portfolio_asset()
     {
-        $asset = Asset::first();
-        if (!$asset) {
-            $this->markTestSkipped('No assets in database');
-        }
+        $newAsset = $this->df->createAsset(null);
 
         $response = $this->actingAs($this->user)->post('/portfolioAssets', [
             'portfolio_id' => $this->df->portfolio->id,
-            'asset_id' => $asset->id,
+            'asset_id' => $newAsset->id,
             'position' => 100.5,
             'start_dt' => '2024-01-01',
             'end_dt' => '9999-12-31',
@@ -222,17 +205,13 @@ class PortfolioAssetControllerExtTest extends TestCase
         $response->assertRedirect(route('portfolioAssets.index'));
         $this->assertDatabaseHas('portfolio_assets', [
             'portfolio_id' => $this->df->portfolio->id,
-            'asset_id' => $asset->id,
+            'asset_id' => $newAsset->id,
         ]);
     }
 
     public function test_update_modifies_portfolio_asset()
     {
-        $portfolioAsset = PortfolioAsset::first();
-        if (!$portfolioAsset) {
-            $this->markTestSkipped('No portfolio assets in database');
-        }
-
+        $portfolioAsset = $this->portfolioAssetA;
         $newPosition = 999.99;
 
         $response = $this->actingAs($this->user)->put('/portfolioAssets/' . $portfolioAsset->id, [
@@ -265,15 +244,9 @@ class PortfolioAssetControllerExtTest extends TestCase
 
     public function test_destroy_returns_redirect()
     {
-        // Create a portfolio asset we can safely delete
-        $asset = Asset::first();
-        if (!$asset) {
-            $this->markTestSkipped('No assets in database');
-        }
-
         $pa = PortfolioAsset::create([
             'portfolio_id' => $this->df->portfolio->id,
-            'asset_id' => $asset->id,
+            'asset_id' => $this->assetA->id,
             'position' => 1,
             'start_dt' => '2024-01-01',
             'end_dt' => '9999-12-31',

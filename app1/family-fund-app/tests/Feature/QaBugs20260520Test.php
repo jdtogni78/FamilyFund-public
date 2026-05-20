@@ -149,6 +149,58 @@ class QaBugs20260520Test extends TestCase
         );
     }
 
+    /**
+     * #3: a massive overpay on one CL must not desync borrowedSharesAsOf
+     * from the sum of active CLs' outstanding_shares. Structurally closed
+     * by #1's rejection of shares > outstanding (no overpayment, no ghost).
+     */
+    public function test_bug_3_excess_does_not_cascade_or_ghost_across_lines(): void
+    {
+        $account = $this->df->userAccount;
+
+        // Two active CLs on the same account.
+        $lineA = $this->draw->open($account, 100.0, 12, 'monthly', null, Carbon::today()->subMonths(2));
+        $lineB = $this->draw->open($account, 50.0,  12, 'monthly', null, Carbon::today()->subMonths(2));
+
+        $aBefore = round((float) $lineA->refresh()->outstanding_shares, 4);
+        $bBefore = round((float) $lineB->refresh()->outstanding_shares, 4);
+        $borrowedBefore = round((float) $account->borrowedSharesAsOf(Carbon::today()->toDateString()), 4);
+        $this->assertEquals($aBefore + $bBefore, $borrowedBefore, 'pre-condition: borrowedSharesAsOf == sum of outstandings');
+
+        $repCountBefore = TransactionExt::where('account_id', $account->id)
+            ->where('type', TransactionExt::TYPE_REPAY)->count();
+
+        // 10x overpay on lineA — repro E4 from the QA doc. Must be rejected.
+        $resp = $this->actingAs($this->admin)->post(
+            route('credit_lines.repay', ['line' => $lineA->id]),
+            [
+                'account_credit_line_id' => $lineA->id,
+                'shares'                 => $aBefore * 10,
+                'date'                   => Carbon::today()->toDateString(),
+            ]
+        );
+        $resp->assertRedirect();
+
+        // Both lines untouched; no REP rows added; no ghost vs borrowedSharesAsOf.
+        $this->assertEquals($aBefore, round((float) $lineA->refresh()->outstanding_shares, 4),
+            'lineA outstanding must be unchanged after a rejected overpay');
+        $this->assertEquals($bBefore, round((float) $lineB->refresh()->outstanding_shares, 4),
+            'lineB (another active CL on the same account) must not be touched');
+        $this->assertEquals(
+            $repCountBefore,
+            TransactionExt::where('account_id', $account->id)->where('type', TransactionExt::TYPE_REPAY)->count(),
+            'a rejected overpay must not append any REP transaction'
+        );
+        $borrowedAfter = round((float) $account->borrowedSharesAsOf(Carbon::today()->toDateString()), 4);
+        $sumActive = round(
+            (float) \App\Models\AccountCreditLine::where('account_id', $account->id)
+                ->where('status', 'active')->sum('outstanding_shares'),
+            4
+        );
+        $this->assertEquals($sumActive, $borrowedAfter,
+            'borrowedSharesAsOf must still match sum of active CL outstandings (no ghost shares)');
+    }
+
     private function seedOwnBalance($account, float $shares): void
     {
         $tran = $this->df->createTransaction(

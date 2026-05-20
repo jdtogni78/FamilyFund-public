@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class DetectLateCreditLinePayments extends Command
 {
     protected $signature = 'credit-lines:detect-late';
-    protected $description = 'Flag overdue scheduled credit-line payment rows as late';
+    protected $description = 'Flag overdue scheduled loan-share payment rows as late';
 
     public function handle(LateDetector $detector): int
     {

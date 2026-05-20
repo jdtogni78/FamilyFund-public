@@ -6,7 +6,7 @@
         <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a>
+        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Loan Shares</a>
     </li>
     <li class="breadcrumb-item active">#{{ $line->id }}</li>
 </ol>
@@ -61,7 +61,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
                 <i class="fa fa-credit-card me-2"></i>
-                <strong>Credit Line #{{ $line->id }}</strong>
+                <strong>Loan Share #{{ $line->id }}</strong>
                 @if($line->nickname)
                     <span class="text-body-secondary ms-2">{{ $line->nickname }}</span>
                 @endif

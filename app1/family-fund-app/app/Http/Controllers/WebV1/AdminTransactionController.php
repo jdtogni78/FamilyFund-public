@@ -28,7 +28,7 @@ class AdminTransactionController extends AppBaseController
     {
         // Wave-2 review (2026-05-14): GET endpoint was auth-protected but not
         // admin-gated — any logged-in user could pre-fill the form and see the
-        // account / credit-line lists. Match the simulator() gate pattern.
+        // account / loan-share lists. Match the simulator() gate pattern.
         if (!auth()->user()?->is_admin()) {
             abort(403);
         }

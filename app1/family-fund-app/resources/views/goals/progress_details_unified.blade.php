@@ -20,7 +20,7 @@
 
     // $current is already net of borrowing (OWN − BOR via valueAsOf). The
     // borrowed value is exposed only as context — small annotation under the
-    // Current value when the account carries an active credit-line draw.
+    // Current value when the account carries an active loan-share draw.
     $borrowedValue = $progress['borrowed_value'] ?? 0;
     $grossValue = $progress['current_gross']['value'] ?? $currentValue;
     $hasBorrowing = $borrowedValue > 0;

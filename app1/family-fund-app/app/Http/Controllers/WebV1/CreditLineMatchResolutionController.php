@@ -51,7 +51,7 @@ class CreditLineMatchResolutionController extends AppBaseController
 
         $this->resolutionService->resolve($tran, $creditLine, auth()->user());
 
-        Flash::success('Transaction #' . $tran->id . ' resolved to credit line #' . $creditLine->id . '.');
+        Flash::success('Transaction #' . $tran->id . ' resolved to loan share #' . $creditLine->id . '.');
 
         return redirect(route('credit_lines.resolve_index'));
     }

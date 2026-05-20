@@ -1,5 +1,5 @@
 {{--
-    Account credit-lines section for the quarterly PDF report (UC-16, UC-44, UC-49).
+    Account loan-shares section for the quarterly PDF report (UC-16, UC-44, UC-49).
     Inputs:
       $account     – AccountExt
       $quarterStart – Carbon (optional; defaults to start of current quarter)
@@ -40,11 +40,11 @@
 
 <div style="page-break-inside: avoid; margin-top: 18px; border: 2px solid #0d9488; border-radius: 8px; overflow: hidden;">
     <div style="background:#f0fdf4; padding:12px 16px; color:#0f766e; font-weight:700; font-size:14px;">
-        Credit Lines &mdash; Quarter {{ $quarterStart->format('Y-m-d') }} to {{ $quarterEnd->format('Y-m-d') }}
+        Loan Shares &mdash; Quarter {{ $quarterStart->format('Y-m-d') }} to {{ $quarterEnd->format('Y-m-d') }}
     </div>
 @if($lines->isEmpty())
     <div style="padding:16px; background:#ffffff; color:#64748b; font-size:12px;">
-        No credit lines on this account.
+        No loan shares on this account.
     </div>
 </div>
 @else

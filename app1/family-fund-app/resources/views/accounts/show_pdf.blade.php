@@ -6,7 +6,7 @@
     @php
         $account = $api['account'];
         $asOfDate = $api['asOf'] ?? now()->format('Y-m-d');
-        // SHARES / Market Value are net of outstanding credit-line shares (BOR balance).
+        // SHARES / Market Value are net of outstanding loan shares (BOR balance).
         $shares = $account->sharesAsOf($asOfDate);
         $marketValue = $account->valueAsOf($asOfDate);
         $sharePrice = $account->shareValueAsOf($asOfDate);
@@ -195,7 +195,7 @@
     <div style="margin-bottom: 20px;"></div>
     @endif
 
-    {{-- Credit Lines Summary (like web header) --}}
+    {{-- Loan Shares Summary (like web header) --}}
     @php
         $clActiveLines = \App\Models\AccountCreditLine::where('account_id', $account->id)
             ->where('status', 'active')
@@ -224,7 +224,7 @@
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #99f6e4; border-radius: 8px; padding: 12px;">
         <tr>
             <td style="padding: 8px 12px;">
-                <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Credit Lines Summary</div>
+                <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Loan Shares Summary</div>
                 @foreach($clActiveLines as $line)
                     @php
                         $clPrincipal      = (float) $line->principal_shares;
@@ -236,7 +236,7 @@
                     @endphp
                     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
                         <tr>
-                            <td width="40%" style="color: #0d9488; font-weight: 600; font-size: 12px;">Credit Line #{{ $line->id }}</td>
+                            <td width="40%" style="color: #0d9488; font-weight: 600; font-size: 12px;">Loan Share #{{ $line->id }}</td>
                             <td width="20%" align="right" style="font-size: 12px;">
                                 <span style="font-weight: 700; color: {{ $clBehind ? '#d97706' : '#16a34a' }};">{{ number_format($clRepaidPct, 1) }}%</span>
                                 <span style="color: #64748b;"> repaid</span>

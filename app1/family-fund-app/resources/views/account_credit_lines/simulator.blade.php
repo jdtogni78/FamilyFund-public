@@ -9,7 +9,7 @@
         <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a>
+        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Loan Shares</a>
     </li>
     <li class="breadcrumb-item">
         <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">#{{ $line->id }}</a>
@@ -22,7 +22,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Payment simulator &mdash; Credit Line #{{ $line->id }}</strong>
+            <strong>Payment simulator &mdash; Loan Share #{{ $line->id }}</strong>
             <span class="badge bg-info">{{ $line->status }}</span>
         </div>
         <div class="card-body">

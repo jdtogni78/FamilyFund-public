@@ -4,7 +4,7 @@
       $fund – FundExt
 
     Renders ONLY for admin users (auth()->user()?->is_admin()).
-    Visually subordinate to the main credit-line-exposure card — small heading,
+    Visually subordinate to the main loan-share-exposure card — small heading,
     inline table, no big card chrome.
 --}}
 @php
@@ -87,7 +87,7 @@
                 </tbody>
             </table>
         @else
-            <p class="text-muted small mb-0">No active credit lines.</p>
+            <p class="text-muted small mb-0">No active loan shares.</p>
         @endif
     </div>
 </div>

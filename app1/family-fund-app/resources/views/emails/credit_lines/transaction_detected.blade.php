@@ -83,14 +83,14 @@
         </div>
     </div>
 
-    <!-- Credit Line -->
+    <!-- Loan Share -->
     @if($result->targetCreditLineId)
     <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
-        <strong style="color: #0369a1;">Applied to credit line #{{ $result->targetCreditLineId }}</strong>
+        <strong style="color: #0369a1;">Applied to loan share #{{ $result->targetCreditLineId }}</strong>
     </div>
     @elseif($result->needsReview())
     <div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
-        <strong style="color: #92400e;">Needs review</strong> — this transaction could not be automatically matched to a credit line.
+        <strong style="color: #92400e;">Needs review</strong> — this transaction could not be automatically matched to a loan share.
     </div>
     @endif
 

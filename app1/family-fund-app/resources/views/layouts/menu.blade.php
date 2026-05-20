@@ -97,13 +97,13 @@
 <li class="nav-item nav-dropdown {{ Request::is('credit-lines*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-credit-card"></i>
-        <span>Credit Lines</span>
+        <span>Loan Shares</span>
     </a>
     <ul class="nav-dropdown-items">
         <li class="nav-item {{ Request::is('credit-lines') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('credit_lines.global_index') }}">
                 <i class="nav-icon fa fa-credit-card"></i>
-                <span>All Credit Lines</span>
+                <span>All Loan Shares</span>
             </a>
         </li>
         <li class="nav-item {{ Request::is('credit-lines/payments') ? 'active' : '' }}">

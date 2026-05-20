@@ -8,7 +8,7 @@
         <tr>
             <td style="padding: 24px;">
                 <h2 style="margin: 0; font-size: 22px; font-weight: bold; color: white;">
-                    &#128202; Credit Line Status Update
+                    &#128202; Loan Share Status Update
                 </h2>
                 <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
                     Quarterly summary &amp; forecast — as of {{ \Carbon\Carbon::parse($asOf)->format('F j, Y') }}.
@@ -23,7 +23,7 @@
     </p>
 
     <p style="color: #666; font-size: 14px; margin: 0 0 20px 0;">
-        Here is the current status of your credit line{{ $summary['active_line_count'] === 1 ? '' : 's' }},
+        Here is the current status of your loan share{{ $summary['active_line_count'] === 1 ? '' : 's' }},
         followed by a forecast of when each is on track to be paid off.
     </p>
 
@@ -35,7 +35,7 @@
         <div style="padding: 16px;">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="padding: 8px 0; color: #666;">Active credit lines</td>
+                    <td style="padding: 8px 0; color: #666;">Active loan shares</td>
                     <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">
                         {{ $summary['active_line_count'] }}
                     </td>
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Per-line forecast -->
-    <h3 style="color: #333; font-size: 16px; margin: 0 0 12px 0;">Forecast by credit line</h3>
+    <h3 style="color: #333; font-size: 16px; margin: 0 0 12px 0;">Forecast by loan share</h3>
 
     @foreach($lines as $entry)
         @php

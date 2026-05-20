@@ -3,15 +3,15 @@
 <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ route('accounts.index') }}">Accounts</a></li>
     <li class="breadcrumb-item"><a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a></li>
-    <li class="breadcrumb-item active">Credit Lines</li>
+    <li class="breadcrumb-item active">Loan Shares</li>
 </ol>
 <div class="container-fluid">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Credit Lines — {{ $account->nickname }}</strong>
+            <strong>Loan Shares — {{ $account->nickname }}</strong>
             @if(auth()->user()?->is_admin())
             <a href="{{ route('credit_lines.create', ['account' => $account->id]) }}"
-               class="btn btn-sm btn-primary">New credit line</a>
+               class="btn btn-sm btn-primary">New loan share</a>
             @endif
         </div>
         <div class="card-body">
@@ -30,7 +30,7 @@
                 </div>
             </form>
             @if($lines->isEmpty())
-                <p class="text-muted mb-0">No credit lines.</p>
+                <p class="text-muted mb-0">No loan shares.</p>
             @else
             <table class="table table-sm">
                 <thead>

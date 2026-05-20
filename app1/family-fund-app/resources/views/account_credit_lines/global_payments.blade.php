@@ -1,7 +1,7 @@
 <x-app-layout>
 @section('content')
 <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ route('credit_lines.global_index') }}">Credit Lines</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('credit_lines.global_index') }}">Loan Shares</a></li>
     <li class="breadcrumb-item active">Receivables</li>
 </ol>
 <div class="container-fluid">

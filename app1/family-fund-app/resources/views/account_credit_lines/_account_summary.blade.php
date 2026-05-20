@@ -41,7 +41,7 @@
             <div>
                 <i class="fa fa-exclamation-triangle me-2"></i>
                 <strong>{{ $flaggedCount }}</strong> transaction(s) on this account need
-                credit-line review (ambiguous or unmatched).
+                loan-share review (ambiguous or unmatched).
             </div>
             <a href="{{ route('credit_lines.resolve_index') }}" class="btn btn-sm btn-warning">
                 Review
@@ -57,7 +57,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                     <i class="fa fa-credit-card me-2"></i>
-                    <strong>Credit Lines</strong>
+                    <strong>Loan Shares</strong>
                     <span class="badge bg-primary ms-2">{{ $lines->count() }}</span>
                 </div>
                 <div>
@@ -66,7 +66,7 @@
                     @if($isAdmin)
                     <a href="{{ route('credit_lines.create', ['account' => $account->id]) }}"
                        class="btn btn-sm btn-primary">
-                        <i class="fa fa-plus me-1"></i> New credit line
+                        <i class="fa fa-plus me-1"></i> New loan share
                     </a>
                     @endif
                 </div>
@@ -124,7 +124,7 @@
                     </tbody>
                 </table>
                 @else
-                <p class="text-muted mb-0">No credit lines for this account.</p>
+                <p class="text-muted mb-0">No loan shares for this account.</p>
                 @endif
             </div>
         </div>

@@ -55,7 +55,7 @@ trait AccountTrait
             $value = $transaction->value;
             $transaction->share_price = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
             $transaction->current_value = Utils::currency($current = $transaction->shares * $shareValue);
-            // Guard against value=0 — true for BOR/REP credit-line transactions
+            // Guard against value=0 — true for BOR/REP loan-share transactions
             // (cash leg is deferred per docs/credit_lines/fund_cashflow.md).
             $transaction->current_performance = Utils::percent($value != 0 ? $current/$value - 1 : 0);
             $transaction->balance?->id;

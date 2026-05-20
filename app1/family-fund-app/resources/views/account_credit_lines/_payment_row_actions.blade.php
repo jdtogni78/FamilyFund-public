@@ -1,5 +1,5 @@
 {{--
-    Shared per-row payment actions for a credit-line schedule row.
+    Shared per-row payment actions for a loan-share schedule row.
 
     Expects:
       $line  — AccountCreditLine the row belongs to

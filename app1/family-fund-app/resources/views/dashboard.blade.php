@@ -71,16 +71,16 @@
                 </div>
             </div>
 
-            <!-- Credit Lines -->
+            <!-- Loan Shares -->
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
-                        <h5 class="mb-0"><i class="fa fa-credit-card me-2"></i>Credit Lines</h5>
+                        <h5 class="mb-0"><i class="fa fa-credit-card me-2"></i>Loan Shares</h5>
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
                             <a href="{{ route('credit_lines.global_index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="fa fa-credit-card text-teal-600 me-3" style="width: 20px;"></i>All Credit Lines
+                                <i class="fa fa-credit-card text-teal-600 me-3" style="width: 20px;"></i>All Loan Shares
                             </a>
                             <a href="{{ route('credit_lines.global_payments') }}" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fa fa-calendar-check-o text-teal-600 me-3" style="width: 20px;"></i>Receivables

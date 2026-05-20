@@ -91,7 +91,7 @@
         @apply p-2;
     }
 
-    /* Schedule status filter pills (credit-line payment schedule).
+    /* Schedule status filter pills (loan-share payment schedule).
        Theme-consistent replacement for Bootstrap .btn-group/.btn-outline-secondary,
        which this Tailwind theme does not style. */
     .schedule-filter-group {

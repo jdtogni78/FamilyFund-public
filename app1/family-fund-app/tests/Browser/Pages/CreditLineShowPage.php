@@ -26,7 +26,7 @@ class CreditLineShowPage extends Page
             $path = parse_url($browser->driver->getCurrentURL(), PHP_URL_PATH);
             return $path === $this->url();
         });
-        $browser->waitForText('Credit Line #' . $this->lineId, 5);
+        $browser->waitForText('Loan Share #' . $this->lineId, 5);
     }
 
     /**

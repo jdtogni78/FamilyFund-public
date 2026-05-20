@@ -1,5 +1,5 @@
 {{--
-    Fund credit-line exposure section (UC-15).
+    Fund loan-share exposure section (UC-15).
     Inputs:
       $fund – FundExt
 --}}
@@ -51,7 +51,7 @@
                     receivable-as-asset model.
                 </p>
                 @else
-                <p class="text-muted mb-0">No credit lines on this fund.</p>
+                <p class="text-muted mb-0">No loan shares on this fund.</p>
                 @endif
             </div>
         </div>

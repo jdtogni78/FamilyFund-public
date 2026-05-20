@@ -1,5 +1,5 @@
 {{--
-    Fund credit-line exposure section for the quarterly PDF report (UC-17).
+    Fund loan-share exposure section for the quarterly PDF report (UC-17).
     Inputs:
       $fund         – FundExt
       $quarterStart – Carbon (optional)

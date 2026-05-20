@@ -14,7 +14,7 @@
             {{-- Account Highlights Card --}}
             @php
                 $asOfDate = $api['asOf'] ?? now()->format('Y-m-d');
-                // SHARES / Market Value are net of outstanding credit-line shares (BOR balance).
+                // SHARES / Market Value are net of outstanding loan shares (BOR balance).
                 // The gross figures are available via sharesWithoutBorrowingAsOf/valueWithoutBorrowingAsOf.
                 $shares = $account->sharesAsOf($asOfDate);
                 $marketValue = $account->valueAsOf($asOfDate);
@@ -70,14 +70,14 @@
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Market Value</div>
                                     @if($borrowedShares > 0)
-                                        <div class="small text-danger" title="Subtracts ${{ number_format($borrowedValue, 0) }} of outstanding credit-line shares">−${{ number_format($borrowedValue, 0) }} borrowed</div>
+                                        <div class="small text-danger" title="Subtracts ${{ number_format($borrowedValue, 0) }} of outstanding loan shares">−${{ number_format($borrowedValue, 0) }} borrowed</div>
                                     @endif
                                 </div>
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Shares</div>
                                     @if($borrowedShares > 0)
-                                        <div class="small text-danger" title="Subtracts {{ number_format($borrowedShares, 2) }} sh outstanding on credit lines">−{{ number_format($borrowedShares, 2) }} borrowed</div>
+                                        <div class="small text-danger" title="Subtracts {{ number_format($borrowedShares, 2) }} sh outstanding on loan shares">−{{ number_format($borrowedShares, 2) }} borrowed</div>
                                     @endif
                                 </div>
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
@@ -147,7 +147,7 @@
                         </div>
                         @endif
 
-                        {{-- Credit Lines Summary --}}
+                        {{-- Loan Shares Summary --}}
                         @php
                             $clActiveLines = \App\Models\AccountCreditLine::where('account_id', $account->id)
                                 ->where('status', 'active')
@@ -182,7 +182,7 @@
                         @if($clActiveLines->isNotEmpty())
                         <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #99f6e4;">
                             <div class="d-flex justify-content-between align-items-center mb-2 mt-2">
-                                <div class="text-muted text-uppercase small" style="font-weight: 600;">Credit Lines Summary</div>
+                                <div class="text-muted text-uppercase small" style="font-weight: 600;">Loan Shares Summary</div>
                                 <div class="small">
                                     <span class="text-muted">Repaid:</span>
                                     <strong>{{ number_format($clTotalRepaidShares, 2) }} sh</strong>
@@ -206,7 +206,7 @@
                                     $clBehind      = $clBehindIds->contains($line->id);
                                 @endphp
                                 <div class="d-flex align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
-                                    <div style="flex: 1;"><a href="{{ route('credit_lines.show', $line->id) }}" style="color: #0d9488; font-weight: 600; text-decoration: none;">Credit Line #{{ $line->id }}</a></div>
+                                    <div style="flex: 1;"><a href="{{ route('credit_lines.show', $line->id) }}" style="color: #0d9488; font-weight: 600; text-decoration: none;">Loan Share #{{ $line->id }}</a></div>
                                     <div style="flex: 1; text-align: center;">
                                         <div>
                                             <span style="font-size: 1rem; font-weight: 700; color: {{ $clBehind ? '#d97706' : '#16a34a' }};">
@@ -244,7 +244,7 @@
                 ['id' => 'section-transactions', 'icon' => 'fa-exchange-alt', 'label' => 'History'],
                 ['id' => 'section-scheduled', 'icon' => 'fa-calendar-alt', 'label' => 'Scheduled', 'condition' => isset($scheduledTransactionJobs) && $scheduledTransactionJobs->count() > 0],
                 ['id' => 'section-matching', 'icon' => 'fa-hand-holding-usd', 'label' => 'Matching', 'condition' => !empty($api['matching_rules'])],
-                ['id' => 'section-credit-lines', 'icon' => 'fa-credit-card', 'label' => 'Credit Lines'],
+                ['id' => 'section-credit-lines', 'icon' => 'fa-credit-card', 'label' => 'Loan Shares'],
             ]])
 
             {{-- Disbursement Eligibility --}}
@@ -500,7 +500,7 @@
                 </div>
             @endif
 
-            {{-- Credit Lines Section --}}
+            {{-- Loan Shares Section --}}
             <div class="row mb-4" id="section-credit-lines">
                 <div class="col">
                     @include('account_credit_lines._account_summary', ['account' => $account])

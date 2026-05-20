@@ -175,7 +175,7 @@ class AccountController extends AppBaseController
 
         $this->authorize('delete', $account);
 
-        // UC-47: refuse closure while the account still has active credit lines.
+        // UC-47: refuse closure while the account still has active loan shares.
         // The caller must cancel or pay them off first so the receivable on the
         // fund's books has a defined disposition.
         if (method_exists($account, 'creditLines')) {
@@ -188,7 +188,7 @@ class AccountController extends AppBaseController
                     ->implode(', ');
                 Flash::error(
                     'Cannot close account: ' . $activeLines->count() .
-                    ' active credit line(s) remain — ' . $list .
+                    ' active loan share(s) remain — ' . $list .
                     '. Cancel or pay them off first.'
                 );
 

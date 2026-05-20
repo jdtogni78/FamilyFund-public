@@ -50,11 +50,11 @@ class AccountCreditLineControllerExt extends AppBaseController
     ) {}
 
     /**
-     * Admin gate for read-only credit-line endpoints.
+     * Admin gate for read-only loan-share endpoints.
      *
      * Wave-2 review (2026-05-14) flagged that index/show/create/edit had no
      * is_admin() check — only `simulator()` did. A non-admin authenticated
-     * user could GET other accounts' credit-line data. Mirror the simulator
+     * user could GET other accounts' loan-share data. Mirror the simulator
      * gate pattern here as a shared helper.
      */
     private function ensureAdmin(): void
@@ -84,7 +84,7 @@ class AccountCreditLineControllerExt extends AppBaseController
     }
 
     /**
-     * Global (cross-account) credit-line listing. Admin-only.
+     * Global (cross-account) loan-share listing. Admin-only.
      */
     public function globalIndex(Request $request)
     {
@@ -155,7 +155,7 @@ class AccountCreditLineControllerExt extends AppBaseController
         }
 
         // Filter option lists: only accounts/funds that actually have
-        // credit lines, so the dropdowns stay scoped to relevant choices.
+        // loan shares, so the dropdowns stay scoped to relevant choices.
         $accounts = AccountExt::whereIn('id', AccountCreditLine::query()->select('account_id'))
             ->with('fund')
             ->orderBy('nickname')
@@ -449,7 +449,7 @@ class AccountCreditLineControllerExt extends AppBaseController
 
         $line->fill($request->validated())->save();
 
-        Flash::success('Notification settings updated for credit line #' . $line->id . '.');
+        Flash::success('Notification settings updated for loan share #' . $line->id . '.');
 
         return redirect(route('credit_lines.show', ['line' => $line->id]));
     }

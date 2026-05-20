@@ -53,7 +53,7 @@ class FundExt extends Fund
         if (!$account) {
             return 0;
         }
-        return $account->sharesAsOf($now);
+        return $account->sharesWithoutBorrowingAsOf($now);
     }
 
     /**
@@ -128,11 +128,10 @@ class FundExt extends Fund
         $used = 0;
         $total = 0;
         foreach ($accounts as $account) {
-            $balance = $account->sharesAsOf($now);
             if ($account->user_id) {
-                $used += $balance;
+                $used += max(0, $account->sharesAsOf($now));
             } else {
-                $total = $balance;
+                $total = $account->sharesWithoutBorrowingAsOf($now);
             }
         }
 

@@ -20,7 +20,7 @@
     </li>
     @endif
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Credit Line #{{ $line->id }}</a>
+        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Loan Share #{{ $line->id }}</a>
     </li>
     <li class="breadcrumb-item active">{{ $isEdit ? 'Edit payment' : 'Register payment' }}</li>
 </ol>

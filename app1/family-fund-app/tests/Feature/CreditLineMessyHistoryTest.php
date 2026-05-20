@@ -79,7 +79,7 @@ class CreditLineMessyHistoryTest extends TestCase
         $this->assertSame(
             $before,
             AccountCreditLine::where('account_id', $account->id)->count(),
-            'over-borrow must not persist a new credit line'
+            'over-borrow must not persist a new loan share'
         );
     }
 
@@ -114,7 +114,7 @@ class CreditLineMessyHistoryTest extends TestCase
         $this->assertSame(
             $before + 1,
             AccountCreditLine::where('account_id', $account->id)->count(),
-            'the backdated draw should persist a new credit line'
+            'the backdated draw should persist a new loan share'
         );
 
         $borRows = \App\Models\AccountBalance::where('account_id', $account->id)

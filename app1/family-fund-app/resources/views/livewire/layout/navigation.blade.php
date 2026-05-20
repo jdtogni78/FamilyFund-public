@@ -14,8 +14,8 @@ $logout = function (Logout $logout) {
             <!-- Left: Logo & Brand -->
             <div class="flex items-center">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 group">
-                    <div class="rounded-full p-0.5 bg-white/20 group-hover:bg-white/30 transition-colors">
-                        <x-application-logo class="h-10 w-10 rounded-full" />
+                    <div class="flex-shrink-0 rounded-full p-0.5 bg-white/20 group-hover:bg-white/30 transition-colors">
+                        <x-application-logo class="h-10 w-10 flex-shrink-0 rounded-full" />
                     </div>
                     <span class="text-xl font-bold text-white hidden sm:block drop-shadow">Family Fund</span>
                 </a>

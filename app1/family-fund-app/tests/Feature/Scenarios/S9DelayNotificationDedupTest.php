@@ -98,9 +98,8 @@ class S9DelayNotificationDedupTest extends TestCase
         $account->save();
 
         // Operator opts the line out of delay notifications.
-        // The column is non-fillable, so write directly.
-        \App\Models\AccountCreditLine::where('id', $line->id)
-            ->update(['delay_notification_enabled' => false]);
+        $line->delay_notification_enabled = false;
+        $line->save();
         $line->refresh();
 
         $firstRow = $this->s->rows($line)->first();

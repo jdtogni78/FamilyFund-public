@@ -96,18 +96,25 @@
         ->values()
         ->all();
 
-    $alignSeries = function (array $series) use ($allDates) {
+    // $stopAtLast: when true, emit null for every x-axis date after the
+    // series' last real data point instead of carrying the last value
+    // forward. The actual-repayments line uses this so it ends at the last
+    // actual payment rather than running flat to plan maturity — there have
+    // been no further repayments, so there is nothing to draw there. The
+    // plan line keeps the default carry-forward so it spans full length.
+    $alignSeries = function (array $series, bool $stopAtLast = false) use ($allDates) {
         $byDate = [];
         $last = null;
         foreach ($series as $p) {
             $byDate[$p['date']] = $p['cumulative_shares'];
         }
+        $lastDate = $series ? $series[count($series) - 1]['date'] : null;
         $out = [];
         foreach ($allDates as $d) {
             if (isset($byDate[$d])) {
                 $last = $byDate[$d];
             }
-            $out[] = $last;
+            $out[] = ($stopAtLast && $lastDate !== null && $d > $lastDate) ? null : $last;
         }
         return $out;
     };
@@ -132,7 +139,7 @@
     if (!empty($actual)) {
         $datasets[] = [
             'label'       => 'Actual repayments',
-            'data'        => $alignSeries($actual),
+            'data'        => $alignSeries($actual, true),
             'borderColor' => '#16a34a',
             'fill'        => false,
             'pointRadius' => 3,

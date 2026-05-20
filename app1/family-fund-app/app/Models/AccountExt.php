@@ -134,6 +134,36 @@ class AccountExt extends Account
         return $value;
     }
 
+    /**
+     * Gross OWN shares before subtracting borrowed (BOR) shares.
+     * Use sharesAsOf() for the spendable/available number.
+     */
+    public function sharesWithoutBorrowingAsOf($now) {
+        $accountBalances = $this->allSharesAsOf($now);
+        return isset($accountBalances['OWN']) ? (float) $accountBalances['OWN']->shares : 0;
+    }
+
+    /**
+     * Gross market value of OWN shares before subtracting borrowed shares.
+     * Use valueAsOf() for the spendable/available value.
+     */
+    public function valueWithoutBorrowingAsOf($now) {
+        return $this->shareValueAsOf($now) * $this->sharesWithoutBorrowingAsOf($now);
+    }
+
+    /**
+     * Shares the account currently owes against active credit lines.
+     * Mirrors the outstanding total tracked in account_balances rows where type='BOR'.
+     */
+    public function borrowedSharesAsOf($now) {
+        $accountBalances = $this->allSharesAsOf($now);
+        return isset($accountBalances['BOR']) ? (float) $accountBalances['BOR']->shares : 0;
+    }
+
+    public function borrowedValueAsOf($now) {
+        return $this->shareValueAsOf($now) * $this->borrowedSharesAsOf($now);
+    }
+
     public function shareValueAsOf($asOf) {
         /** @var FundExt $fund */
         $fund = $this->fund()->first();

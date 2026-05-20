@@ -78,7 +78,11 @@ class CreditLineUITourTest extends DuskTestCase
             // ── 08. Account page now (loans summary card has a line) ────
             $browser->visit('/accounts/' . self::ACCOUNT_ID)
                 ->pause(500)
-                ->screenshot('tour/08_account_page_after_open');
+                ->screenshot('tour/08_account_page_after_open')
+                // SHARES + Market Value tiles must subtract the 120 shares
+                // just borrowed and show a "borrowed" sub-line.
+                ->assertSee('borrowed')
+                ->assertSee('120.00 borrowed');
 
             // ── 09. First repay → show page ─────────────────────────────
             $page = new CreditLineShowPage($lineId);

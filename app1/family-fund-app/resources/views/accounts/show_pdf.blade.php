@@ -5,9 +5,13 @@
 @section('content')
     @php
         $account = $api['account'];
-        $shares = $account->balances['OWN']->shares ?? 0;
-        $marketValue = $account->balances['OWN']->market_value ?? 0;
-        $sharePrice = $shares > 0 ? $marketValue / $shares : 0;
+        $asOfDate = $api['asOf'] ?? now()->format('Y-m-d');
+        // SHARES / Market Value are net of outstanding credit-line shares (BOR balance).
+        $shares = $account->sharesAsOf($asOfDate);
+        $marketValue = $account->valueAsOf($asOfDate);
+        $sharePrice = $account->shareValueAsOf($asOfDate);
+        $borrowedShares = $account->borrowedSharesAsOf($asOfDate);
+        $borrowedValue = $account->borrowedValueAsOf($asOfDate);
         $matchingAvailable = $api['matching_available'] ?? 0;
         $goalsCount = count($account->goals);
 
@@ -90,10 +94,16 @@
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Market Value</div>
+                @if($borrowedShares > 0)
+                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;${{ number_format($borrowedValue, 0) }} borrowed</div>
+                @endif
             </td>
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Shares</div>
+                @if($borrowedShares > 0)
+                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;{{ number_format($borrowedShares, 2) }} borrowed</div>
+                @endif
             </td>
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>

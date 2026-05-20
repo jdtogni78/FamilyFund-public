@@ -13,10 +13,14 @@
 
             {{-- Account Highlights Card --}}
             @php
-                $balance = $account->balances['OWN'] ?? null;
-                $shares = $balance->shares ?? 0;
-                $marketValue = $balance->market_value ?? 0;
-                $sharePrice = $shares > 0 ? $marketValue / $shares : 0;
+                $asOfDate = $api['asOf'] ?? now()->format('Y-m-d');
+                // SHARES / Market Value are net of outstanding credit-line shares (BOR balance).
+                // The gross figures are available via sharesWithoutBorrowingAsOf/valueWithoutBorrowingAsOf.
+                $shares = $account->sharesAsOf($asOfDate);
+                $marketValue = $account->valueAsOf($asOfDate);
+                $sharePrice = $account->shareValueAsOf($asOfDate);
+                $borrowedShares = $account->borrowedSharesAsOf($asOfDate);
+                $borrowedValue = $account->borrowedValueAsOf($asOfDate);
                 $matchingAvailable = $api['matching_available'] ?? 0;
                 $goalsCount = $account->goals->count();
                 $disbursableValue = $api['disbursable']['value'] ?? 0;
@@ -65,10 +69,16 @@
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Market Value</div>
+                                    @if($borrowedShares > 0)
+                                        <div class="small text-danger" title="Subtracts ${{ number_format($borrowedValue, 0) }} of outstanding credit-line shares">−${{ number_format($borrowedValue, 0) }} borrowed</div>
+                                    @endif
                                 </div>
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Shares</div>
+                                    @if($borrowedShares > 0)
+                                        <div class="small text-danger" title="Subtracts {{ number_format($borrowedShares, 2) }} sh outstanding on credit lines">−{{ number_format($borrowedShares, 2) }} borrowed</div>
+                                    @endif
                                 </div>
                                 <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>

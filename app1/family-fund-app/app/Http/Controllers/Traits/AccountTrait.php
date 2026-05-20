@@ -7,6 +7,7 @@ use App\Mail\AccountQuarterlyReport;
 use App\Models\AccountExt;
 use App\Models\AssetExt;
 use App\Models\Utils;
+use App\Services\GoalCalculationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -132,34 +133,12 @@ trait AccountTrait
     }
     protected function createGoalsResponse(AccountExt $account, $asOf)
     {
+        $service = app(GoalCalculationService::class);
         $goals = $account->goals;
         foreach ($goals as $goal) {
             $goal->as_of = $asOf;
-            $start_value = $account->valueAsOf($goal->start_dt);
-            
-            $targetValue = 0;
-            if ($goal->target_type == GoalExt::TARGET_TYPE_TOTAL) {
-                $targetValue = $goal->target_amount;
-            } elseif ($goal->target_type == GoalExt::TARGET_TYPE_4PCT) {
-                $targetValue = $goal->target_amount / $goal->target_pct;
-            }
-            $value = $account->balances['OWN']->market_value;
-            $totalDays = $goal->start_dt->diffInDays($goal->end_dt);
-            $currentDays = $goal->start_dt->diffInDays(Carbon::now());
-            
-            $valuePerDay = max(0, ($targetValue - $start_value)) / $totalDays;
-            $expectedValue = $start_value + ($valuePerDay * $currentDays);
-            // Log::debug(json_encode([$goal->id, $goal->target_type, $value, $targetValue, $goal->target_pct, $start_value, $totalDays, $currentDays, $valuePerDay, $expectedValue]));
-
-            $g = [];
-            $g['period'] = [$currentDays, $totalDays, ($currentDays / $totalDays) * 100.0];
-            $g['start_value'] = $this->getGoalPct($start_value, $start_value, $targetValue, $goal->target_pct);
-            $g['current'] = $this->getGoalPct($value, $start_value, $targetValue, $goal->target_pct);
-            $g['expected'] = $this->getGoalPct($expectedValue, $start_value, $targetValue, $goal->target_pct);
-            $goal->progress = $g;
-
+            $goal->progress = $service->progressFor($account, $goal, $asOf);
         }
-
         return $goals;
     }
 

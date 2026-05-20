@@ -1063,6 +1063,7 @@
             <div class="row mb-4" id="section-credit-lines">
                 <div class="col">
                     @include('funds._credit_line_exposure', ['fund' => $fund ?? \App\Models\FundExt::find($api['id'])])
+                    @include('funds._admin_cash_position', ['fund' => $fund ?? \App\Models\FundExt::find($api['id'])])
                 </div>
             </div>
         </div>

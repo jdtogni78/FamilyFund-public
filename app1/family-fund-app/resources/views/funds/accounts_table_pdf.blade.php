@@ -77,9 +77,9 @@
         </tr>
         <tr style="background: #134e4a; color: #ffffff; font-weight: 700;">
             <td colspan="2" style="padding: 10px;">TOTAL</td>
-            <td class="col-number" style="padding: 10px;">{{ number_format($api['summary']['shares'], 2) }}</td>
+            <td class="col-number" style="padding: 10px;">{{ number_format($totalShares + $availableUnallocatedShares, 2) }}</td>
             <td class="col-number" style="padding: 10px;">{{ $loanedShares > 0 ? number_format($loanedShares, 2) : '-' }}</td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($api['summary']['value'], 2) }}</td>
+            <td class="col-number" style="padding: 10px;">${{ number_format($totalValue + $availableUnallocatedValue, 2) }}</td>
             <td class="col-number" style="padding: 10px;">{{ $loanedValue > 0 ? '$' . number_format($loanedValue, 2) : '-' }}</td>
             <td class="col-number" style="padding: 10px;">100.00%</td>
         </tr>

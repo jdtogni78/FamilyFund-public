@@ -95,10 +95,10 @@
             <tr class="table-total-row">
                 <th scope="row">Total</th>
                 <td></td>
-                <td>{{ number_format($totalShares, 2) }}</td>
+                <td>{{ number_format($allocatedShares + $availableUnallocatedShares, 2) }}</td>
                 <td>{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
                 <td>100.00%</td>
-                <td>${{ number_format(($allocatedValue + $borrowedValue + $availableUnallocatedValue), 2) }}</td>
+                <td>${{ number_format(($allocatedValue + $availableUnallocatedValue), 2) }}</td>
                 <td>{{ $borrowedValue > 0 ? '$' . number_format($borrowedValue, 2) : '-' }}</td>
             </tr>
         </tfoot>

@@ -64,18 +64,22 @@ class MatchResolutionServiceTest extends TestCase
 
     private function makeFlaggedRepTran(int $accountId, string $matchStatus): TransactionExt
     {
-        /** @var TransactionExt $tran */
-        $tran = Transaction::factory()->create([
-            'account_id'              => $accountId,
-            'type'                    => TransactionExt::TYPE_REPAY,
-            'status'                  => TransactionExt::STATUS_PENDING,
-            'shares'                  => 5.0,
-            'value'                   => 5.0,
-            'timestamp'               => '2026-05-01',
-            'credit_line_match_status' => $matchStatus,
-            'account_credit_line_id'  => null,
-        ]);
-        return $tran;
+        // Bypass the TransactionObserver so the matcher doesn't auto-classify this
+        // REP — the test needs the row in the literal flagged state we set here.
+        return TransactionExt::withoutEvents(function () use ($accountId, $matchStatus): TransactionExt {
+            /** @var TransactionExt $tran */
+            $tran = Transaction::factory()->create([
+                'account_id'              => $accountId,
+                'type'                    => TransactionExt::TYPE_REPAY,
+                'status'                  => TransactionExt::STATUS_PENDING,
+                'shares'                  => 5.0,
+                'value'                   => 5.0,
+                'timestamp'               => '2026-05-01',
+                'credit_line_match_status' => $matchStatus,
+                'account_credit_line_id'  => null,
+            ]);
+            return $tran;
+        });
     }
 
     // ── UC-31: Resolve ambiguous → sets manual + FK ───────────────────────────

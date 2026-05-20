@@ -49,19 +49,24 @@ class CreditLineClassifier implements Classifier
         $lineId   = $matchResult->creditLineId;
         $reason   = $matchResult->reason ?? '';
 
-        // Persist back to the transaction (only if values actually changed to avoid spurious updates).
-        $dirty = false;
-        if ($tran->credit_line_match_status !== $status) {
-            $tran->credit_line_match_status = $status;
-            $dirty = true;
-        }
-        if ($tran->account_credit_line_id !== $lineId) {
-            $tran->account_credit_line_id = $lineId;
-            $dirty = true;
-        }
-        if ($dirty) {
-            // Use saveQuietly if available (Laravel 8+) so no model events re-fire.
-            method_exists($tran, 'saveQuietly') ? $tran->saveQuietly() : $tran->save();
+        // Skip persistence when the matcher returned a no-op (FK already set
+        // or wrong type). Writing here would clobber the row's existing status
+        // — e.g. demote a MANUAL match back to AUTO_MATCHED on a re-entry.
+        if (!($matchResult->isNoOp ?? false)) {
+            // Persist back to the transaction (only if values actually changed to avoid spurious updates).
+            $dirty = false;
+            if ($tran->credit_line_match_status !== $status) {
+                $tran->credit_line_match_status = $status;
+                $dirty = true;
+            }
+            if ($tran->account_credit_line_id !== $lineId) {
+                $tran->account_credit_line_id = $lineId;
+                $dirty = true;
+            }
+            if ($dirty) {
+                // Use saveQuietly if available (Laravel 8+) so no model events re-fire.
+                method_exists($tran, 'saveQuietly') ? $tran->saveQuietly() : $tran->save();
+            }
         }
 
         // Convert match status string → DetectionResult factory method.

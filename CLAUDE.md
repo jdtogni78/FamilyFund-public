@@ -155,8 +155,14 @@ Backups saved to:
 Load prod to dev + anonymize (see README.md for full docs):
 ```bash
 mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod/familyfund_prod_data_*.sql
-mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod_to_dev.sql
+# Anonymize + apply pending migrations + seed permissions/QA users in one step.
+app1/family-fund-app/bin/prod-to-dev.sh
 ```
+
+`bin/prod-to-dev.sh` is the canonical entry point — it runs `database/prod_to_dev.sql`,
+`php artisan migrate --force`, and the `RolesAndPermissionsSeeder` + `QaTestUsersSeeder`
+seeders. Skipping it leaves the credit-line allocation tables un-migrated and the
+spatie permissions table empty.
 
 ## Code Generators
 

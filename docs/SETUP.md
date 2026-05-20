@@ -135,10 +135,16 @@ docker exec -it familyfund php artisan queue:work
 cd ~/dev/FamilyFund/app1/family-fund-app
 docker compose exec familyfund php artisan migrate:fresh
 mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod/familyfund_prod_data_YYYYMMDD.sql
-mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod_to_dev.sql
+# One-shot: anonymize + run pending migrations + seed permissions + seed QA users.
+app1/family-fund-app/bin/prod-to-dev.sh
 ```
 
-`prod_to_dev.sql` resets passwords (`devpassword123`), anonymizes names/emails, preserves `admin@dev.familyfund.local` and `claude@test.local`.
+`bin/prod-to-dev.sh` wraps `database/prod_to_dev.sql` plus the two artisan
+follow-ups a fresh prod dump otherwise misses (per
+[`docs/QA_BUGS_2026-05-19.md`](QA_BUGS_2026-05-19.md) #2 + #5): the credit-line
+backfill migration and the spatie permissions/QA-users seeders. The SQL itself
+resets passwords (`devpassword123`), anonymizes names/emails, and preserves
+`admin@dev.familyfund.local` and `claude@test.local`.
 
 ## 11. Deploy to prod (spirit, REDACTED_PROD_HOST)
 

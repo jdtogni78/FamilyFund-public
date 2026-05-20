@@ -1,3 +1,8 @@
+@php
+    $u = auth()->user();
+    $canFundUi = $u && method_exists($u, 'canAccessAnyFund') && $u->canAccessAnyFund();
+@endphp
+@if($canFundUi)
 <li class="nav-item nav-dropdown {{ Request::is('accounts*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-money"></i>
@@ -109,7 +114,7 @@
         <li class="nav-item {{ Request::is('credit-lines/payments') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('credit_lines.global_payments') }}">
                 <i class="nav-icon fa fa-calendar-check-o"></i>
-                <span>Receivables</span>
+                <span>Payments</span>
             </a>
         </li>
         <li class="nav-item {{ Request::is('credit-lines/resolve*') ? 'active' : '' }}">
@@ -210,6 +215,8 @@
         <span>Change Logs</span>
     </a>
 </li> -->
+@endif {{-- end fund-scoped menus --}}
+
 <li class="nav-item nav-dropdown {{ Request::is('people*') ? 'active' : '' }}">
     <a class="nav-link nav-dropdown-toggle" href="#">
         <i class="nav-icon fa fa-users"></i>

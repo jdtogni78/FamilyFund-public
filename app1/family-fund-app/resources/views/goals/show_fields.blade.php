@@ -21,10 +21,14 @@
         <div class="form-group mb-3">
             <label class="text-body-secondary"><i class="fa fa-calendar me-1"></i> Active Period:</label>
             <p class="mb-0">
-                {{ $goal->start_dt }} <i class="fa fa-arrow-right mx-2 text-body-secondary"></i> {{ $goal->end_dt }}
+                {{ \Illuminate\Support\Carbon::parse($goal->start_dt)->format('Y-m-d') }}
+                <i class="fa fa-arrow-right mx-2 text-body-secondary"></i>
+                {{ \Illuminate\Support\Carbon::parse($goal->end_dt)->format('Y-m-d') }}
                 @php
                     $now = now()->format('Y-m-d');
-                    $isActive = $now >= $goal->start_dt && $now <= $goal->end_dt;
+                    $startStr = \Illuminate\Support\Carbon::parse($goal->start_dt)->format('Y-m-d');
+                    $endStr   = \Illuminate\Support\Carbon::parse($goal->end_dt)->format('Y-m-d');
+                    $isActive = $now >= $startStr && $now <= $endStr;
                 @endphp
                 @if($isActive)
                     <span class="badge bg-success ms-2">Active</span>

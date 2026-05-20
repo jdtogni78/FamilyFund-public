@@ -3,8 +3,23 @@
         <li class="breadcrumb-item">{{ __('Dashboard') }}</li>
     </ol>
 
+    @php
+        // Gate fund-scoped sections behind any-fund access so a no-role user
+        // doesn't see links that 403 on click (QA_BUGS_2026-05-19 #7).
+        $u = auth()->user();
+        $canFundUi = $u && method_exists($u, 'canAccessAnyFund') && $u->canAccessAnyFund();
+    @endphp
+
     <div class="container-fluid py-4">
+        @unless($canFundUi || ($u && method_exists($u, 'isSystemAdmin') && $u->isSystemAdmin()))
+            <div class="alert alert-info mb-4">
+                Your account isn't linked to a fund yet. Ask an administrator to assign you a role
+                so you can view funds, accounts, transactions, and reports.
+            </div>
+        @endunless
+
         <div class="row g-4">
+            @if($canFundUi)
             <!-- Funds -->
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
@@ -83,7 +98,7 @@
                                 <i class="fa fa-credit-card text-teal-600 me-3" style="width: 20px;"></i>All Credit Lines
                             </a>
                             <a href="{{ route('credit_lines.global_payments') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="fa fa-calendar-check-o text-teal-600 me-3" style="width: 20px;"></i>Receivables
+                                <i class="fa fa-calendar-check-o text-teal-600 me-3" style="width: 20px;"></i>Payments
                             </a>
                             <a href="{{ route('credit_lines.resolve_index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fa fa-link text-teal-600 me-3" style="width: 20px;"></i>Match Resolution
@@ -136,6 +151,7 @@
                     </div>
                 </div>
             </div>
+            @endif {{-- end fund-scoped sections --}}
 
             <!-- Admin -->
             @if(auth()->user() && method_exists(auth()->user(), 'isSystemAdmin') && auth()->user()->isSystemAdmin())

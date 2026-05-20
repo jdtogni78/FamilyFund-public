@@ -102,6 +102,7 @@ $logout = function (Logout $logout) {
                 </button>
 
                 <!-- User Dropdown -->
+                @if(auth()->check())
                 <div class="hidden sm:block relative" x-data="{ userOpen: false }">
                     <button
                         @click="userOpen = !userOpen"
@@ -141,6 +142,11 @@ $logout = function (Logout $logout) {
                         </button>
                     </div>
                 </div>
+                @else
+                <a href="{{ route('login') }}" class="hidden sm:flex items-center px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors duration-150">
+                    <i class="fa fa-sign-in mr-2"></i>Sign in
+                </a>
+                @endif
 
                 <!-- Mobile Hamburger -->
                 <button
@@ -196,6 +202,7 @@ $logout = function (Logout $logout) {
             @endforeach
         </div>
 
+        @if(auth()->check())
         <!-- Mobile User Section -->
         <div class="border-t border-white/10 px-4 py-3">
             <div class="flex items-center space-x-3 mb-3">
@@ -216,5 +223,6 @@ $logout = function (Logout $logout) {
                 </button>
             </div>
         </div>
+        @endif
     </div>
 </nav>

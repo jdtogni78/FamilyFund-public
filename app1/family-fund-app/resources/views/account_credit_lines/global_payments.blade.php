@@ -2,13 +2,13 @@
 @section('content')
 <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ route('credit_lines.global_index') }}">Credit Lines</a></li>
-    <li class="breadcrumb-item active">Receivables</li>
+    <li class="breadcrumb-item active">Payments</li>
 </ol>
 <div class="container-fluid">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>
-                <strong>Receivables — all accounts</strong>
+                <strong>Payments — all accounts</strong>
                 <span class="text-muted small">
                     @if($status === 'open')
                         (scheduled / partial / late)

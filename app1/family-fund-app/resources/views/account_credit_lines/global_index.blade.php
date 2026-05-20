@@ -9,7 +9,7 @@
             <strong>Credit Lines — all accounts</strong>
             <div class="d-flex gap-2">
                 <a href="{{ route('credit_lines.global_payments') }}"
-                   class="btn btn-sm btn-outline-secondary">Receivables</a>
+                   class="btn btn-sm btn-outline-secondary">Payments</a>
                 <a href="{{ route('credit_lines.global_create') }}"
                    class="btn btn-sm btn-primary">
                     <i class="fa fa-plus"></i> Open new credit line
@@ -44,7 +44,7 @@
                 <tbody>
                 @foreach($lines as $line)
                     <tr>
-                        <td>{{ $line->id }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $line->nickname }}</td>
                         <td>
                             @if($line->account)
@@ -56,8 +56,8 @@
                             @endif
                         </td>
                         <td>{{ $line->status }}</td>
-                        <td>{{ number_format($line->principal_shares, 4) }}</td>
-                        <td>{{ number_format($line->outstanding_shares, 4) }}</td>
+                        <td>{{ number_format($line->principal_shares, 2) }}</td>
+                        <td>{{ number_format($line->outstanding_shares, 2) }}</td>
                         <td>{{ $line->term_months }} mo</td>
                         <td>{{ $line->payment_frequency }}</td>
                         <td>{{ optional($line->origination_date)->format('Y-m-d') }}</td>

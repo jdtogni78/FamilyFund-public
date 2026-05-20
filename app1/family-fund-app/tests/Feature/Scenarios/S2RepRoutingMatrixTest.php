@@ -10,7 +10,6 @@ use App\Models\TransactionExt;
 use App\Services\CreditLine\Matching\Contracts\ScheduleAdvancer;
 use App\Services\CreditLine\Matching\MatchResolutionService;
 use App\Services\CreditLine\Support\OutstandingCalculator;
-use App\Services\Detection\CreditLineClassifier;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
@@ -33,14 +32,10 @@ use Tests\TestCase;
  * NULL (so we can't go through RepayService, which pre-sets the FK and
  * bypasses the matcher).
  *
- * Wiring note: in AppServiceProvider, `Transaction::observe(TransactionObserver::class)`
- * registers the saved-event listener on the BASE Transaction model. Laravel
- * dispatches eloquent events keyed on the concrete class, so saves through
- * `TransactionExt::create()` / `$transactionExt->save()` (every production path
- * uses these) do NOT fire the observer. The detection pipeline therefore never
- * runs from a real save today — it must be invoked explicitly. This test
- * documents that by calling `CreditLineClassifier::classify($rep)` directly,
- * which is the same path the (currently-dead) observer would take.
+ * The TransactionObserver — registered on TransactionExt in AppServiceProvider —
+ * fires on every TransactionExt save and routes the row through
+ * CreditLineClassifier, so a plain `$tran->save()` with a null FK is enough
+ * to drive the matcher in tests.
  */
 class S2RepRoutingMatrixTest extends TestCase
 {
@@ -162,11 +157,9 @@ class S2RepRoutingMatrixTest extends TestCase
     }
 
     /**
-     * Build a REP transaction with account_credit_line_id = NULL, then invoke
-     * the CreditLineClassifier directly so the matcher runs against a fully-
-     * populated row (shares + value already set). See the class-level wiring
-     * note: the observer is registered on the wrong class, so explicit
-     * classification is needed to exercise the matcher in tests.
+     * Build a REP transaction with account_credit_line_id = NULL; the
+     * TransactionObserver fires on save and routes the row through the
+     * matcher.
      */
     private function makeUnassignedRep(\App\Models\AccountExt $account, float $shares): TransactionExt
     {
@@ -182,7 +175,6 @@ class S2RepRoutingMatrixTest extends TestCase
         $tran->account_credit_line_id = null;
         $tran->save();
 
-        app(CreditLineClassifier::class)->classify($tran);
         return $tran;
     }
 }

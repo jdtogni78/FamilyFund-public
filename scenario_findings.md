@@ -6,7 +6,18 @@ Pool slot for verification (if still leased): http://localhost:3024 — release 
 
 ---
 
-## Bug 1 — TransactionObserver never fires in production (HIGH impact)
+## Bug 1 — TransactionObserver never fires in production (HIGH impact) — ✅ FIXED 2026-05-20
+
+Resolved on the `bridge-cse` worktree. `AppServiceProvider::boot()` now registers
+`TransactionObserver` on `TransactionExt` (was on the base `Transaction`), so the
+detection pipeline fires on every prod save. The S2 test workaround was removed,
+and a latent secondary bug in `MatchResult::noOp` (which had been clobbering
+MANUAL → AUTO_MATCHED whenever the observer re-traversed a manually-resolved REP)
+was fixed by adding an `isNoOp` flag and skipping persistence in
+`CreditLineClassifier::mapAndPersist`. Verified via tinker + 214 credit-line
+tests pass (32 scenarios + 182 others).
+
+### Original report (for context)
 
 ### Symptom
 

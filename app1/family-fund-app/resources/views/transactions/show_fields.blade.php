@@ -1,5 +1,15 @@
 @php
-    $isDebit = $transaction->value < 0;
+    $shareOnly = (float) $transaction->value == 0.0 && (float) $transaction->shares != 0.0;
+    $imputedCash = null;
+    if ($shareOnly) {
+        $fund = $transaction->account?->fund;
+        if ($fund) {
+            $sharePrice = (float) $fund->shareValueAsOf($transaction->timestamp->toDateString());
+            $imputedCash = $sharePrice * (float) $transaction->shares;
+        }
+    }
+    $displayValue = $shareOnly && $imputedCash !== null ? $imputedCash : (float) $transaction->value;
+    $isDebit = $displayValue < 0;
     $typeClasses = [
         'PUR' => ['class' => 'badge-tx-purchase', 'label' => 'Purchase'],
         'INI' => ['class' => 'badge-tx-initial', 'label' => 'Initial'],
@@ -7,6 +17,7 @@
         'MAT' => ['class' => 'badge-tx-matching', 'label' => 'Matching'],
         'BOR' => ['class' => 'badge-tx-borrow', 'label' => 'Borrow'],
         'REP' => ['class' => 'badge-tx-repay', 'label' => 'Repay'],
+        'OWN' => ['class' => 'badge-tx-purchase', 'label' => 'Equity'],
     ];
     $tc = $typeClasses[$transaction->type] ?? ['class' => 'badge-gray', 'label' => $transaction->type];
 
@@ -37,8 +48,14 @@
                 <!-- Amount -->
                 <div class="text-center mb-4">
                     <span class="{{ $isDebit ? 'badge-negative' : 'badge-positive' }} badge-value-lg">
-                        {{ $isDebit ? '-' : '+' }}${{ number_format(abs($transaction->value), 2) }}
+                        {{ $isDebit ? '-' : '+' }}${{ number_format(abs($displayValue), 2) }}
                     </span>
+                    @if($shareOnly && $imputedCash !== null)
+                        <div class="small text-muted mt-1">
+                            imputed: {{ number_format(abs((float) $transaction->shares), 4) }} sh
+                            × ${{ number_format($imputedCash / max(abs((float) $transaction->shares), 1e-9), 4) }}/share
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Details Grid -->
@@ -120,12 +137,21 @@
     $balance = $transaction->balance;
     $prevShares = $balance->previousBalance?->shares ?? 0;
     $delta = $balance->shares - $prevShares;
+    $isDebtBucket = $balance->type === \App\Models\TransactionExt::TYPE_BORROW;
+    $deltaGood = $isDebtBucket ? ($delta <= 0) : ($delta >= 0);
+    $bucketTc = $typeClasses[$balance->type] ?? ['class' => 'badge-gray', 'label' => $balance->type];
+    $bucketTitle = $isDebtBucket ? 'Outstanding Debt Change' : 'Balance Change';
 @endphp
 <div class="row">
     <div class="col-md-12 mb-4">
         <div class="card">
-            <div class="card-header bg-light">
-                <i class="fa fa-chart-pie me-2"></i><strong>Balance Change</strong>
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fa fa-chart-pie me-2"></i><strong>{{ $bucketTitle }}</strong>
+                </div>
+                <span class="{{ $bucketTc['class'] }} text-sm px-3 py-1" title="Balance bucket">
+                    {{ $bucketTc['label'] }} bucket
+                </span>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-center py-3">
@@ -135,21 +161,26 @@
                         <div class="small text-muted">shares</div>
                     </div>
                     <div class="mx-4">
-                        <i class="fa fa-long-arrow-right fa-2x {{ $delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}"></i>
+                        <i class="fa fa-long-arrow-right fa-2x {{ $deltaGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}"></i>
                     </div>
                     <div class="text-center px-4">
                         <div class="text-muted small text-uppercase">After</div>
-                        <div class="fs-3 fw-bold {{ $delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+                        <div class="fs-3 fw-bold {{ $deltaGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                             {{ number_format($balance->shares, 4) }}
                         </div>
                         <div class="small fw-bold">shares</div>
                     </div>
                     <div class="ms-4">
-                        <span class="{{ $delta >= 0 ? 'badge-positive' : 'badge-negative' }} text-lg px-3 py-2">
+                        <span class="{{ $deltaGood ? 'badge-positive' : 'badge-negative' }} text-lg px-3 py-2">
                             {{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 4) }}
                         </span>
                     </div>
                 </div>
+                @if($isDebtBucket)
+                <div class="text-center text-muted small mb-1">
+                    Debt {{ $delta <= 0 ? 'paid down by' : 'increased by' }} {{ number_format(abs($delta), 4) }} shares
+                </div>
+                @endif
                 <div class="text-center text-muted small">
                     <i class="fa fa-calendar me-1"></i>Effective: {{ $balance->start_dt }}
                 </div>

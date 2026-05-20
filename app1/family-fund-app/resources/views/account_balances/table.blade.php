@@ -3,7 +3,7 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>Type</th>
+                <th>Bucket</th>
                 <th>Previous Id</th>
                 <th>Previous Shares</th>
                 <th>Shares</th>
@@ -16,10 +16,27 @@
             </tr>
         </thead>
         <tbody>
+        @php
+            $balanceTypeLabels = (\App\Models\TransactionExt::$typeMap ?? []) + ['OWN' => 'Equity'];
+            $balanceTypeBadges = [
+                'PUR' => 'badge-tx-purchase',
+                'INI' => 'badge-tx-initial',
+                'SAL' => 'badge-tx-sale',
+                'MAT' => 'badge-tx-matching',
+                'BOR' => 'badge-tx-borrow',
+                'REP' => 'badge-tx-repay',
+                'OWN' => 'badge-tx-purchase',
+            ];
+        @endphp
         @foreach($accountBalances as $accountBalance)
             <tr>
                 <td>{{ $accountBalance->id }}</td>
-                <td>{{ $accountBalance->type }}</td>
+                <td>
+                    <span class="{{ $balanceTypeBadges[$accountBalance->type] ?? 'badge-gray' }} text-sm px-2 py-1"
+                          title="{{ $accountBalance->type }} bucket">
+                        {{ $balanceTypeLabels[$accountBalance->type] ?? $accountBalance->type }}
+                    </span>
+                </td>
                 <td>{{ $accountBalance->previousBalance?->id }}</td>
                 <td>{{ $accountBalance->previousBalance?->shares }}</td>
                 <td>{{ $accountBalance->shares }}</td>

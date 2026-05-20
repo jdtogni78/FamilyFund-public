@@ -109,6 +109,31 @@ class CreditLineManualAllocationTest extends TestCase
         $this->assertSame(CreditLinePayment::STATUS_PAID, $row0->refresh()->status);
     }
 
+    public function test_under_allocation_is_rejected_and_leaves_ledger_unchanged(): void
+    {
+        [$line, $tran, $rows] = $this->lineWithOnePayment();
+        $row0 = $rows->get(0);
+        $row2 = $rows->get(2);
+
+        // 10-share payment but caller only places 4 → server must reject
+        // (strict balance: every share must land on a row).
+        $response = $this->actingAs($this->scenario->admin)
+            ->post(route('credit_lines.payments.allocate', [
+                'line' => $line->id, 'transaction' => $tran->id,
+            ]), ['allocations' => [$row2->id => 4.0]]);
+
+        $response->assertRedirect(route('credit_lines.payments.allocate_form', [
+            'line' => $line->id, 'transaction' => $tran->id,
+        ]));
+
+        // Original auto-cascade allocation (10 on row 0) is untouched.
+        $this->assertEqualsWithDelta(10.0, (float) CreditLinePaymentAllocation::where('transaction_id', $tran->id)
+            ->where('credit_line_payment_id', $row0->id)->sum('shares'), 1e-4);
+        $this->assertSame(0, CreditLinePaymentAllocation::where('transaction_id', $tran->id)
+            ->where('credit_line_payment_id', $row2->id)->count());
+        $this->assertSame(CreditLinePayment::STATUS_PAID, $row0->refresh()->status);
+    }
+
     public function test_non_admin_cannot_allocate(): void
     {
         [$line, $tran] = $this->lineWithOnePayment();

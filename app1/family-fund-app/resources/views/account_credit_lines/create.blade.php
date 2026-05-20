@@ -71,10 +71,10 @@
                            id="principal_shares" required>
                     <div class="form-text">
                         Available to borrow as of <span id="available-date">{{ \Illuminate\Support\Carbon::today()->toDateString() }}</span>:
-                        <strong id="available-shares">{{ number_format($available, 4) }}</strong> shares
+                        <strong id="available-shares">{{ $account ? number_format($available, 4) : '—' }}</strong> shares
                         <span id="available-loading" class="text-muted" style="display:none;">(updating…)</span>
                     </div>
-                    <div class="invalid-feedback d-block" id="over-borrow-warning" style="display:none;">
+                    <div class="invalid-feedback" id="over-borrow-warning">
                         Requested principal exceeds the available-to-borrow balance for this date.
                     </div>
                 </div>
@@ -176,14 +176,24 @@
             var req = parseFloat(principal.value);
             var over = !isNaN(req) && req > available;
             principal.classList.toggle('is-invalid', over);
-            if (overWarn) overWarn.style.display = over ? '' : 'none';
+            if (overWarn) overWarn.classList.toggle('d-block', over);
             if (submitBtn) submitBtn.disabled = over;
         }
 
         function fetchAvailable() {
             if (!input || !input.value) return;
+            // Reflect the user's picked date immediately, even before (or
+            // without) a successful fetch.
+            if (availDate) availDate.textContent = input.value;
             var acct = accountId();
-            if (globalMode && !acct) return; // no account chosen yet
+            if (globalMode && !acct) {
+                // No account → nothing to query. Show a placeholder so the
+                // readout doesn't look like a stale "0.0000 shares today".
+                if (availEl) availEl.textContent = '—';
+                available = 0;
+                syncOverBorrow();
+                return;
+            }
             if (loading) loading.style.display = '';
             var url = availUrl + '?as_of=' + encodeURIComponent(input.value);
             if (globalMode) url += '&account=' + encodeURIComponent(acct);

@@ -79,7 +79,7 @@ class TrajectoryBuilderTest extends TestCase
         // 3 repayments of 5 shares each, 30 days apart.
         $start = Carbon::parse('2026-01-15');
         for ($i = 0; $i < 3; $i++) {
-            Transaction::factory()->for($account, 'account')->create([
+            $tran = Transaction::factory()->for($account, 'account')->create([
                 'type'      => TransactionExt::TYPE_REPAY,
                 'status'    => TransactionExt::STATUS_CLEARED,
                 'value'     => 50,
@@ -87,6 +87,13 @@ class TrajectoryBuilderTest extends TestCase
                 'reversed'  => false,
                 'timestamp' => $start->copy()->addDays(30 * $i),
                 'account_credit_line_id' => $line->id,
+            ]);
+            CreditLinePayment::create([
+                'account_credit_line_id' => $line->id,
+                'due_date'               => $start->copy()->addDays(30 * $i)->toDateString(),
+                'shares_due'             => 5,
+                'status'                 => CreditLinePayment::STATUS_PAID,
+                'paid_transaction_id'    => $tran->id,
             ]);
         }
         $line->update(['outstanding_shares' => 85.0]);
@@ -98,10 +105,50 @@ class TrajectoryBuilderTest extends TestCase
         $this->assertNotNull($traj['projected_payoff_date']);
     }
 
+    public function test_actual_repayments_include_only_confirmed_schedule_payments(): void
+    {
+        $line = $this->makeLine(100.0, 10);
+        $account = $this->factory->userAccount;
+
+        $confirmed = Transaction::factory()->for($account, 'account')->create([
+            'type'      => TransactionExt::TYPE_REPAY,
+            'status'    => TransactionExt::STATUS_CLEARED,
+            'value'     => 50,
+            'shares'    => 5,
+            'reversed'  => false,
+            'timestamp' => Carbon::parse('2026-01-15'),
+            'account_credit_line_id' => $line->id,
+        ]);
+
+        Transaction::factory()->for($account, 'account')->create([
+            'type'      => TransactionExt::TYPE_REPAY,
+            'status'    => TransactionExt::STATUS_CLEARED,
+            'value'     => 70,
+            'shares'    => 7,
+            'reversed'  => false,
+            'timestamp' => Carbon::parse('2026-02-15'),
+            'account_credit_line_id' => $line->id,
+        ]);
+
+        CreditLinePayment::create([
+            'account_credit_line_id' => $line->id,
+            'due_date'               => '2026-01-15',
+            'shares_due'             => 5,
+            'status'                 => CreditLinePayment::STATUS_PAID,
+            'paid_transaction_id'    => $confirmed->id,
+        ]);
+
+        $traj = $this->builder->build($line);
+
+        $this->assertSame([
+            ['date' => '2026-01-15', 'cumulative_shares' => 5.0],
+        ], $traj['actual_repayments']);
+    }
+
     public function test_single_repayment_no_projection(): void
     {
         $line = $this->makeLine(100.0, 12);
-        Transaction::factory()->for($this->factory->userAccount, 'account')->create([
+        $tran = Transaction::factory()->for($this->factory->userAccount, 'account')->create([
             'type'      => TransactionExt::TYPE_REPAY,
             'status'    => TransactionExt::STATUS_CLEARED,
             'value'     => 100,
@@ -109,6 +156,13 @@ class TrajectoryBuilderTest extends TestCase
             'reversed'  => false,
             'timestamp' => Carbon::parse('2026-02-01'),
             'account_credit_line_id' => $line->id,
+        ]);
+        CreditLinePayment::create([
+            'account_credit_line_id' => $line->id,
+            'due_date'               => '2026-02-01',
+            'shares_due'             => 10,
+            'status'                 => CreditLinePayment::STATUS_PAID,
+            'paid_transaction_id'    => $tran->id,
         ]);
 
         $traj = $this->builder->build($line);

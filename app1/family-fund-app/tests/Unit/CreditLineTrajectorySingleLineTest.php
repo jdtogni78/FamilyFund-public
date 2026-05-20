@@ -205,8 +205,10 @@ class CreditLineTrajectorySingleLineTest extends TestCase
         // The legacy adjusted_at-spliced baseline (40 → 30) must NOT appear.
         $this->assertNotContains(30, $plan);
 
-        // Actual repayments anchored at origination 0, carried forward.
-        $this->assertSame([0, 0, 20, 20, 20, 20], $byLabel['Actual repayments']);
+        // Actual repayments anchored at origination 0, then 20 at 02-10, then
+        // stop — the 03-01 / 05-01 / 06-01 plan dates carry no flat tail
+        // (the actual line ends at the last real payment).
+        $this->assertSame([0, 0, 20, null, null, null], $byLabel['Actual repayments']);
     }
 
     /**
@@ -245,8 +247,9 @@ class CreditLineTrajectorySingleLineTest extends TestCase
         // 2026-01-01, 02-01, 02-15, 03-01
         // Plan starts at the origination 0, then 20, carried to 02-15, then 40.
         $this->assertSame([0, 20, 20, 40], $byLabel['Scheduled plan']);
-        // Actual also anchored at the origination 0, flat until the repayment.
-        $this->assertSame([0, 0, 15, 15], $byLabel['Actual repayments']);
+        // Actual anchored at the origination 0, flat until the repayment,
+        // then stops — the 2026-03-01 plan date carries no flat tail.
+        $this->assertSame([0, 0, 15, null], $byLabel['Actual repayments']);
     }
 
     /**
@@ -277,6 +280,49 @@ class CreditLineTrajectorySingleLineTest extends TestCase
 
         $byLabel = array_column($datasets, 'data', 'label');
         $this->assertSame([20, 40], $byLabel['Scheduled plan']);
+    }
+
+    /**
+     * The actual line must STOP at the last real payment, not run flat to
+     * plan maturity. The plan dates that extend past the final repayment
+     * carry a null (line ends) rather than the carried-forward last value.
+     */
+    public function test_actual_line_stops_at_last_actual_payment(): void
+    {
+        $datasets = $this->datasets([
+            'original_plan' => [
+                ['date' => '2026-01-01', 'cumulative_shares' => 0],
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+                ['date' => '2026-04-01', 'cumulative_shares' => 60],
+            ],
+            'historical_plans' => [],
+            'current_plan' => [
+                ['date' => '2026-01-01', 'cumulative_shares' => 0],
+                ['date' => '2026-02-01', 'cumulative_shares' => 20],
+                ['date' => '2026-03-01', 'cumulative_shares' => 40],
+                ['date' => '2026-04-01', 'cumulative_shares' => 60],
+            ],
+            'actual_repayments' => [
+                ['date' => '2026-02-01', 'cumulative_shares' => 18],
+                ['date' => '2026-03-01', 'cumulative_shares' => 33],
+            ],
+            'expected_to_date' => [],
+            'overdue_shares' => 0,
+            'overdue_installments' => 0,
+            'as_of' => '2026-03-10',
+            'projected_payoff_date' => null,
+            'planned_payoff_date' => '2026-04-01',
+            'variance_days' => null,
+        ]);
+
+        $byLabel = array_column($datasets, 'data', 'label');
+
+        // x-axis = sorted union: 2026-01-01, 02-01, 03-01, 04-01.
+        // Plan runs its full length; actual stops at the last payment
+        // (2026-03-01), so 2026-04-01 is null — no flat tail to maturity.
+        $this->assertSame([0, 20, 40, 60], $byLabel['Scheduled plan']);
+        $this->assertSame([null, 18, 33, null], $byLabel['Actual repayments']);
     }
 
     /**

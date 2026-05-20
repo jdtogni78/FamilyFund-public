@@ -192,13 +192,20 @@ class CreditLineTrajectorySingleLineTest extends TestCase
         // x-axis = origination + sorted union of plan + actual dates:
         // 2026-01-01, 02-01, 02-10, 03-01, 05-01, 06-01
         // Plan: anchored at origination 0, then the continuous effective_plan
-        // (20, 40, 50, 60) carried forward across the gaps.
+        // (20, 40, 50, 60) emitted ONLY at its own scheduled dates. The
+        // 2026-02-10 column (an actual-only date) is null so Chart.js
+        // spanGaps draws a direct incline from 20 → 40 rather than a
+        // plateau-then-jump.
         $plan = $byLabel['Scheduled plan'];
-        $this->assertSame([0, 20, 20, 40, 50, 60], $plan);
+        $this->assertSame([0, 20, null, 40, 50, 60], $plan);
 
-        // Monotonic non-decreasing — the readjust must not introduce a dip.
+        // Monotonic non-decreasing across the known points — the readjust
+        // must not introduce a dip. Skip nulls (gaps the chart spans).
         $prev = -INF;
         foreach ($plan as $v) {
+            if ($v === null) {
+                continue;
+            }
             $this->assertGreaterThanOrEqual($prev, $v, 'plan line must never dip');
             $prev = $v;
         }
@@ -245,8 +252,10 @@ class CreditLineTrajectorySingleLineTest extends TestCase
 
         // x-axis = origination + sorted union of plan + actual dates:
         // 2026-01-01, 02-01, 02-15, 03-01
-        // Plan starts at the origination 0, then 20, carried to 02-15, then 40.
-        $this->assertSame([0, 20, 20, 40], $byLabel['Scheduled plan']);
+        // Plan starts at the origination 0, then 20 at its scheduled 02-01,
+        // null at the actual-only 02-15 (spanGaps draws a direct incline
+        // through to the next scheduled point), then 40 at 03-01.
+        $this->assertSame([0, 20, null, 40], $byLabel['Scheduled plan']);
         // Actual anchored at the origination 0, flat until the repayment,
         // then stops — the 2026-03-01 plan date carries no flat tail.
         $this->assertSame([0, 0, 15, null], $byLabel['Actual repayments']);

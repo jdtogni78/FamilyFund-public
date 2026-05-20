@@ -303,16 +303,6 @@ class AccountCreditLineControllerExt extends AppBaseController
         } catch (OverBorrowException $e) {
             Flash::error($e->getMessage());
             return redirect()->back()->withInput();
-        } catch (InvalidArgumentException $e) {
-            // OutstandingCalculator's backdate guard: the chosen date predates
-            // an existing open BOR balance row for this account. FF cannot
-            // splice a draw before already-recorded borrow history.
-            Flash::error(
-                'Cannot backdate to ' . $originationDate?->toDateString()
-                . ': the account already has recorded borrow activity on or after that date. '
-                . 'Choose a later origination date. (' . $e->getMessage() . ')'
-            );
-            return redirect()->back()->withInput();
         }
 
         if ($isBackdated) {

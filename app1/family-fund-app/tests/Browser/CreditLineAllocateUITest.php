@@ -98,7 +98,7 @@ class CreditLineAllocateUITest extends DuskTestCase
     }
 
     /**
-     * Open a fresh credit line (60 sh / 6 mo monthly → 6 × 10 sh rows) via
+     * Open a fresh loan share (60 sh / 6 mo monthly → 6 × 10 sh rows) via
      * the UI, then repay 30 sh through the service so we have a REP txn with
      * a known multi-row allocation to re-allocate against. Returns [lineId, tranId].
      */

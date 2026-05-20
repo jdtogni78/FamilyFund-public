@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * UC-50: Quarterly per-account credit-line status digest.
+ * UC-50: Quarterly per-account loan-share status digest.
  *
  * One email per account aggregating every active line: the LoansSummaryBuilder
  * snapshot plus a trajectory-only forecast (expected-vs-actual, overdue backlog,

@@ -26,7 +26,7 @@ class CreditLineUITourTest extends DuskTestCase
     public function test_ui_tour_of_credit_line_flow(): void
     {
         $this->browse(function (Browser $browser) {
-            // ── 01. Account page before any credit line ──────────────────
+            // ── 01. Account page before any loan share ──────────────────
             $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID)
                 ->pause(500)
                 ->screenshot('tour/01_account_page_before')
@@ -63,7 +63,7 @@ class CreditLineUITourTest extends DuskTestCase
             $lineId = (int) $m[1];
 
             // ── 05. Show page right after open ──────────────────────────
-            $browser->waitForText('Credit Line #' . $lineId, 5)
+            $browser->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/05_show_page_just_opened');
 
             // Scroll down to capture below-the-fold sections
@@ -78,22 +78,26 @@ class CreditLineUITourTest extends DuskTestCase
             // ── 08. Account page now (loans summary card has a line) ────
             $browser->visit('/accounts/' . self::ACCOUNT_ID)
                 ->pause(500)
-                ->screenshot('tour/08_account_page_after_open');
+                ->screenshot('tour/08_account_page_after_open')
+                // SHARES + Market Value tiles must subtract the 120 shares
+                // just borrowed and show a "borrowed" sub-line.
+                ->assertSee('borrowed')
+                ->assertSee('120.00 borrowed');
 
             // ── 09. First repay → show page ─────────────────────────────
             $page = new CreditLineShowPage($lineId);
             $browser->visit($page->url())
-                ->waitForText('Credit Line #' . $lineId, 5);
+                ->waitForText('Loan Share #' . $lineId, 5);
 
             $browser->type('form[action$="/repay"] input[name="shares"]', '20')
                 ->press('Record repayment')
-                ->waitForText('Credit Line #' . $lineId, 5)
+                ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/09_show_after_first_repay');
 
             // ── 10. Second repay (different size, partial) ──────────────
             $browser->type('form[action$="/repay"] input[name="shares"]', '15')
                 ->press('Record repayment')
-                ->waitForText('Credit Line #' . $lineId, 5)
+                ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/10_show_after_second_repay');
 
             // Scroll for schedule
@@ -106,7 +110,7 @@ class CreditLineUITourTest extends DuskTestCase
             $browser->pause(150);
             $browser->type('form[action$="/readjust"] input[name="new_term_months"]', '12')
                 ->press('Readjust')
-                ->waitForText('Credit Line #' . $lineId, 5)
+                ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/12_show_after_readjust');
 
             $browser->script("window.scrollTo(0, 800);");
@@ -161,7 +165,7 @@ class CreditLineUITourTest extends DuskTestCase
                 );
                 $browser->pause(800);
                 $browser->visit($page->url())
-                    ->waitForText('Credit Line #' . $lineId, 5)
+                    ->waitForText('Loan Share #' . $lineId, 5)
                     ->screenshot('tour/17_show_after_reverse');
             }
 

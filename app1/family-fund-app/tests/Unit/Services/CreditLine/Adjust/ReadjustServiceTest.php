@@ -97,7 +97,7 @@ class ReadjustServiceTest extends TestCase
     }
 
     /**
-     * Create a BOR transaction linked to a credit line and a balance row.
+     * Create a BOR transaction linked to a loan share and a balance row.
      */
     private function createBorTransaction(AccountCreditLine $line, float $shares): TransactionExt
     {
@@ -118,7 +118,7 @@ class ReadjustServiceTest extends TestCase
     }
 
     /**
-     * Create a REP transaction linked to a credit line.
+     * Create a REP transaction linked to a loan share.
      */
     private function createRepTransaction(AccountCreditLine $line, float $shares): TransactionExt
     {

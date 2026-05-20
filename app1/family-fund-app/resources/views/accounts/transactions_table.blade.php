@@ -15,6 +15,24 @@
         TransactionExt::STATUS_CLEARED => ['class' => 'badge-status-cleared'],
         TransactionExt::STATUS_SCHEDULED => ['class' => 'badge-status-scheduled'],
     ];
+
+    $runningOwnShares = 0;
+    $runningBorrowedShares = 0;
+    $runningBalancesByTransaction = [];
+    foreach ($api['transactions'] as $transactionForBalance) {
+        $bucket = $transactionForBalance->balance?->type;
+        if ($bucket === 'OWN') {
+            $runningOwnShares = (float) $transactionForBalance->balance->shares;
+        } elseif ($bucket === 'BOR') {
+            $runningBorrowedShares = (float) $transactionForBalance->balance->shares;
+        }
+
+        $runningBalancesByTransaction[$transactionForBalance->id] = [
+            'own' => $runningOwnShares,
+            'borrowed' => $runningBorrowedShares,
+            'net' => $runningOwnShares - $runningBorrowedShares,
+        ];
+    }
 @endphp
 
 <div class="table-responsive-sm">
@@ -29,7 +47,9 @@
                 <th class="text-end">Share Price</th>
                 <th class="text-end">Shares</th>
                 <th class="text-end">Current Value</th>
-                <th class="text-end">Balance</th>
+                <th class="text-end">OWN</th>
+                <th class="text-end">BOR</th>
+                <th class="text-end">Net Balance</th>
                 <th>Notes</th>
                 <th></th>
             </tr>
@@ -40,6 +60,7 @@
                 $typeStyle = $typeClasses[$trans->type] ?? ['class' => 'badge-gray', 'icon' => 'fa-circle'];
                 $statusStyle = $statusClasses[$trans->status] ?? ['class' => 'badge-gray'];
                 $perfValue = floatval($trans->current_performance ?? 0);
+                $runningBalance = $runningBalancesByTransaction[$trans->id] ?? ['own' => 0, 'borrowed' => 0, 'net' => 0];
             @endphp
             <tr>
                 <td><small class="text-muted">{{ $trans->id }}</small></td>
@@ -72,7 +93,9 @@
                         (@if($perfValue >= 0)+@endif{{ number_format($perfValue, 1) }}%)
                     </small>
                 </td>
-                <td class="text-end">{{ number_format($trans->balance?->shares ?? 0, 2) }}</td>
+                <td class="text-end">{{ number_format($runningBalance['own'], 2) }}</td>
+                <td class="text-end">{{ number_format($runningBalance['borrowed'], 2) }}</td>
+                <td class="text-end fw-semibold">{{ number_format($runningBalance['net'], 2) }}</td>
                 <td>
                     @isset($trans->reference_transaction)
                         <small class="text-muted">

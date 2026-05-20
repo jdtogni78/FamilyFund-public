@@ -126,9 +126,15 @@ class ScanJobsTest extends TestCase
         $dueDate = Carbon::today()->subDays(3)->toDateString();
         $payment = $this->makePayment($line, $dueDate, CreditLinePayment::STATUS_LATE);
 
-        // Simulate that the cap (default=6) has already been reached
-        $cacheKey = "credit_line_delay_count_{$payment->id}";
-        Cache::put($cacheKey, 6, now()->addDays(365));
+        // Simulate that the cap (default=6) has already been reached.
+        for ($i = 1; $i <= 6; $i++) {
+            \App\Models\CreditLineDelayNotification::create([
+                'credit_line_payment_id' => $payment->id,
+                'notification_number'    => $i,
+                'sent_at'                => now()->subDays(7 * (6 - $i)),
+                'recipient_email'        => 'test@example.com',
+            ]);
+        }
 
         (new ScanLatePaymentsJob(Carbon::today()))->handle();
 
@@ -149,11 +155,45 @@ class ScanJobsTest extends TestCase
         // Send the first notification
         (new ScanLatePaymentsJob(Carbon::today()))->handle();
 
-        $cacheKey = "credit_line_delay_count_{$payment->id}";
-        $this->assertSame(1, (int) Cache::get($cacheKey));
+        $this->assertSame(
+            1,
+            \App\Models\CreditLineDelayNotification::where('credit_line_payment_id', $payment->id)->count()
+        );
 
         Mail::assertSent(DelayNotificationMail::class, function ($mail) use ($payment) {
             return $mail->payment->id === $payment->id && $mail->notificationCount === 1;
         });
+    }
+
+    // ── Issue #7: notification counter must survive cache flush ───────────────
+
+    /**
+     * If the cache is evicted between runs the job must NOT re-send a
+     * notification it has already sent. The DB ledger is the unit of truth.
+     */
+    public function test_scan_late_payments_does_not_resend_after_cache_flush(): void
+    {
+        Mail::fake();
+        Cache::flush();
+
+        $line    = $this->makeActiveLine();
+        // Use a single date so the expected/sent counts stay aligned. With
+        // a 3-day grace + 7-day repeat, day-3 is the first notification.
+        $today   = Carbon::today();
+        $dueDate = $today->copy()->subDays(3)->toDateString();
+        $payment = $this->makePayment($line, $dueDate, CreditLinePayment::STATUS_LATE);
+
+        // First run sends notification #1.
+        (new ScanLatePaymentsJob($today))->handle();
+        Mail::assertSent(DelayNotificationMail::class, fn ($m) => $m->payment->id === $payment->id);
+
+        // Simulate cache eviction / multi-worker fresh state.
+        Cache::flush();
+
+        // Re-run on the same day. Without a DB ledger the cache-flushed
+        // counter resets to 0 and the job re-sends notification #1.
+        Mail::fake();
+        (new ScanLatePaymentsJob($today))->handle();
+        Mail::assertNotSent(DelayNotificationMail::class, fn ($m) => $m->payment->id === $payment->id);
     }
 }

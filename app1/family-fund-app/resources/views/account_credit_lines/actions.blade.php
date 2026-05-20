@@ -7,7 +7,7 @@
     </li>
     @endif
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Credit Line #{{ $line->id }}</a>
+        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Loan Share #{{ $line->id }}</a>
     </li>
     <li class="breadcrumb-item active">Admin actions</li>
 </ol>
@@ -17,7 +17,7 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Credit Line #{{ $line->id }} &mdash; admin actions</strong>
+            <strong>Loan Share #{{ $line->id }} &mdash; admin actions</strong>
             <span class="badge bg-info">{{ $line->status }}</span>
         </div>
         <div class="card-body">
@@ -74,7 +74,7 @@
                 <div class="col-md-4">
                     <form method="POST"
                           action="{{ route('credit_lines.cancel', ['line' => $line->id]) }}"
-                          onsubmit="return confirm('Cancel this credit line?');">
+                          onsubmit="return confirm('Cancel this loan share?');">
                         @csrf
                         <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
                         <label class="form-label">Danger zone</label>
@@ -91,7 +91,7 @@
             @php
                 // Only paid rows surface here — they're the ones admins can
                 // edit or reverse. New payments go through the "Make payment"
-                // button on the credit-line show page (oldest-first cascade);
+                // button on the loan-share show page (oldest-first cascade);
                 // cross-row reallocation is reached via the per-allocation
                 // slider on the show page.
                 $shownRows = $schedule->filter(fn($r) => $r->status === 'paid');
@@ -130,9 +130,9 @@
         </div>
     </div>
     @else
-        <p class="text-muted">This credit line is <strong>{{ $line->status }}</strong> — no admin actions available.</p>
+        <p class="text-muted">This loan share is <strong>{{ $line->status }}</strong> — no admin actions available.</p>
     @endif
 
-    <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}" class="btn btn-secondary">Back to credit line</a>
+    <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}" class="btn btn-secondary">Back to loan share</a>
 </div>
 </x-app-layout>

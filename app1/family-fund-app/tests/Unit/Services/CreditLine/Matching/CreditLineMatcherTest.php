@@ -43,7 +43,7 @@ class CreditLineMatcherTest extends TestCase
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
-     * Create an active credit line on the user account.
+     * Create an active loan share on the user account.
      *
      * @param  float  $outstanding  outstanding_shares value
      * @param  float  $principal    principal_shares value (defaults to outstanding)

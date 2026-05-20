@@ -17,12 +17,12 @@ use Tests\DuskTestCase;
  *  - Validation errors on bad input (tests 2–3)
  *  - Over-borrow rejection (test 4)
  *  - Cancel blocked when outstanding (test 5)
- *  - Account closure blocked by active credit line (test 6)
+ *  - Account closure blocked by active loan share (test 6)
  *  - No-change readjust surfaces error (test 7)
  *  - Double-reverse rejection (test 8)
  *
  * Uses account 7 (Acct7) against the live dev DB.
- * Each test cleans up credit lines it creates in tearDown / try-finally.
+ * Each test cleans up loan shares it creates in tearDown / try-finally.
  */
 class CreditLineNegativeUITest extends DuskTestCase
 {
@@ -174,7 +174,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     }
 
     // ---------------------------------------------------------------
-    // Test 6: Account show blocked when active credit line exists
+    // Test 6: Account show blocked when active loan share exists
     // ---------------------------------------------------------------
 
     public function test_account_show_blocked_when_active_credit_line_exists(): void
@@ -265,7 +265,7 @@ class CreditLineNegativeUITest extends DuskTestCase
             // Repay something to create a REP transaction.
             $page->repay($browser, 10.0);
             $browser->on($page)
-                ->assertSee('Credit Line #' . $lineId)
+                ->assertSee('Loan Share #' . $lineId)
                 ->screenshot('negative/08a_after_repay');
 
             $repTx = TransactionExt::where('account_credit_line_id', $lineId)
@@ -298,7 +298,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     // ------------------------------------------------------------------
 
     /**
-     * Drive the "new credit line" form and return the new line's id.
+     * Drive the "new loan share" form and return the new line's id.
      */
     private function openLineViaUi(
         Browser $browser,
@@ -389,15 +389,15 @@ class CreditLineNegativeUITest extends DuskTestCase
                 || stripos($source, 'unauthorized') !== false;
             $this->assertTrue($blocked, 'Non-admin GET /accounts/{id}/credit-lines should be 403.');
             // Belt-and-suspenders: a future regression that drops the 403 but
-            // still 200s with the admin UI must NOT leak the "New credit line"
+            // still 200s with the admin UI must NOT leak the "New loan share"
             // button or any active-line metadata.
-            $browser->assertDontSee('New credit line');
+            $browser->assertDontSee('New loan share');
         });
     }
 
     public function test_non_admin_cannot_get_credit_line_show(): void
     {
-        // Find any existing credit line (the dev DB normally has a few from the
+        // Find any existing loan share (the dev DB normally has a few from the
         // happy-path tour; fall back to a synthetic id which will 404 — also a
         // valid non-200 outcome and still proves the page is not viewable).
         $line = AccountCreditLine::orderByDesc('id')->first();
@@ -468,7 +468,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     }
 
     /**
-     * Soft-cancel a credit line to avoid polluting dev data.
+     * Soft-cancel a loan share to avoid polluting dev data.
      */
     private function cleanupLine(?int $lineId): void
     {

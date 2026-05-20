@@ -3,8 +3,10 @@
 namespace Tests\Unit;
 
 use App\Models\AccountExt;
+use App\Models\AccountBalance;
 use App\Models\FundExt;
 use App\Models\PortfolioExt;
+use App\Models\TransactionExt;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\DataFactory;
 use Tests\TestCase;
@@ -75,6 +77,26 @@ class FundExtTest extends TestCase
         $this->assertIsNumeric($result);
     }
 
+    public function test_fund_size_ignores_borrowed_shares_on_fund_account()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $fundAccount = $fund->account();
+        $transaction = $this->factory->createTransaction(0, $fundAccount, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+
+        AccountBalance::factory()
+            ->for($transaction, 'transaction')
+            ->for($fundAccount, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 25,
+            ]);
+
+        $this->assertEquals(1000, $fund->sharesAsOf('2022-06-01'));
+    }
+
     public function test_value_as_of_returns_value()
     {
         $fund = FundExt::find($this->factory->fund->id);
@@ -134,6 +156,55 @@ class FundExtTest extends TestCase
         // Total shares (1000) - allocated (50) = 950
         $expected = 1000 - 50;
         $this->assertEquals($expected, $result);
+    }
+
+    public function test_borrowed_user_shares_return_to_unallocated_without_changing_fund_size()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $account = $this->factory->userAccount;
+
+        $ownTransaction = $this->factory->createTransaction(1000, $account, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_CLEARED, null, '2022-01-15');
+        $this->factory->createBalance(100, $ownTransaction, $account, '2022-01-15');
+
+        $borrowTransaction = $this->factory->createTransaction(0, $account, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+        AccountBalance::factory()
+            ->for($borrowTransaction, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 40,
+            ]);
+
+        $this->assertEquals(1000, $fund->sharesAsOf('2022-06-01'));
+        $this->assertEquals(60, $fund->allocatedShares('2022-06-01'));
+        $this->assertEquals(940, $fund->unallocatedShares('2022-06-01'));
+        $this->assertEquals(40, $fund->borrowedShares('2022-06-01'));
+        $this->assertEquals(900, $fund->availableUnallocatedShares('2022-06-01'));
+    }
+
+    public function test_debt_only_user_account_does_not_inflate_unallocated_shares()
+    {
+        $fund = FundExt::find($this->factory->fund->id);
+        $account = $this->factory->userAccount;
+
+        $borrowTransaction = $this->factory->createTransaction(0, $account, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+        AccountBalance::factory()
+            ->for($borrowTransaction, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 40,
+            ]);
+
+        $this->assertEquals(0, $fund->allocatedShares('2022-06-01'));
+        $this->assertEquals(1000, $fund->unallocatedShares('2022-06-01'));
     }
 
     public function test_period_performance_delegates_to_portfolio()

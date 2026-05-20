@@ -181,7 +181,7 @@ class OutstandingCalculatorSameDayTest extends TestCase
     }
 
     /**
-     * Backdated DRAW: opening a new credit line with an origination date that
+     * Backdated DRAW: opening a new loan share with an origination date that
      * predates an existing open BOR row used to be refused. Now the draw is
      * spliced into the BOR chain — the open row's shares are bumped to the
      * new aggregate, and a closed historical row covers [$asOf, openRow.start_dt)

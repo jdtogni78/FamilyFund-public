@@ -83,7 +83,7 @@ class CreditLineSimulatorTest extends TestCase
         $response->assertOk();
         $response->assertSee('Payment simulator', false);
         $response->assertSee('Monthly payment (USD)', false);
-        $response->assertSee('Credit Line #' . $this->line->id, false);
+        $response->assertSee('Loan Share #' . $this->line->id, false);
     }
 
     public function test_simulator_returns_results_when_payment_supplied(): void

@@ -24,7 +24,7 @@ class MismatchAlertMail extends Mailable
     {
         $this->tran       = $tran;
         $this->result     = $result;
-        // Phase 2 TODO: replace with route('credit-lines.resolve', $tran->id)
+        // Phase 2 TODO: replace with route('credit_lines.resolve', $tran->id)
         $this->resolveUrl = url("/credit-lines/resolve/{$tran->id}");
     }
 

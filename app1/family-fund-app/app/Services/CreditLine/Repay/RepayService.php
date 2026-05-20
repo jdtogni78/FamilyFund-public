@@ -66,6 +66,7 @@ class RepayService implements ScheduleAdvancer
         }
 
         $date = $date ?? Carbon::today();
+        $this->assertDateInRepayWindow($line, $date);
         $sharesRounded = round($shares, 4);
 
         return DB::transaction(function () use ($line, $sharesRounded, $date) {
@@ -148,6 +149,7 @@ class RepayService implements ScheduleAdvancer
         }
 
         $date   = $date ?? Carbon::today();
+        $this->assertDateInRepayWindow($line, $date);
         $shares = round($shares, 4);
 
         return DB::transaction(function () use ($line, $row, $shares, $date) {
@@ -297,5 +299,34 @@ class RepayService implements ScheduleAdvancer
     public function advance(TransactionExt $tran, AccountCreditLine $line): void
     {
         $this->applyToSchedule($tran, $line);
+    }
+
+    /**
+     * Reject repayments dated outside [origination_date, today]: backdated
+     * REPs corrupt the account_balances chain (out-of-order rows), future-
+     * dated REPs create phantom balance rows that become the active row at
+     * that future date. See QA_BUGS_2026-05-20 #2.
+     */
+    private function assertDateInRepayWindow(AccountCreditLine $line, Carbon $date): void
+    {
+        $effective   = $date->copy()->startOfDay();
+        $today       = Carbon::today();
+        $origination = Carbon::parse($line->origination_date)->startOfDay();
+
+        if ($effective->lt($origination)) {
+            throw new InvalidArgumentException(sprintf(
+                'Repayment date %s is before the credit line\'s origination date %s.',
+                $effective->toDateString(),
+                $origination->toDateString()
+            ));
+        }
+
+        if ($effective->gt($today)) {
+            throw new InvalidArgumentException(sprintf(
+                'Repayment date %s is in the future. Repayments must be dated on or before today (%s).',
+                $effective->toDateString(),
+                $today->toDateString()
+            ));
+        }
     }
 }

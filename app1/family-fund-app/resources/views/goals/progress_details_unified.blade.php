@@ -18,6 +18,13 @@
     $expectedValue = $expected['value'] ?? 0;
     $finalValue = $current['final_value'] ?? $goal->target_amount;
 
+    // $current is already net of borrowing (OWN − BOR via valueAsOf). The
+    // borrowed value is exposed only as context — small annotation under the
+    // Current value when the account carries an active credit-line draw.
+    $borrowedValue = $progress['borrowed_value'] ?? 0;
+    $grossValue = $progress['current_gross']['value'] ?? $currentValue;
+    $hasBorrowing = $borrowedValue > 0;
+
     // 4% yield calculations
     $yieldRate = $goal->target_pct ?? 0.04;
     $yieldPct = $yieldRate * 100;
@@ -86,11 +93,16 @@
                 <div style="font-size: 10px; color: #92400e;">${{ number_format($expectedYield, 0) }}/yr yield</div>
             </td>
             <td width="4%"></td>
-            {{-- Current Box --}}
+            {{-- Current Box (net of borrowing) --}}
             <td width="48%" style="background: {{ $trackBg }}; border: 1px solid {{ $trackBorder }}; border-radius: 8px; padding: 12px; text-align: center; vertical-align: top;">
                 <div style="font-size: 10px; text-transform: uppercase; color: {{ $isOnTrack ? '#166534' : '#991b1b' }}; margin-bottom: 4px;">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</div>
                 <div style="font-size: 20px; font-weight: 700; color: {{ $trackColor }};">${{ number_format($currentValue, 0) }}</div>
                 <div style="font-size: 10px; color: {{ $isOnTrack ? '#166534' : '#991b1b' }};">${{ number_format($currentYield, 0) }}/yr yield</div>
+                @if($hasBorrowing)
+                    <div style="font-size: 9px; color: #64748b; margin-top: 4px;">
+                        ${{ number_format($grossValue, 0) }} gross − ${{ number_format($borrowedValue, 0) }} borrowed
+                    </div>
+                @endif
             </td>
         </tr>
     </table>
@@ -150,12 +162,17 @@
                 <small class="goal-yield" style="color: #92400e;">${{ number_format($expectedYield, 0) }}/yr yield</small>
             </div>
         </div>
-        {{-- Current Box --}}
+        {{-- Current Box (net of borrowing) --}}
         <div class="col-md-6">
             <div class="goal-box-current-{{ $isOnTrack ? 'success' : 'danger' }} p-3 rounded h-100" style="background: {{ $trackBg }}; border: 1px solid {{ $trackBorder }};">
                 <small class="goal-label text-uppercase d-block" style="font-size: 10px; color: {{ $isOnTrack ? '#166534' : '#991b1b' }};">Current ({{ $goal->as_of ?? now()->format('Y-m-d') }})</small>
                 <h3 class="goal-value mb-0" style="color: {{ $trackColor }}; font-size: 1.75rem;">${{ number_format($currentValue, 0) }}</h3>
                 <small class="goal-yield" style="color: {{ $isOnTrack ? '#166534' : '#991b1b' }};">${{ number_format($currentYield, 0) }}/yr yield</small>
+                @if($hasBorrowing)
+                    <small class="d-block mt-1 text-body-secondary" style="font-size: 10px;">
+                        ${{ number_format($grossValue, 0) }} gross − ${{ number_format($borrowedValue, 0) }} borrowed
+                    </small>
+                @endif
             </div>
         </div>
     </div>

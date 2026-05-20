@@ -196,11 +196,62 @@ class CreditLineFlowTest extends TestCase
         $edit->assertOk();
         $edit->assertSee('reminder_lead_days', false);
         $edit->assertSee('reminder_enabled', false);
+        $edit->assertSee('delay_notification_enabled', false);
         $edit->assertSee('delay_notification_grace_days', false);
         $edit->assertSee('delay_notification_repeat_days', false);
         $edit->assertSee('delay_notification_max_repeats', false);
         $edit->assertSee('transaction_email_enabled', false);
         $edit->assertSee('mismatch_alert_enabled', false);
+    }
+
+    /**
+     * delay_notification_enabled: master toggle for the late-payment pipeline.
+     * Posting the checkbox unchecked (no key) flips it false; posting "1"
+     * flips it back on. The hidden "0" input in the form covers the missing-key
+     * case from a real browser submission.
+     */
+    public function test_admin_can_toggle_delay_notification_enabled(): void
+    {
+        $account = $this->df->userAccount;
+
+        $this->actingAs($this->admin)->post(
+            route('credit_lines.store', ['account' => $account->id]),
+            [
+                'account_id'        => $account->id,
+                'nickname'          => 'Delay-toggle line',
+                'principal_shares'  => 25,
+                'term_months'       => 6,
+                'payment_frequency' => 'monthly',
+                'descr'             => 'Delay-toggle line',
+            ]
+        );
+        $line = AccountCreditLine::where('account_id', $account->id)->latest('id')->first();
+        $this->assertTrue((bool) $line->delay_notification_enabled, 'default should be enabled');
+
+        $basePayload = [
+            'reminder_lead_days'              => 7,
+            'reminder_enabled'                => '1',
+            'delay_notification_grace_days'   => 3,
+            'delay_notification_repeat_days'  => 14,
+            'delay_notification_max_repeats'  => 6,
+            'transaction_email_enabled'       => '1',
+            'mismatch_alert_enabled'          => '1',
+        ];
+
+        // Off: omit the key (HTML checkboxes don't post when unchecked).
+        $this->actingAs($this->admin)
+            ->put(route('credit_lines.update', ['line' => $line->id]), $basePayload)
+            ->assertRedirect();
+        $line->refresh();
+        $this->assertFalse((bool) $line->delay_notification_enabled);
+
+        // On: post the key with "1".
+        $this->actingAs($this->admin)
+            ->put(route('credit_lines.update', ['line' => $line->id]),
+                  $basePayload + ['delay_notification_enabled' => '1'])
+            ->assertRedirect();
+        $line->refresh();
+        $this->assertTrue((bool) $line->delay_notification_enabled);
     }
 
     /**

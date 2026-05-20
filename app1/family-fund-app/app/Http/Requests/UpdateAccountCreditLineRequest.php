@@ -20,9 +20,10 @@ class UpdateAccountCreditLineRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Checkboxes that are unchecked don't get posted at all in HTML forms.
-        // Normalise the three boolean fields so we always have an explicit value.
+        // Normalise the boolean fields so we always have an explicit value.
         $this->merge([
             'reminder_enabled'            => $this->boolean('reminder_enabled'),
+            'delay_notification_enabled'  => $this->boolean('delay_notification_enabled'),
             'transaction_email_enabled'   => $this->boolean('transaction_email_enabled'),
             'mismatch_alert_enabled'      => $this->boolean('mismatch_alert_enabled'),
         ]);
@@ -33,6 +34,7 @@ class UpdateAccountCreditLineRequest extends FormRequest
         return [
             'reminder_lead_days'              => 'required|integer|min:0|max:365',
             'reminder_enabled'                => 'required|boolean',
+            'delay_notification_enabled'      => 'required|boolean',
             'delay_notification_grace_days'   => 'required|integer|min:0|max:365',
             // Wave-2 review: must be >= 1 — ScanLatePaymentsJob divides by this
             // value (`floor($daysAfterGrace / $repeatDays)`), so 0 = DivisionByZero.

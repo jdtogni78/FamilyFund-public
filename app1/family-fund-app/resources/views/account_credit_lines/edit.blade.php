@@ -74,6 +74,19 @@
                         </div>
                     </div>
 
+                    <div class="col-12">
+                        <label class="form-label d-block">Delay notifications</label>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="delay_notification_enabled" value="0">
+                            <input type="checkbox" class="form-check-input"
+                                   id="delay_notification_enabled" name="delay_notification_enabled" value="1"
+                                   {{ old('delay_notification_enabled', $line->delay_notification_enabled ?? true) ? 'checked' : '' }}>
+                            <label for="delay_notification_enabled" class="form-check-label">
+                                Send late-payment notifications for this line (master toggle for the three fields below)
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="col-md-4">
                         <label for="delay_notification_grace_days" class="form-label">
                             Delay grace days

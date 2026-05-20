@@ -5,11 +5,13 @@ namespace App\Jobs\CreditLine;
 use App\Mail\CreditLine\DelayNotificationMail;
 use App\Models\AccountCreditLine;
 use App\Models\AccountCreditLineExt;
+use App\Models\CreditLineDelayNotification;
 use App\Models\CreditLinePayment;
 use App\Services\CreditLine\Settings\LineNotificationSettings;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -25,9 +27,12 @@ use Illuminate\Support\Facades\Mail;
  * Phase 2 TODO — register in console/Kernel.php:
  *   $schedule->job(new ScanLatePaymentsJob)->dailyAt('08:05');
  *
- * DEDUP strategy: uses a cache key per payment row to track how many notifications
- * have been sent. Format: "credit_line_delay_count_{payment_id}" → integer count.
- * Phase 2 may replace with a DB log table.
+ * DEDUP strategy: each sent notification is recorded in
+ * `credit_line_delay_notifications` (one row per email). The job derives
+ * `sentCount` from that table, so the counter survives cache flushes and
+ * stays consistent across multiple queue workers. The unique
+ * (credit_line_payment_id, notification_number) index makes a concurrent
+ * double-send safely fail at the DB level (Issue #7).
  */
 class ScanLatePaymentsJob implements ShouldQueue
 {
@@ -84,8 +89,7 @@ class ScanLatePaymentsJob implements ShouldQueue
                 continue;
             }
 
-            $cacheKey    = "credit_line_delay_count_{$payment->id}";
-            $sentCount   = (int) \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+            $sentCount   = CreditLineDelayNotification::where('credit_line_payment_id', $payment->id)->count();
             $maxCount    = $settings->delayNotificationMax();
             $repeatDays  = $settings->delayNotificationRepeatDays();
 
@@ -112,8 +116,23 @@ class ScanLatePaymentsJob implements ShouldQueue
             }
 
             $newCount = $sentCount + 1;
+
+            // Insert the ledger row FIRST. If another worker raced us to this
+            // notification slot, the unique index throws and we skip sending
+            // — preferring under-notify to duplicate emails.
+            try {
+                CreditLineDelayNotification::create([
+                    'credit_line_payment_id' => $payment->id,
+                    'notification_number'    => $newCount,
+                    'sent_at'                => now(),
+                    'recipient_email'        => $recipientEmail,
+                ]);
+            } catch (UniqueConstraintViolationException $e) {
+                Log::info("ScanLatePaymentsJob: notification #{$newCount} for payment #{$payment->id} already claimed; skipping send.");
+                continue;
+            }
+
             Mail::to($recipientEmail)->send(new DelayNotificationMail($line, $payment, $newCount));
-            \Illuminate\Support\Facades\Cache::put($cacheKey, $newCount, now()->addDays(365));
 
             $notified++;
             Log::info("ScanLatePaymentsJob: sent delay notification #{$newCount} for payment #{$payment->id} to {$recipientEmail}");

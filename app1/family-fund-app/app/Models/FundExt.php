@@ -82,8 +82,11 @@ class FundExt extends Fund
      * Dollar value of the credit-line receivable held by this fund as of $now.
      * See docs/credit_lines/fund_cashflow.md (receivable-as-asset).
      *
-     * Returns 0 when there are no active credit lines. Safe to call even
-     * before the credit-line tables exist (defensive try/catch).
+     * Returns 0 when there are no active credit lines. In production a
+     * calculator failure (schema drift, missing relationship, bad as-of
+     * date) is logged and swallowed so the fund show page still renders;
+     * in every other environment the exception propagates so the failure
+     * is visible in tests, dev and staging (Issue #6).
      */
     public function creditLineReceivableValueAsOf($now): float
     {
@@ -92,6 +95,13 @@ class FundExt extends Fund
             $calc = \App::make(\App\Services\CreditLine\Reporting\FundReceivableCalculator::class);
             return (float) $calc->receivableValue($this, $asOf);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'creditLineReceivableValueAsOf failed for fund #' . $this->id . ': ' . $e->getMessage(),
+                ['exception' => $e]
+            );
+            if (!app()->environment('production')) {
+                throw $e;
+            }
             return 0.0;
         }
     }

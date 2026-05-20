@@ -121,7 +121,7 @@ class S1MultiLineOnePaidOffTest extends TestCase
         $this->actingAs($this->s->admin)
             ->get(route('credit_lines.show', ['line' => $l1->id]))
             ->assertOk()
-            ->assertSee('Credit Line #' . $l1->id);
+            ->assertSee('Loan Share #' . $l1->id);
     }
 
     public function test_account_index_renders_with_paid_off_and_active_lines(): void

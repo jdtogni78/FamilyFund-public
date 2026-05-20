@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Scenarios;
 
+use App\Models\GoalExt;
+use App\Services\GoalCalculationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
@@ -22,12 +24,9 @@ use Tests\TestCase;
  *      These assertions pass today.
  *
  *  (b) Goal-progress rendering — the `progress['current']` array consumed by
- *      goals/progress_summary.blade.php must reflect (a). Today the trait
- *      AccountTrait::createGoalsResponse reads $account->balances['OWN']->market_value
- *      (gross), which contradicts the canonical rule. That branch is intentionally
- *      isolated in `test_goal_progress_current_reflects_net_shares` and skipped
- *      with a pointer to the fix site — flip the skip when AccountTrait.php:146
- *      switches to AccountExt::valueAsOf().
+ *      goals/progress_summary.blade.php now flows through GoalCalculationService
+ *      (shipped 2026-05-20 via commit 9f9ce944), which returns net for `current`
+ *      and the gross figure on a separate `current_gross` key.
  */
 class S5GoalReactsToBorrowingTest extends TestCase
 {
@@ -110,20 +109,41 @@ class S5GoalReactsToBorrowingTest extends TestCase
     }
 
     /**
-     * Canonical rule: a goal's `progress['current']` must equal valueAsOf (net).
-     *
-     * Today, AccountTrait::createGoalsResponse reads
-     * `$account->balances['OWN']->market_value` (gross OWN) at
-     * app1/family-fund-app/app/Http/Controllers/Traits/AccountTrait.php:146 —
-     * inconsistent with `$start_value` which is already net via valueAsOf
-     * three lines above. Flip the skip when that line uses valueAsOf().
+     * Canonical rule (memory: goal-current-is-net): `progress['current']` must
+     * equal valueAsOf (net). `progress['current_gross']` is exposed for legacy
+     * callers but views default to `current`. Validates the shipped behavior
+     * of GoalCalculationService end-to-end (no HTTP — the service is the
+     * single seam where the rule lives).
      */
-    public function test_goal_progress_current_reflects_net_shares(): void
+    public function test_goal_progress_current_reflects_net_and_current_gross_carries_legacy(): void
     {
-        $this->markTestSkipped(
-            'AccountTrait::createGoalsResponse currently uses gross balances[OWN]->market_value '
-            . 'at AccountTrait.php:146; canonical rule (memory: goal-current-is-net) is net. '
-            . 'Flip this skip when the line switches to $account->valueAsOf($asOf).'
+        $this->s->withBorrowingPower('bE', 500.0);
+        $goal = $this->s->withGoal('bE', 'Retirement', 10_000);
+        $line = $this->s->openLine('bE', 200, 12, 'monthly', null, 'S5 progress');
+        $account = $this->s->account('bE');
+
+        $progress = app(GoalCalculationService::class)
+            ->progressFor($account, GoalExt::find($goal->id), Carbon::today());
+
+        $shareValue   = $account->shareValueAsOf(Carbon::today()->toDateString());
+        $expectedNet  = $account->valueAsOf(Carbon::today()->toDateString());
+        $expectedGross = 500.0 * $shareValue;
+        $expectedBorrowedValue = 200.0 * $shareValue;
+
+        $this->assertEqualsWithDelta($expectedNet,   $progress['current']['value'],        0.0001,
+            'progress.current.value must equal net valueAsOf (OWN − BOR) × shareValue');
+        $this->assertEqualsWithDelta($expectedGross, $progress['current_gross']['value'],  0.0001,
+            'progress.current_gross.value must equal OWN × shareValue (legacy callers only)');
+        $this->assertEqualsWithDelta($expectedBorrowedValue, $progress['borrowed_value'],  0.0001,
+            'borrowed_value should surface the dollar value of outstanding borrowed shares');
+        $this->assertEqualsWithDelta(200.0, $progress['borrowed_shares'], 0.0001);
+
+        // current and current_gross diverge precisely by the borrowed delta.
+        $this->assertEqualsWithDelta(
+            $progress['current_gross']['value'] - $progress['current']['value'],
+            $progress['borrowed_value'],
+            0.0001,
+            'gross − net must equal borrowed_value'
         );
     }
 }

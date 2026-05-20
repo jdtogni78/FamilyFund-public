@@ -95,7 +95,7 @@ class S4BackdatedLateSweepTest extends TestCase
         $this->actingAs($this->s->admin)
             ->get(route('credit_lines.show', ['line' => $line->id]))
             ->assertOk()
-            ->assertSee('Credit Line #' . $line->id);
+            ->assertSee('Loan Share #' . $line->id);
     }
 
     /** @return array<string,int> */

@@ -168,6 +168,45 @@ class CreditLineMessyHistoryTest extends TestCase
         );
     }
 
+    /**
+     * Regression for QA_BUGS_2026-05-20 #1: POST overpayment is rejected and
+     * leaves the line + BOR ledger untouched, so REP-shares never exceed
+     * BOR-shares on the line.
+     */
+    public function test_repay_overpayment_is_rejected(): void
+    {
+        $this->scenario->withBorrowingPower('main', 500);
+        $lines = $this->scenario->messyAccount('main');
+        $active = $lines['active'];
+        $this->assertSame(AccountCreditLineExt::STATUS_ACTIVE, $active->status);
+
+        $outstandingBefore = round((float) $active->outstanding_shares, 4);
+        $this->assertGreaterThan(0.0, $outstandingBefore);
+
+        $repsBefore = TransactionExt::where('account_credit_line_id', $active->id)
+            ->where('type', TransactionExt::TYPE_REPAY)->count();
+
+        // Overpay by 1 share — must be rejected.
+        $response = $this->actingAs($this->scenario->admin)
+            ->post(route('credit_lines.repay', ['line' => $active->id]), [
+                'account_credit_line_id' => $active->id,
+                'shares'                 => $outstandingBefore + 1.0,
+            ]);
+
+        $response->assertRedirect(route('credit_lines.show', ['line' => $active->id]));
+        $response->assertSessionHas('flash_notification');
+
+        $active->refresh();
+        $this->assertSame(AccountCreditLineExt::STATUS_ACTIVE, $active->status);
+        $this->assertEquals($outstandingBefore, round((float) $active->outstanding_shares, 4));
+        $this->assertSame(
+            $repsBefore,
+            TransactionExt::where('account_credit_line_id', $active->id)
+                ->where('type', TransactionExt::TYPE_REPAY)->count(),
+            'a rejected overpayment must not append a REP transaction'
+        );
+    }
+
     /** Registering a payment on an already-paid schedule row is rejected. */
     public function test_register_payment_on_settled_row_is_rejected(): void
     {

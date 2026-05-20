@@ -66,14 +66,29 @@ class RepayService implements ScheduleAdvancer
         }
 
         $date = $date ?? Carbon::today();
+        $sharesRounded = round($shares, 4);
 
-        return DB::transaction(function () use ($line, $shares, $date) {
-            // Lock the line row to prevent concurrent updates.
-            DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
+        return DB::transaction(function () use ($line, $sharesRounded, $date) {
+            // Lock the line row to prevent concurrent updates, then read fresh
+            // outstanding to enforce the no-overpayment invariant. Inside the
+            // lock so concurrent repays can't both pass a stale check.
+            $locked = DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
+            $outstanding = round((float) $locked->outstanding_shares, 4);
+
+            if ($sharesRounded > $outstanding) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Cannot repay %.4f shares against a credit line with %.4f outstanding. Reduce the amount to at most %.4f.',
+                        $sharesRounded,
+                        $outstanding,
+                        $outstanding
+                    )
+                );
+            }
 
             $repTransaction = $this->createRepTransaction(
                 $line,
-                round($shares, 4),
+                $sharesRounded,
                 $date,
                 'Credit line repayment'
             );
@@ -136,7 +151,19 @@ class RepayService implements ScheduleAdvancer
         $shares = round($shares, 4);
 
         return DB::transaction(function () use ($line, $row, $shares, $date) {
-            DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
+            $locked = DB::table('account_credit_lines')->where('id', $line->id)->lockForUpdate()->first();
+            $outstanding = round((float) $locked->outstanding_shares, 4);
+
+            if ($shares > $outstanding) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Cannot repay %.4f shares against a credit line with %.4f outstanding. Reduce the amount to at most %.4f.',
+                        $shares,
+                        $outstanding,
+                        $outstanding
+                    )
+                );
+            }
 
             $repTransaction = $this->createRepTransaction(
                 $line,

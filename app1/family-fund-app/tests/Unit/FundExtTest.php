@@ -182,6 +182,8 @@ class FundExtTest extends TestCase
         $this->assertEquals(1000, $fund->sharesAsOf('2022-06-01'));
         $this->assertEquals(60, $fund->allocatedShares('2022-06-01'));
         $this->assertEquals(940, $fund->unallocatedShares('2022-06-01'));
+        $this->assertEquals(40, $fund->borrowedShares('2022-06-01'));
+        $this->assertEquals(900, $fund->availableUnallocatedShares('2022-06-01'));
     }
 
     public function test_debt_only_user_account_does_not_inflate_unallocated_shares()

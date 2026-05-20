@@ -94,6 +94,12 @@ Trait FundTrait
         $arr['allocated_shares_percent'] = Utils::percent($shares ? $allocated / $shares : 0);
         $arr['share_value'] = Utils::currency($sharePrice = $shares ? $value / $shares : 0);
         $arr['unallocated_value'] = Utils::currency($unallocatedValue = $unallocated * $sharePrice);
+        $arr['borrowed_shares'] = Utils::shares($borrowed = $fund->borrowedShares($asOf));
+        $arr['borrowed_shares_percent'] = Utils::percent($shares ? $borrowed / $shares : 0);
+        $arr['borrowed_value'] = Utils::currency($borrowed * $sharePrice);
+        $arr['available_unallocated_shares'] = Utils::shares($availableUnallocated = $fund->availableUnallocatedShares($asOf));
+        $arr['available_unallocated_shares_percent'] = Utils::percent($shares ? $availableUnallocated / $shares : 0);
+        $arr['available_unallocated_value'] = Utils::currency($availableUnallocated * $sharePrice);
 
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
         // Sum max cash across all portfolios

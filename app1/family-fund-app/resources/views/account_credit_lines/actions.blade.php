@@ -86,17 +86,18 @@
     </div>
 
     <div class="card mb-3">
-        <div class="card-header"><strong>Register a scheduled payment</strong></div>
+        <div class="card-header"><strong>Registered payments</strong></div>
         <div class="card-body">
             @php
-                // Open rows (registrable) plus paid rows (reversible) — admins
-                // need both surfaces here; _payment_row_actions gates the
-                // controls per row. Cancelled rows stay hidden.
-                $shownRowStatuses = ['scheduled', 'partial', 'late', 'paid'];
-                $shownRows = $schedule->filter(fn($r) => in_array($r->status, $shownRowStatuses, true));
+                // Only paid rows surface here — they're the ones admins can
+                // edit or reverse. New payments go through the "Make payment"
+                // button on the credit-line show page (oldest-first cascade);
+                // cross-row reallocation is reached via the per-allocation
+                // slider on the show page.
+                $shownRows = $schedule->filter(fn($r) => $r->status === 'paid');
             @endphp
             @if($shownRows->isEmpty())
-                <p class="text-muted mb-0">No schedule rows.</p>
+                <p class="text-muted mb-0">No registered payments.</p>
             @else
             <table class="table table-sm mb-0">
                 <thead>

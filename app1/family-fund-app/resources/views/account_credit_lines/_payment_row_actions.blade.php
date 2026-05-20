@@ -5,25 +5,17 @@
       $line  — AccountCreditLine the row belongs to
       $row   — CreditLinePayment schedule row
 
-    Renders, for an admin, the Register / Edit / Delete controls using the
-    app-standard btn-group + btn-ghost-* icon buttons (see transactions
-    table.blade.php). Only active lines accept changes (mirrors RepayService
-    / show-page gating).
+    Renders Edit / Delete controls for an already-registered payment. New
+    payments are entered via the card-level "Make payment" button (oldest-first
+    cascade); manual re-allocation is reached via the per-allocation slider.
+    Only active lines accept changes.
 --}}
 @php
-    $openStatuses = ['scheduled', 'partial', 'late'];
     $lineActive   = $line && $line->status === 'active';
-    $isOpen       = in_array($row->status, $openStatuses, true);
     $hasPayment   = !empty($row->paid_transaction_id);
 @endphp
 @if($lineActive && $line)
     <div class="btn-group">
-        @if($isOpen)
-            <a href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $row->id]) }}"
-               class="btn btn-ghost-success" title="Register payment">
-                <i class="fa fa-money-bill"></i>
-            </a>
-        @endif
         @if($hasPayment)
             <a href="{{ route('credit_lines.payments.edit_form', ['line' => $line->id, 'payment' => $row->id]) }}"
                class="btn btn-ghost-info"

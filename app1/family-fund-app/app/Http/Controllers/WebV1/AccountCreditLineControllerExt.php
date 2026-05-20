@@ -754,6 +754,16 @@ class AccountCreditLineControllerExt extends AppBaseController
             ->pluck('shares', 'credit_line_payment_id')
             ->toArray();
 
+        // Per-row contribution from OTHER transactions — used to display the
+        // remainder this txn could still fill (shares_due - other = remainder).
+        $otherAlloc = \App\Models\CreditLinePaymentAllocation::whereIn('credit_line_payment_id', $rows->pluck('id'))
+            ->where('transaction_id', '!=', $tran->id)
+            ->selectRaw('credit_line_payment_id, SUM(shares) as total')
+            ->groupBy('credit_line_payment_id')
+            ->pluck('total', 'credit_line_payment_id')
+            ->map(fn ($v) => round((float) $v, 4))
+            ->toArray();
+
         $account = $line->account()->with('fund')->first();
 
         return view('account_credit_lines.allocate_payment')
@@ -761,6 +771,7 @@ class AccountCreditLineControllerExt extends AppBaseController
             ->with('tran', $tran)
             ->with('rows', $rows)
             ->with('currentAlloc', $currentAlloc)
+            ->with('otherAlloc', $otherAlloc)
             ->with('account', $account);
     }
 
@@ -807,18 +818,11 @@ class AccountCreditLineControllerExt extends AppBaseController
             }
         }
 
-        $total = round(array_sum($split), 4);
-        if ($total <= 0) {
-            Flash::error('Enter at least one positive allocation.');
-            return redirect(route('credit_lines.payments.allocate_form', [
-                'line' => $line->id, 'transaction' => $tran->id,
-            ]));
-        }
-
+        $total      = round(array_sum($split), 4);
         $tranShares = round((float) $tran->shares, 4);
-        if ($total > $tranShares + 1e-4) {
+        if (abs($total - $tranShares) > 1e-4) {
             Flash::error(sprintf(
-                'Allocations total %.4f exceeds the transaction\'s %.4f shares.',
+                'Allocations total %.4f but the transaction has %.4f shares — every share must land on a row. Use "Fill remainders" to auto-distribute.',
                 $total, $tranShares
             ));
             return redirect(route('credit_lines.payments.allocate_form', [

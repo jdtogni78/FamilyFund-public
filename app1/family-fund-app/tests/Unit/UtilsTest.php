@@ -92,4 +92,51 @@ class UtilsTest extends TestCase
         $result = Utils::asOfAddYear('2022-06-15', 5);
         $this->assertEquals('2027-06-15', $result);
     }
+
+    public function test_as_of_add_year_rejects_non_date_prefix()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Utils::asOfAddYear('not-a-date', -1);
+    }
+
+    public function test_as_of_add_year_rejects_empty_string()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Utils::asOfAddYear('', -1);
+    }
+
+    public function test_sanitize_as_of_passes_valid_date_through()
+    {
+        $this->assertEquals('2026-05-19', Utils::sanitizeAsOf('2026-05-19'));
+    }
+
+    public function test_sanitize_as_of_defaults_empty_to_today()
+    {
+        $this->assertEquals(date('Y-m-d'), Utils::sanitizeAsOf(null));
+        $this->assertEquals(date('Y-m-d'), Utils::sanitizeAsOf(''));
+    }
+
+    public function test_sanitize_as_of_clamps_far_future_year_to_2100()
+    {
+        // 9999-12-31 is the "forever" sentinel used in the rebalance form;
+        // downstream report code throws on year > 2100, so clamp.
+        $this->assertEquals('2100-12-31', Utils::sanitizeAsOf('9999-12-31'));
+    }
+
+    public function test_sanitize_as_of_clamps_far_past_year_to_1970()
+    {
+        $this->assertEquals('1970-01-01', Utils::sanitizeAsOf('1900-01-01'));
+    }
+
+    public function test_sanitize_as_of_rejects_malformed()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Utils::sanitizeAsOf('not-a-date');
+    }
+
+    public function test_sanitize_as_of_rejects_impossible_calendar_date()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Utils::sanitizeAsOf('2026-02-30');
+    }
 }

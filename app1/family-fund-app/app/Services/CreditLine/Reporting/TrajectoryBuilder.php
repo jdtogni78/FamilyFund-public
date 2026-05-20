@@ -125,11 +125,22 @@ class TrajectoryBuilder
             ->values();
         $effectivePlan = $this->cumulativeFromPayments($inForce, $line->principal_shares);
 
-        // Actual repayments: cleared REP transactions, not reversed.
+        // Actual repayments: confirmed schedule credits only. A REP is
+        // confirmed for the chart once at least one paid/partial schedule row
+        // links to it; collect unique ids so overpayments spanning multiple
+        // rows still count as one real repayment.
+        $confirmedRepIds = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->whereIn('status', [CreditLinePayment::STATUS_PAID, CreditLinePayment::STATUS_PARTIAL])
+            ->whereNotNull('paid_transaction_id')
+            ->pluck('paid_transaction_id')
+            ->unique()
+            ->values();
+
         $reps = TransactionExt::where('account_credit_line_id', $line->id)
             ->where('type', TransactionExt::TYPE_REPAY)
             ->where('status', TransactionExt::STATUS_CLEARED)
             ->where('reversed', false)
+            ->whereIn('id', $confirmedRepIds)
             ->orderBy('timestamp')
             ->get();
 

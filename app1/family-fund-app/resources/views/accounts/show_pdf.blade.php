@@ -185,6 +185,65 @@
     <div style="margin-bottom: 20px;"></div>
     @endif
 
+    {{-- Credit Lines Summary (like web header) --}}
+    @php
+        $clActiveLines = \App\Models\AccountCreditLine::where('account_id', $account->id)
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->get();
+
+        $clSharePrice = 0.0;
+        try {
+            $clSharePrice = (float) $account->shareValueAsOf(\Carbon\Carbon::today()->toDateString());
+        } catch (\Throwable $e) {
+            $clSharePrice = 0.0;
+        }
+
+        $clBehindIds = $clActiveLines->isEmpty() ? collect() :
+            \App\Models\CreditLinePayment::whereIn('account_credit_line_id', $clActiveLines->pluck('id'))
+                ->whereIn('status', [
+                    \App\Models\CreditLinePayment::STATUS_SCHEDULED,
+                    \App\Models\CreditLinePayment::STATUS_LATE,
+                    \App\Models\CreditLinePayment::STATUS_PARTIAL,
+                ])
+                ->where('due_date', '<', \Carbon\Carbon::today()->toDateString())
+                ->pluck('account_credit_line_id')
+                ->unique();
+    @endphp
+    @if($clActiveLines->isNotEmpty())
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #99f6e4; border-radius: 8px; padding: 12px;">
+        <tr>
+            <td style="padding: 8px 12px;">
+                <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Credit Lines Summary</div>
+                @foreach($clActiveLines as $line)
+                    @php
+                        $clPrincipal      = (float) $line->principal_shares;
+                        $clOutstanding    = (float) $line->outstanding_shares;
+                        $clRepaid         = max(0.0, $clPrincipal - $clOutstanding);
+                        $clRepaidPct      = $clPrincipal > 0 ? ($clRepaid / $clPrincipal) * 100 : 0;
+                        $clOutstandingVal = $clOutstanding * $clSharePrice;
+                        $clBehind         = $clBehindIds->contains($line->id);
+                    @endphp
+                    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
+                        <tr>
+                            <td width="40%" style="color: #0d9488; font-weight: 600; font-size: 12px;">Credit Line #{{ $line->id }}</td>
+                            <td width="20%" align="right" style="font-size: 12px;">
+                                <span style="font-weight: 700; color: {{ $clBehind ? '#d97706' : '#16a34a' }};">{{ number_format($clRepaidPct, 1) }}%</span>
+                                <span style="color: #64748b;"> repaid</span>
+                            </td>
+                            <td width="40%" style="text-align: right;">
+                                <span style="background: {{ $clBehind ? '#fef2f2' : '#dcfce7' }}; color: {{ $clBehind ? '#dc2626' : '#16a34a' }}; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px;">
+                                    ${{ number_format($clOutstandingVal, 0) }} outstanding · {{ $clBehind ? 'behind' : 'on track' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                @endforeach
+            </td>
+        </tr>
+    </table>
+    @endif
+
     {{-- Disbursement Eligibility Section --}}
     @if($account->disbursement_cap !== 0.0)
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">

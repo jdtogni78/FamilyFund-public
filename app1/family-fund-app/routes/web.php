@@ -14,11 +14,26 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Dev-only auto-login route for CLI testing
+// Dev-only auto-login route for CLI testing.
+// Default user is claude@test.local; override with ?as=<email> or a role alias
+// (admin / fund-admin / financial-manager / beneficiary -> canonical qa-* users
+// seeded by QaTestUsersSeeder).
 if (app()->environment('local', 'dev')) {
-    Route::get('/dev-login/{redirect?}', function ($redirect = '/') {
-        Auth::loginUsingId(\App\Models\User::where('email', 'claude@test.local')->first()->id);
-        return redirect('/' . $redirect);
+    Route::get('/dev-login/{redirect?}', function (\Illuminate\Http\Request $request, $redirect = '') {
+        $aliases = [
+            'admin' => 'admin@dev.familyfund.local',
+            'system-admin' => 'admin@dev.familyfund.local',
+            'fund-admin' => 'qa-fund-admin@test.local',
+            'financial-manager' => 'qa-financial-manager@test.local',
+            'beneficiary' => 'qa-beneficiary@test.local',
+        ];
+        $as = (string) $request->query('as', 'claude@test.local');
+        $email = $aliases[$as] ?? $as;
+        $user = \App\Models\User::where('email', $email)->first();
+        abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+        Auth::loginUsingId($user->id);
+        // ltrim guards against '//' protocol-relative redirects when $redirect is empty
+        return redirect('/' . ltrim($redirect, '/'));
     })->where('redirect', '.*');
 }
 
@@ -34,17 +49,27 @@ Route::view('profile', 'profile')
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::middleware('auth')->group(function () {
+    // Constrain as_of route params to a valid YYYY-MM-DD in the year range
+    // [1970, 2100] that Utils::decreaseYearMonth supports. Out-of-range or
+    // malformed inputs now 404 at routing instead of 500-ing on downstream
+    // substring math (Utils::asOfAddYear) or year-range checks.
+    $asOfRegex = '(19[7-9]\d|20\d\d|2100)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])';
+
     Route::get('funds/{id}/overview', 'App\Http\Controllers\WebV1\FundControllerExt@overview')
         ->name('funds.overview');
     Route::get('api/funds/{id}/overview-data', 'App\Http\Controllers\WebV1\FundControllerExt@overviewData')
         ->name('api.funds.overview_data');
-    Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showAsOf');
-    Route::get('funds/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showPDFAsOf');
+    Route::get('funds/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showAsOf')
+        ->where('as_of', $asOfRegex);
+    Route::get('funds/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showPDFAsOf')
+        ->where('as_of', $asOfRegex);
     Route::get('funds/{id}/trade_bands', 'App\Http\Controllers\WebV1\FundControllerExt@tradeBands')
         ->name('funds.show_trade_bands');
         Route::get('funds/{id}/trade_bands_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@tradeBandsAsOf')
+        ->where('as_of', $asOfRegex)
         ->name('funds.show_trade_bands_as_of');
     Route::get('funds/{id}/trade_bands_pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\FundControllerExt@showTradeBandsPDFAsOf')
+        ->where('as_of', $asOfRegex)
         ->name('funds.show_trade_bands_pdf');
     Route::get('funds/{id}/portfolios', 'App\Http\Controllers\WebV1\FundControllerExt@portfolios')
         ->name('funds.portfolios');
@@ -52,8 +77,10 @@ Route::middleware('auth')->group(function () {
         ->name('funds.withdrawal_goal.edit');
     Route::put('funds/{id}/withdrawal_goal', 'App\Http\Controllers\WebV1\FundControllerExt@updateFourPctGoal')
         ->name('funds.withdrawal_goal.update');
-    Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf');
-    Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf');
+    Route::get('accounts/{id}/as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showAsOf')
+        ->where('as_of', $asOfRegex);
+    Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf')
+        ->where('as_of', $asOfRegex);
     Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')
         ->name('tradePortfolios.rebalance');
     Route::post('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doRebalance')

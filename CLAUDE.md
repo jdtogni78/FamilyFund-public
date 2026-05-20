@@ -194,9 +194,24 @@ A dedicated test user exists for automated testing (created by `prod_to_dev.sql`
 
 Dev-only auto-login route (local environment only):
 ```
-GET /dev-login/{redirect?}
+GET /dev-login/{redirect?}              # logs in as claude@test.local
+GET /dev-login/{redirect?}?as=<email>   # logs in as that user
+GET /dev-login/{redirect?}?as=<alias>   # alias: admin | system-admin | fund-admin
+                                        #        financial-manager | beneficiary
 ```
-Example: `curl -L http://localhost:3000/dev-login/accounts/8` to auto-login and access account 8.
+Examples:
+```
+curl -L "http://localhost:3000/dev-login/accounts/8"                       # claude@test.local
+curl -L "http://localhost:3000/dev-login/dashboard?as=fund-admin"          # qa-fund-admin@test.local
+curl -L "http://localhost:3000/dev-login/funds/2/overview?as=admin"        # admin@dev.familyfund.local
+```
+
+`fund-admin`/`financial-manager`/`beneficiary` aliases resolve to `qa-*@test.local`
+users seeded by `QaTestUsersSeeder` (password=`password`, scoped to the first fund):
+```bash
+docker exec familyfund php artisan db:seed --class=RolesAndPermissionsSeeder --force
+docker exec familyfund php artisan db:seed --class=QaTestUsersSeeder --force
+```
 
 # Misc
 

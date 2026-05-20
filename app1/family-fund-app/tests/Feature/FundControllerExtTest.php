@@ -80,6 +80,26 @@ class FundControllerExtTest extends TestCase
         $response->assertRedirect(route('funds.index'));
     }
 
+    public function test_show_as_of_returns_404_for_malformed_date()
+    {
+        // Previously this 500'd in Utils::asOfAddYear ("Unsupported operand
+        // types: string + int") because the route constraint wasn't applied.
+        $response = $this->actingAs($this->user)
+            ->get('/funds/' . $this->df->fund->id . '/as_of/not-a-date');
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_as_of_returns_404_for_far_future_year()
+    {
+        // 9999-12-31 used to 500 in Utils::decreaseYearMonth ("Invalid year");
+        // the route regex now bounds the year to 1970..2100.
+        $response = $this->actingAs($this->user)
+            ->get('/funds/' . $this->df->fund->id . '/as_of/9999-12-31');
+
+        $response->assertNotFound();
+    }
+
     // ==================== Trade Bands Tests ====================
 
     /**

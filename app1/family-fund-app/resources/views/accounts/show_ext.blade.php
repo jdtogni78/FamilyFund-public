@@ -136,6 +136,61 @@
                             @endforeach
                         </div>
                         @endif
+
+                        {{-- Credit Lines Summary --}}
+                        @php
+                            $clActiveLines = \App\Models\AccountCreditLine::where('account_id', $account->id)
+                                ->where('status', 'active')
+                                ->orderByDesc('id')
+                                ->get();
+
+                            $clSharePrice = 0.0;
+                            try {
+                                $clSharePrice = (float) $account->shareValueAsOf(\Carbon\Carbon::today()->toDateString());
+                            } catch (\Throwable $e) {
+                                $clSharePrice = 0.0;
+                            }
+
+                            $clBehindIds = $clActiveLines->isEmpty() ? collect() :
+                                \App\Models\CreditLinePayment::whereIn('account_credit_line_id', $clActiveLines->pluck('id'))
+                                    ->whereIn('status', [
+                                        \App\Models\CreditLinePayment::STATUS_SCHEDULED,
+                                        \App\Models\CreditLinePayment::STATUS_LATE,
+                                        \App\Models\CreditLinePayment::STATUS_PARTIAL,
+                                    ])
+                                    ->where('due_date', '<', \Carbon\Carbon::today()->toDateString())
+                                    ->pluck('account_credit_line_id')
+                                    ->unique();
+                        @endphp
+                        @if($clActiveLines->isNotEmpty())
+                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #99f6e4;">
+                            <div class="text-muted text-uppercase small mb-2 mt-2" style="font-weight: 600;">Credit Lines Summary</div>
+                            @foreach($clActiveLines as $line)
+                                @php
+                                    $clPrincipal   = (float) $line->principal_shares;
+                                    $clOutstanding = (float) $line->outstanding_shares;
+                                    $clRepaid      = max(0.0, $clPrincipal - $clOutstanding);
+                                    $clRepaidPct   = $clPrincipal > 0 ? ($clRepaid / $clPrincipal) * 100 : 0;
+                                    $clOutstandingVal = $clOutstanding * $clSharePrice;
+                                    $clBehind      = $clBehindIds->contains($line->id);
+                                @endphp
+                                <div class="d-flex align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    <div style="flex: 1;"><a href="{{ route('credit_lines.show', $line->id) }}" style="color: #0d9488; font-weight: 600; text-decoration: none;">Credit Line #{{ $line->id }}</a></div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <span style="font-size: 1rem; font-weight: 700; color: {{ $clBehind ? '#d97706' : '#16a34a' }};">
+                                            {{ number_format($clRepaidPct, 1) }}%
+                                        </span>
+                                        <span class="text-muted ms-1 small">repaid</span>
+                                    </div>
+                                    <div style="flex: 1; text-align: right;">
+                                        <span class="px-2 py-1 rounded small {{ $clBehind ? 'badge-negative' : 'badge-positive' }}">
+                                            ${{ number_format($clOutstandingVal, 0) }} outstanding{{ $clBehind ? ' · behind' : ' · on track' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

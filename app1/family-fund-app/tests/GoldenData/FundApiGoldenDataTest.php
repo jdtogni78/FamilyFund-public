@@ -33,6 +33,8 @@ class FundApiGoldenDataTest extends TestCase
         $shares = $fund->sharesAsOf($asOf);
         $unallocated = $fund->unallocatedShares($asOf);
         $allocated = $shares - $unallocated;
+        $borrowed = $fund->borrowedShares($asOf);
+        $availableUnallocated = $fund->availableUnallocatedShares($asOf);
 
         $sharePrice = $shares ? $value / $shares : 0;
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
@@ -40,12 +42,19 @@ class FundApiGoldenDataTest extends TestCase
         $calc = [];
         $calc['value'] = Utils::currency($value);
         $calc['shares'] = Utils::shares($shares);
-        $calc['share_value'] = Utils::currency($sharePrice);
-        $calc['allocated_shares'] = Utils::shares($allocated);
         $calc['unallocated_shares'] = Utils::shares($unallocated);
-        $calc['allocated_shares_percent'] = Utils::percent($shares ? $allocated/$shares : 0);
         $calc['unallocated_shares_percent'] = Utils::percent($shares ? $unallocated/$shares : 0);
+        $calc['allocated_shares'] = Utils::shares($allocated);
+        $calc['allocated_shares_percent'] = Utils::percent($shares ? $allocated/$shares : 0);
+        $calc['share_value'] = Utils::currency($sharePrice);
+        $calc['allocated_value'] = Utils::currency($allocated * $sharePrice);
         $calc['unallocated_value'] = Utils::currency($unallocated * $sharePrice);
+        $calc['borrowed_shares'] = Utils::shares($borrowed);
+        $calc['borrowed_shares_percent'] = Utils::percent($shares ? $borrowed/$shares : 0);
+        $calc['borrowed_value'] = Utils::currency($borrowed * $sharePrice);
+        $calc['available_unallocated_shares'] = Utils::shares($availableUnallocated);
+        $calc['available_unallocated_shares_percent'] = Utils::percent($shares ? $availableUnallocated/$shares : 0);
+        $calc['available_unallocated_value'] = Utils::currency($availableUnallocated * $sharePrice);
         $calc['max_cash_value'] = $fund->portfolio()->maxCashBetween($prevYearAsOf, $asOf);
 
         $expected = [

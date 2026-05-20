@@ -118,18 +118,19 @@
                 <td>
                     @php
                         $typeColors = [
-                            'CSH' => ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8', 'label' => 'Cash'],
-                            'STK' => ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d', 'label' => 'Stock'],
-                            'CRYPTO' => ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309', 'label' => 'Crypto'],
-                            'FUND' => ['bg' => '#e0e7ff', 'border' => '#4f46e5', 'text' => '#4338ca', 'label' => 'Fund'],
-                            'RE' => ['bg' => '#ccfbf1', 'border' => '#0d9488', 'text' => '#0f766e', 'label' => 'Real Estate'],
-                            'VEHICLE' => ['bg' => '#e0f2fe', 'border' => '#0284c7', 'text' => '#0369a1', 'label' => 'Vehicle'],
-                            'MORTGAGE' => ['bg' => '#fee2e2', 'border' => '#dc2626', 'text' => '#b91c1c', 'label' => 'Mortgage'],
-                            'BOND' => ['bg' => '#fae8ff', 'border' => '#c026d3', 'text' => '#a21caf', 'label' => 'Bond'],
+                            'CSH' => ['bg' => '#2563eb', 'label' => 'Cash'],
+                            'STK' => ['bg' => '#15803d', 'label' => 'Stock'],
+                            'CRYPTO' => ['bg' => '#b45309', 'label' => 'Crypto'],
+                            'FUND' => ['bg' => '#4f46e5', 'label' => 'Fund'],
+                            'RE' => ['bg' => '#0f766e', 'label' => 'Real Estate'],
+                            'VEHICLE' => ['bg' => '#0369a1', 'label' => 'Vehicle'],
+                            'MORTGAGE' => ['bg' => '#b91c1c', 'label' => 'Mortgage'],
+                            'BOND' => ['bg' => '#a21caf', 'label' => 'Bond'],
                         ];
-                        $colors = $typeColors[$asset['type']] ?? ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce', 'label' => $asset['type']];
+                        $colors = $typeColors[$asset['type']] ?? ['bg' => '#7e22ce', 'label' => $asset['type']];
+                        $typeTextColor = \App\Support\UIColors::textColorFor($colors['bg']);
                     @endphp
-                    <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
+                    <span class="badge" style="background: {{ $colors['bg'] }}; color: {{ $typeTextColor }}; font-size: 0.75rem; padding: 0.25em 0.5em;">
                         {{ $colors['label'] }}
                     </span>
                 </td>
@@ -137,8 +138,9 @@
                     @php
                         $groupName = $asset['group'] ?? 'Unknown';
                         $groupColor = \App\Support\UIColors::byIndex(crc32($groupName));
+                        $groupTextColor = \App\Support\UIColors::textColorFor($groupColor);
                     @endphp
-                    <span class="badge" style="background: {{ $groupColor }}; color: white;">
+                    <span class="badge" style="background: {{ $groupColor }}; color: {{ $groupTextColor }};">
                         {{ $groupName }}
                     </span>
                 </td>

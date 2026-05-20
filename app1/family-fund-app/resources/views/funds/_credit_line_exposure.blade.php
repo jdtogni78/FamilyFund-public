@@ -17,7 +17,7 @@
         <div class="card">
             <div class="card-header">
                 <i class="fa fa-hand-holding-usd me-2"></i>
-                <strong>Credit-line exposure</strong>
+                <strong>Shares Loan Exposure</strong>
             </div>
             <div class="card-body">
                 @if(!empty($exposure) && ($exposure['total_lines'] ?? 0) > 0)
@@ -46,9 +46,8 @@
                     </div>
                 </div>
                 <p class="text-muted small mb-0 mt-2">
-                    The receivable is share-denominated. The dollar value moves with the fund's share price; the share
-                    count is what is owed back to the fund. See <code>docs/credit_lines/fund_cashflow.md</code> for the
-                    receivable-as-asset model.
+                    Loaned shares are share-denominated, funded from unallocated shares, and reported separately from
+                    available unallocated shares so they do not change fund size.
                 </p>
                 @else
                 <p class="text-muted mb-0">No loan shares on this fund.</p>

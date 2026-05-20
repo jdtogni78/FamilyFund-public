@@ -66,4 +66,29 @@ class UIColors
         $colors = array_values(self::all());
         return $colors[$index % count($colors)];
     }
+
+    /**
+     * Pick readable text for a solid color chip.
+     */
+    public static function textColorFor(?string $hexColor): string
+    {
+        if (!is_string($hexColor) || !preg_match('/^#?([0-9a-f]{6})$/i', $hexColor, $matches)) {
+            return '#ffffff';
+        }
+
+        $hex = $matches[1];
+        $r = hexdec(substr($hex, 0, 2)) / 255;
+        $g = hexdec(substr($hex, 2, 2)) / 255;
+        $b = hexdec(substr($hex, 4, 2)) / 255;
+
+        $linear = static fn ($channel) => $channel <= 0.03928
+            ? $channel / 12.92
+            : (($channel + 0.055) / 1.055) ** 2.4;
+
+        $luminance = 0.2126 * $linear($r) + 0.7152 * $linear($g) + 0.0722 * $linear($b);
+        $contrastWithWhite = 1.05 / ($luminance + 0.05);
+        $contrastWithBlack = ($luminance + 0.05) / 0.05;
+
+        return $contrastWithWhite >= $contrastWithBlack ? '#ffffff' : '#111827';
+    }
 }

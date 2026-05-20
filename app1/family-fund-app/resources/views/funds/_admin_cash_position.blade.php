@@ -15,14 +15,12 @@
 @php
     $asOf = now()->toDateString();
     $portfolioValue   = 0.0;
-    $receivableValue  = 0.0;
-    $combinedValue    = 0.0;
+    $loanedValue      = 0.0;
     $activeLines     = collect();
 
     try {
         $portfolioValue  = (float) $fund->valueAsOf($asOf);
-        $receivableValue = (float) $fund->creditLineReceivableValueAsOf($asOf);
-        $combinedValue   = (float) $fund->valueWithCreditLinesAsOf($asOf);
+        $loanedValue = (float) $fund->creditLineReceivableValueAsOf($asOf);
 
         $accountIds = \App\Models\Account::where('fund_id', $fund->id)->pluck('id');
         $activeLines = \App\Models\AccountCreditLine::whereIn('account_id', $accountIds)
@@ -47,12 +45,12 @@
                 <strong>${{ number_format($portfolioValue, 2) }}</strong>
             </div>
             <div class="col-md-4">
-                <span class="text-muted">Credit-line receivable:</span>
-                <strong>${{ number_format($receivableValue, 2) }}</strong>
+                <span class="text-muted">Loaned share value:</span>
+                <strong>${{ number_format($loanedValue, 2) }}</strong>
             </div>
             <div class="col-md-4">
-                <span class="text-muted">Combined value:</span>
-                <strong>${{ number_format($combinedValue, 2) }}</strong>
+                <span class="text-muted">Fund size impact:</span>
+                <strong>$0.00</strong>
             </div>
         </div>
 

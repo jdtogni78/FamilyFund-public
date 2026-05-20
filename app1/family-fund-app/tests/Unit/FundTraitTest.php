@@ -126,6 +126,8 @@ class FundTraitTest extends TestCase
         $this->assertArrayHasKey('share_value', $summary);
         $this->assertArrayHasKey('unallocated_shares', $summary);
         $this->assertArrayHasKey('allocated_shares', $summary);
+        $this->assertArrayHasKey('borrowed_shares', $summary);
+        $this->assertArrayHasKey('available_unallocated_shares', $summary);
     }
 
     public function test_create_allocation_status_array_with_empty_data()

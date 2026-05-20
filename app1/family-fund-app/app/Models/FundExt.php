@@ -142,6 +142,25 @@ class FundExt extends Fund
         return $this->allocatedShares($now, true);
     }
 
+    public function borrowedShares($now) {
+        $accountRepo = \App::make(AccountRepository::class);
+        $query = $accountRepo->makeModel()->newQuery();
+        $query->where('fund_id', $this->id);
+        $query->whereNotNull('user_id');
+        $accounts = $query->get(['*']);
+
+        $borrowed = 0;
+        foreach ($accounts as $account) {
+            $borrowed += max(0, $account->borrowedSharesAsOf($now));
+        }
+
+        return $borrowed;
+    }
+
+    public function availableUnallocatedShares($now) {
+        return max(0, $this->unallocatedShares($now) - $this->borrowedShares($now));
+    }
+
     /**
      * Calculate period performance aggregated across all portfolios.
      * Returns weighted average based on portfolio values.

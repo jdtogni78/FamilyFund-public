@@ -166,11 +166,14 @@
                         @if(isset($api['admin']) && $accountsCount > 0)
                         @php
                             $allocatedPct = $api['summary']['allocated_shares_percent'] ?? 0;
-                            $unallocatedPct = $api['summary']['unallocated_shares_percent'] ?? (100 - $allocatedPct);
-                            $allocatedShares = ($api['summary']['shares'] ?? 0) * $allocatedPct / 100;
-                            $unallocatedShares = ($api['summary']['shares'] ?? 0) - $allocatedShares;
+                            $borrowedPct = $api['summary']['borrowed_shares_percent'] ?? 0;
+                            $unallocatedPct = $api['summary']['available_unallocated_shares_percent'] ?? max(0, 100 - $allocatedPct - $borrowedPct);
+                            $allocatedShares = $api['summary']['allocated_shares'] ?? (($api['summary']['shares'] ?? 0) * $allocatedPct / 100);
+                            $borrowedShares = $api['summary']['borrowed_shares'] ?? 0;
+                            $unallocatedShares = $api['summary']['available_unallocated_shares'] ?? max(0, ($api['summary']['shares'] ?? 0) - $allocatedShares - $borrowedShares);
                             $allocatedValueCalc = $allocatedShares * ($api['summary']['share_value'] ?? 0);
-                            $unallocatedValueCalc = $unallocatedShares * ($api['summary']['share_value'] ?? 0);
+                            $borrowedValueCalc = $api['summary']['borrowed_value'] ?? ($borrowedShares * ($api['summary']['share_value'] ?? 0));
+                            $unallocatedValueCalc = $api['summary']['available_unallocated_value'] ?? ($unallocatedShares * ($api['summary']['share_value'] ?? 0));
                         @endphp
                         <div class="card-body py-3" style="background: #fffbeb; border-top: 1px solid #99f6e4;">
                             <div class="d-flex align-items-center mb-2">
@@ -182,13 +185,18 @@
                                 <div style="width: {{ $allocatedPct }}%; background-color: #22c55e; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px;">
                                     {{ number_format($allocatedPct, 1) }}%
                                 </div>
+                                @if($borrowedPct > 0)
+                                <div style="width: {{ $borrowedPct }}%; background-color: #dc2626; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px;">
+                                    {{ number_format($borrowedPct, 1) }}%
+                                </div>
+                                @endif
                                 <div style="width: {{ $unallocatedPct }}%; background-color: #d97706; padding: 8px 0; text-align: center; color: #ffffff; font-weight: 700; font-size: 13px;">
                                     {{ number_format($unallocatedPct, 1) }}%
                                 </div>
                             </div>
-                            {{-- Allocated / Unallocated Boxes --}}
+                            {{-- Allocated / Borrowed / Unallocated Boxes --}}
                             <div class="row">
-                                <div class="col-6">
+                                <div class="col-md-{{ $borrowedPct > 0 ? '4' : '6' }} mb-2 mb-md-0">
                                     <div style="background-color: #22c55e; padding: 12px 16px; border-radius: 6px; color: #ffffff;">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
@@ -202,7 +210,23 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-6">
+                                @if($borrowedPct > 0)
+                                <div class="col-md-4 mb-2 mb-md-0">
+                                    <div style="background-color: #dc2626; padding: 12px 16px; border-radius: 6px; color: #ffffff;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span style="font-size: 14px; font-weight: 700;">Borrowed</span>
+                                                <span style="background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px;">{{ number_format($borrowedPct, 1) }}%</span>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <span style="font-size: 11px; opacity: 0.9;">{{ number_format($borrowedShares, 2) }} shares</span><br>
+                                                <span style="font-size: 18px; font-weight: 700;">${{ number_format($borrowedValueCalc, 0) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                                <div class="col-md-{{ $borrowedPct > 0 ? '4' : '6' }}">
                                     <div style="background-color: #d97706; padding: 12px 16px; border-radius: 6px; color: #ffffff;">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>

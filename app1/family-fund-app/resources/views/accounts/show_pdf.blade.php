@@ -11,7 +11,6 @@
         $marketValue = $account->valueAsOf($asOfDate);
         $sharePrice = $account->shareValueAsOf($asOfDate);
         $borrowedShares = $account->borrowedSharesAsOf($asOfDate);
-        $borrowedValue = $account->borrowedValueAsOf($asOfDate);
         $matchingAvailable = $api['matching_available'] ?? 0;
         $goalsCount = count($account->goals);
 
@@ -95,14 +94,14 @@
                 <div style="font-size: 18px; font-weight: 700; color: #0d9488;">${{ number_format($marketValue, 0) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Market Value</div>
                 @if($borrowedShares > 0)
-                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;${{ number_format($borrowedValue, 0) }} borrowed</div>
+                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;{{ number_format($borrowedShares, 2) }} sh borrowed</div>
                 @endif
             </td>
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
                 <div style="font-size: 18px; font-weight: 700; color: #0d9488;">{{ number_format($shares, 2) }}</div>
                 <div style="font-size: 9px; text-transform: uppercase; color: #64748b; margin-top: 2px;">Shares</div>
                 @if($borrowedShares > 0)
-                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;{{ number_format($borrowedShares, 2) }} borrowed</div>
+                    <div style="font-size: 9px; color: #dc2626; margin-top: 2px;">&minus;{{ number_format($borrowedShares, 2) }} sh borrowed</div>
                 @endif
             </td>
             <td width="14%" style="padding: 10px 6px; text-align: center; border-right: 1px solid #99f6e4;">
@@ -202,13 +201,6 @@
             ->orderByDesc('id')
             ->get();
 
-        $clSharePrice = 0.0;
-        try {
-            $clSharePrice = (float) $account->shareValueAsOf(\Carbon\Carbon::today()->toDateString());
-        } catch (\Throwable $e) {
-            $clSharePrice = 0.0;
-        }
-
         $clBehindIds = $clActiveLines->isEmpty() ? collect() :
             \App\Models\CreditLinePayment::whereIn('account_credit_line_id', $clActiveLines->pluck('id'))
                 ->whereIn('status', [
@@ -219,19 +211,32 @@
                 ->where('due_date', '<', \Carbon\Carbon::today()->toDateString())
                 ->pluck('account_credit_line_id')
                 ->unique();
+        $clTotalPrincipalShares   = (float) $clActiveLines->sum('principal_shares');
+        $clTotalOutstandingShares = (float) $clActiveLines->sum('outstanding_shares');
+        $clTotalRepaidShares      = max(0.0, $clTotalPrincipalShares - $clTotalOutstandingShares);
+        $clAnyBehind              = $clActiveLines->contains(fn($l) => $clBehindIds->contains($l->id));
     @endphp
     @if($clActiveLines->isNotEmpty())
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px; background: #ffffff; border: 1px solid #99f6e4; border-radius: 8px; padding: 12px;">
         <tr>
             <td style="padding: 8px 12px;">
                 <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 8px;">Loan Shares Summary</div>
+                <div style="font-size: 10px; text-align: right; margin-bottom: 8px;">
+                    <span style="color: #64748b;">Total loan:</span>
+                    <strong>{{ number_format($clTotalPrincipalShares, 2) }} sh</strong>
+                    <span style="color: #64748b; margin: 0 6px;">|</span>
+                    <span style="color: #64748b;">Repaid:</span>
+                    <strong>{{ number_format($clTotalRepaidShares, 2) }} sh</strong>
+                    <span style="color: #64748b; margin: 0 6px;">|</span>
+                    <span style="color: #64748b;">Outstanding:</span>
+                    <strong style="color: {{ $clAnyBehind ? '#dc2626' : '#111827' }};">{{ number_format($clTotalOutstandingShares, 2) }} sh</strong>
+                </div>
                 @foreach($clActiveLines as $line)
                     @php
                         $clPrincipal      = (float) $line->principal_shares;
                         $clOutstanding    = (float) $line->outstanding_shares;
                         $clRepaid         = max(0.0, $clPrincipal - $clOutstanding);
                         $clRepaidPct      = $clPrincipal > 0 ? ($clRepaid / $clPrincipal) * 100 : 0;
-                        $clOutstandingVal = $clOutstanding * $clSharePrice;
                         $clBehind         = $clBehindIds->contains($line->id);
                     @endphp
                     <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: {{ $loop->last ? '0' : '6px' }}; {{ !$loop->last ? 'border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;' : '' }}">
@@ -242,8 +247,14 @@
                                 <span style="color: #64748b;"> repaid</span>
                             </td>
                             <td width="40%" style="text-align: right;">
-                                <span style="background: {{ $clBehind ? '#fef2f2' : '#dcfce7' }}; color: {{ $clBehind ? '#dc2626' : '#16a34a' }}; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px;">
-                                    ${{ number_format($clOutstandingVal, 0) }} outstanding · {{ $clBehind ? 'behind' : 'on track' }}
+                                <span style="background: #dcfce7; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 9px;">
+                                    Total loan: {{ number_format($clPrincipal, 2) }} sh
+                                </span>
+                                <span style="background: #dcfce7; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 9px;">
+                                    Repaid: {{ number_format($clRepaid, 2) }} sh
+                                </span>
+                                <span style="background: {{ $clBehind ? '#fef2f2' : '#dcfce7' }}; color: {{ $clBehind ? '#dc2626' : '#16a34a' }}; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 9px;">
+                                    Outstanding: {{ number_format($clOutstanding, 2) }} sh · {{ $clBehind ? 'behind' : 'on track' }}
                                 </span>
                             </td>
                         </tr>

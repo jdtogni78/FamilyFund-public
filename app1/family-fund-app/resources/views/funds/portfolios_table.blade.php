@@ -104,7 +104,11 @@
                 </td>
                 <td>
                     @if($cat)
-                        <span class="badge" style="background: {{ $categoryColors[$cat] ?? '#6b7280' }}; color: white;">
+                        @php
+                            $catColor = $categoryColors[$cat] ?? '#6b7280';
+                            $catTextColor = \App\Support\UIColors::textColorFor($catColor);
+                        @endphp
+                        <span class="badge" style="background: {{ $catColor }}; color: {{ $catTextColor }};">
                             {{ $categoryLabels[$cat] ?? ucfirst($cat) }}
                         </span>
                     @else
@@ -113,7 +117,11 @@
                 </td>
                 <td>
                     @if($type)
-                        <span class="badge" style="background: {{ $typeColors[$type] ?? '#6b7280' }}; color: white;">
+                        @php
+                            $typeColor = $typeColors[$type] ?? '#6b7280';
+                            $typeTextColor = \App\Support\UIColors::textColorFor($typeColor);
+                        @endphp
+                        <span class="badge" style="background: {{ $typeColor }}; color: {{ $typeTextColor }};">
                             {{ $typeLabels[$type] ?? ucfirst($type) }}
                         </span>
                     @else
@@ -164,7 +172,11 @@
                             @endphp
                             <tr>
                                 <td style="padding: 1px 4px 1px 0;">
-                                    <span class="badge" style="background: {{ $assetColors[$idx % count($assetColors)] }}; color: white;">
+                                    @php
+                                        $assetColor = $assetColors[$idx % count($assetColors)];
+                                        $assetTextColor = \App\Support\UIColors::textColorFor($assetColor);
+                                    @endphp
+                                    <span class="badge" style="background: {{ $assetColor }}; color: {{ $assetTextColor }};">
                                         {{ $assetName }}
                                     </span>
                                 </td>
@@ -191,7 +203,11 @@
                                 @endphp
                                 <tr>
                                     <td style="padding: 1px 4px 1px 0;">
-                                        <span class="badge" style="background: {{ $assetColors[($idx + 3) % count($assetColors)] }}; color: white;">
+                                        @php
+                                            $assetColor = $assetColors[($idx + 3) % count($assetColors)];
+                                            $assetTextColor = \App\Support\UIColors::textColorFor($assetColor);
+                                        @endphp
+                                        <span class="badge" style="background: {{ $assetColor }}; color: {{ $assetTextColor }};">
                                             {{ $assetName }}
                                         </span>
                                     </td>

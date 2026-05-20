@@ -3,9 +3,11 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\Traits\FundTrait;
+use App\Models\AccountBalance;
 use App\Models\AssetPrice;
 use App\Models\ExchangeHoliday;
 use App\Models\FundExt;
+use App\Models\TransactionExt;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -126,6 +128,7 @@ class FundTraitTest extends TestCase
         $this->assertArrayHasKey('share_value', $summary);
         $this->assertArrayHasKey('unallocated_shares', $summary);
         $this->assertArrayHasKey('allocated_shares', $summary);
+        $this->assertArrayHasKey('allocated_value', $summary);
         $this->assertArrayHasKey('borrowed_shares', $summary);
         $this->assertArrayHasKey('available_unallocated_shares', $summary);
     }
@@ -249,6 +252,35 @@ class FundTraitTest extends TestCase
             $this->assertArrayHasKey('shares', $balance);
             $this->assertArrayHasKey('value', $balance);
         }
+    }
+
+    public function test_create_account_balances_response_aggregates_borrowing_by_account()
+    {
+        $this->factory->createUser();
+        $account = $this->factory->userAccount;
+
+        $ownTransaction = $this->factory->createTransaction(1000, $account, TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_CLEARED, null, '2022-01-15');
+        $this->factory->createBalance(100, $ownTransaction, $account, '2022-01-15');
+
+        $borrowTransaction = $this->factory->createTransaction(0, $account, TransactionExt::TYPE_BORROW,
+            TransactionExt::STATUS_CLEARED, null, '2022-02-01');
+        AccountBalance::factory()
+            ->for($borrowTransaction, 'transaction')
+            ->for($account, 'account')
+            ->create([
+                'type' => 'BOR',
+                'start_dt' => '2022-02-01',
+                'end_dt' => '9999-12-31',
+                'shares' => 40,
+            ]);
+
+        $result = $this->traitObject->createAccountBalancesResponse($this->factory->fund, '2022-06-01');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals(100.0, $result[0]['gross_shares']);
+        $this->assertEquals(40.0, $result[0]['borrowed_shares']);
+        $this->assertEquals(60.0, $result[0]['shares']);
     }
 
     public function test_report_users_returns_user_accounts()

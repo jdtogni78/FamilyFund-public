@@ -100,21 +100,35 @@
     // series' last real data point instead of carrying the last value
     // forward. The actual-repayments line uses this so it ends at the last
     // actual payment rather than running flat to plan maturity — there have
-    // been no further repayments, so there is nothing to draw there. The
-    // plan line keeps the default carry-forward so it spans full length.
-    $alignSeries = function (array $series, bool $stopAtLast = false) use ($allDates) {
+    // been no further repayments, so there is nothing to draw there.
+    //
+    // $skipGaps: when true, emit null at every x-axis date that the series
+    // itself does not have a point for (rather than carrying the last value
+    // forward). The plan line uses this: between two scheduled installments
+    // the x-axis may include actual-only dates, and carrying-forward would
+    // draw the plan as a flat plateau that then jumps at the next scheduled
+    // date. Emitting nulls + spanGaps on the dataset makes Chart.js draw a
+    // direct line from one scheduled point to the next — a continuous
+    // incline, which is how cumulative shares scheduled actually accrue.
+    $alignSeries = function (array $series, bool $stopAtLast = false, bool $skipGaps = false) use ($allDates) {
         $byDate = [];
-        $last = null;
         foreach ($series as $p) {
             $byDate[$p['date']] = $p['cumulative_shares'];
         }
         $lastDate = $series ? $series[count($series) - 1]['date'] : null;
         $out = [];
+        $last = null;
         foreach ($allDates as $d) {
             if (isset($byDate[$d])) {
                 $last = $byDate[$d];
+                $out[] = $byDate[$d];
+            } elseif ($skipGaps) {
+                $out[] = null;
+            } elseif ($stopAtLast && $lastDate !== null && $d > $lastDate) {
+                $out[] = null;
+            } else {
+                $out[] = $last;
             }
-            $out[] = ($stopAtLast && $lastDate !== null && $d > $lastDate) ? null : $last;
         }
         return $out;
     };
@@ -127,13 +141,29 @@
     $datasets = [];
     if (!empty($plan)) {
         $datasets[] = [
-            'label'       => 'Scheduled plan',
-            'data'        => $alignSeries($plan),
-            'borderColor' => '#2563eb',
-            'borderDash'  => [6, 4],
-            'fill'        => false,
-            'pointRadius' => 0,
-            'borderWidth' => 2,
+            'label'                => 'Scheduled plan',
+            'data'                 => $alignSeries($plan, false, true),
+            'borderColor'          => '#2563eb',
+            'borderDash'           => [6, 4],
+            'fill'                 => false,
+            // Hollow blue DIAMOND on each scheduled installment. A
+            // diamond instead of a circle so where a scheduled date and
+            // an actual repayment fall on the same day (the actual line
+            // uses solid green circles) you can still see both markers
+            // distinctly instead of one swallowing the other. Fill is
+            // transparent (not white) so the green dot underneath stays
+            // visible at overlap points. Null values (actual-only
+            // x-axis dates) render no point — only real scheduled
+            // dates get a marker.
+            'pointStyle'           => 'rectRot',
+            'pointRadius'          => 4,
+            'pointBackgroundColor' => 'rgba(0,0,0,0)',
+            'pointBorderColor'     => '#2563eb',
+            'pointBorderWidth'     => 1.5,
+            'borderWidth'          => 2,
+            // Draw straight from one scheduled point to the next over
+            // actual-only x-axis dates instead of plateauing through them.
+            'spanGaps'             => true,
         ];
     }
     if (!empty($actual)) {

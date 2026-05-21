@@ -117,6 +117,37 @@ docker exec familyfund php artisan test --filter=TransactionTest    # Single tes
 docker exec familyfund ./vendor/bin/phpunit --coverage-text 2>&1 | grep -E "^  (Lines|Methods|Classes):"
 ```
 
+### Isolated-DB test env (testpool) — for coverage, RefreshDatabase, parallel runs
+
+Tests in the main `familyfund` container reset the shared `familyfund_dev` DB
+(RefreshDatabase wipes it), which clobbers any other session using dev. For
+coverage / Dusk / migration trials / parallel-session test runs, lease an
+isolated slot from `~/.familyfund-pool/testpool.sh` instead — each slot has
+its own `familyfund_testN` DB restored from `database/test/test-baseline.sql.gz`
+on every claim.
+
+```bash
+# From this worktree's app1/
+~/.familyfund-pool/testpool.sh list                                # 3 slots: test0..test2
+~/.familyfund-pool/testpool.sh claim "<label>"                     # lease + DB restore + bring up stack
+~/.familyfund-pool/testpool.sh run        -- --filter=Foo          # `php artisan test` in this worktree's slot
+~/.familyfund-pool/testpool.sh tour       -- --filter=FooDuskTest  # Dusk w/ Selenium sidecar
+~/.familyfund-pool/testpool.sh reseed test2                        # re-restore mid-lease
+~/.familyfund-pool/testpool.sh release                             # free the slot
+```
+
+Coverage in a slot (pcov is in `app1/Dockerfile`):
+
+```bash
+docker exec familyfund-<slot> sh -c "cd /app && \
+  ./vendor/bin/phpunit --coverage-text --exclude-group=incomplete,needs-data-refactor" \
+  2>&1 | grep -E '^  (Lines|Methods|Classes):'
+```
+
+**Do not** use `pool.sh` (the preview pool, `pool0..pool5` at ports
+3020–3025) for tests — every preview slot hardcodes `DB_DATABASE=familyfund_dev`,
+so RefreshDatabase will wipe shared dev data.
+
 See `test_plan.md` for detailed test fix progress and remaining issues.
 
 ## Docker Services

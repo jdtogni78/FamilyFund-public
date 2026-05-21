@@ -5,9 +5,9 @@
                 <th scope="col">Account</th>
                 <th scope="col">User</th>
                 <th scope="col">Allocated Shares</th>
-                <th scope="col">Loaned Shares</th>
                 <th scope="col">%</th>
                 <th scope="col">Value</th>
+                <th scope="col">Loaned Shares</th>
                 <th scope="col">Loaned Value</th>
             </tr>
         </thead>
@@ -38,9 +38,9 @@
                 </th>
                 <td>{{ $bals['user']['name'] }}</td>
                 <td data-order="{{ $shares }}">{{ number_format($shares, 2) }}</td>
-                <td data-order="{{ $rowBorrowedShares }}">{{ $rowBorrowedShares > 0 ? number_format($rowBorrowedShares, 2) : '-' }}</td>
                 <td data-order="{{ $percent }}">{{ number_format($percent, 2) }}%</td>
                 <td data-order="{{ $value }}">${{ number_format($value, 2) }}</td>
+                <td data-order="{{ $rowBorrowedShares }}">{{ $rowBorrowedShares > 0 ? number_format($rowBorrowedShares, 2) : '-' }}</td>
                 <td data-order="{{ $rowBorrowedValue }}">{{ $rowBorrowedValue > 0 ? '$' . number_format($rowBorrowedValue, 2) : '-' }}</td>
             </tr>
         @endforeach
@@ -59,9 +59,9 @@
                 <th scope="row">Total Allocated</th>
                 <td></td>
                 <td>{{ number_format($allocatedShares, 2) }}</td>
-                <td>{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
                 <td>{{ number_format($allocatedPercent, 2) }}%</td>
                 <td>${{ number_format($allocatedValue, 2) }}</td>
+                <td>{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
                 <td>{{ $borrowedValue > 0 ? '$' . number_format($borrowedValue, 2) : '-' }}</td>
             </tr>
             @if($borrowedShares > 0)
@@ -72,9 +72,9 @@
                 </th>
                 <td>-</td>
                 <td>-</td>
-                <td>{{ number_format($borrowedShares, 2) }}</td>
                 <td>{{ number_format($borrowedPercent, 2) }}%</td>
                 <td>-</td>
+                <td>{{ number_format($borrowedShares, 2) }}</td>
                 <td>${{ number_format($borrowedValue, 2) }}</td>
             </tr>
             @endif
@@ -86,9 +86,9 @@
                 </th>
                 <td>-</td>
                 <td>{{ number_format($availableUnallocatedShares, 2) }}</td>
-                <td>-</td>
                 <td>{{ number_format($availableUnallocatedPercent, 2) }}%</td>
                 <td>${{ number_format($availableUnallocatedValue, 2) }}</td>
+                <td>-</td>
                 <td>-</td>
             </tr>
             @endif
@@ -96,9 +96,9 @@
                 <th scope="row">Total</th>
                 <td></td>
                 <td>{{ number_format($allocatedShares + $availableUnallocatedShares, 2) }}</td>
-                <td>{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
                 <td>100.00%</td>
                 <td>${{ number_format(($allocatedValue + $availableUnallocatedValue), 2) }}</td>
+                <td>{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
                 <td>{{ $borrowedValue > 0 ? '$' . number_format($borrowedValue, 2) : '-' }}</td>
             </tr>
         </tfoot>
@@ -109,7 +109,7 @@
 <script>
 $(document).ready(function() {
     $('#fund-accounts-table').DataTable({
-        order: [[5, 'desc']], // Sort by Value descending
+        order: [[4, 'desc']], // Sort by Value descending
         pageLength: 25,
         paging: false,
         searching: false,

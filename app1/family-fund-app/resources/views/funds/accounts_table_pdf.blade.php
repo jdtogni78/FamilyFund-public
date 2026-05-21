@@ -5,10 +5,10 @@
             <th>Account</th>
             <th>User</th>
             <th class="col-number">Allocated Shares</th>
-            <th class="col-number">Loaned Shares</th>
-            <th class="col-number">Value</th>
-            <th class="col-number">Loaned Value</th>
             <th class="col-number">%</th>
+            <th class="col-number">Value</th>
+            <th class="col-number">Loaned Shares</th>
+            <th class="col-number">Loaned Value</th>
         </tr>
     </thead>
     <tbody>
@@ -27,9 +27,6 @@
             <td><strong>{{ $balance['nickname'] }}</strong></td>
             <td>{{ $balance['user']['name'] ?? $balance['user_name'] ?? $balance['nickname'] ?? '-' }}</td>
             <td class="col-number">{{ number_format($balance['shares'] ?? 0, 2) }}</td>
-            <td class="col-number">{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
-            <td class="col-number">${{ number_format($balanceValue, 2) }}</td>
-            <td class="col-number">{{ $borrowedValue > 0 ? '$' . number_format($borrowedValue, 2) : '-' }}</td>
             <td class="col-number">
                 @if($api['summary']['shares'] > 0)
                     {{ number_format((($balance['shares'] ?? 0) / $api['summary']['shares']) * 100, 2) }}%
@@ -37,6 +34,9 @@
                     -
                 @endif
             </td>
+            <td class="col-number">${{ number_format($balanceValue, 2) }}</td>
+            <td class="col-number">{{ $borrowedShares > 0 ? number_format($borrowedShares, 2) : '-' }}</td>
+            <td class="col-number">{{ $borrowedValue > 0 ? '$' . number_format($borrowedValue, 2) : '-' }}</td>
         </tr>
     @endforeach
     </tbody>
@@ -44,10 +44,10 @@
         <tr style="background: #ccfbf1; font-weight: 600; color: #134e4a;">
             <td colspan="2" style="padding: 10px;">TOTAL ALLOCATED</td>
             <td class="col-number" style="padding: 10px;">{{ number_format($totalShares, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">{{ $totalBorrowedShares > 0 ? number_format($totalBorrowedShares, 2) : '-' }}</td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($totalValue, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">{{ $totalBorrowedValue > 0 ? '$' . number_format($totalBorrowedValue, 2) : '-' }}</td>
             <td class="col-number" style="padding: 10px;">{{ number_format($api['summary']['allocated_shares_percent'], 2) }}%</td>
+            <td class="col-number" style="padding: 10px;">${{ number_format($totalValue, 2) }}</td>
+            <td class="col-number" style="padding: 10px;">{{ $totalBorrowedShares > 0 ? number_format($totalBorrowedShares, 2) : '-' }}</td>
+            <td class="col-number" style="padding: 10px;">{{ $totalBorrowedValue > 0 ? '$' . number_format($totalBorrowedValue, 2) : '-' }}</td>
         </tr>
         @php
             $loanedShares = $api['summary']['borrowed_shares'] ?? $totalBorrowedShares;
@@ -61,27 +61,27 @@
         <tr style="background: #fef3c7; font-weight: 600; color: #92400e;">
             <td colspan="2" style="padding: 10px;">LOANED FROM UNALLOCATED</td>
             <td class="col-number" style="padding: 10px;">-</td>
-            <td class="col-number" style="padding: 10px;">{{ number_format($loanedShares, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">-</td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($loanedValue, 2) }}</td>
             <td class="col-number" style="padding: 10px;">{{ number_format($loanedPct, 2) }}%</td>
+            <td class="col-number" style="padding: 10px;">-</td>
+            <td class="col-number" style="padding: 10px;">{{ number_format($loanedShares, 2) }}</td>
+            <td class="col-number" style="padding: 10px;">${{ number_format($loanedValue, 2) }}</td>
         </tr>
         @endif
         <tr style="background: #fef3c7; font-weight: 600; color: #92400e;">
             <td colspan="2" style="padding: 10px;"><span style="margin-right: 4px;">&#9888;</span> AVAILABLE UNALLOCATED</td>
             <td class="col-number" style="padding: 10px;">{{ number_format($availableUnallocatedShares, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">-</td>
+            <td class="col-number" style="padding: 10px;">{{ number_format($availableUnallocatedPct, 2) }}%</td>
             <td class="col-number" style="padding: 10px;">${{ number_format($availableUnallocatedValue, 2) }}</td>
             <td class="col-number" style="padding: 10px;">-</td>
-            <td class="col-number" style="padding: 10px;">{{ number_format($availableUnallocatedPct, 2) }}%</td>
+            <td class="col-number" style="padding: 10px;">-</td>
         </tr>
         <tr style="background: #134e4a; color: #ffffff; font-weight: 700;">
             <td colspan="2" style="padding: 10px;">TOTAL</td>
             <td class="col-number" style="padding: 10px;">{{ number_format($totalShares + $availableUnallocatedShares, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">{{ $loanedShares > 0 ? number_format($loanedShares, 2) : '-' }}</td>
-            <td class="col-number" style="padding: 10px;">${{ number_format($totalValue + $availableUnallocatedValue, 2) }}</td>
-            <td class="col-number" style="padding: 10px;">{{ $loanedValue > 0 ? '$' . number_format($loanedValue, 2) : '-' }}</td>
             <td class="col-number" style="padding: 10px;">100.00%</td>
+            <td class="col-number" style="padding: 10px;">${{ number_format($totalValue + $availableUnallocatedValue, 2) }}</td>
+            <td class="col-number" style="padding: 10px;">{{ $loanedShares > 0 ? number_format($loanedShares, 2) : '-' }}</td>
+            <td class="col-number" style="padding: 10px;">{{ $loanedValue > 0 ? '$' . number_format($loanedValue, 2) : '-' }}</td>
         </tr>
     </tfoot>
 </table>

@@ -73,7 +73,8 @@ class CreditLineNegativeUITest extends DuskTestCase
             $browser->script("document.querySelector('input[name=\"principal_shares\"]').removeAttribute('min');");
             $browser->script("document.querySelector('input[name=\"principal_shares\"]').removeAttribute('required');");
 
-            $browser->type('input[name="principal_shares"]', '-10')
+            $browser->type('input[name="nickname"]', 'Negative test: negative principal')
+                ->type('input[name="principal_shares"]', '-10')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '6')
                 ->select('select[name="payment_frequency"]', 'monthly')
@@ -101,7 +102,8 @@ class CreditLineNegativeUITest extends DuskTestCase
             $browser->script("document.querySelector('input[name=\"term_months\"]').removeAttribute('min');");
             $browser->script("document.querySelector('input[name=\"term_months\"]').removeAttribute('required');");
 
-            $browser->type('input[name="principal_shares"]', '50')
+            $browser->type('input[name="nickname"]', 'Negative test: zero term')
+                ->type('input[name="principal_shares"]', '50')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '0')
                 ->select('select[name="payment_frequency"]', 'monthly')
@@ -125,7 +127,8 @@ class CreditLineNegativeUITest extends DuskTestCase
                 ->waitFor('form[action*="/credit-lines"]')
                 ->screenshot('negative/04a_create_form_loaded');
 
-            $browser->type('input[name="principal_shares"]', '9999999')
+            $browser->type('input[name="nickname"]', 'Negative test: over-borrow')
+                ->type('input[name="principal_shares"]', '9999999')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '12')
                 ->select('select[name="payment_frequency"]', 'monthly')
@@ -308,6 +311,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     ): int {
         $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
             ->waitFor('form[action*="/credit-lines"]')
+            ->type('input[name="nickname"]', $descr)
             ->type('input[name="principal_shares"]', (string) $principalShares)
             ->clear('input[name="term_months"]')
             ->type('input[name="term_months"]', (string) $termMonths)

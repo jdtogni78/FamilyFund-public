@@ -44,7 +44,8 @@ class CreditLineUITourTest extends DuskTestCase
                 ->screenshot('tour/03_create_form_empty');
 
             // Fill the form (don't submit yet — screenshot the filled state)
-            $browser->type('input[name="principal_shares"]', '120')
+            $browser->type('input[name="nickname"]', 'UI tour line')
+                ->type('input[name="principal_shares"]', '120')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '6')
                 ->select('select[name="payment_frequency"]', 'monthly')

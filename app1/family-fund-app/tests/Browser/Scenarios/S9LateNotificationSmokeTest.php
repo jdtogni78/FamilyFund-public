@@ -66,11 +66,17 @@ class S9LateNotificationSmokeTest extends DuskTestCase
             ->select('select[name="payment_frequency"]', 'monthly')
             ->type('input[name="descr"]', $descr);
 
-        // The origination_date input is optional on the form; type into it
-        // only if present.
+        // Set the date via JS — Dusk's ->type() on a native HTML5 date
+        // input enters characters into the month/day/year segments rather
+        // than the field value, which garbles to e.g. year 0421. Setting
+        // .value directly and dispatching 'change' is the supported pattern
+        // for Selenium against <input type="date">.
         if ($browser->element('input[name="origination_date"]')) {
-            $browser->clear('input[name="origination_date"]')
-                ->type('input[name="origination_date"]', $originationDate);
+            $browser->script(
+                "var el = document.querySelector('input[name=\"origination_date\"]');"
+                . "el.value = '" . $originationDate . "';"
+                . "el.dispatchEvent(new Event('change', {bubbles:true}));"
+            );
         }
 
         $browser->press('Open')

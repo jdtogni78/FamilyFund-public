@@ -249,9 +249,12 @@ class TrajectoryBuilderTest extends TestCase
         // Seed a partial on row 1 so it's PARTIAL & past-due.
         $repay->repayRow($r1->refresh(), 4.0);
 
-        // Big payment on row 2 covers it (10) and overflows 8 back onto r1
-        // (cascading rule: overflow goes to oldest open row first).
-        $repay->repayRow($r2->refresh(), 18.0);
+        // Big payment on row 2 covers it (10) and overflows 6 back onto r1
+        // (cascading rule: overflow goes to oldest open row first). Pay
+        // exactly the line's remaining outstanding — overpaying the line
+        // total is rejected (see RepayServiceTest::test_repay_overpayment_is_rejected).
+        $line->refresh();
+        $repay->repayRow($r2->refresh(), (float) $line->outstanding_shares);
 
         $r1->refresh();
         $this->assertSame(CreditLinePayment::STATUS_PAID, $r1->status);

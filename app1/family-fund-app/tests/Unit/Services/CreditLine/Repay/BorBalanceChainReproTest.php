@@ -45,7 +45,11 @@ class BorBalanceChainReproTest extends TestCase
         $draw = new DrawService(new AmortizationScheduleBuilder(), $calc);
         $repay = new RepayService($calc);
 
-        $line = $draw->open($account, 3000.0, 18, 'monthly', 'Buy Home', Carbon::today());
+        // Anchor origination in the past so the repayment dates below all
+        // fall within [origination_date, today] — future-dated REPs are
+        // rejected (QA_BUGS_2026-05-20 #2).
+        $origination = Carbon::today()->copy()->subMonths(4);
+        $line = $draw->open($account, 3000.0, 18, 'monthly', 'Buy Home', $origination);
 
         $afterBor = AccountBalance::where('account_id', $account->id)
             ->where('type', 'BOR')
@@ -55,7 +59,7 @@ class BorBalanceChainReproTest extends TestCase
         $this->assertEquals(3000.0000, round((float) $afterBor->shares, 4),
             'BOR balance after draw should equal principal (3000), not 3080');
 
-        $repay->repay($line, 83.3333, Carbon::today()->copy()->addMonth());
+        $repay->repay($line, 83.3333, $origination->copy()->addMonth());
         $afterRep1 = AccountBalance::where('account_id', $account->id)
             ->where('type', 'BOR')
             ->whereDate('end_dt', '9999-12-31')
@@ -63,14 +67,14 @@ class BorBalanceChainReproTest extends TestCase
         $this->assertEquals(2916.6667, round((float) $afterRep1->shares, 4),
             'BOR balance after first 83.33 payment should be 2916.6667, not 2916.67 minus extra 80');
 
-        $repay->repay($line, 50.0, Carbon::today()->copy()->addMonths(2)->addDays(14));
+        $repay->repay($line, 50.0, $origination->copy()->addMonths(2)->addDays(14));
         $afterRep2 = AccountBalance::where('account_id', $account->id)
             ->where('type', 'BOR')
             ->whereDate('end_dt', '9999-12-31')
             ->first();
         $this->assertEquals(2866.6667, round((float) $afterRep2->shares, 4));
 
-        $repay->repay($line, 100.0, Carbon::today()->copy()->addMonths(3)->addDays(9));
+        $repay->repay($line, 100.0, $origination->copy()->addMonths(3)->addDays(9));
         $afterRep3 = AccountBalance::where('account_id', $account->id)
             ->where('type', 'BOR')
             ->whereDate('end_dt', '9999-12-31')
@@ -96,15 +100,16 @@ class BorBalanceChainReproTest extends TestCase
 
     private function seedOwnBalance($account, float $shares): void
     {
-        $factory = new DataFactory();
-        $factory->userAccount = $account;
+        // Seed an OWN balance dated well in the past so a backdated draw
+        // (origination several months ago) has borrow capacity at that date.
+        $start = Carbon::today()->subYear()->toDateString();
         $tran = (new DataFactory())->createTransaction(
             $shares * 10,
             $account,
             TransactionExt::TYPE_PURCHASE,
             TransactionExt::STATUS_CLEARED,
             null,
-            Carbon::today()->toDateString()
+            $start
         );
         $tran->shares = $shares;
         $tran->save();
@@ -114,7 +119,7 @@ class BorBalanceChainReproTest extends TestCase
             'transaction_id' => $tran->id,
             'type'           => 'OWN',
             'shares'         => $shares,
-            'start_dt'       => Carbon::today()->toDateString(),
+            'start_dt'       => $start,
             'end_dt'         => '9999-12-31',
         ]);
     }

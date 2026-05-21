@@ -93,7 +93,7 @@ php artisan queue:listen
 
 **IMPORTANT:** Tests must run in Docker (`docker exec familyfund php artisan test`) - database is not accessible from host.
 
-**Current Status (2026-05-14):** 1791 passing (excluding incomplete/needs-data-refactor groups).
+**Current Status (2026-05-14):** 1791 passing. No tests are currently tagged with `incomplete` or `needs-data-refactor` groups — the `<exclude><group>incomplete</group></exclude>` block in `phpunit.xml` is a no-op kept as scaffolding for future use.
 
 Prefer the wrapper `app1/family-fund-app/bin/test.sh`: rebuilds Vite assets if stale, autodetects the container name (`$FF_CONTAINER` → `ffacl-familyfund-1` → `familyfund`), then runs `php artisan test`. Pass-through args work (e.g. `bin/test.sh --filter=Foo`).
 
@@ -110,7 +110,6 @@ Tests organized in `tests/`:
 ```bash
 # Run tests in Docker (REQUIRED - do not run locally)
 docker exec familyfund php artisan test
-docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor  # Skip problematic tests
 docker exec familyfund php artisan test --filter=TransactionTest    # Single test
 
 # Coverage report

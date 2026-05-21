@@ -305,8 +305,6 @@ class TransactionControllerExtTest extends TestCase
 
     public function test_edit_shows_edit_form()
     {
-        $this->markTestSkipped('View has template issues - controller method works');
-
         $transaction = $this->df->createTransaction(100, null, TransactionExt::TYPE_PURCHASE);
 
         $response = $this->actingAs($this->user)

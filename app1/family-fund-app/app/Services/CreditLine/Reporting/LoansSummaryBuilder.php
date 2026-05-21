@@ -26,49 +26,77 @@ use Carbon\Carbon;
  */
 class LoansSummaryBuilder
 {
-    public function forAccount(AccountExt $account): array
+    /**
+     * @param  Carbon|null $asOf  When provided, returns the summary as it was
+     *         at that date — lines whose origination_date is in the future
+     *         relative to $asOf are excluded, totals are recomputed from the
+     *         transaction history at that date, and net outstanding comes
+     *         from the BOR ledger row that was open at $asOf. (QA_BUGS_2026-05-21
+     *         #7, #16: the present-day version corrupts as-of views and the
+     *         "Lifetime repaid" tile.)
+     */
+    public function forAccount(AccountExt $account, ?Carbon $asOf = null): array
     {
-        $lines = AccountCreditLine::where('account_id', $account->id)->get();
+        $today    = Carbon::today();
+        $asOfDate = $asOf ? $asOf->copy()->startOfDay() : $today;
+        $asOfStr  = $asOfDate->toDateString();
+
+        // Lines that existed at $asOf.
+        $lines = AccountCreditLine::where('account_id', $account->id)
+            ->whereDate('origination_date', '<=', $asOfStr)
+            ->get();
 
         $totalDisbursed = (float) $lines->sum('principal_shares');
 
-        $totalRepaid = (float) TransactionExt::where('account_id', $account->id)
-            ->where('type', TransactionExt::TYPE_REPAY)
-            ->where('status', TransactionExt::STATUS_CLEARED)
-            ->where('reversed', false)
-            ->sum('shares');
+        // Lifetime repaid is the share of principal actually paid back across
+        // lines: Σ (principal − outstanding_at_$asOf). Using SUM(transactions
+        // WHERE type=REP) here would let overpayments and corrupted REP rows
+        // inflate the figure (QA_BUGS_2026-05-21 #7).
+        $isLive = $asOfStr >= $today->toDateString();
+        $totalRepaid = 0.0;
+        foreach ($lines as $line) {
+            $outstandingAt = $isLive
+                ? (float) $line->outstanding_shares
+                : $this->outstandingForLineAsOf($line, $asOfStr);
+            $totalRepaid += max(0.0, (float) $line->principal_shares - $outstandingAt);
+        }
 
         $activeLines = $lines->where('status', 'active');
-        $netOutstanding = (float) $activeLines->sum('outstanding_shares');
+
+        // Net outstanding: live mode trusts the snapshot column (which the
+        // OutstandingCalculator keeps in sync with the BOR ledger); historical
+        // mode reads the BOR aggregate row open at $asOf (same source of
+        // truth as availableToBorrow() in OutstandingCalculator).
+        $netOutstanding = $isLive
+            ? (float) $activeLines->sum('outstanding_shares')
+            : (float) $account->borrowedSharesAsOf($asOfStr);
+
         $activeLineCount = $activeLines->count();
 
-        $today = Carbon::today();
-
-        // Next due across all active lines.
+        // Next due / behind plan are "going-forward from $asOf" projections.
         $next = CreditLinePayment::whereIn('account_credit_line_id', $activeLines->pluck('id'))
             ->where('status', CreditLinePayment::STATUS_SCHEDULED)
-            ->where('due_date', '>=', $today->toDateString())
+            ->where('due_date', '>=', $asOfStr)
             ->orderBy('due_date')
             ->first();
 
         $nextDueDate = $next ? Carbon::parse($next->due_date)->format('Y-m-d') : null;
         $nextDueShares = $next ? (float) $next->shares_due : 0.0;
 
-        // Behind-plan = any active line with a scheduled row whose due_date is past.
         $behindIds = CreditLinePayment::whereIn('account_credit_line_id', $activeLines->pluck('id'))
             ->whereIn('status', [
                 CreditLinePayment::STATUS_SCHEDULED,
                 CreditLinePayment::STATUS_LATE,
                 CreditLinePayment::STATUS_PARTIAL,
             ])
-            ->where('due_date', '<', $today->toDateString())
+            ->where('due_date', '<', $asOfStr)
             ->pluck('account_credit_line_id')
             ->unique();
         $behindCount = $behindIds->count();
 
         $outstandingValue = 0.0;
         try {
-            $sharePrice = (float) $account->shareValueAsOf($today->toDateString());
+            $sharePrice = (float) $account->shareValueAsOf($asOfStr);
             $outstandingValue = $netOutstanding * $sharePrice;
         } catch (\Throwable $e) {
             // Defensive: keep 0 if fund/share price not available.
@@ -84,5 +112,35 @@ class LoansSummaryBuilder
             'behind_plan_count'      => $behindCount,
             'outstanding_value'      => round($outstandingValue, 2),
         ];
+    }
+
+    /**
+     * Replay BOR/REP transactions on a line up to $asOfStr to recover its
+     * outstanding shares at that date. Mirrors the counted-statuses filter in
+     * OutstandingCalculator::recomputeForLine() so historical and live reads
+     * agree.
+     */
+    private function outstandingForLineAsOf(AccountCreditLine $line, string $asOfStr): float
+    {
+        $rows = TransactionExt::where('account_credit_line_id', $line->id)
+            ->whereIn('type', [TransactionExt::TYPE_BORROW, TransactionExt::TYPE_REPAY])
+            ->where('reversed', false)
+            ->where(function ($q) {
+                $q->whereNull('credit_line_match_status')
+                  ->orWhereIn('credit_line_match_status', [
+                      TransactionExt::MATCH_STATUS_AUTO_MATCHED,
+                      TransactionExt::MATCH_STATUS_MANUAL,
+                  ]);
+            })
+            ->whereDate('timestamp', '<=', $asOfStr)
+            ->get();
+
+        $outstanding = 0.0;
+        foreach ($rows as $row) {
+            $outstanding += ($row->type === TransactionExt::TYPE_BORROW)
+                ? (float) $row->shares
+                : -(float) $row->shares;
+        }
+        return round(max(0.0, $outstanding), 4);
     }
 }

@@ -319,16 +319,28 @@ class QaBugs20260520Test extends TestCase
     {
         $a = $this->df->userAccount;
 
-        // CL #1 — 100 principal, *overpaid* 150 (relies on bug #1 still
-        // being present). After the overpay, CL is paid_off / outstanding=0
-        // / REP transaction sum=150. The "Lifetime repaid" tile that uses
-        // raw transaction sums would render 150; the post-fix tile that
-        // uses SUM(principal - outstanding) would render 100.
+        // CL #1 — 100 principal, fully repaid through the controller (clean
+        // state: outstanding=0, REP transactions sum to 100). Then inject a
+        // rogue 50-share REP row directly via the DB to simulate the corrupted
+        // historical state from before bug #1 was fixed (commit 4df7d83a closed
+        // the controller path that produced this state, but past data and any
+        // future regression can recreate it). The tile must derive Lifetime
+        // repaid from SUM(principal − outstanding) [= 100], NOT from
+        // SUM(transactions WHERE type=REP) [= 150 with the injected row].
         $line1 = $this->openLine(['principal_shares' => 100, 'nickname' => 'tile-1']);
         $this->actingAs($this->admin)->post(
             route('credit_lines.repay', ['line' => $line1->id]),
-            ['account_credit_line_id' => $line1->id, 'shares' => 150]
+            ['account_credit_line_id' => $line1->id, 'shares' => 100]
         );
+        \App\Models\Transaction::factory()->for($a, 'account')->create([
+            'type'                   => \App\Models\TransactionExt::TYPE_REPAY,
+            'status'                 => \App\Models\TransactionExt::STATUS_CLEARED,
+            'value'                  => 500,
+            'shares'                 => 50,
+            'reversed'               => false,
+            'timestamp'              => now(),
+            'account_credit_line_id' => $line1->id,
+        ]);
 
         // CL #2 — 50 principal, fully paid normally.
         $line2 = $this->openLine(['principal_shares' => 50, 'nickname' => 'tile-2']);
@@ -338,10 +350,10 @@ class QaBugs20260520Test extends TestCase
         );
 
         // Post-fix expected:
-        //   Lifetime disbursed = SUM(principal)           = 100 + 50 = 150
-        //   Lifetime repaid    = SUM(principal - outstanding) = 100 + 50 = 150
-        //                        (NOT SUM(REP) = 200, which is corrupted
-        //                        by the overpay phantom shares.)
+        //   Lifetime disbursed = SUM(principal)               = 100 + 50 = 150
+        //   Lifetime repaid    = SUM(principal − outstanding) = 100 + 50 = 150
+        //                        (NOT SUM(REP) = 150 + 50 + 50 = 250,
+        //                        which is corrupted by the injected row.)
         $expectedDisbursed = 150.0;
         $expectedRepaid    = 150.0;
 

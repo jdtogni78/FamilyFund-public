@@ -110,10 +110,14 @@ class LoansSummaryBuilderTest extends TestCase
     public function test_reversed_repayments_excluded_from_total_repaid(): void
     {
         $account = $this->factory->userAccount;
+        // outstanding_shares is the snapshot OutstandingCalculator maintains
+        // from non-reversed BOR/REP transactions: principal 100, one cleared
+        // REP of 10 → outstanding 90. A reversed REP must not move the
+        // snapshot, so total_repaid = 100 − 90 = 10.
         $line = AccountCreditLine::create([
             'account_id'         => $account->id,
             'principal_shares'   => 100.0,
-            'outstanding_shares' => 100.0,
+            'outstanding_shares' => 90.0,
             'term_months'        => 12,
             'origination_date'   => '2026-01-01',
             'maturity_date'      => '2027-01-01',

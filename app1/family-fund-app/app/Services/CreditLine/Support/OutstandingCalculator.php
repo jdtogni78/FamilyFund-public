@@ -64,55 +64,27 @@ class OutstandingCalculator
     }
 
     /**
-     * Calculate how many shares this account can still borrow.
+     * Calculate how many shares this account can still borrow as of a date.
      *
-     * Formula:
-     *   available = AccountExt::sharesAsOf($asOf) − Σ outstanding_shares across all ACTIVE lines
+     *   available($asOf) = OWN_balance($asOf) − BOR_aggregate_balance($asOf)
      *
-     * Explanation of the accounting:
-     *   AccountExt::sharesAsOf() already returns OWN_shares − BOR_aggregate_balance.
-     *   The BOR_aggregate_balance row equals Σ outstanding_shares on ALL lines.
-     *   So:
-     *       sharesAsOf() = OWN − BOR_aggregate = OWN − Σ_outstanding_all_lines
+     * Both sides are read from the `account_balances` ledger, so both reflect
+     * the historical state at $asOf. (QA_BUGS_2026-05-21 #15: an earlier
+     * version subtracted the *current* SUM(outstanding_shares) of active CLs
+     * from OWN-at-$asOf, which goes negative for any $asOf predating a
+     * still-active CL.)
      *
-     *   But "available to borrow" should be:
-     *       OWN − Σ_outstanding_active_lines
-     *
-     *   Since BOR_aggregate = Σ_outstanding_all_lines (including paid_off, cancelled),
-     *   but in practice paid_off lines have outstanding=0 and cancelled lines have outstanding=0,
-     *   Σ_outstanding_all_lines ≈ Σ_outstanding_active_lines.
-     *
-     *   We compute it directly and safely as:
-     *       available = sharesAsOf($asOf) − additional check for any unpaid active lines
-     *
-     *   The simplest correct implementation: read OWN balance directly (before BOR offset),
-     *   then subtract Σ outstanding_shares of active lines.
-     *
-     *   OWN_shares = sharesAsOf($asOf) + BOR_aggregate
-     *   available  = OWN_shares − Σ_outstanding_active_lines
-     *              = (sharesAsOf($asOf) + BOR_aggregate) − Σ_outstanding_active_lines
-     *
-     *   When the aggregate BOR row = Σ_outstanding_active_lines, this simplifies to sharesAsOf().
-     *   We use the explicit computation to be safe.
-     *
-     * @param  AccountExt $account
-     * @param  Carbon|null $asOf   Defaults to today.
-     * @return float Available shares to borrow (may be negative if over-drawn).
+     * @return float May be negative if the account is genuinely over-drawn at $asOf.
      */
     public function availableToBorrow(AccountExt $account, ?Carbon $asOf = null): float
     {
         $asOf = $asOf ?? Carbon::today();
 
-        // Get OWN balance directly (before BOR offset).
-        $allBalances  = $account->allSharesAsOf($asOf->toDateString());
-        $ownShares    = isset($allBalances['OWN']) ? (float) $allBalances['OWN']->shares : 0.0;
+        $allBalances = $account->allSharesAsOf($asOf->toDateString());
+        $ownShares   = isset($allBalances['OWN']) ? (float) $allBalances['OWN']->shares : 0.0;
+        $borShares   = isset($allBalances['BOR']) ? (float) $allBalances['BOR']->shares : 0.0;
 
-        // Sum outstanding_shares on all ACTIVE lines for this account.
-        $activeOutstanding = (float) AccountCreditLine::where('account_id', $account->id)
-            ->where('status', AccountCreditLineExt::STATUS_ACTIVE)
-            ->sum('outstanding_shares');
-
-        return round($ownShares - $activeOutstanding, 4);
+        return round($ownShares - $borShares, 4);
     }
 
     /**

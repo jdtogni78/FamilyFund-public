@@ -493,7 +493,7 @@
             {{-- Loan Shares Section --}}
             <div class="row mb-4" id="section-credit-lines">
                 <div class="col">
-                    @include('account_credit_lines._account_summary', ['account' => $account])
+                    @include('account_credit_lines._account_summary', ['account' => $account, 'asOf' => $api['as_of'] ?? null])
                 </div>
             </div>
         </div>

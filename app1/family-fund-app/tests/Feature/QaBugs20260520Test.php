@@ -6,6 +6,7 @@ use App\Models\AccountBalance;
 use App\Models\Asset;
 use App\Models\TransactionExt;
 use App\Models\User;
+use App\Services\CreditLine\Cancel\CancelService;
 use App\Services\CreditLine\Draw\DrawService;
 use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
 use App\Services\CreditLine\Support\OutstandingCalculator;
@@ -199,6 +200,61 @@ class QaBugs20260520Test extends TestCase
         );
         $this->assertEquals($sumActive, $borrowedAfter,
             'borrowedSharesAsOf must still match sum of active CL outstandings (no ghost shares)');
+    }
+
+    /**
+     * #4: cancellation must refresh the BOR aggregate ledger so a cancelled
+     * CL's contribution stops being counted by borrowedSharesAsOf(). Today
+     * the controller blocks cancel-with-outstanding, but the seed baseline
+     * contains a CL in state status=cancelled+outstanding=108 — i.e. the
+     * inconsistency is reachable somehow. Test exercises a force/writeoff
+     * bypass into CancelService and asserts:
+     *   - borrowedSharesAsOf(now) == 0 immediately after cancel
+     *   - borrowedSharesAsOf(yesterday) still reflects the active period
+     *   - the line is normalized: status=cancelled, outstanding_shares=0
+     *   - no synthetic REP / BOR transaction is written on the account
+     */
+    public function test_bug_4_force_cancel_refreshes_bor_ledger_and_zeroes_outstanding(): void
+    {
+        $account = $this->df->userAccount;
+
+        $origination = Carbon::today()->subDays(7);
+        $line = $this->draw->open($account, 100.0, 12, 'monthly', null, $origination);
+
+        $borrowedBefore = round((float) $account->borrowedSharesAsOf(Carbon::today()->toDateString()), 4);
+        $this->assertEquals(100.0, $borrowedBefore, 'pre-condition: BOR ledger shows the 100-share draw');
+
+        $txCountBefore = TransactionExt::where('account_id', $account->id)->count();
+
+        // Force-cancel with outstanding > 0 (the write-off path).
+        $cancelService = app(CancelService::class);
+        $cancelService->cancel($line, force: true);
+
+        $line->refresh();
+        $this->assertEquals('cancelled', $line->status, 'cancel must mark status=cancelled');
+        $this->assertEquals(
+            0.0,
+            round((float) $line->outstanding_shares, 4),
+            'a cancelled line must have outstanding_shares=0 to stay consistent with status'
+        );
+
+        $this->assertEquals(
+            0.0,
+            round((float) $account->borrowedSharesAsOf(Carbon::today()->toDateString()), 4),
+            'borrowedSharesAsOf(now) must drop to 0 immediately after cancellation, not wait for the next BOR/REP'
+        );
+
+        $this->assertEquals(
+            100.0,
+            round((float) $account->borrowedSharesAsOf($origination->copy()->addDay()->toDateString()), 4),
+            'historical state (during the line\'s active period) must be preserved by the ledger'
+        );
+
+        $this->assertEquals(
+            $txCountBefore,
+            TransactionExt::where('account_id', $account->id)->count(),
+            'cancellation must not synthesize a phantom REP/BOR transaction on the account'
+        );
     }
 
     private function seedOwnBalance($account, float $shares): void

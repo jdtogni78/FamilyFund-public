@@ -182,12 +182,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
-    Route::resource('addresses', App\Http\Controllers\AddressController::class);
-    Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
+    Route::resource('addresses', App\Http\Controllers\Web\AddressController::class);
+    Route::resource('assetChangeLogs', App\Http\Controllers\Web\AssetChangeLogController::class);
     Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class);
-    Route::resource('assets', App\Http\Controllers\AssetController::class);
+    Route::resource('assets', App\Http\Controllers\Web\AssetController::class);
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
-    Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
+    Route::resource('changeLogs', App\Http\Controllers\Web\ChangeLogController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
     Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
         ->name('fundReports.resend');
@@ -198,7 +198,7 @@ Route::middleware('auth')->group(function () {
         ->name('funds.storeWithSetup');
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
-    Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
+    Route::resource('id_documents', App\Http\Controllers\Web\IdDocumentController::class);
     Route::get('matchingRules/{id}/clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@clone')
         ->name('matchingRules.clone');
     Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
@@ -206,23 +206,23 @@ Route::middleware('auth')->group(function () {
     Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
         ->name('matchingRules.send-all-emails');
     Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class);
-    Route::resource('people', App\Http\Controllers\PersonController::class);
-    Route::resource('persons', App\Http\Controllers\PersonController::class);
-    Route::resource('phones', App\Http\Controllers\PhoneController::class);
+    Route::resource('people', App\Http\Controllers\Web\PersonController::class);
+    Route::resource('persons', App\Http\Controllers\Web\PersonController::class);
+    Route::resource('phones', App\Http\Controllers\Web\PhoneController::class);
     Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class);
-    Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
+    Route::resource('portfolios', App\Http\Controllers\Web\PortfolioController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class);
-    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
-    Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
+    Route::resource('schedules', App\Http\Controllers\Web\ScheduleController::class);
+    Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\Web\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');
-    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\TradeBandReportController@resend')
+    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\Web\TradeBandReportController@resend')
         ->name('tradeBandReports.resend');
-    Route::resource('tradeBandReports', App\Http\Controllers\TradeBandReportController::class);
+    Route::resource('tradeBandReports', App\Http\Controllers\Web\TradeBandReportController::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
-    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
+    Route::resource('transactionMatchings', App\Http\Controllers\Web\TransactionMatchingController::class);
     Route::resource('transactions', App\Http\Controllers\WebV1\TransactionControllerExt::class);
-    Route::resource('users', App\Http\Controllers\UserController::class);
+    Route::resource('users', App\Http\Controllers\Web\UserController::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');

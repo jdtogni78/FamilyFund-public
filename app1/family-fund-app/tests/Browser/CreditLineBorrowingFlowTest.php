@@ -43,8 +43,11 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
                 ->assertSee('Outstanding (shares)')
                 ->assertSee('Payment schedule');
 
-            // 6-month monthly schedule => 6 rows
-            $rows = $browser->elements('.card .table tbody tr');
+            // 6-month monthly schedule => 6 rows. The show page has
+            // multiple tables (schedule, allocations, adjustment history);
+            // target only the schedule rows by the data-due attribute the
+            // schedule rows carry (show.blade.php:195).
+            $rows = $browser->elements('table tbody tr[data-due]');
             $this->assertCount(6, $rows, 'Expected 6 schedule rows for term=6 monthly.');
 
             $this->cleanupLine($lineId);

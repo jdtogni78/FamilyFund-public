@@ -73,8 +73,8 @@ These have a `Route::resource(...)` declaration pointing directly at them. The b
 ### Category C — organizational / placement issues
 
 1. `Controllers/APIv1/ExchangeHolidayAPIController.php` — lives in `APIv1/` but isn't an `Ext`. It's a custom standalone API controller. Moved to `Controllers/API/` for consistency.
-2. `Controllers/WebV1/AccountCreditLineControllerExt.php` — has the `Ext` suffix but `extends AppBaseController` (no parent it's extending). Renamed to `AccountCreditLineController` for clarity.
-3. `Controllers/WebV1/ExchangeHolidayController.php` — extends Laravel's `Controller` while all other WebV1 standalones extend `AppBaseController`. Reparented to `AppBaseController`.
+2. `Controllers/WebV1/AccountCreditLineControllerExt.php` — has the `Ext` suffix but `extends AppBaseController` (no parent it's extending). Renamed to `AccountCreditLineController` and all 25 route references updated.
+3. `Controllers/WebV1/ExchangeHolidayController.php` — extended Laravel's `Controller` while all other WebV1 standalones extend `AppBaseController`. Reparented to `AppBaseController`.
 4. 12 active web controllers lived at root with no version directory — moved to a new `Controllers/Web/` namespace.
 
 ## Layout after this work

@@ -94,8 +94,8 @@ Route::resource('phones', App\Http\Controllers\API\PhoneAPIController::class)->n
 
 // Exchange Holiday API
 Route::get('/exchange_holidays/{exchange}/{year}',
-    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'index']);
+    [App\Http\Controllers\API\ExchangeHolidayAPIController::class, 'index']);
 Route::post('/exchange_holidays/sync',
-    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'sync']);
+    [App\Http\Controllers\API\ExchangeHolidayAPIController::class, 'sync']);
 Route::get('/exchange_holidays/status',
-    [App\Http\Controllers\APIv1\ExchangeHolidayAPIController::class, 'status']);
+    [App\Http\Controllers\API\ExchangeHolidayAPIController::class, 'status']);

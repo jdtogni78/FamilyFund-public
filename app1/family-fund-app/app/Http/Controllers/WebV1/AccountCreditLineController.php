@@ -37,7 +37,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-class AccountCreditLineControllerExt extends AppBaseController
+class AccountCreditLineController extends AppBaseController
 {
     public function __construct(
         private readonly DrawService $drawService,

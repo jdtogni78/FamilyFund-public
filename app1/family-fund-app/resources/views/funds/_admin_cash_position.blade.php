@@ -71,9 +71,9 @@
                         $oVal = $line->outstanding_shares * ($sharePrice ?? 0);
                         if ($line->origination_date) {
                             $orig = \Illuminate\Support\Carbon::parse($line->origination_date);
-                            $days = (int) $orig->diffInDays(now());
                             $months = (int) $orig->diffInMonths(now());
-                            $age = $days . ' d / ' . $months . ' mo';
+                            $days = (int) $orig->copy()->addMonths($months)->diffInDays(now());
+                            $age = $months . ' mo, ' . $days . ' d';
                         } else {
                             $age = '—';
                         }

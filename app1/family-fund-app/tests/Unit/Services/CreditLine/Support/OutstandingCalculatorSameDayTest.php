@@ -121,18 +121,16 @@ class OutstandingCalculatorSameDayTest extends TestCase
         $open = $borRows->filter(fn ($r) => $r->end_dt && $r->end_dt->toDateString() === '9999-12-31')->values();
         $this->assertCount(0, $open, 'No open BOR row should remain when same-day full repay clears outstanding.');
 
-        // The originally-opened-and-closed-same-day row should not be persisted
-        // either — it's a zero-length artifact.
-        foreach ($borRows as $row) {
-            $endIsSentinel = $row->end_dt && $row->end_dt->toDateString() === '9999-12-31';
-            if (!$endIsSentinel) {
-                $this->assertNotEquals(
-                    $row->start_dt->toDateString(),
-                    $row->end_dt->toDateString(),
-                    'No BOR row should be zero-length.'
-                );
-            }
-        }
+        // QA_BUGS_2026-05-20 #5: same-day BOR→full REP previously deleted the
+        // BOR row entirely (wave-2 "zero-length cleanup"), erasing the audit
+        // trail. The row is now kept as a zero-length closed record so the
+        // event "this account was borrowed against on this date" stays
+        // discoverable in account_balances.
+        $this->assertGreaterThanOrEqual(
+            1,
+            $borRows->count(),
+            'at least one BOR row must survive same-day BOR→full REP for audit'
+        );
     }
 
     /**

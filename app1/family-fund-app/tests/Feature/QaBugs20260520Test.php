@@ -257,6 +257,47 @@ class QaBugs20260520Test extends TestCase
         );
     }
 
+    /**
+     * #5: a same-day BOR → full REP cycle must leave at least one BOR row in
+     * account_balances so the audit trail "this account was borrowed against
+     * on this date" is recoverable from the ledger. Wave-2's in-place
+     * collapse used to delete the row when start_dt==asOf, leaving zero
+     * historical rows. The row is now kept as a zero-length closed record
+     * (start_dt==end_dt) — invisible to asOf queries, but discoverable.
+     */
+    public function test_bug_5_same_day_bor_then_full_rep_preserves_audit_row(): void
+    {
+        $account = $this->df->userAccount;
+        $today = Carbon::today();
+
+        $line = $this->draw->open($account, 300.0, 12, 'monthly', null, $today);
+        // Two REPs that together fully clear the line on the same day.
+        $repay = app(\App\Services\CreditLine\Repay\RepayService::class);
+        $repay->repay($line, 30.0, $today);
+        $repay->repay($line, 270.0, $today);
+
+        $borRows = AccountBalance::where('account_id', $account->id)
+            ->where('type', 'BOR')
+            ->get();
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $borRows->count(),
+            'audit trail: at least one BOR row must survive same-day BOR→full REP'
+        );
+
+        // No row should be open after a full repay.
+        $open = $borRows->filter(fn ($r) => $r->end_dt && $r->end_dt->toDateString() === '9999-12-31');
+        $this->assertCount(0, $open, 'No open BOR row should remain after a full repay');
+
+        // The surviving row(s) must not interfere with asOf reads.
+        $this->assertEquals(
+            0.0,
+            round((float) $account->borrowedSharesAsOf($today->toDateString()), 4),
+            'borrowedSharesAsOf(today) must be 0 after full same-day repay'
+        );
+    }
+
     private function seedOwnBalance($account, float $shares): void
     {
         $tran = $this->df->createTransaction(

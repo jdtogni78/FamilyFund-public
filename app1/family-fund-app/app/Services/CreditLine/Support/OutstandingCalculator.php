@@ -174,15 +174,16 @@ class OutstandingCalculator
 
         if ($totalOutstanding <= 0) {
             // No outstanding — close the BOR row if it exists.
+            //
+            // Wave-2 used to delete same-day rows ("zero-length, no value"),
+            // but QA_BUGS_2026-05-20 #5 noted that this erased the audit
+            // trail "this account was borrowed against on this date". The
+            // row is now kept as a zero-length closed record: invisible to
+            // asOf reads (start_dt<=now AND end_dt>now excludes it on
+            // start_dt==end_dt==now) but discoverable via raw queries.
             if ($existing) {
-                // Wave-2 review: if the open row opened today and we are now
-                // closing it today, that's a zero-length row. Delete it instead.
-                if ($existing->start_dt && $existing->start_dt->toDateString() === $asOf) {
-                    $existing->delete();
-                } else {
-                    $existing->end_dt = $asOf;
-                    $existing->save();
-                }
+                $existing->end_dt = $asOf;
+                $existing->save();
             }
             return;
         }

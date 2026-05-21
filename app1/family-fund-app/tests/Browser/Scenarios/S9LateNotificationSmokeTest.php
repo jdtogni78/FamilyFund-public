@@ -26,7 +26,13 @@ class S9LateNotificationSmokeTest extends DuskTestCase
     public function test_loan_share_show_renders_late_state_for_backdated_line(): void
     {
         $this->browse(function (Browser $browser) {
-            $originationDate = Carbon::today()->subDays(30)->toDateString();
+            // Backdate by 90 days so that with a monthly schedule starting
+            // ~1 month after origination, at least two scheduled rows have
+            // due dates well past the 3-day default grace and get flagged
+            // late by DrawService::detectForLine. (Backdating only 30 days
+            // leaves the first row due today, still inside the grace
+            // window.)
+            $originationDate = Carbon::today()->subDays(90)->toDateString();
             $lineId = $this->openLineViaUiBackdated(
                 $browser,
                 principalShares: 60,
@@ -41,10 +47,11 @@ class S9LateNotificationSmokeTest extends DuskTestCase
                 ->assertDontSee('Whoops!')
                 ->assertDontSee('Undefined');
 
-            // At least one schedule row will be flagged late on a 30-day
-            // backdated draw (default grace is 3 days). The status pill text
-            // appears in the schedule table.
-            $browser->assertSeeIn('table.table', 'Late');
+            // The schedule table renders the late-status pill on each
+            // past-due row as `<span class="badge bg-danger">late</span>`
+            // (account_credit_lines/_payment_status_badge.blade.php:11)
+            // — note the lowercase pill text.
+            $browser->assertSeeIn('table', 'late');
 
             $this->cleanupLine($lineId);
         });

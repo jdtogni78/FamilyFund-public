@@ -1,5 +1,13 @@
 @php
+    // $asOf comes from the as-of view; default to today for live views.
+    $asOf = isset($asOf) && $asOf
+        ? \Carbon\Carbon::parse($asOf)->toDateString()
+        : \Carbon\Carbon::today()->toDateString();
+
+    // Lines that existed at $asOf — an as-of view dated before the CL must not
+    // render the CL (QA_BUGS_2026-05-21 #16).
     $lines = \App\Models\AccountCreditLine::where('account_id', $account->id)
+        ->whereDate('origination_date', '<=', $asOf)
         ->orderByDesc('id')
         ->get();
 
@@ -10,20 +18,23 @@
         ])
         ->count();
 
-    $totalOutstanding = $lines->sum('outstanding_shares');
-    $totalPrincipal   = $lines->sum('principal_shares');
-    $totalRepaid      = max(0.0, $totalPrincipal - $totalOutstanding);
-
     $isAdmin = (bool) (auth()->user()?->is_admin());
 
     $loansSummary = [];
     if ($lines->isNotEmpty()) {
         try {
-            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)->forAccount($account);
+            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)
+                ->forAccount($account, \Carbon\Carbon::parse($asOf));
         } catch (\Throwable $e) {
             $loansSummary = [];
         }
     }
+
+    // The inline "Total disbursed / repaid / outstanding" strip mirrors the
+    // loans-summary card so both stay consistent on as-of views.
+    $totalPrincipal   = (float) ($loansSummary['total_disbursed_shares'] ?? $lines->sum('principal_shares'));
+    $totalOutstanding = (float) ($loansSummary['net_outstanding_shares'] ?? $lines->sum('outstanding_shares'));
+    $totalRepaid      = (float) ($loansSummary['total_repaid_shares']    ?? max(0.0, $totalPrincipal - $totalOutstanding));
 @endphp
 
 @if($lines->isNotEmpty() && !empty($loansSummary))

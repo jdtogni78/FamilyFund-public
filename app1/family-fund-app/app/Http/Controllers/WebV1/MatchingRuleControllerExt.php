@@ -3,19 +3,24 @@
 namespace App\Http\Controllers\WebV1;
 
 use App\Http\Requests\CreateMatchingRuleRequest;
+use App\Http\Requests\UpdateMatchingRuleRequest;
 use App\Repositories\MatchingRuleRepository;
 use App\Repositories\AccountMatchingRuleRepository;
-use App\Http\Controllers\MatchingRuleController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\MailTrait;
 use App\Mail\AccountMatchingRuleEmail;
 use App\Models\AccountExt;
 use App\Models\Fund;
 use Illuminate\Http\Request;
 use Flash;
+use Response;
 
-class MatchingRuleControllerExt extends MatchingRuleController
+class MatchingRuleControllerExt extends AppBaseController
 {
     use MailTrait;
+
+    /** @var  MatchingRuleRepository */
+    protected $matchingRuleRepository;
 
     protected $accountMatchingRuleRepository;
 
@@ -23,7 +28,7 @@ class MatchingRuleControllerExt extends MatchingRuleController
         MatchingRuleRepository $matchingRuleRepo,
         AccountMatchingRuleRepository $accountMatchingRuleRepo
     ) {
-        parent::__construct($matchingRuleRepo);
+        $this->matchingRuleRepository = $matchingRuleRepo;
         $this->accountMatchingRuleRepository = $accountMatchingRuleRepo;
     }
 
@@ -200,6 +205,79 @@ class MatchingRuleControllerExt extends MatchingRuleController
         }
 
         Flash::success($message);
+
+        return redirect(route('matchingRules.index'));
+    }
+
+    // --- inlined from former base ---
+
+    public function index(Request $request)
+    {
+        $matchingRules = $this->matchingRuleRepository->all();
+
+        return view('matching_rules.index')
+            ->with('matchingRules', $matchingRules);
+    }
+
+    public function create()
+    {
+        return view('matching_rules.create');
+    }
+
+    public function store(CreateMatchingRuleRequest $request)
+    {
+        $input = $request->all();
+
+        $matchingRule = $this->matchingRuleRepository->create($input);
+
+        Flash::success('Matching Rule saved successfully.');
+
+        return redirect(route('matchingRules.index'));
+    }
+
+    public function edit($id)
+    {
+        $matchingRule = $this->matchingRuleRepository->find($id);
+
+        if (empty($matchingRule)) {
+            Flash::error('Matching Rule not found');
+
+            return redirect(route('matchingRules.index'));
+        }
+
+        return view('matching_rules.edit')->with('matchingRule', $matchingRule);
+    }
+
+    public function update($id, UpdateMatchingRuleRequest $request)
+    {
+        $matchingRule = $this->matchingRuleRepository->find($id);
+
+        if (empty($matchingRule)) {
+            Flash::error('Matching Rule not found');
+
+            return redirect(route('matchingRules.index'));
+        }
+
+        $matchingRule = $this->matchingRuleRepository->update($request->all(), $id);
+
+        Flash::success('Matching Rule updated successfully.');
+
+        return redirect(route('matchingRules.index'));
+    }
+
+    public function destroy($id)
+    {
+        $matchingRule = $this->matchingRuleRepository->find($id);
+
+        if (empty($matchingRule)) {
+            Flash::error('Matching Rule not found');
+
+            return redirect(route('matchingRules.index'));
+        }
+
+        $this->matchingRuleRepository->delete($id);
+
+        Flash::success('Matching Rule deleted successfully.');
 
         return redirect(route('matchingRules.index'));
     }

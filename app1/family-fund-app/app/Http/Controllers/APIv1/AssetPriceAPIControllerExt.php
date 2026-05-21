@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\APIv1;
 
-use App\Http\Controllers\API\AssetPriceAPIController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\BulkStoreTrait;
 use App\Http\Requests\API\CreateAssetPriceAPIRequest;
 use App\Http\Requests\API\CreatePriceUpdateAPIRequest;
+use App\Http\Requests\API\UpdateAssetPriceAPIRequest;
 use App\Http\Resources\AssetPriceResource;
 use App\Models\AssetPrice;
 use App\Repositories\AssetPriceRepository;
@@ -16,13 +17,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AssetPriceAPIControllerExt extends AssetPriceAPIController
+class AssetPriceAPIControllerExt extends AppBaseController
 {
     use BulkStoreTrait;
 
+    /** @var  AssetPriceRepository */
+    protected $assetPriceRepository;
+
     public function __construct(AssetPriceRepository $assetPricesRepo)
     {
-        parent::__construct($assetPricesRepo);
+        $this->assetPriceRepository = $assetPricesRepo;
     }
 
     /**
@@ -112,5 +116,60 @@ class AssetPriceAPIControllerExt extends AssetPriceAPIController
             'missing_count' => count($missingDates),
             'missing_dates' => $missingDates,
         ]);
+    }
+
+    // --- inlined from former base ---
+
+    public function index(Request $request)
+    {
+        $assetPrices = $this->assetPriceRepository->all(
+            $request->except(['skip', 'limit']),
+            $request->get('skip'),
+            $request->get('limit')
+        );
+
+        return $this->sendResponse(AssetPriceResource::collection($assetPrices), 'Asset Prices retrieved successfully');
+    }
+
+    public function show($id)
+    {
+        /** @var AssetPrice $assetPrice */
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            return $this->sendError('Asset Price not found');
+        }
+
+        return $this->sendResponse(new AssetPriceResource($assetPrice), 'Asset Price retrieved successfully');
+    }
+
+    public function update($id, UpdateAssetPriceAPIRequest $request)
+    {
+        $input = $request->all();
+
+        /** @var AssetPrice $assetPrice */
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            return $this->sendError('Asset Price not found');
+        }
+
+        $assetPrice = $this->assetPriceRepository->update($input, $id);
+
+        return $this->sendResponse(new AssetPriceResource($assetPrice), 'AssetPrice updated successfully');
+    }
+
+    public function destroy($id)
+    {
+        /** @var AssetPrice $assetPrice */
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            return $this->sendError('Asset Price not found');
+        }
+
+        $assetPrice->delete();
+
+        return $this->sendSuccess('Asset Price deleted successfully');
     }
 }

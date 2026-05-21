@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateCashDepositRequest;
 use App\Http\Requests\UpdateCashDepositRequest;
 use App\Repositories\CashDepositRepository;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
-use App\Http\Controllers\CashDepositController;
 use App\Models\CashDepositExt;
 use App\Models\AccountExt;
 use App\Http\Requests\AssignDepositRequestsRequest;
@@ -23,15 +23,23 @@ use App\Mail\CashDepositMail;
 use App\Mail\DepositAllocationMail;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
 
-class CashDepositControllerExt extends CashDepositController
+class CashDepositControllerExt extends AppBaseController
 {
     use CashDepositTrait;
     use AccountSelectorTrait;
 
+    /** @var CashDepositRepository $cashDepositRepository*/
+    private $cashDepositRepository;
+
+    public function __construct(CashDepositRepository $cashDepositRepo)
+    {
+        $this->cashDepositRepository = $cashDepositRepo;
+    }
+
     public function create()
     {
         $api = $this->getApi();
-        return parent::create($api)->with('api', $api);
+        return view('cash_deposits.create')->with('api', $api);
     }
 
     public function getApi()
@@ -47,14 +55,34 @@ class CashDepositControllerExt extends CashDepositController
 
     public function show($id)
     {
+        $cashDeposit = $this->cashDepositRepository->find($id);
+
+        if (empty($cashDeposit)) {
+            Flash::error('Cash Deposit not found');
+
+            return redirect(route('cashDeposits.index'));
+        }
+
         $api = $this->getApi();
-        return parent::show($id)->with('api', $api);
+        return view('cash_deposits.show')
+            ->with('cashDeposit', $cashDeposit)
+            ->with('api', $api);
     }
 
     public function edit($id)
     {
+        $cashDeposit = $this->cashDepositRepository->find($id);
+
+        if (empty($cashDeposit)) {
+            Flash::error('Cash Deposit not found');
+
+            return redirect(route('cashDeposits.index'));
+        }
+
         $api = $this->getApi();
-        return parent::edit($id)->with('api', $api);
+        return view('cash_deposits.edit')
+            ->with('cashDeposit', $cashDeposit)
+            ->with('api', $api);
     }
 
     public function index(Request $request)
@@ -93,7 +121,7 @@ class CashDepositControllerExt extends CashDepositController
     {
         $api = $this->getApi();
         $cashDeposit = CashDepositExt::findOrFail($id);
-        
+
         $depositRequests = DepositRequestExt::whereNull('cash_deposit_id')
             ->where('status', DepositRequestExt::STATUS_PENDING)
             ->get();
@@ -163,5 +191,51 @@ class CashDepositControllerExt extends CashDepositController
         Flash::success('Cash deposit email sent to ' . $emailTo);
         return redirect(route('cashDeposits.show', $id));
     }
-}
 
+    // --- inlined from former base ---
+
+    public function store(CreateCashDepositRequest $request)
+    {
+        $input = $request->all();
+
+        $cashDeposit = $this->cashDepositRepository->create($input);
+
+        Flash::success('Cash Deposit saved successfully.');
+
+        return redirect(route('cashDeposits.index'));
+    }
+
+    public function update($id, UpdateCashDepositRequest $request)
+    {
+        $cashDeposit = $this->cashDepositRepository->find($id);
+
+        if (empty($cashDeposit)) {
+            Flash::error('Cash Deposit not found');
+
+            return redirect(route('cashDeposits.index'));
+        }
+
+        $cashDeposit = $this->cashDepositRepository->update($request->all(), $id);
+
+        Flash::success('Cash Deposit updated successfully.');
+
+        return redirect(route('cashDeposits.index'));
+    }
+
+    public function destroy($id)
+    {
+        $cashDeposit = $this->cashDepositRepository->find($id);
+
+        if (empty($cashDeposit)) {
+            Flash::error('Cash Deposit not found');
+
+            return redirect(route('cashDeposits.index'));
+        }
+
+        $this->cashDepositRepository->delete($id);
+
+        Flash::success('Cash Deposit deleted successfully.');
+
+        return redirect(route('cashDeposits.index'));
+    }
+}

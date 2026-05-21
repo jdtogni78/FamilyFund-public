@@ -2,20 +2,28 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\PortfolioAssetController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\DetectsDataIssuesTrait;
+use App\Http\Requests\CreatePortfolioAssetRequest;
+use App\Http\Requests\UpdatePortfolioAssetRequest;
 use App\Models\AssetExt;
 use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
 use App\Repositories\PortfolioAssetRepository;
 use Illuminate\Http\Request;
+use Flash;
+use Response;
 
-class PortfolioAssetControllerExt extends PortfolioAssetController
+class PortfolioAssetControllerExt extends AppBaseController
 {
     use DetectsDataIssuesTrait;
+
+    /** @var  PortfolioAssetRepository */
+    protected $portfolioAssetRepository;
+
     public function __construct(PortfolioAssetRepository $portfolioAssetRepo)
     {
-        parent::__construct($portfolioAssetRepo);
+        $this->portfolioAssetRepository = $portfolioAssetRepo;
     }
 
     /**
@@ -515,5 +523,65 @@ class PortfolioAssetControllerExt extends PortfolioAssetController
         return view('portfolio_assets.edit')
             ->with('portfolioAsset', $portfolioAsset)
             ->with('api', $api);
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreatePortfolioAssetRequest $request)
+    {
+        $input = $request->all();
+
+        $portfolioAsset = $this->portfolioAssetRepository->create($input);
+
+        Flash::success('Portfolio Asset saved successfully.');
+
+        return redirect(route('portfolioAssets.index'));
+    }
+
+    public function show($id)
+    {
+        $portfolioAsset = $this->portfolioAssetRepository->find($id);
+
+        if (empty($portfolioAsset)) {
+            Flash::error('Portfolio Asset not found');
+
+            return redirect(route('portfolioAssets.index'));
+        }
+
+        return view('portfolio_assets.show')->with('portfolioAsset', $portfolioAsset);
+    }
+
+    public function update($id, UpdatePortfolioAssetRequest $request)
+    {
+        $portfolioAsset = $this->portfolioAssetRepository->find($id);
+
+        if (empty($portfolioAsset)) {
+            Flash::error('Portfolio Asset not found');
+
+            return redirect(route('portfolioAssets.index'));
+        }
+
+        $portfolioAsset = $this->portfolioAssetRepository->update($request->all(), $id);
+
+        Flash::success('Portfolio Asset updated successfully.');
+
+        return redirect(route('portfolioAssets.index'));
+    }
+
+    public function destroy($id)
+    {
+        $portfolioAsset = $this->portfolioAssetRepository->find($id);
+
+        if (empty($portfolioAsset)) {
+            Flash::error('Portfolio Asset not found');
+
+            return redirect(route('portfolioAssets.index'));
+        }
+
+        $this->portfolioAssetRepository->delete($id);
+
+        Flash::success('Portfolio Asset deleted successfully.');
+
+        return redirect(route('portfolioAssets.index'));
     }
 }

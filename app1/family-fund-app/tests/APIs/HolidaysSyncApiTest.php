@@ -307,20 +307,13 @@ class HolidaysSyncApiTest extends TestCase
     #[Test]
     public function test_artisan_command_can_trigger_holidays_sync()
     {
-        // NOTE: This test is commented out because the RunScheduledJobs artisan command
-        // makes an HTTP request to the API internally, which requires a running server.
-        // To test manually: php artisan schedule_jobs:run --as-of=2026-05-01
-
-        $this->markTestIncomplete('Requires HTTP server - uncomment code below to run manually');
-
-        /* Uncomment when testing with running server:
+        ScheduledJob::query()->delete();
 
         $schedule = ScheduleExt::create([
             'descr' => 'Test Schedule',
             'type' => ScheduleExt::TYPE_DAY_OF_MONTH,
             'value' => '1',
         ]);
-
         $job = ScheduledJob::create([
             'schedule_id' => $schedule->id,
             'entity_descr' => ScheduledJobExt::ENTITY_HOLIDAYS_SYNC,
@@ -329,24 +322,32 @@ class HolidaysSyncApiTest extends TestCase
             'end_dt' => Carbon::now()->addYear(),
         ]);
 
-        $mockService = $this->createMock(HolidaySyncService::class);
-        $mockService->expects($this->once())
-            ->method('syncHolidays')
-            ->willReturn([
-                'records_added' => 12,
-                'source' => 'test',
-            ]);
-        $this->app->instance(HolidaySyncService::class, $mockService);
+        // syncHolidays runs for asOf.year-1 .. asOf.year+2 = 4 years (2025-2028 for as-of 2026-05-01).
+        $this->mock(HolidaySyncService::class, function ($mock) {
+            $mock->shouldReceive('syncHolidays')
+                ->times(4)
+                ->andReturn(['records_added' => 5, 'source' => 'test']);
+        });
 
-        // Act: Run the artisan command
+        // The artisan command does an outbound HTTP POST to its own /api/schedule_jobs endpoint.
+        // Re-dispatch that call through the in-process controller so the full chain runs
+        // (artisan → API → service → HolidaysSyncLog row) without needing a live HTTP server.
+        $test = $this;
+        \Illuminate\Support\Facades\Http::fake([
+            '*/api/schedule_jobs' => function ($request) use ($test) {
+                $response = $test->actingAs($test->user)->postJson('/api/schedule_jobs', $request->data());
+                return \Illuminate\Support\Facades\Http::response($response->json(), $response->status());
+            },
+        ]);
+
         $this->artisan('schedule_jobs:run', ['--as-of' => '2026-05-01'])
             ->assertExitCode(0);
 
-        // Assert: Log created
         $this->assertDatabaseHas('holidays_sync_logs', [
             'scheduled_job_id' => $job->id,
-            'records_synced' => 12,
+            'exchange' => 'NYSE',
+            'records_synced' => 20, // 4 years × 5 records
+            'source' => 'test',
         ]);
-        */
     }
 }

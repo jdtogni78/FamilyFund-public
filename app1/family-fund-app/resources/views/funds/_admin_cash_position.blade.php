@@ -62,16 +62,21 @@
                         <th class="text-end">Principal (sh)</th>
                         <th class="text-end">Outstanding (sh)</th>
                         <th class="text-end">Outstanding value</th>
-                        <th class="text-end">Days since origination</th>
+                        <th class="text-end">Age</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach($activeLines as $line)
                     @php
                         $oVal = $line->outstanding_shares * ($sharePrice ?? 0);
-                        $days = $line->origination_date
-                            ? \Illuminate\Support\Carbon::parse($line->origination_date)->diffInDays(now())
-                            : '—';
+                        if ($line->origination_date) {
+                            $orig = \Illuminate\Support\Carbon::parse($line->origination_date);
+                            $months = (int) $orig->diffInMonths(now());
+                            $days = (int) $orig->copy()->addMonths($months)->diffInDays(now());
+                            $age = $months . ' mo, ' . $days . ' d';
+                        } else {
+                            $age = '—';
+                        }
                         $nickname = $line->account?->nickname ?? ('account #' . $line->account_id);
                     @endphp
                     <tr>
@@ -79,7 +84,7 @@
                         <td class="text-end">{{ number_format($line->principal_shares, 4) }}</td>
                         <td class="text-end">{{ number_format($line->outstanding_shares, 4) }}</td>
                         <td class="text-end">${{ number_format($oVal, 2) }}</td>
-                        <td class="text-end">{{ $days }}</td>
+                        <td class="text-end">{{ $age }}</td>
                     </tr>
                 @endforeach
                 </tbody>

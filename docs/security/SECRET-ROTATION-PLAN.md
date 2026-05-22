@@ -11,13 +11,19 @@ Done (branch `secret-rotation-dev`, container `app1-familyfund-1`):
 - [x] **Refreshed leaked-but-unused `REDIS_PASSWORD` / `MAIL_PASSWORD`** in `.env.dev`
   (drivers are file/database/log; redis not used, dev mail = Mailpit no-auth).
 - [x] Verified: app1 boots on the new key, http://localhost:3001/login + auto-login = 200.
+- [x] **DB root password rotated** (`123456` → strong). The literal is removed from HEAD:
+  `app1/docker-compose.{env,acl,dev,dev2}.yml` now use `${FF_DB_*:-changeme}` and the real value
+  lives only in git-ignored `app1/.env` (compose auto-reads it). `ALTER USER` applied to root +
+  `famfun_dev` on `app1-mariadb-1`; old pw rejected. `app1` + `familyfund-pool0/1` recreated and
+  verified (DB_OK, /login 200 on :3001/:3020/:3021). `pool.sh` literal updated. `.env.dev`/`.env.stage`
+  `DB_PASSWORD` updated. New value backed up off-repo (perms 600).
 
 Deferred / open:
-- [ ] **DB root password rotation** — value `123456` is hardcoded in HEAD across
-  `app1/docker-compose.{env,acl,dev,dev2}.yml` AND in `~/.familyfund-pool/{pool.sh,testpool.sh}`,
-  and is live to `app1-familyfund-1` + `familyfund-pool0/1` (2 concurrent codex sessions).
-  Rotating it = edit 4 compose files + 2 tooling scripts + `ALTER USER` + restart 3 stacks.
-- [ ] **Stage** (`.env.stage`) left as-is per "dev only" scope (dormant; no running stage env).
+- [ ] **Testpool DB** (`db-testpool` on :3315) NOT rotated — an active test slot (`test0`) was
+  leased mid-rotation; rotating broke its auth so it was reverted to `123456`. Rotate
+  `db-testpool` + `testpool.sh` DB_PASS together when no test slots are leased.
+- [ ] **Stage APP_KEY** left as-is per "dev only" scope (dormant; no running stage env; only its
+  DB_PASSWORD was refreshed).
 - [ ] **Prod APP_KEY ≠ leaked dev key** check — read-only SSH failed host-key verification; user to run.
 - [ ] User password resets / history purge — separate deferred tasks (prod = user action).
 

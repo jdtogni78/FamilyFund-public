@@ -9,8 +9,8 @@ services:
       - ALLOW_EMPTY_PASSWORD=no
       - MARIADB_USER=famfun_dev
       - MARIADB_DATABASE=familyfund_dev2
-      - MARIADB_PASSWORD=1234
-      - MARIADB_ROOT_PASSWORD=123456
+      - MARIADB_PASSWORD=${FF_DB_USER_PASSWORD:-changeme}
+      - MARIADB_ROOT_PASSWORD=${FF_DB_ROOT_PASSWORD:-changeme}
     ports:
       - 3309:3306
     volumes:
@@ -22,7 +22,7 @@ services:
       - DB_HOST=mariadb
       - DB_DATABASE=familyfund_dev2
       - DB_USERNAME=root
-      - DB_PASSWORD=123456
+      - DB_PASSWORD=${FF_DB_PASSWORD:-changeme}
       - APP_ENV=local
       - MAIL_HOST=mailhog
       - QUICKCHART_HOST=quickchart

@@ -92,14 +92,16 @@ class CreditLineUITourTest extends DuskTestCase
             $browser->visit($page->url())
                 ->waitForText('Loan Share #' . $lineId, 5);
 
-            $browser->type('form[action$="/repay"] input[name="shares"]', '20')
-                ->press('Record repayment')
+            // Repay now goes through the Bootstrap modal (#makePaymentModal)
+            // on the show page — see CreditLineShowPage::repay().
+            $page->repay($browser, 20.0);
+            $browser->visit($page->url())
                 ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/09_show_after_first_repay');
 
             // ── 10. Second repay (different size, partial) ──────────────
-            $browser->type('form[action$="/repay"] input[name="shares"]', '15')
-                ->press('Record repayment')
+            $page->repay($browser, 15.0);
+            $browser->visit($page->url())
                 ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/10_show_after_second_repay');
 
@@ -109,10 +111,10 @@ class CreditLineUITourTest extends DuskTestCase
             $browser->screenshot('tour/11_schedule_after_two_repays');
 
             // ── 12. Readjust → new schedule + adjustment timeline entry ─
-            $browser->script("window.scrollTo(0, 0);");
-            $browser->pause(150);
-            $browser->type('form[action$="/readjust"] input[name="new_term_months"]', '12')
-                ->press('Readjust')
+            // Readjust form moved to /credit-lines/{id}/actions — Page
+            // Object's readjust() navigates there before submitting.
+            $page->readjust($browser, newTermMonths: 12);
+            $browser->visit($page->url())
                 ->waitForText('Loan Share #' . $lineId, 5)
                 ->screenshot('tour/12_show_after_readjust');
 

@@ -25,19 +25,23 @@ use Tests\DuskTestCase;
 class S7FundSummarySmokeTest extends DuskTestCase
 {
     private const ACCOUNT_ID = 7;
-    private const FUND_ID = 1;
+    // Account 7 is in fund 2 on the committed test baseline; the original
+    // FUND_ID=1 was unrelated to the account opening the loan share and
+    // 404'd because fund 1 doesn't exist in the baseline.
+    private const FUND_ID = 2;
 
     public function test_fund_summary_renders_loaned_bucket_under_active_borrowing(): void
     {
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, principalShares: 75, termMonths: 6, descr: 'S7 fund smoke');
 
-            // The fund overview page is where the 3-bucket stripe lives.
-            $browser->visit('/dev-login/funds/' . self::FUND_ID . '/overview?as=admin')
-                ->waitForLocation('/funds/' . self::FUND_ID . '/overview', 10)
+            // The 3-bucket stripe (Allocated / Loaned / Unallocated) lives
+            // on the fund SHOW page (show_ext.blade.php:197-218), not the
+            // overview page. The overview page renders summary tiles only.
+            $browser->visit('/dev-login/funds/' . self::FUND_ID . '?as=admin')
+                ->waitForLocation('/funds/' . self::FUND_ID, 10)
                 ->assertDontSee('Whoops!')
                 ->assertDontSee('Undefined')
-                // The new bucket label introduced by 12ef9b38.
                 ->assertSee('Loaned');
 
             $this->cleanupLine($lineId);

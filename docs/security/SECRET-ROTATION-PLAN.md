@@ -1,5 +1,28 @@
 # FamilyFund — secret rotation & user-reset plan
 
+## Progress — 2026-05-22 (dev rotation, run in /Users/claudio1/dev/FamilyFund)
+Done (branch `secret-rotation-dev`, container `app1-familyfund-1`):
+- [x] **Untracked the leaked `app1/family-fund-app/.env.dev`** (`git rm --cached`; kept on
+  disk, now git-ignored as the dev/pool/test runtime template) + added a secret-free
+  tracked `.env.example`. Incident/plan docs copied into `docs/security/`.
+- [x] **APP_KEY rotated (dev)** via `php artisan key:generate` — key sha `dffffd…` → `a5f1c6…`.
+  No encrypted data to migrate (2FA rows = 0, `MAIL_PASSWORD_ENCRYPTED` empty).
+- [x] **Sessions + `password_resets` truncated** (dev).
+- [x] **Refreshed leaked-but-unused `REDIS_PASSWORD` / `MAIL_PASSWORD`** in `.env.dev`
+  (drivers are file/database/log; redis not used, dev mail = Mailpit no-auth).
+- [x] Verified: app1 boots on the new key, http://localhost:3001/login + auto-login = 200.
+
+Deferred / open:
+- [ ] **DB root password rotation** — value `123456` is hardcoded in HEAD across
+  `app1/docker-compose.{env,acl,dev,dev2}.yml` AND in `~/.familyfund-pool/{pool.sh,testpool.sh}`,
+  and is live to `app1-familyfund-1` + `familyfund-pool0/1` (2 concurrent codex sessions).
+  Rotating it = edit 4 compose files + 2 tooling scripts + `ALTER USER` + restart 3 stacks.
+- [ ] **Stage** (`.env.stage`) left as-is per "dev only" scope (dormant; no running stage env).
+- [ ] **Prod APP_KEY ≠ leaked dev key** check — read-only SSH failed host-key verification; user to run.
+- [ ] User password resets / history purge — separate deferred tasks (prod = user action).
+
+---
+
 Companion to `SECURITY-EXPOSURE.md`. **No secret values are stored in this file.**
 New secrets must go ONLY into git-ignored files (`.env`, `.env.stage`) — never into
 a tracked file again.

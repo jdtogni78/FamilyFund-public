@@ -1,4 +1,5 @@
 **/.DS_Store
+.tools/
 datadir
 misc
 app1/family-fund-app/public/pdf_file.pdf

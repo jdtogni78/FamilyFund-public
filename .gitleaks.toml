@@ -1,0 +1,33 @@
+title = "FamilyFund Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known local-only FamilyFund development credentials"
+condition = "AND"
+paths = [
+  '''^app1/docker-compose\.(dev|dev2|acl|ffacl|env)\.yml$''',
+  '''^app1/family-fund-app/\.env\.dev$''',
+  '''^AGENTS\.md$''',
+  '''^SECURITY_SCAN_AUTOMATION_PLAN\.md$'''
+]
+regexes = [
+  '''famfun_dev''',
+  '''Codex-test-2024''',
+  '''MARIADB_PASSWORD=1234''',
+  '''MARIADB_ROOT_PASSWORD=123456''',
+  '''DB_PASSWORD=123456''',
+  '''DB_PASSWORD=1234'''
+]
+
+[[allowlists]]
+description = "Historical local database backup filenames documented in gitignore"
+condition = "AND"
+paths = [
+  '''^\.gitignore$'''
+]
+regexes = [
+  '''familyfund_dev_data_[0-9]+\.sql''',
+  '''familyfund_ddl_[0-9]+\.sql'''
+]

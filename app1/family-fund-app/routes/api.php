@@ -10,13 +10,16 @@ use App\Http\Controllers\APIv1\AccountAPIControllerExt;
 use App\Http\Controllers\APIv1\PortfolioAPIControllerExt;
 
 use Illuminate\Support\Facades\Artisan;
-Route::get('/clear', function () {
-    Artisan::call('route:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('config:clear');
-    Artisan::call('view:clear');
-    return 'clear done';
-});
+
+if (app()->environment('local', 'dev')) {
+    Route::get('/clear', function () {
+        Artisan::call('route:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('config:clear');
+        Artisan::call('view:clear');
+        return 'clear done';
+    });
+}
 /*
 |--------------------------------------------------------------------------
 | API Routes

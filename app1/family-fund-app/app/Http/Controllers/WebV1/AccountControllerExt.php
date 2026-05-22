@@ -2,25 +2,34 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\AccountPDF;
 use App\Http\Controllers\Traits\AccountTrait;
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\PerformanceTrait;
+use App\Http\Requests\CreateAccountRequest;
+use App\Http\Requests\UpdateAccountRequest;
+use App\Models\AccountExt;
+use App\Models\FundExt;
 use App\Models\ScheduledJobExt;
+use App\Models\UserExt;
 use App\Repositories\AccountRepository;
+use Illuminate\Http\Request;
 use Flash;
 use Response;
 
 
-class AccountControllerExt extends AccountController
+class AccountControllerExt extends AppBaseController
 {
     use ChartBaseTrait;
     use AccountTrait, PerformanceTrait;
 
+    /** @var  AccountRepository */
+    protected $accountRepository;
+
     public function __construct(AccountRepository $accountRepo)
     {
-        parent::__construct($accountRepo);
+        $this->accountRepository = $accountRepo;
     }
 
     /**
@@ -96,6 +105,124 @@ class AccountControllerExt extends AccountController
         $pdf = new AccountPDF($arr, false);
 
         return $pdf->inline('account.pdf');
+    }
+
+    // --- inlined from former base ---
+
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', AccountExt::class);
+
+        $accounts = $this->accountRepository->withAuthorization()->all();
+
+        return view('accounts.index')
+            ->with('accounts', $accounts);
+    }
+
+    public function create()
+    {
+        $this->authorize('create', AccountExt::class);
+
+        $api = [
+            'userMap' => UserExt::userMap(),
+            'fundMap' => FundExt::fundMap(),
+        ];
+        return view('accounts.create')
+            ->with('api', $api);
+    }
+
+    public function store(CreateAccountRequest $request)
+    {
+        $this->authorize('create', AccountExt::class);
+
+        $input = $request->all();
+
+        $account = $this->accountRepository->create($input);
+
+        Flash::success('Account saved successfully.');
+
+        return redirect(route('accounts.index'));
+    }
+
+    public function edit($id)
+    {
+        $account = $this->accountRepository->withAuthorization()->find($id);
+
+        if (empty($account)) {
+            Flash::error('Account not found');
+
+            return redirect(route('accounts.index'));
+        }
+
+        $this->authorize('update', $account);
+
+        $api = [
+            'userMap' => UserExt::userMap(),
+            'fundMap' => FundExt::fundMap(),
+        ];
+
+        return view('accounts.edit')
+            ->with('account', $account)
+            ->with('api', $api);
+    }
+
+    public function update($id, UpdateAccountRequest $request)
+    {
+        $account = $this->accountRepository->withAuthorization()->find($id);
+
+        if (empty($account)) {
+            Flash::error('Account not found');
+
+            return redirect(route('accounts.index'));
+        }
+
+        $this->authorize('update', $account);
+
+        $account = $this->accountRepository->update($request->all(), $id);
+
+        Flash::success('Account updated successfully.');
+
+        return redirect(route('accounts.index'));
+    }
+
+    public function destroy($id)
+    {
+        $account = $this->accountRepository->withAuthorization()->find($id);
+
+        if (empty($account)) {
+            Flash::error('Account not found');
+
+            return redirect(route('accounts.index'));
+        }
+
+        $this->authorize('delete', $account);
+
+        // UC-47: refuse closure while the account still has active loan shares.
+        // The caller must cancel or pay them off first so the receivable on the
+        // fund's books has a defined disposition.
+        if (method_exists($account, 'creditLines')) {
+            $activeLines = $account->creditLines()
+                ->where('status', 'active')
+                ->get(['id', 'descr']);
+            if ($activeLines->isNotEmpty()) {
+                $list = $activeLines
+                    ->map(fn ($l) => '#' . $l->id . ($l->descr ? ' (' . $l->descr . ')' : ''))
+                    ->implode(', ');
+                Flash::error(
+                    'Cannot close account: ' . $activeLines->count() .
+                    ' active loan share(s) remain — ' . $list .
+                    '. Cancel or pay them off first.'
+                );
+
+                return redirect(route('accounts.show', $account->id));
+            }
+        }
+
+        $this->accountRepository->delete($id);
+
+        Flash::success('Account deleted successfully.');
+
+        return redirect(route('accounts.index'));
     }
 
 }

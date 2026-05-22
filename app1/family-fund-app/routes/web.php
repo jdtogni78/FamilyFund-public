@@ -182,12 +182,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
     Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
-    Route::resource('addresses', App\Http\Controllers\AddressController::class);
-    Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
+    Route::resource('addresses', App\Http\Controllers\Web\AddressController::class);
+    Route::resource('assetChangeLogs', App\Http\Controllers\Web\AssetChangeLogController::class);
     Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class);
-    Route::resource('assets', App\Http\Controllers\AssetController::class);
+    Route::resource('assets', App\Http\Controllers\Web\AssetController::class);
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
-    Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
+    Route::resource('changeLogs', App\Http\Controllers\Web\ChangeLogController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
     Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
         ->name('fundReports.resend');
@@ -198,7 +198,7 @@ Route::middleware('auth')->group(function () {
         ->name('funds.storeWithSetup');
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
     Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
-    Route::resource('id_documents', App\Http\Controllers\IdDocumentController::class);
+    Route::resource('id_documents', App\Http\Controllers\Web\IdDocumentController::class);
     Route::get('matchingRules/{id}/clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@clone')
         ->name('matchingRules.clone');
     Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
@@ -206,23 +206,23 @@ Route::middleware('auth')->group(function () {
     Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
         ->name('matchingRules.send-all-emails');
     Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class);
-    Route::resource('people', App\Http\Controllers\PersonController::class);
-    Route::resource('persons', App\Http\Controllers\PersonController::class);
-    Route::resource('phones', App\Http\Controllers\PhoneController::class);
+    Route::resource('people', App\Http\Controllers\Web\PersonController::class);
+    Route::resource('persons', App\Http\Controllers\Web\PersonController::class);
+    Route::resource('phones', App\Http\Controllers\Web\PhoneController::class);
     Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class);
-    Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
+    Route::resource('portfolios', App\Http\Controllers\Web\PortfolioController::class);
     Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class);
-    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
-    Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
+    Route::resource('schedules', App\Http\Controllers\Web\ScheduleController::class);
+    Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\Web\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');
-    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\TradeBandReportController@resend')
+    Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\Web\TradeBandReportController@resend')
         ->name('tradeBandReports.resend');
-    Route::resource('tradeBandReports', App\Http\Controllers\TradeBandReportController::class);
+    Route::resource('tradeBandReports', App\Http\Controllers\Web\TradeBandReportController::class);
     Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
-    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
+    Route::resource('transactionMatchings', App\Http\Controllers\Web\TransactionMatchingController::class);
     Route::resource('transactions', App\Http\Controllers\WebV1\TransactionControllerExt::class);
-    Route::resource('users', App\Http\Controllers\UserController::class);
+    Route::resource('users', App\Http\Controllers\Web\UserController::class);
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
         ->name('tradePortfolios.create');
@@ -232,16 +232,16 @@ Route::middleware('auth')->group(function () {
 
     // Credit Lines (Phase 2 wiring)
     Route::get('accounts/{account}/credit-lines',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'index'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'index'])
         ->name('credit_lines.index');
     Route::get('accounts/{account}/credit-lines/create',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'create'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'create'])
         ->name('credit_lines.create');
     Route::get('accounts/{account}/credit-lines/available-shares',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'availableShares'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'availableShares'])
         ->name('credit_lines.available_shares');
     Route::post('accounts/{account}/credit-lines',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'store'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'store'])
         ->name('credit_lines.store');
     Route::get('credit-lines/resolve',
         [\App\Http\Controllers\WebV1\CreditLineMatchResolutionController::class, 'index'])
@@ -252,70 +252,70 @@ Route::middleware('auth')->group(function () {
     // Global (cross-account) listings — must precede credit-lines/{line}
     // so the static segments aren't captured as a {line} id.
     Route::get('credit-lines',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalIndex'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'globalIndex'])
         ->name('credit_lines.global_index');
     Route::get('credit-lines/payments',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalPayments'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'globalPayments'])
         ->name('credit_lines.global_payments');
     // Global create flow (no pre-selected account) — static segments must
     // precede credit-lines/{line} so they aren't captured as a {line} id.
     Route::get('credit-lines/create',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalCreate'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'globalCreate'])
         ->name('credit_lines.global_create');
     Route::get('credit-lines/available-shares',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'globalAvailableShares'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'globalAvailableShares'])
         ->name('credit_lines.global_available_shares');
     Route::post('credit-lines',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'store'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'store'])
         ->name('credit_lines.global_store');
     Route::get('credit-lines/{line}',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'show'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'show'])
         ->name('credit_lines.show');
     Route::get('credit-lines/{line}/actions',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'actions'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'actions'])
         ->name('credit_lines.actions');
     Route::get('credit-lines/{line}/edit',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'edit'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'edit'])
         ->name('credit_lines.edit');
     Route::put('credit-lines/{line}',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'update'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'update'])
         ->name('credit_lines.update');
     Route::post('credit-lines/{line}/repay',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'repay'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'repay'])
         ->name('credit_lines.repay');
     Route::get('credit-lines/{line}/payments/{payment}/register',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPaymentForm'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'registerPaymentForm'])
         ->name('credit_lines.payments.register_form');
     Route::post('credit-lines/{line}/payments/{payment}/register',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'registerPayment'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'registerPayment'])
         ->name('credit_lines.payments.register');
     Route::get('credit-lines/{line}/payments/{payment}/edit',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'editPaymentForm'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'editPaymentForm'])
         ->name('credit_lines.payments.edit_form');
     Route::post('credit-lines/{line}/payments/{payment}/edit',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'updatePayment'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'updatePayment'])
         ->name('credit_lines.payments.update');
     Route::post('credit-lines/{line}/payments/{payment}/reverse',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'reversePayment'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'reversePayment'])
         ->name('credit_lines.payments.reverse');
     Route::get('credit-lines/{line}/transactions/{transaction}/allocate',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'allocateForm'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'allocateForm'])
         ->name('credit_lines.payments.allocate_form');
     Route::post('credit-lines/{line}/transactions/{transaction}/allocate',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'allocate'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'allocate'])
         ->name('credit_lines.payments.allocate');
     Route::post('credit-lines/{line}/readjust',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'readjust'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'readjust'])
         ->name('credit_lines.readjust');
     Route::post('credit-lines/{line}/cancel',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'cancel'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'cancel'])
         ->name('credit_lines.cancel');
     Route::post('transactions/{transaction}/reverse',
         [\App\Http\Controllers\WebV1\TransactionReversalController::class, 'store'])
         ->name('credit_lines.reverse');
     // Phase 9: credit-line payment simulator (admin-gated in controller)
     Route::get('credit-lines/{line}/simulator',
-        [\App\Http\Controllers\WebV1\AccountCreditLineControllerExt::class, 'simulator'])
+        [\App\Http\Controllers\WebV1\AccountCreditLineController::class, 'simulator'])
         ->name('credit_lines.simulator');
 
     // Admin: backdated transaction creation (UC-46)

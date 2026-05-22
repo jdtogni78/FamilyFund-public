@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
 use App\Http\Requests\CreateAssetChangeLogRequest;
 use App\Http\Requests\UpdateAssetChangeLogRequest;

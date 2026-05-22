@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\ChartBaseTrait;
 use App\Http\Controllers\Traits\FundPDF;
+use App\Http\Controllers\Traits\FundSetupTrait;
 use App\Http\Controllers\Traits\OverviewTrait;
+use App\Http\Requests\CreateFundRequest;
+use App\Http\Requests\CreateFundWithSetupRequest;
+use App\Http\Requests\UpdateFundRequest;
 use App\Models\FundExt;
 use App\Repositories\FundRepository;
 use App\Repositories\TransactionRepository;
@@ -12,19 +17,26 @@ use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
-use App\Http\Controllers\FundController;
 use App\Http\Controllers\Traits\FundTrait;
 use Spatie\TemporaryDirectory\Exceptions\PathAlreadyExists;
 
-class FundControllerExt extends FundController
+class FundControllerExt extends AppBaseController
 {
     use FundTrait;
     use ChartBaseTrait;
     use OverviewTrait;
+    use FundSetupTrait;
+
+    /** @var  FundRepository */
+    protected $fundRepository;
+
+    /** @var  TransactionRepository */
+    protected $transactionRepository;
 
     public function __construct(FundRepository $fundRepo, TransactionRepository $transactionRepo)
     {
-        parent::__construct($fundRepo, $transactionRepo);
+        $this->fundRepository = $fundRepo;
+        $this->transactionRepository = $transactionRepo;
     }
 
     /**
@@ -305,5 +317,122 @@ class FundControllerExt extends FundController
 
         Flash::success('Withdrawal Rule Goal updated successfully.');
         return redirect(route('funds.show', $id));
+    }
+
+    // --- inlined from former base ---
+
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', FundExt::class);
+
+        $funds = $this->fundRepository->all();
+
+        return view('funds.index')
+            ->with('funds', $funds);
+    }
+
+    public function create()
+    {
+        $this->authorize('create', FundExt::class);
+
+        return view('funds.create');
+    }
+
+    public function store(CreateFundRequest $request)
+    {
+        $this->authorize('create', FundExt::class);
+
+        $input = $request->all();
+
+        $fund = $this->fundRepository->create($input);
+
+        Flash::success('Fund saved successfully.');
+
+        return redirect(route('funds.index'));
+    }
+
+    public function edit($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+
+            return redirect(route('funds.index'));
+        }
+
+        $this->authorize('update', $fund);
+
+        return view('funds.edit')->with('fund', $fund);
+    }
+
+    public function update($id, UpdateFundRequest $request)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+
+            return redirect(route('funds.index'));
+        }
+
+        $this->authorize('update', $fund);
+
+        $fund = $this->fundRepository->update($request->all(), $id);
+
+        Flash::success('Fund updated successfully.');
+
+        return redirect(route('funds.index'));
+    }
+
+    public function destroy($id)
+    {
+        $fund = $this->fundRepository->find($id);
+
+        if (empty($fund)) {
+            Flash::error('Fund not found');
+
+            return redirect(route('funds.index'));
+        }
+
+        $this->authorize('delete', $fund);
+
+        $this->fundRepository->delete($id);
+
+        Flash::success('Fund deleted successfully.');
+
+        return redirect(route('funds.index'));
+    }
+
+    public function createWithSetup()
+    {
+        $this->authorize('create', FundExt::class);
+
+        return view('funds.create_with_setup');
+    }
+
+    public function storeWithSetup(CreateFundWithSetupRequest $request)
+    {
+        $this->authorize('create', FundExt::class);
+
+        $input = $request->all();
+        $isPreview = $request->input('preview', false);
+
+        try {
+            $setupData = $this->setupFund($input, $isPreview);
+
+            if ($isPreview) {
+                return view('funds.preview_setup', [
+                    'preview' => $setupData,
+                    'input' => $input,
+                ]);
+            } else {
+                Flash::success('Fund created successfully with account, portfolio, and initial transaction!');
+                return redirect(route('funds.show', $setupData['fund']->id));
+            }
+        } catch (\Exception $e) {
+            Flash::error('Fund creation failed: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
 use App\Http\Requests\CreatePersonRequest;
 use App\Http\Requests\UpdatePersonRequest;
@@ -174,7 +174,7 @@ class PersonController extends AppBaseController
                 if ($existingSubEntity->id == $subEntity['id']) {
                     $found = true;
                     break;
-                    }   
+                    }
                 }
                 if (!$found) {
                     $existingSubEntity->delete();

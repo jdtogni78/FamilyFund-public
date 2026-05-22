@@ -1,0 +1,128 @@
+# FamilyFund — secret rotation & user-reset plan
+
+Companion to `SECURITY-EXPOSURE.md`. **No secret values are stored in this file.**
+New secrets must go ONLY into git-ignored files (`.env`, `.env.stage`) — never into
+a tracked file again.
+
+## Scope correction (read first)
+The leaked `.env.dev` is reused by the local `.env` (dev) and `.env.stage` — but these
+point at the **local docker dev DB** (`familyfund_dev`, user `root` on the `mariadb`
+container), which is the **shared** DB for the lease-env / test-env pools and concurrent
+worktrees. **The live production data is NOT here** — it's on **spirit** (REDACTED_PROD_HOST),
+in a separate `familyfund_prod` DB with its own credentials (see "PROD analysis" below).
+So the public leak compromises **dev + stage only**, not prod data.
+
+## Blast-radius warning (dev/stage rotation)
+Rotating the dev/stage secrets will:
+- **APP_KEY** → invalidate every session/cookie/signed-URL and make any
+  `encrypted`-cast DB columns undecryptable (must re-encrypt first — see below).
+- **DB_PASSWORD (root)** → break every pool/test env + concurrent session still using
+  the old password until their config is updated.
+→ **Quiesce the pools/worktrees before executing the lower-env rotation.**
+
+---
+
+## 1. Secrets to rotate
+
+| Secret | Where it's leaked / used | Owner | Status |
+|---|---|---|---|
+| **APP_KEY** | leaked in `.env.dev`; reused live in `.env` (dev) + `.env.stage` | Claude (dev+stage) | execute after pools quiesced |
+| **DB_PASSWORD** (`root`@`familyfund_dev`) | leaked in `.env.dev`; reused live in `.env` + `.env.stage` | Claude (dev+stage) | execute after pools quiesced |
+| **PROD secrets (on spirit)** | separate creds (`famfun_prod`/`familyfund_prod`); leaked `.env.dev` does NOT expose them. Only open Q: does prod APP_KEY == leaked dev key? | **Jdtogni** | **analyze-only**; plan window if APP_KEY matches |
+| `MIX_PUSHER_APP_KEY` | leaked, but client-side key by Laravel convention; real `PUSHER_APP_SECRET` was empty | — | skip unless Pusher is actually used |
+| `REDIS/MAIL/AWS/PUSHER_APP_SECRET` | empty/placeholder | — | nothing to do |
+
+### ⚠️ Pre-reqs discovered 2026-05-22 (must handle before rotating)
+- **Encrypted columns exist** — `User::two_factor_secret` (`encrypted`),
+  `two_factor_recovery_codes` (`encrypted:array`), and `MAIL_PASSWORD_ENCRYPTED`
+  (`Crypt::decrypt`). Rotating APP_KEY makes these unreadable → **2FA + mail break**
+  unless you decrypt-with-old then re-encrypt-with-new (or accept resetting dev 2FA).
+- **`familyfund_dev` is live to 3 envs right now** — `app1-familyfund-1`,
+  `familyfund-pool0`, `familyfund-pool1`. **Quiesce these (and release pool/test
+  leases) before rotating the DB root password**, else they break mid-session.
+- Real-world risk is LOW (localhost/LAN docker DB, not internet-facing) → no rush.
+
+### Execution steps (dev + stage — lower; run only after the above)
+1. Quiesce/stop the pool + app1 familyfund containers; release leases.
+2. **Encrypted data:** decrypt 2FA columns + re-encrypt mail password with the new key,
+   OR null `two_factor_*` for dev users (forces 2FA re-enroll).
+3. **APP_KEY:** `docker exec app1-familyfund-1 php artisan key:generate` (PHP is only in
+   the container; writes to the git-ignored `.env`). Repeat for stage. Users logged out.
+3. **DB_PASSWORD:** in the `mariadb` container —
+   `ALTER USER 'root'@'%' IDENTIFIED BY '<new>'; FLUSH PRIVILEGES;` then update
+   `DB_PASSWORD` in the git-ignored `.env`/`.env.stage` **only**.
+4. **Update the pools:** restart lease-env/test-env pools with the new `.env`.
+5. **Sanitize the tracked file:** replace `.env.dev` with placeholders (or rename to
+   `.env.dev.example`) and add `.env.dev` to `.gitignore` — see §5.
+
+### PROD analysis (analyze-only — no changes, no prod contact made)
+Live host **spirit** = `REDACTED_PROD_HOST` (Wake-on-LAN; SSH `jdtogni@REDACTED_PROD_HOST`,
+alias `dstrader`). Rootless docker; containers `db` + `familyfund`.
+- **Prod DB:** `familyfund_prod`, user `famfun_prod`, **weak hardcoded password**, plus
+  hardcoded `MARIADB_ROOT_PASSWORD` — in `docker-compose.prod.yml`, `local/deploy_ff.sh`,
+  `dstrader/opt/backup.sh`. All in **dstrader-aws (private)** → not publicly exposed, but
+  poor hygiene and weak.
+- **Prod Laravel `.env`** lives on spirit and is **excluded from rsync/git** → separate
+  from the leaked `.env.dev`. Prod uses different DB creds, so the public leak does **not**
+  expose prod creds.
+- **Open item (needs Jdtogni / read-only SSH):** confirm prod `.env`'s `APP_KEY` is NOT the
+  leaked dev key. If it coincidentally matches, plan a prod key rotation in a window.
+- **Recommended later (with deployment planning, not now):** move prod DB creds out of
+  tracked compose/scripts into an `env_file`/secrets, and strengthen the DB + root passwords.
+
+---
+
+## 2. Dump emails — review result
+Mostly seed/fake, **but real PII present**:
+- `familyfund_dev_data.sql`: 8 `@familyfund.com` (fake) + **1 `@gmail.com` (real)**.
+- `test-baseline.sql.gz`: 38 `@dev.familyfund.local` + 8 `@familyfund.com` + 1 `@test.local` (fake) + **14 `@gmail.com` + 1 `@hotmail.com` (real)**.
+- ~13 distinct real Gmail addresses (incl. yours) — look like real family members.
+→ Treat the real Gmail/Hotmail accounts as exposed PII; reset + heads-up (see §3).
+
+---
+
+## 3. User password resets
+- **Bulk-reset everyone EXCEPT `jdtogni`** (admin): force a reset / null the password so
+  they must re-set. Suggested (verify table/columns):
+  `UPDATE users SET password = '', remember_token = NULL WHERE email NOT LIKE '%jdtogni%';`
+  then trigger the app's reset-email flow, or set a known-expired state.
+- **`jdtogni`** account: **Jdtogni reviews manually** — do not auto-reset (it's the admin
+  used by migrations `assign_system_admin_role`; nulling it could lock out admin).
+- **Invalidate reset tokens:** `TRUNCATE password_resets;` (covers the leaked CSV/.ibd).
+- **Invalidate sessions:** `TRUNCATE sessions;` (APP_KEY rotation also does this).
+
+---
+
+## 4. Real emails embedded in code (pre-publish cleanup)
+gmail.com appears in source traits, controllers, **migrations**
+(`assign_system_admin_role`, `add_is_admin_to_users`), seeders, tests, docs, and the
+dumps. Before going public:
+- Parameterize the admin email into `config`/env (e.g. `ADMIN_EMAIL`), not hardcoded.
+- Scrub/synthesize the dumps (or remove them from the repo entirely — see §5).
+- Your own email is already in commit metadata; lower concern, but others' aren't.
+
+---
+
+## 5. Prevent future bad commits (suggestions)
+1. **Pre-commit secret scanner** — `gitleaks protect --staged` (or `git-secrets`) as a
+   `.git/hooks/pre-commit`, ideally via the `pre-commit` framework so it's shared.
+2. **Pre-push full-diff scan** — `gitleaks detect` over the push range as a `pre-push` hook.
+3. **Harden `.gitignore`** (root + app):
+   `.env*` (with `!.env.example`), `*.sql`, `*.sql.gz`, `*.ibd`, `*.frm`,
+   `database/**/*data*.sql`, `**/*.log`, `**/*.log.*`, `**/datadir*/`.
+4. **Never commit data/datadir** — replace dumps with a synthetic seeder; keep real
+   data out of git entirely.
+5. **CI scanning** — gitleaks-action (or GitHub secret scanning + push protection) on
+   every PR/push; fail the build on a hit.
+6. **One tracked env only** — `.env.example` with placeholders; all real secrets in
+   git-ignored files or a secrets manager.
+7. **Parameterize PII** — admin/recipient emails via config/env, not literals.
+8. Periodic full-history scan in CI to catch regressions.
+
+---
+
+## Order of operations
+1. (this doc) ✅  2. Quiesce pools/worktrees → rotate dev+stage (§1) →
+3. Bulk user reset, exclude jdtogni (§3) → 4. Harden `.gitignore` + add scanners (§5) →
+5. FamilyFund history purge (`SECURITY-EXPOSURE.md` §5) → 6. Plan prod rotation →
+7. Publish.

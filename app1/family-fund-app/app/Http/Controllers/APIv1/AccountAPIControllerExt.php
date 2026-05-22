@@ -10,6 +10,7 @@ use App\Models\Utils;
 use App\Repositories\AccountRepository;
 use App\Http\Controllers\API\AccountAPIController;
 use App\Http\Resources\AccountResource;
+use Illuminate\Http\Request;
 use Carbon\Traits\Date;
 use Response;
 use Carbon\Carbon;
@@ -38,7 +39,7 @@ class AccountAPIControllerExt extends AccountAPIController
      *
      * @return Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $now = date('Y-m-d');
         return $this->showAsOf($id, $now);

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\API\CreateAccountAPIRequest;
 use App\Http\Requests\API\UpdateAccountAPIRequest;
 use App\Models\Account;
+use App\Models\AccountExt;
 use App\Repositories\AccountRepository;
+use App\Services\AuthorizationService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\AccountResource;
@@ -35,11 +37,22 @@ class AccountAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $accounts = $this->accountRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = AuthorizationService::for($request->user())
+            ->scopeAccountsQuery(AccountExt::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $accounts = $query->get();
 
         return $this->sendResponse(AccountResource::collection($accounts), 'Accounts retrieved successfully');
     }
@@ -69,14 +82,16 @@ class AccountAPIController extends AppBaseController
      *
      * @return Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        /** @var Account $account */
-        $account = $this->accountRepository->find($id);
+        /** @var AccountExt $account */
+        $account = AccountExt::find($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
         }
+
+        abort_unless($request->user()?->canAccessAccount($account), 403);
 
         return $this->sendResponse(new AccountResource($account), 'Account retrieved successfully');
     }

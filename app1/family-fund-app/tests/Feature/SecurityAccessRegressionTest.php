@@ -9,6 +9,7 @@ use App\Models\FundReport;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laravel\Sanctum\Sanctum;
 use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
@@ -79,9 +80,9 @@ class SecurityAccessRegressionTest extends TestCase
 
     public function test_beneficiary_cannot_fetch_sibling_account_through_generated_api(): void
     {
-        $response = $this
-            ->actingAs($this->beneficiary)
-            ->getJson('/api/accounts/' . $this->siblingAccount->id);
+        Sanctum::actingAs($this->beneficiary);
+
+        $response = $this->getJson('/api/accounts/' . $this->siblingAccount->id);
 
         $this->assertContains(
             $response->getStatusCode(),

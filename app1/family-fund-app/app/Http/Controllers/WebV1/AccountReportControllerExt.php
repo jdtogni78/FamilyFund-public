@@ -8,6 +8,7 @@ use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
 use App\Jobs\SendAccountReport;
 use App\Models\Account;
+use App\Models\AccountExt;
 use App\Models\AccountReport;
 use App\Models\AccountReportExt;
 use App\Models\Fund;
@@ -101,6 +102,15 @@ class AccountReportControllerExt extends AccountReportController
 
     public function show($id)
     {
+        $accountReport = $this->accountReportRepository->find($id);
+        if (empty($accountReport)) {
+            Flash::error('Account Report not found');
+            return redirect(route('accountReports.index'));
+        }
+
+        $account = AccountExt::find($accountReport->account_id);
+        abort_unless($account && auth()->user()?->canAccessAccount($account), 403);
+
         $api = ['typeMap' => AccountReportExt::$typeMap];
         return parent::show($id)->with('api', $api);
     }

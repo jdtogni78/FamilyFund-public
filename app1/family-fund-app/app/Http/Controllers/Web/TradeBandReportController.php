@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
 use App\Http\Requests\CreateTradeBandReportRequest;
 use App\Http\Requests\UpdateTradeBandReportRequest;
@@ -8,6 +8,7 @@ use App\Jobs\SendTradeBandReport;
 use App\Models\TradeBandReport;
 use App\Repositories\TradeBandReportRepository;
 use App\Models\FundExt;
+use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\AppBaseController;
 use App\Models\ExchangeHoliday;
 use App\Repositories\ExchangeHolidayRepository;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-class ExchangeHolidayController extends Controller
+class ExchangeHolidayController extends AppBaseController
 {
     public function __construct(
         private ExchangeHolidayRepository $repository

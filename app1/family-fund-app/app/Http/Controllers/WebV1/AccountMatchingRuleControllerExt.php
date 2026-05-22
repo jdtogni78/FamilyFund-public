@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateAccountMatchingRuleRequest;
 use App\Http\Requests\CreateAccountMatchingRuleRequestBulk;
 use App\Repositories\AccountMatchingRuleRepository;
 use App\Http\Controllers\AppBaseController;
-use App\Http\Controllers\AccountMatchingRuleController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
@@ -18,10 +17,18 @@ use App\Models\MatchingRuleExt;
 use App\Models\AccountExt;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
 
-class AccountMatchingRuleControllerExt extends AccountMatchingRuleController
+class AccountMatchingRuleControllerExt extends AppBaseController
 {
     use MailTrait;
     use AccountSelectorTrait;
+
+    /** @var  AccountMatchingRuleRepository */
+    protected $accountMatchingRuleRepository;
+
+    public function __construct(AccountMatchingRuleRepository $accountMatchingRuleRepo)
+    {
+        $this->accountMatchingRuleRepository = $accountMatchingRuleRepo;
+    }
 
     /**
      * Display a listing of AccountMatchingRules with filtering.

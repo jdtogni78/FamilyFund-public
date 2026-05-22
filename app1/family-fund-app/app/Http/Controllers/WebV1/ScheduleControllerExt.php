@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateScheduleRequest;
 use App\Models\Schedule;
 use App\Models\ScheduleExt;
 use App\Repositories\ScheduleRepository;
-use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\Web\ScheduleController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;

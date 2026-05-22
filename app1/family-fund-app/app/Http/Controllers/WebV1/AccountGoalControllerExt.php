@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\AccountGoalController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
+use App\Http\Requests\CreateAccountGoalRequest;
+use App\Http\Requests\UpdateAccountGoalRequest;
 use App\Models\AccountGoal;
 use App\Models\Goal;
 use App\Repositories\AccountGoalRepository;
+use Illuminate\Http\Request;
 use Flash;
+use Response;
 
-class AccountGoalControllerExt extends AccountGoalController
+class AccountGoalControllerExt extends AppBaseController
 {
     use AccountSelectorTrait;
 
@@ -18,7 +22,6 @@ class AccountGoalControllerExt extends AccountGoalController
 
     public function __construct(AccountGoalRepository $accountGoalRepo)
     {
-        parent::__construct($accountGoalRepo);
         $this->accountGoalRepository = $accountGoalRepo;
     }
 
@@ -49,5 +52,73 @@ class AccountGoalControllerExt extends AccountGoalController
         return view('account_goals.edit')
             ->with('accountGoal', $accountGoal)
             ->with('api', $api);
+    }
+
+    // --- inlined from former base ---
+
+    public function index(Request $request)
+    {
+        $accountGoals = $this->accountGoalRepository->all();
+
+        return view('account_goals.index')
+            ->with('accountGoals', $accountGoals);
+    }
+
+    public function store(CreateAccountGoalRequest $request)
+    {
+        $input = $request->all();
+
+        $accountGoal = $this->accountGoalRepository->create($input);
+
+        Flash::success('Account Goal saved successfully.');
+
+        return redirect(route('accountGoals.index'));
+    }
+
+    public function show($id)
+    {
+        $accountGoal = $this->accountGoalRepository->find($id);
+
+        if (empty($accountGoal)) {
+            Flash::error('Account Goal not found');
+
+            return redirect(route('accountGoals.index'));
+        }
+
+        return view('account_goals.show')->with('accountGoal', $accountGoal);
+    }
+
+    public function update($id, UpdateAccountGoalRequest $request)
+    {
+        $accountGoal = $this->accountGoalRepository->find($id);
+
+        if (empty($accountGoal)) {
+            Flash::error('Account Goal not found');
+
+            return redirect(route('accountGoals.index'));
+        }
+
+        $accountGoal = $this->accountGoalRepository->update($request->all(), $id);
+
+        Flash::success('Account Goal updated successfully.');
+
+        return redirect(route('accountGoals.index'));
+    }
+
+    public function destroy($id)
+    {
+        $accountGoal = $this->accountGoalRepository->find($id);
+
+        if (empty($accountGoal)) {
+            Flash::error('Account Goal not found');
+
+            return redirect(route('accountGoals.index'));
+        }
+
+        $this->accountGoalRepository->delete($id);
+
+        Flash::success('Account Goal deleted successfully.');
+
+        return redirect(route('accountGoals.index'));
     }
 }

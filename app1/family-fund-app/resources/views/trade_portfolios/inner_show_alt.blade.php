@@ -6,12 +6,12 @@
 @php
     // Group color palette (indexed by hash for consistent colors)
     $groupPalette = [
-        ['bg' => '#dcfce7', 'border' => '#16a34a', 'text' => '#15803d'], // green
-        ['bg' => '#dbeafe', 'border' => '#2563eb', 'text' => '#1d4ed8'], // blue
-        ['bg' => '#fef3c7', 'border' => '#d97706', 'text' => '#b45309'], // amber
-        ['bg' => '#f3e8ff', 'border' => '#9333ea', 'text' => '#7e22ce'], // purple
-        ['bg' => '#ffe4e6', 'border' => '#e11d48', 'text' => '#be123c'], // rose
-        ['bg' => '#ccfbf1', 'border' => '#14b8a6', 'text' => '#0f766e'], // teal
+        ['bg' => '#2563eb', 'text' => '#ffffff'], // blue
+        ['bg' => '#0f766e', 'text' => '#ffffff'], // teal
+        ['bg' => '#b45309', 'text' => '#ffffff'], // amber
+        ['bg' => '#7c3aed', 'text' => '#ffffff'], // violet
+        ['bg' => '#be123c', 'text' => '#ffffff'], // rose
+        ['bg' => '#4338ca', 'text' => '#ffffff'], // indigo
     ];
     $getGroupColors = fn($name) => $groupPalette[crc32($name) % 6];
 
@@ -118,7 +118,7 @@
                     <div class="d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
                         @foreach($tpGroups as $group => $targetPct)
                             @php $colors = $getGroupColors($group); @endphp
-                            <span class="badge py-2 px-3" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }}; border: 1px solid {{ $colors['border'] }};">
+                            <span class="badge py-2 px-3" style="background: {{ $colors['bg'] }}; color: {{ $colors['text'] }};">
                                 {{ $group }}: {{ $targetPct }}%
                             </span>
                         @endforeach

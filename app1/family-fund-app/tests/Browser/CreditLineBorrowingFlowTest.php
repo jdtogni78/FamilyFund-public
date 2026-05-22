@@ -29,7 +29,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
     private const ACCOUNT_ID = 7;
 
     /**
-     * UC-01: An admin can open a new credit line through the UI.
+     * UC-01: An admin can open a new loan share through the UI.
      */
     public function test_admin_can_open_credit_line_through_ui(): void
     {
@@ -37,14 +37,17 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
             $lineId = $this->openLineViaUi($browser, principalShares: 100, termMonths: 6, descr: 'E2E open UC-01');
 
             $browser->on(new CreditLineShowPage($lineId))
-                ->assertSee('Credit Line #' . $lineId)
+                ->assertSee('Loan Share #' . $lineId)
                 ->assertSee('Principal (shares)')
                 ->assertSee('100.0000')
                 ->assertSee('Outstanding (shares)')
                 ->assertSee('Payment schedule');
 
-            // 6-month monthly schedule => 6 rows
-            $rows = $browser->elements('.card .table tbody tr');
+            // 6-month monthly schedule => 6 rows. The show page has
+            // multiple tables (schedule, allocations, adjustment history);
+            // target only the schedule rows by the data-due attribute the
+            // schedule rows carry (show.blade.php:195).
+            $rows = $browser->elements('table tbody tr[data-due]');
             $this->assertCount(6, $rows, 'Expected 6 schedule rows for term=6 monthly.');
 
             $this->cleanupLine($lineId);
@@ -67,7 +70,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
             $page->repay($browser, 10.0);
 
             $browser->on($page)
-                ->assertSee('Credit Line #' . $lineId);
+                ->assertSee('Loan Share #' . $lineId);
 
             // Outstanding should now read 50.0000 (60 − 10).
             $line = AccountCreditLine::findOrFail($lineId);
@@ -128,7 +131,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
             $page->repay($browser, 10.0);
 
             // Wait for the post-repay redirect to land so the REP row is committed.
-            $browser->on($page)->assertSee('Credit Line #' . $lineId);
+            $browser->on($page)->assertSee('Loan Share #' . $lineId);
 
             $line = AccountCreditLine::findOrFail($lineId);
             $repTx = TransactionExt::where('account_credit_line_id', $lineId)
@@ -148,7 +151,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
             $browser->pause(800);
 
             $browser->visit($page->url())
-                ->assertSee('Credit Line #' . $lineId);
+                ->assertSee('Loan Share #' . $lineId);
 
             $line->refresh();
             $this->assertEqualsWithDelta(60.0, (float) $line->outstanding_shares, 0.0001);
@@ -205,7 +208,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
     // ------------------------------------------------------------------
 
     /**
-     * Drive the "new credit line" form and return the new line's id.
+     * Drive the "new loan share" form and return the new line's id.
      */
     private function openLineViaUi(
         Browser $browser,
@@ -215,6 +218,7 @@ class CreditLineBorrowingFlowTest extends DuskTestCase
     ): int {
         $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
             ->waitFor('form[action*="/credit-lines"]')
+            ->type('input[name="nickname"]', $descr)
             ->type('input[name="principal_shares"]', (string) $principalShares)
             ->clear('input[name="term_months"]')
             ->type('input[name="term_months"]', (string) $termMonths)

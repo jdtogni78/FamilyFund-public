@@ -1,18 +1,18 @@
 <x-app-layout>
 @section('content')
 <ol class="breadcrumb">
-    <li class="breadcrumb-item active">Credit Lines</li>
+    <li class="breadcrumb-item active">Loan Shares</li>
 </ol>
 <div class="container-fluid">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Credit Lines — all accounts</strong>
+            <strong>Loan Shares — all accounts</strong>
             <div class="d-flex gap-2">
                 <a href="{{ route('credit_lines.global_payments') }}"
-                   class="btn btn-sm btn-outline-secondary">Receivables</a>
+                   class="btn btn-sm btn-outline-secondary">Payments</a>
                 <a href="{{ route('credit_lines.global_create') }}"
                    class="btn btn-sm btn-primary">
-                    <i class="fa fa-plus"></i> Open new credit line
+                    <i class="fa fa-plus"></i> Open new loan share
                 </a>
             </div>
         </div>
@@ -32,7 +32,7 @@
                 </div>
             </form>
             @if($lines->isEmpty())
-                <p class="text-muted mb-0">No credit lines.</p>
+                <p class="text-muted mb-0">No loan shares.</p>
             @else
             <table class="table table-sm">
                 <thead>
@@ -44,7 +44,7 @@
                 <tbody>
                 @foreach($lines as $line)
                     <tr>
-                        <td>{{ $line->id }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $line->nickname }}</td>
                         <td>
                             @if($line->account)
@@ -56,8 +56,8 @@
                             @endif
                         </td>
                         <td>{{ $line->status }}</td>
-                        <td>{{ number_format($line->principal_shares, 4) }}</td>
-                        <td>{{ number_format($line->outstanding_shares, 4) }}</td>
+                        <td>{{ number_format($line->principal_shares, 2) }}</td>
+                        <td>{{ number_format($line->outstanding_shares, 2) }}</td>
                         <td>{{ $line->term_months }} mo</td>
                         <td>{{ $line->payment_frequency }}</td>
                         <td>{{ optional($line->origination_date)->format('Y-m-d') }}</td>

@@ -48,7 +48,7 @@ class DrawServiceTest extends TestCase
     }
 
     // -----------------------------------------------------------------
-    // UC-01: Open first credit line (happy path)
+    // UC-01: Open first loan share (happy path)
     // -----------------------------------------------------------------
 
     public function test_open_creates_credit_line_with_correct_fields(): void

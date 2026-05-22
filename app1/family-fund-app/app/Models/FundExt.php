@@ -53,7 +53,7 @@ class FundExt extends Fund
         if (!$account) {
             return 0;
         }
-        return $account->sharesAsOf($now);
+        return $account->sharesWithoutBorrowingAsOf($now);
     }
 
     /**
@@ -82,8 +82,11 @@ class FundExt extends Fund
      * Dollar value of the credit-line receivable held by this fund as of $now.
      * See docs/credit_lines/fund_cashflow.md (receivable-as-asset).
      *
-     * Returns 0 when there are no active credit lines. Safe to call even
-     * before the credit-line tables exist (defensive try/catch).
+     * Returns 0 when there are no active credit lines. In production a
+     * calculator failure (schema drift, missing relationship, bad as-of
+     * date) is logged and swallowed so the fund show page still renders;
+     * in every other environment the exception propagates so the failure
+     * is visible in tests, dev and staging (Issue #6).
      */
     public function creditLineReceivableValueAsOf($now): float
     {
@@ -92,6 +95,13 @@ class FundExt extends Fund
             $calc = \App::make(\App\Services\CreditLine\Reporting\FundReceivableCalculator::class);
             return (float) $calc->receivableValue($this, $asOf);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'creditLineReceivableValueAsOf failed for fund #' . $this->id . ': ' . $e->getMessage(),
+                ['exception' => $e]
+            );
+            if (!app()->environment('production')) {
+                throw $e;
+            }
             return 0.0;
         }
     }
@@ -118,11 +128,10 @@ class FundExt extends Fund
         $used = 0;
         $total = 0;
         foreach ($accounts as $account) {
-            $balance = $account->sharesAsOf($now);
             if ($account->user_id) {
-                $used += $balance;
+                $used += max(0, $account->sharesAsOf($now));
             } else {
-                $total = $balance;
+                $total = $account->sharesWithoutBorrowingAsOf($now);
             }
         }
 
@@ -131,6 +140,25 @@ class FundExt extends Fund
 
     public function unallocatedShares($now) {
         return $this->allocatedShares($now, true);
+    }
+
+    public function borrowedShares($now) {
+        $accountRepo = \App::make(AccountRepository::class);
+        $query = $accountRepo->makeModel()->newQuery();
+        $query->where('fund_id', $this->id);
+        $query->whereNotNull('user_id');
+        $accounts = $query->get(['*']);
+
+        $borrowed = 0;
+        foreach ($accounts as $account) {
+            $borrowed += max(0, $account->borrowedSharesAsOf($now));
+        }
+
+        return $borrowed;
+    }
+
+    public function availableUnallocatedShares($now) {
+        return max(0, $this->unallocatedShares($now) - $this->borrowedShares($now));
     }
 
     /**

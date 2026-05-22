@@ -2,15 +2,27 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\AccountBalanceController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
+use App\Http\Requests\CreateAccountBalanceRequest;
+use App\Http\Requests\UpdateAccountBalanceRequest;
 use App\Models\AccountBalance;
+use App\Repositories\AccountBalanceRepository;
 use Illuminate\Http\Request;
 use Flash;
+use Response;
 
-class AccountBalanceControllerExt extends AccountBalanceController
+class AccountBalanceControllerExt extends AppBaseController
 {
     use AccountSelectorTrait;
+
+    /** @var  AccountBalanceRepository */
+    protected $accountBalanceRepository;
+
+    public function __construct(AccountBalanceRepository $accountBalanceRepo)
+    {
+        $this->accountBalanceRepository = $accountBalanceRepo;
+    }
 
     /**
      * Display a listing of AccountBalances with filtering.
@@ -80,5 +92,65 @@ class AccountBalanceControllerExt extends AccountBalanceController
         return view('account_balances.edit')
             ->with('accountBalance', $accountBalance)
             ->with('api', $api);
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreateAccountBalanceRequest $request)
+    {
+        $input = $request->all();
+
+        $accountBalance = $this->accountBalanceRepository->create($input);
+
+        Flash::success('Account Balance saved successfully.');
+
+        return redirect(route('accountBalances.index'));
+    }
+
+    public function show($id)
+    {
+        $accountBalance = $this->accountBalanceRepository->find($id);
+
+        if (empty($accountBalance)) {
+            Flash::error('Account Balance not found');
+
+            return redirect(route('accountBalances.index'));
+        }
+
+        return view('account_balances.show')->with('accountBalance', $accountBalance);
+    }
+
+    public function update($id, UpdateAccountBalanceRequest $request)
+    {
+        $accountBalance = $this->accountBalanceRepository->find($id);
+
+        if (empty($accountBalance)) {
+            Flash::error('Account Balance not found');
+
+            return redirect(route('accountBalances.index'));
+        }
+
+        $accountBalance = $this->accountBalanceRepository->update($request->all(), $id);
+
+        Flash::success('Account Balance updated successfully.');
+
+        return redirect(route('accountBalances.index'));
+    }
+
+    public function destroy($id)
+    {
+        $accountBalance = $this->accountBalanceRepository->find($id);
+
+        if (empty($accountBalance)) {
+            Flash::error('Account Balance not found');
+
+            return redirect(route('accountBalances.index'));
+        }
+
+        $this->accountBalanceRepository->delete($id);
+
+        Flash::success('Account Balance deleted successfully.');
+
+        return redirect(route('accountBalances.index'));
     }
 }

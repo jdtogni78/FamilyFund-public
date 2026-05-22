@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\FundReportController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\CreateFundReportRequest;
 use App\Http\Requests\UpdateFundReportRequest;
@@ -18,13 +18,16 @@ use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Response;
 
-class FundReportControllerExt extends FundReportController
+class FundReportControllerExt extends AppBaseController
 {
     use FundTrait;
 
+    /** @var FundReportRepository $fundReportRepository*/
+    protected $fundReportRepository;
+
     public function __construct(FundReportRepository $fundReportRepo)
     {
-        parent::__construct($fundReportRepo);
+        $this->fundReportRepository = $fundReportRepo;
     }
 
     public function index(Request $request)
@@ -178,6 +181,25 @@ class FundReportControllerExt extends FundReportController
         Flash::success($msg);
 
         return redirect(route('fundReports.show', $id));
+    }
+
+    // --- inlined from former base ---
+
+    public function destroy($id)
+    {
+        $fundReport = $this->fundReportRepository->find($id);
+
+        if (empty($fundReport)) {
+            Flash::error('Fund Report not found');
+
+            return redirect(route('fundReports.index'));
+        }
+
+        $this->fundReportRepository->delete($id);
+
+        Flash::success('Fund Report deleted successfully.');
+
+        return redirect(route('fundReports.index'));
     }
 
 }

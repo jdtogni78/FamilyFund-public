@@ -4,7 +4,7 @@
       $fund – FundExt
 
     Renders ONLY for admin users (auth()->user()?->is_admin()).
-    Visually subordinate to the main credit-line-exposure card — small heading,
+    Visually subordinate to the main loan-share-exposure card — small heading,
     inline table, no big card chrome.
 --}}
 @php
@@ -15,14 +15,12 @@
 @php
     $asOf = now()->toDateString();
     $portfolioValue   = 0.0;
-    $receivableValue  = 0.0;
-    $combinedValue    = 0.0;
+    $loanedValue      = 0.0;
     $activeLines     = collect();
 
     try {
         $portfolioValue  = (float) $fund->valueAsOf($asOf);
-        $receivableValue = (float) $fund->creditLineReceivableValueAsOf($asOf);
-        $combinedValue   = (float) $fund->valueWithCreditLinesAsOf($asOf);
+        $loanedValue = (float) $fund->creditLineReceivableValueAsOf($asOf);
 
         $accountIds = \App\Models\Account::where('fund_id', $fund->id)->pluck('id');
         $activeLines = \App\Models\AccountCreditLine::whereIn('account_id', $accountIds)
@@ -47,12 +45,12 @@
                 <strong>${{ number_format($portfolioValue, 2) }}</strong>
             </div>
             <div class="col-md-4">
-                <span class="text-muted">Credit-line receivable:</span>
-                <strong>${{ number_format($receivableValue, 2) }}</strong>
+                <span class="text-muted">Loaned share value:</span>
+                <strong>${{ number_format($loanedValue, 2) }}</strong>
             </div>
             <div class="col-md-4">
-                <span class="text-muted">Combined value:</span>
-                <strong>${{ number_format($combinedValue, 2) }}</strong>
+                <span class="text-muted">Fund size impact:</span>
+                <strong>$0.00</strong>
             </div>
         </div>
 
@@ -64,16 +62,21 @@
                         <th class="text-end">Principal (sh)</th>
                         <th class="text-end">Outstanding (sh)</th>
                         <th class="text-end">Outstanding value</th>
-                        <th class="text-end">Days since origination</th>
+                        <th class="text-end">Age</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach($activeLines as $line)
                     @php
                         $oVal = $line->outstanding_shares * ($sharePrice ?? 0);
-                        $days = $line->origination_date
-                            ? \Illuminate\Support\Carbon::parse($line->origination_date)->diffInDays(now())
-                            : '—';
+                        if ($line->origination_date) {
+                            $orig = \Illuminate\Support\Carbon::parse($line->origination_date);
+                            $months = (int) $orig->diffInMonths(now());
+                            $days = (int) $orig->copy()->addMonths($months)->diffInDays(now());
+                            $age = $months . ' mo, ' . $days . ' d';
+                        } else {
+                            $age = '—';
+                        }
                         $nickname = $line->account?->nickname ?? ('account #' . $line->account_id);
                     @endphp
                     <tr>
@@ -81,13 +84,13 @@
                         <td class="text-end">{{ number_format($line->principal_shares, 4) }}</td>
                         <td class="text-end">{{ number_format($line->outstanding_shares, 4) }}</td>
                         <td class="text-end">${{ number_format($oVal, 2) }}</td>
-                        <td class="text-end">{{ $days }}</td>
+                        <td class="text-end">{{ $age }}</td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
         @else
-            <p class="text-muted small mb-0">No active credit lines.</p>
+            <p class="text-muted small mb-0">No active loan shares.</p>
         @endif
     </div>
 </div>

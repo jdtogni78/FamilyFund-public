@@ -231,12 +231,18 @@ class TwoFactorAuthTest extends TestCase
 
     // ==================== Login Activity Tests ====================
 
-    #[\PHPUnit\Framework\Attributes\Group('needs-livewire-setup')]
     public function test_successful_login_records_activity()
     {
-        // This test requires Livewire component testing setup for login form
-        // Skip for now - login activity recording is tested manually
-        $this->markTestSkipped('Requires Livewire component testing setup');
+        \Livewire\Volt\Volt::test('pages.auth.login')
+            ->set('form.email', $this->user->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('login_activities', [
+            'user_id' => $this->user->id,
+            'status' => 'success',
+        ]);
     }
 
     public function test_login_with_wrong_password_does_not_authenticate()

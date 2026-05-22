@@ -5,6 +5,7 @@ namespace App\Services\CreditLine\Reporting;
 use App\Models\AccountCreditLine;
 use App\Models\CreditLineAdjustment;
 use App\Models\CreditLinePayment;
+use App\Models\CreditLinePaymentAllocation;
 use App\Models\TransactionExt;
 use Carbon\Carbon;
 
@@ -235,21 +236,17 @@ class TrajectoryBuilder
     }
 
     /**
-     * Shares already credited against a partially-paid row.
-     *
-     * Mirrors RepayService's partial-credit model: a row tracks only its
-     * latest partial transaction via paid_transaction_id, so the covered
-     * shares are that transaction's shares. LATE/SCHEDULED rows have no
-     * partial credit (a partial payment would have set status = partial).
+     * Shares already credited against a row, summed from the allocation
+     * ledger (the unit of truth). Reading `paid_transaction_id`'s tx.shares
+     * would under-count consecutive partials on the same row and over-count
+     * a single REP whose overflow cascaded across rows. (Issue #4.)
      */
     private function sharesPaidOnRow(CreditLinePayment $row): float
     {
-        if ($row->status !== CreditLinePayment::STATUS_PARTIAL || !$row->paid_transaction_id) {
-            return 0.0;
-        }
-
-        $tran = TransactionExt::find($row->paid_transaction_id);
-        return $tran ? (float) $tran->shares : 0.0;
+        return round(
+            (float) CreditLinePaymentAllocation::where('credit_line_payment_id', $row->id)->sum('shares'),
+            4
+        );
     }
 
     /**

@@ -21,3 +21,37 @@ database/dev/familyfund_dev_data_20260110.sql
 test_plan.md
 database/dev/familyfund_dev_data_20260419.sql
 database/familyfund_ddl_20260419.sql
+
+# Test pool slot artifacts (per-slot, never committed)
+app1/docker-compose.test*.local.yml
+app1/docker-compose.pool*.local.yml
+app1/family-fund-app/.env.test*
+app1/family-fund-app/.env.pool*
+
+# Coverage reports (regenerated on demand)
+app1/family-fund-app/coverage-html/
+app1/family-fund-app/coverage-summary.txt
+
+# --- Secrets & data hygiene (2026-05-21, post .env.dev leak) ---
+# never commit any env file except the example template
+**/.env
+**/.env.*
+!**/.env.example
+# data dumps / raw DB files / logs (the leak class)
+database/dev/*.sql
+database/**/*data*.sql
+database/prod_to_dev.sql
+**/*.sql.gz
+**/*.ibd
+**/*.frm
+**/*.sqlite
+**/*.log
+**/*.log.*
+database/csv/*password*
+**/datadir*/
+
+# --- Local tooling & scratch dirs (never committed) ---
+/.claude/worktrees/
+/.codex-worktrees/
+/.playwright-cli/
+/output/

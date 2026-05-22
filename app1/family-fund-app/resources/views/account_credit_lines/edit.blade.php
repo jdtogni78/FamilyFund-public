@@ -8,11 +8,11 @@
         <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a>
+        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Loan Shares</a>
     </li>
     @endif
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Credit Line #{{ $line->id }}</a>
+        <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}">Loan Share #{{ $line->id }}</a>
     </li>
     <li class="breadcrumb-item active">Edit</li>
 </ol>
@@ -21,7 +21,7 @@
 
     <div class="card mb-3">
         <div class="card-header">
-            <strong>Edit credit line #{{ $line->id }}</strong>
+            <strong>Edit loan share #{{ $line->id }}</strong>
             @if($account)
                 <span class="text-body-secondary ms-2">
                     &mdash; <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
@@ -70,6 +70,19 @@
                                    {{ old('reminder_enabled', $line->reminder_enabled) ? 'checked' : '' }}>
                             <label for="reminder_enabled" class="form-check-label">
                                 Send reminder emails before each due date
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label d-block">Delay notifications</label>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="delay_notification_enabled" value="0">
+                            <input type="checkbox" class="form-check-input"
+                                   id="delay_notification_enabled" name="delay_notification_enabled" value="1"
+                                   {{ old('delay_notification_enabled', $line->delay_notification_enabled ?? true) ? 'checked' : '' }}>
+                            <label for="delay_notification_enabled" class="form-check-label">
+                                Send late-payment notifications for this line (master toggle for the three fields below)
                             </label>
                         </div>
                     </div>

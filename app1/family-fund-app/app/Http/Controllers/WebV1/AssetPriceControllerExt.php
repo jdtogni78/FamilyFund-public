@@ -2,20 +2,29 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\AssetPriceController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\DetectsDataIssuesTrait;
+use App\Http\Requests\CreateAssetPriceRequest;
+use App\Http\Requests\UpdateAssetPriceRequest;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
 use App\Models\PortfolioAsset;
 use App\Repositories\AssetPriceRepository;
 use Illuminate\Http\Request;
+use Flash;
+use Log;
+use Response;
 
-class AssetPriceControllerExt extends AssetPriceController
+class AssetPriceControllerExt extends AppBaseController
 {
     use DetectsDataIssuesTrait;
+
+    /** @var  AssetPriceRepository */
+    protected $assetPriceRepository;
+
     public function __construct(AssetPriceRepository $assetPriceRepo)
     {
-        parent::__construct($assetPriceRepo);
+        $this->assetPriceRepository = $assetPriceRepo;
     }
 
     /**
@@ -344,5 +353,65 @@ class AssetPriceControllerExt extends AssetPriceController
         return view('asset_prices.edit')
             ->with('assetPrice', $assetPrice)
             ->with('api', $api);
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreateAssetPriceRequest $request)
+    {
+        $input = $request->all();
+
+        $assetPrice = $this->assetPriceRepository->create($input);
+
+        Flash::success('Asset Price saved successfully.');
+
+        return redirect(route('assetPrices.index'));
+    }
+
+    public function show($id)
+    {
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            Flash::error('Asset Price not found');
+
+            return redirect(route('assetPrices.index'));
+        }
+
+        return view('asset_prices.show')->with('assetPrice', $assetPrice);
+    }
+
+    public function update($id, UpdateAssetPriceRequest $request)
+    {
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            Flash::error('Asset Price not found');
+
+            return redirect(route('assetPrices.index'));
+        }
+
+        $assetPrice = $this->assetPriceRepository->update($request->all(), $id);
+
+        Flash::success('Asset Price updated successfully.');
+
+        return redirect(route('assetPrices.index'));
+    }
+
+    public function destroy($id)
+    {
+        $assetPrice = $this->assetPriceRepository->find($id);
+
+        if (empty($assetPrice)) {
+            Flash::error('Asset Price not found');
+
+            return redirect(route('assetPrices.index'));
+        }
+
+        $this->assetPriceRepository->delete($id);
+
+        Flash::success('Asset Price deleted successfully.');
+
+        return redirect(route('assetPrices.index'));
     }
 }

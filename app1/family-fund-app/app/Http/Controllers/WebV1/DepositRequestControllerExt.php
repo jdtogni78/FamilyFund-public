@@ -11,13 +11,20 @@ use Flash;
 use Response;
 use App\Models\DepositRequest;
 use App\Models\DepositRequestExt;
-use App\Http\Controllers\DepositRequestController;
 use App\Models\AccountExt;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
 
-class DepositRequestControllerExt extends DepositRequestController
+class DepositRequestControllerExt extends AppBaseController
 {
     use AccountSelectorTrait;
+
+    /** @var DepositRequestRepository $depositRequestRepository*/
+    private $depositRequestRepository;
+
+    public function __construct(DepositRequestRepository $depositRequestRepo)
+    {
+        $this->depositRequestRepository = $depositRequestRepo;
+    }
 
     /**
      * Display a listing of DepositRequests with filtering.
@@ -65,7 +72,77 @@ class DepositRequestControllerExt extends DepositRequestController
 
     public function edit($id)
     {
+        $depositRequest = $this->depositRequestRepository->find($id);
+
+        if (empty($depositRequest)) {
+            Flash::error('Deposit Request not found');
+
+            return redirect(route('depositRequests.index'));
+        }
+
         $api = $this->getAccountSelectorData();
-        return parent::edit($id)->with('api', $api);
+        return view('deposit_requests.edit')
+            ->with('depositRequest', $depositRequest)
+            ->with('api', $api);
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreateDepositRequestRequest $request)
+    {
+        $input = $request->all();
+
+        $depositRequest = $this->depositRequestRepository->create($input);
+
+        Flash::success('Deposit Request saved successfully.');
+
+        return redirect(route('depositRequests.index'));
+    }
+
+    public function show($id)
+    {
+        $depositRequest = $this->depositRequestRepository->find($id);
+
+        if (empty($depositRequest)) {
+            Flash::error('Deposit Request not found');
+
+            return redirect(route('depositRequests.index'));
+        }
+
+        return view('deposit_requests.show')->with('depositRequest', $depositRequest);
+    }
+
+    public function update($id, UpdateDepositRequestRequest $request)
+    {
+        $depositRequest = $this->depositRequestRepository->find($id);
+
+        if (empty($depositRequest)) {
+            Flash::error('Deposit Request not found');
+
+            return redirect(route('depositRequests.index'));
+        }
+
+        $depositRequest = $this->depositRequestRepository->update($request->all(), $id);
+
+        Flash::success('Deposit Request updated successfully.');
+
+        return redirect(route('depositRequests.index'));
+    }
+
+    public function destroy($id)
+    {
+        $depositRequest = $this->depositRequestRepository->find($id);
+
+        if (empty($depositRequest)) {
+            Flash::error('Deposit Request not found');
+
+            return redirect(route('depositRequests.index'));
+        }
+
+        $this->depositRequestRepository->delete($id);
+
+        Flash::success('Deposit Request deleted successfully.');
+
+        return redirect(route('depositRequests.index'));
     }
 }

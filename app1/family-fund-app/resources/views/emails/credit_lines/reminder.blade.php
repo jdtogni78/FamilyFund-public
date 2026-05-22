@@ -13,7 +13,7 @@
                     &#128276; Payment Reminder
                 </h2>
                 <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
-                    Your credit line payment is due in {{ $leadDays }} day(s).
+                    Your loan share payment is due in {{ $leadDays }} day(s).
                 </p>
             </td>
         </tr>
@@ -32,7 +32,7 @@
         <div style="padding: 16px;">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="padding: 8px 0; color: #666;">Credit Line</td>
+                    <td style="padding: 8px 0; color: #666;">Loan Share</td>
                     <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">#{{ $line->id }}</td>
                 </tr>
                 <tr>

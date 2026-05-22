@@ -1,5 +1,5 @@
 {{--
-    Fund credit-line exposure section for the quarterly PDF report (UC-17).
+    Fund loan-share exposure section for the quarterly PDF report (UC-17).
     Inputs:
       $fund         – FundExt
       $quarterStart – Carbon (optional)
@@ -50,7 +50,7 @@
 @if(!empty($exposure) && ($exposure['total_lines'] ?? 0) > 0)
 <div style="page-break-inside: avoid; margin-top: 18px; border: 2px solid #0d9488; border-radius: 8px; overflow: hidden;">
     <div style="background:#f0fdf4; padding:12px 16px; color:#0f766e; font-weight:700; font-size:14px;">
-        Credit-line Exposure &mdash; Quarter {{ $quarterStart->format('Y-m-d') }} to {{ $quarterEnd->format('Y-m-d') }}
+        Shares Loan Exposure &mdash; Quarter {{ $quarterStart->format('Y-m-d') }} to {{ $quarterEnd->format('Y-m-d') }}
     </div>
     <div style="padding:16px; background:#ffffff;">
         <table width="100%" cellspacing="0" cellpadding="6" style="font-size:12px; margin-bottom: 12px;">
@@ -89,9 +89,8 @@
         @endif
 
         <p style="font-size:10px; color:#666; margin: 10px 0 0 0;">
-            Receivable-as-asset model: the outstanding receivable is held at the fund's current share price (see
-            docs/credit_lines/fund_cashflow.md). Share counts move only with draws and repayments; dollar value tracks
-            the fund's share price.
+            Loaned shares are funded from unallocated shares and reported separately from available unallocated shares.
+            Share counts move only with draws and repayments; dollar value tracks the fund's share price.
         </p>
     </div>
 </div>

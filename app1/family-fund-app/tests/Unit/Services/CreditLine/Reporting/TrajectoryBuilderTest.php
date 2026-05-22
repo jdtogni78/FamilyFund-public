@@ -2,12 +2,17 @@
 
 namespace Tests\Unit\Services\CreditLine\Reporting;
 
+use App\Models\AccountBalance;
 use App\Models\AccountCreditLine;
 use App\Models\Asset;
 use App\Models\CreditLinePayment;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
+use App\Services\CreditLine\Draw\DrawService;
+use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Reporting\TrajectoryBuilder;
+use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
+use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\DataFactory;
@@ -31,6 +36,40 @@ class TrajectoryBuilderTest extends TestCase
         $this->factory->createFund(1000, 1000, '2022-01-01');
         $this->factory->createUser();
         $this->builder = new TrajectoryBuilder();
+    }
+
+    private function makeRepayService(): RepayService
+    {
+        return new RepayService(new OutstandingCalculator());
+    }
+
+    private function openLine($account, float $principal, int $termMonths): AccountCreditLine
+    {
+        $draw = new DrawService(new AmortizationScheduleBuilder(), new OutstandingCalculator());
+        return $draw->open($account, $principal, $termMonths, 'monthly');
+    }
+
+    private function seedOwnBalance($account, float $shares): void
+    {
+        $tran = $this->factory->createTransaction(
+            $shares * 10,
+            $account,
+            TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_CLEARED,
+            null,
+            Carbon::today()->toDateString()
+        );
+        $tran->shares = $shares;
+        $tran->save();
+
+        AccountBalance::create([
+            'account_id'     => $account->id,
+            'transaction_id' => $tran->id,
+            'type'           => 'OWN',
+            'shares'         => $shares,
+            'start_dt'       => Carbon::today()->toDateString(),
+            'end_dt'         => '9999-12-31',
+        ]);
     }
 
     private function makeLine(float $principal = 120.0, int $termMonths = 12, string $originationDate = '2026-01-01'): AccountCreditLine
@@ -143,6 +182,88 @@ class TrajectoryBuilderTest extends TestCase
         $this->assertSame([
             ['date' => '2026-01-15', 'cumulative_shares' => 5.0],
         ], $traj['actual_repayments']);
+    }
+
+    // -----------------------------------------------------------------
+    // Issue #4: overdue backlog must reflect the full allocation ledger,
+    // not just the latest representative transaction.
+    // -----------------------------------------------------------------
+
+    /**
+     * Two partial REPs land on the same past-due row. The trajectory's
+     * `overdue_shares` must equal `shares_due − (sum of allocations)`,
+     * not `shares_due − (latest tx.shares)`.
+     */
+    public function test_overdue_shares_sums_all_partial_allocations_not_just_latest(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 100.0);
+
+        // One row of 10 shares.
+        $line = $this->openLine($account, 10.0, 1);
+
+        // Force the row's due_date into the past so it qualifies as overdue.
+        $row = CreditLinePayment::where('account_credit_line_id', $line->id)->firstOrFail();
+        $row->due_date = Carbon::today()->subDays(30)->toDateString();
+        $row->save();
+
+        // Two partial repayments of 3 shares each (total 6 on a 10-share row).
+        $repay = $this->makeRepayService();
+        $repay->repayRow($row->refresh(), 3.0);
+        $repay->repayRow($row->refresh(), 3.0);
+
+        $row->refresh();
+        $this->assertSame(CreditLinePayment::STATUS_PARTIAL, $row->status);
+
+        $traj = $this->builder->build($line);
+
+        // True remaining = 10 − (3+3) = 4. The pre-fix implementation read
+        // only the *latest* partial tx's shares (3) via paid_transaction_id
+        // and reported remaining = 10 − 3 = 7.
+        $this->assertEqualsWithDelta(4.0, $traj['overdue_shares'], 1e-4);
+        $this->assertSame(1, $traj['overdue_installments']);
+    }
+
+    /**
+     * A single overpayment cascades from one row onto a past-due partial
+     * row. The overflow's *allocation* (not the whole tx) is what should
+     * count toward closing the overdue gap.
+     */
+    public function test_overdue_shares_uses_per_row_allocation_when_overflow_spans_multiple_rows(): void
+    {
+        $account = $this->factory->userAccount;
+        $this->seedOwnBalance($account, 200.0);
+
+        // Two rows of 10 each, both past-due.
+        $line = $this->openLine($account, 20.0, 2);
+        $rows = CreditLinePayment::where('account_credit_line_id', $line->id)
+            ->orderBy('due_date')->get();
+        foreach ($rows as $i => $r) {
+            $r->due_date = Carbon::today()->subDays(60 - $i * 10)->toDateString();
+            $r->save();
+        }
+        [$r1, $r2] = [$rows[0], $rows[1]];
+
+        $repay = $this->makeRepayService();
+
+        // Seed a partial on row 1 so it's PARTIAL & past-due.
+        $repay->repayRow($r1->refresh(), 4.0);
+
+        // Big payment on row 2 covers it (10) and overflows 6 back onto r1
+        // (cascading rule: overflow goes to oldest open row first). Pay
+        // exactly the line's remaining outstanding — overpaying the line
+        // total is rejected (see RepayServiceTest::test_repay_overpayment_is_rejected).
+        $line->refresh();
+        $repay->repayRow($r2->refresh(), (float) $line->outstanding_shares);
+
+        $r1->refresh();
+        $this->assertSame(CreditLinePayment::STATUS_PAID, $r1->status);
+
+        $traj = $this->builder->build($line);
+
+        // Row 1 is now fully covered, row 2 is fully covered → no backlog.
+        $this->assertEqualsWithDelta(0.0, $traj['overdue_shares'], 1e-4);
+        $this->assertSame(0, $traj['overdue_installments']);
     }
 
     public function test_single_repayment_no_projection(): void

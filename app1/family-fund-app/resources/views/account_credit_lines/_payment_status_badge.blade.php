@@ -1,5 +1,5 @@
 {{--
-    Shared status badge for a credit-line schedule / receivable row.
+    Shared status badge for a loan-share schedule / receivable row.
 
     Expects:
       $status — CreditLinePayment status string

@@ -6,7 +6,7 @@
         <a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a>
+        <a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Loan Shares</a>
     </li>
     <li class="breadcrumb-item active">#{{ $line->id }}</li>
 </ol>
@@ -61,7 +61,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
                 <i class="fa fa-credit-card me-2"></i>
-                <strong>Credit Line #{{ $line->id }}</strong>
+                <strong>Loan Share #{{ $line->id }}</strong>
                 @if($line->nickname)
                     <span class="text-body-secondary ms-2">{{ $line->nickname }}</span>
                 @endif
@@ -149,6 +149,12 @@
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
+            @if($isAdmin && $line->status === 'active')
+                <button type="button" class="btn btn-success btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                    <i class="fa fa-money-bill me-1"></i>Make payment
+                </button>
+            @endif
             @unless($schedule->isEmpty())
             <div class="d-flex align-items-center flex-wrap gap-2" id="schedule-filter">
                 <div class="schedule-filter-group" role="group" aria-label="Filter schedule by status (multi-select)" id="schedule-status-filter">
@@ -230,6 +236,47 @@
             @endif
         </div>
     </div>
+
+    @if($isAdmin && $line->status === 'active')
+    <div class="modal fade" id="makePaymentModal" tabindex="-1" aria-labelledby="makePaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('credit_lines.repay', ['line' => $line->id]) }}">
+                @csrf
+                <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="makePaymentModalLabel">
+                            <i class="fa fa-money-bill me-2"></i>Make payment
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small">
+                            Shares are applied to the oldest open schedule rows first. Any overpayment reduces principal.
+                            Use the per-allocation slider on a row to override.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label" for="makePaymentShares">Shares</label>
+                            <input type="number" step="0.0001" min="0.0001" name="shares" id="makePaymentShares"
+                                   required class="form-control">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label" for="makePaymentDate">Settlement date</label>
+                            <input type="date" name="date" id="makePaymentDate" class="form-control">
+                            <small class="text-muted">Optional — defaults to today.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-money-bill me-1"></i>Record payment
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 
     <script>
         (function () {

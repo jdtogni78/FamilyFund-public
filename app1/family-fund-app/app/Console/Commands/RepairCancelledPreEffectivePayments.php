@@ -6,7 +6,7 @@ use App\Services\CreditLine\Adjust\PaymentGenerationRepairer;
 use Illuminate\Console\Command;
 
 /**
- * Idempotent enforcer of the credit-line payment generation / supersession
+ * Idempotent enforcer of the loan-share payment generation / supersession
  * invariant (see {@see PaymentGenerationRepairer} for the full contract).
  *
  * The forward-dating bug (pre-fix step 4 cancelled *every* scheduled row

@@ -18,7 +18,7 @@
                     &#9888; Action Required: Repayment Needs Review
                 </h2>
                 <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
-                    A repayment transaction could not be automatically assigned to a credit line.
+                    A repayment transaction could not be automatically assigned to a loan share.
                 </p>
             </td>
         </tr>
@@ -34,11 +34,11 @@
         <strong style="color: #991b1b;">Status: {{ $statusLabel }}</strong>
         @if($result->status === \App\Services\Detection\DetectionResult::STATUS_AMBIGUOUS)
         <p style="color: #7f1d1d; font-size: 13px; margin: 8px 0 0 0;">
-            This repayment matches more than one active credit line. Please review and assign it to the correct line.
+            This repayment matches more than one active loan share. Please review and assign it to the correct line.
         </p>
         @else
         <p style="color: #7f1d1d; font-size: 13px; margin: 8px 0 0 0;">
-            This repayment could not be matched to any active credit line. Please review and assign it manually.
+            This repayment could not be matched to any active loan share. Please review and assign it manually.
         </p>
         @endif
     </div>

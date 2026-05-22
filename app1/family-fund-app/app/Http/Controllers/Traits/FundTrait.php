@@ -40,28 +40,40 @@ Trait FundTrait
     {
         $bals = array();
         $sharePrice = $fund->shareValueAsOf($asOf);
-        foreach ($fund->accountBalancesAsOf($asOf) as $balance) {
-            $account = $balance->account()->first();
-            $user = $account->user()->first();
+        $accounts = AccountExt::with('user')
+            ->where('fund_id', $fund->id)
+            ->whereNotNull('user_id')
+            ->orderBy('nickname')
+            ->get();
+
+        foreach ($accounts as $account) {
+            $user = $account->user;
+            if (! $user) {
+                continue;
+            }
+
+            $grossShares = max(0, (float) $account->sharesWithoutBorrowingAsOf($asOf));
+            $borrowedShares = max(0, (float) $account->borrowedSharesAsOf($asOf));
+            $netShares = $grossShares - $borrowedShares;
+
+            if ($grossShares == 0.0 && $borrowedShares == 0.0) {
+                continue;
+            }
 
             $bal = array();
-            if ($user) {
-                $bal['user'] = [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
-            } else {
-                continue;
-                // $bal['user'] = [
-                //     'id' => 0,
-                //     'name' => 'N/A',
-                // ];
-            }
+            $bal['user'] = [
+                'id' => $user->id,
+                'name' => $user->name,
+            ];
             $bal['account_id'] = $account->id;
             $bal['nickname'] = $account->nickname;
-            $bal['type'] = $balance->type;
-            $bal['shares'] = Utils::shares($balance->shares);
-            $bal['value'] = Utils::currency($sharePrice * $balance->shares);
+            $bal['type'] = 'OWN';
+            $bal['gross_shares'] = Utils::shares($grossShares);
+            $bal['gross_value'] = Utils::currency($sharePrice * $grossShares);
+            $bal['borrowed_shares'] = Utils::shares($borrowedShares);
+            $bal['borrowed_value'] = Utils::currency($sharePrice * $borrowedShares);
+            $bal['shares'] = Utils::shares($netShares);
+            $bal['value'] = Utils::currency($sharePrice * $netShares);
             $bals[] = $bal;
         }
         return $bals;
@@ -93,7 +105,14 @@ Trait FundTrait
         $arr['allocated_shares'] = Utils::shares($allocated = $shares - $unallocated);
         $arr['allocated_shares_percent'] = Utils::percent($shares ? $allocated / $shares : 0);
         $arr['share_value'] = Utils::currency($sharePrice = $shares ? $value / $shares : 0);
+        $arr['allocated_value'] = Utils::currency($allocated * $sharePrice);
         $arr['unallocated_value'] = Utils::currency($unallocatedValue = $unallocated * $sharePrice);
+        $arr['borrowed_shares'] = Utils::shares($borrowed = $fund->borrowedShares($asOf));
+        $arr['borrowed_shares_percent'] = Utils::percent($shares ? $borrowed / $shares : 0);
+        $arr['borrowed_value'] = Utils::currency($borrowed * $sharePrice);
+        $arr['available_unallocated_shares'] = Utils::shares($availableUnallocated = $fund->availableUnallocatedShares($asOf));
+        $arr['available_unallocated_shares_percent'] = Utils::percent($shares ? $availableUnallocated / $shares : 0);
+        $arr['available_unallocated_value'] = Utils::currency($availableUnallocated * $sharePrice);
 
         $prevYearAsOf = Utils::asOfAddYear($asOf, -1);
         // Sum max cash across all portfolios

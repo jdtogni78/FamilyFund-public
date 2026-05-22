@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\AccountReportController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
 use App\Http\Requests\CreateAccountReportRequest;
 use App\Http\Requests\UpdateAccountReportRequest;
@@ -16,12 +16,16 @@ use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Response;
 
-class AccountReportControllerExt extends AccountReportController
+class AccountReportControllerExt extends AppBaseController
 {
     use AccountSelectorTrait;
+
+    /** @var AccountReportRepository $accountReportRepository*/
+    protected $accountReportRepository;
+
     public function __construct(AccountReportRepository $accountReportRepository)
     {
-        parent::__construct($accountReportRepository);
+        $this->accountReportRepository = $accountReportRepository;
     }
 
     public function index(Request $request)
@@ -101,8 +105,18 @@ class AccountReportControllerExt extends AccountReportController
 
     public function show($id)
     {
+        $accountReport = $this->accountReportRepository->find($id);
+
+        if (empty($accountReport)) {
+            Flash::error('Account Report not found');
+
+            return redirect(route('accountReports.index'));
+        }
+
         $api = ['typeMap' => AccountReportExt::$typeMap];
-        return parent::show($id)->with('api', $api);
+        return view('account_reports.show')
+            ->with('accountReport', $accountReport)
+            ->with('api', $api);
     }
 
     public function store(CreateAccountReportRequest $request)
@@ -140,6 +154,25 @@ class AccountReportControllerExt extends AccountReportController
         } else {
             Flash::success('Template updated successfully.');
         }
+
+        return redirect(route('accountReports.index'));
+    }
+
+    // --- inlined from former base ---
+
+    public function destroy($id)
+    {
+        $accountReport = $this->accountReportRepository->find($id);
+
+        if (empty($accountReport)) {
+            Flash::error('Account Report not found');
+
+            return redirect(route('accountReports.index'));
+        }
+
+        $this->accountReportRepository->delete($id);
+
+        Flash::success('Account Report deleted successfully.');
 
         return redirect(route('accountReports.index'));
     }

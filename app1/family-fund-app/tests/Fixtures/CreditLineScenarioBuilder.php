@@ -4,11 +4,18 @@ namespace Tests\Fixtures;
 
 use App\Models\AccountBalance;
 use App\Models\AccountCreditLine;
+use App\Models\AccountGoal;
+use App\Models\AccountMatchingRule;
 use App\Models\Asset;
 use App\Models\CreditLinePayment;
+use App\Models\Goal;
+use App\Models\MatchingRule;
 use App\Models\TransactionExt;
+use App\Models\TransactionMatching;
 use App\Models\User;
+use App\Services\CreditLine\Cancel\CancelService;
 use App\Services\CreditLine\Draw\DrawService;
+use App\Services\CreditLine\Repay\PaymentAllocator;
 use App\Services\CreditLine\Repay\RepayService;
 use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
 use App\Services\CreditLine\Support\LateDetector;
@@ -254,6 +261,217 @@ class CreditLineScenarioBuilder
             'active'    => $active->refresh(),
             'adjusted'  => $adjusted->refresh(),
         ];
+    }
+
+    /**
+     * Attach a goal to an account. `targetType` accepts the GoalExt constants
+     * (`'total'` or `'4pct'`); `targetAmount` is the absolute target value, in
+     * fund-currency, evaluated against `AccountExt::valueAsOf` (which already
+     * uses net = OWN − BOR).
+     *
+     * @see feedback_goal_current_is_net memory: net is the canonical "current".
+     */
+    public function withGoal(
+        string $accountKey,
+        string $name,
+        float $targetAmount,
+        ?Carbon $startDt = null,
+        ?Carbon $endDt = null,
+        string $targetType = 'total',
+        float $targetPct = 100.0
+    ): Goal {
+        $account = $this->account($accountKey);
+        $startDt = $startDt ?? Carbon::today()->subYears(1);
+        $endDt   = $endDt   ?? Carbon::today()->addYears(2);
+
+        $goal = Goal::create([
+            'name'          => $name,
+            'description'   => $name,
+            'start_dt'      => $startDt->toDateString(),
+            'end_dt'        => $endDt->toDateString(),
+            'target_type'   => $targetType,
+            'target_amount' => $targetAmount,
+            'target_pct'    => $targetPct,
+        ]);
+        AccountGoal::create([
+            'account_id' => $account->id,
+            'goal_id'    => $goal->id,
+        ]);
+        return $goal;
+    }
+
+    /** Add a deposit (PUR) on $accountKey and bump the open OWN balance row. */
+    public function addPurchase(string $accountKey, float $shares, ?Carbon $date = null): TransactionExt
+    {
+        $account = $this->account($accountKey);
+        $date    = $date ?? Carbon::today();
+
+        $tran = $this->df->createTransaction(
+            $shares * 10,
+            $account,
+            TransactionExt::TYPE_PURCHASE,
+            TransactionExt::STATUS_CLEARED,
+            null,
+            $date->toDateString()
+        );
+        $tran->shares = $shares;
+        $tran->save();
+
+        $this->bumpOwnBalance($account, $shares, $date, $tran);
+        return $tran;
+    }
+
+    /** Add a withdrawal (SAL) and reduce the open OWN balance row. */
+    public function addWithdrawal(string $accountKey, float $shares, ?Carbon $date = null): TransactionExt
+    {
+        $account = $this->account($accountKey);
+        $date    = $date ?? Carbon::today();
+
+        $tran = $this->df->createTransaction(
+            $shares * 10,
+            $account,
+            TransactionExt::TYPE_SALE,
+            TransactionExt::STATUS_CLEARED,
+            null,
+            $date->toDateString()
+        );
+        $tran->shares = $shares;
+        $tran->save();
+
+        $this->bumpOwnBalance($account, -$shares, $date, $tran);
+        return $tran;
+    }
+
+    /**
+     * Attach an employer-style matching rule to $accountKey. Matches deposits
+     * whose value falls in [$dollarStart, $dollarEnd] at $matchPct percent.
+     */
+    public function attachMatchingRule(
+        string $accountKey,
+        float $dollarEnd = 1_000_000,
+        float $matchPct = 100,
+        string $start = '2016-01-01',
+        string $end = '9999-12-31',
+        float $dollarStart = 0
+    ): AccountMatchingRule {
+        $account = $this->account($accountKey);
+
+        $rule = MatchingRule::factory()->create([
+            'dollar_range_start' => $dollarStart,
+            'dollar_range_end'   => $dollarEnd,
+            'match_percent'      => $matchPct,
+            'date_start'         => $start,
+            'date_end'           => $end,
+        ]);
+
+        return AccountMatchingRule::factory()
+            ->for($account, 'account')
+            ->for($rule)
+            ->create();
+    }
+
+    /**
+     * Drive an employer-match event: a PUR + a paired MAT transaction linked
+     * by TransactionMatching. Uses the first matching rule bound to the account.
+     */
+    public function triggerEmployerMatch(string $accountKey, float $depositShares, ?Carbon $date = null): array
+    {
+        $account = $this->account($accountKey);
+        $date    = $date ?? Carbon::today();
+
+        $deposit = $this->addPurchase($accountKey, $depositShares, $date);
+
+        $amr = $account->accountMatchingRules()->first();
+        if (!$amr) {
+            throw new \LogicException("attachMatchingRule(...) must be called before triggerEmployerMatch on '{$accountKey}'.");
+        }
+        $rule = $amr->matchingRule()->first();
+        $matchShares = round($depositShares * ((float) $rule->match_percent / 100.0), 4);
+
+        $matchTran = $this->df->createTransaction(
+            $matchShares * 10,
+            $account,
+            TransactionExt::TYPE_MATCHING,
+            TransactionExt::STATUS_CLEARED,
+            null,
+            $date->toDateString()
+        );
+        $matchTran->shares = $matchShares;
+        $matchTran->save();
+
+        TransactionMatching::factory()
+            ->for($rule)
+            ->create([
+                'transaction_id'           => $matchTran->id,
+                'reference_transaction_id' => $deposit->id,
+            ]);
+
+        $this->bumpOwnBalance($account, $matchShares, $date, $matchTran);
+
+        return ['deposit' => $deposit, 'match' => $matchTran];
+    }
+
+    /** Mark a REP transaction reversed (excluded from OutstandingCalculator). */
+    public function reverseRep(TransactionExt $rep): TransactionExt
+    {
+        $rep->reversed = true;
+        $rep->save();
+        return $rep;
+    }
+
+    /**
+     * Apply a manual allocation split for $rep across $line's rows:
+     *   [rowId => shares, ...]
+     */
+    public function manualAllocate(TransactionExt $rep, AccountCreditLine $line, array $split): void
+    {
+        (new PaymentAllocator())->allocate($rep, $line, null, $split);
+    }
+
+    /** Cancel a line (must already be at zero outstanding). */
+    public function cancelLine(AccountCreditLine $line): void
+    {
+        (new CancelService())->cancel($line->refresh());
+    }
+
+    /** Net shares (OWN − BOR) at $date for $accountKey. */
+    public function sharesAsOf(string $accountKey, ?Carbon $date = null): float
+    {
+        $date = $date ?? Carbon::today();
+        return (float) $this->account($accountKey)->sharesAsOf($date->toDateString());
+    }
+
+    /**
+     * Append $delta to the account's open OWN balance row (positive = deposit,
+     * negative = withdrawal). Mirrors the temporal pattern used by
+     * seedOwnBalance: close the prior row at $date, open a new one with the
+     * cumulative total.
+     */
+    private function bumpOwnBalance(\App\Models\AccountExt $account, float $delta, Carbon $date, TransactionExt $tran): void
+    {
+        $open = AccountBalance::where('account_id', $account->id)
+            ->where('type', 'OWN')
+            ->where('end_dt', '9999-12-31')
+            ->orderByDesc('id')
+            ->first();
+
+        $prior = $open ? (float) $open->shares : 0.0;
+        $next  = round($prior + $delta, 4);
+
+        if ($open) {
+            $open->end_dt = $date->toDateString();
+            $open->save();
+        }
+
+        AccountBalance::create([
+            'account_id'          => $account->id,
+            'transaction_id'      => $tran->id,
+            'type'                => 'OWN',
+            'shares'              => $next,
+            'previous_balance_id' => $open?->id,
+            'start_dt'            => $date->toDateString(),
+            'end_dt'              => '9999-12-31',
+        ]);
     }
 
     /** Seed an OWN balance tranche (same shape as the per-test helpers). */

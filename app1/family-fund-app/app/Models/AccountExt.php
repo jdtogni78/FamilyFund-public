@@ -134,6 +134,36 @@ class AccountExt extends Account
         return $value;
     }
 
+    /**
+     * Gross OWN shares before subtracting borrowed (BOR) shares.
+     * Use sharesAsOf() for the spendable/available number.
+     */
+    public function sharesWithoutBorrowingAsOf($now) {
+        $accountBalances = $this->allSharesAsOf($now);
+        return isset($accountBalances['OWN']) ? (float) $accountBalances['OWN']->shares : 0;
+    }
+
+    /**
+     * Gross market value of OWN shares before subtracting borrowed shares.
+     * Use valueAsOf() for the spendable/available value.
+     */
+    public function valueWithoutBorrowingAsOf($now) {
+        return $this->shareValueAsOf($now) * $this->sharesWithoutBorrowingAsOf($now);
+    }
+
+    /**
+     * Shares the account currently owes against active credit lines.
+     * Mirrors the outstanding total tracked in account_balances rows where type='BOR'.
+     */
+    public function borrowedSharesAsOf($now) {
+        $accountBalances = $this->allSharesAsOf($now);
+        return isset($accountBalances['BOR']) ? (float) $accountBalances['BOR']->shares : 0;
+    }
+
+    public function borrowedValueAsOf($now) {
+        return $this->shareValueAsOf($now) * $this->borrowedSharesAsOf($now);
+    }
+
     public function shareValueAsOf($asOf) {
         /** @var FundExt $fund */
         $fund = $this->fund()->first();
@@ -182,16 +212,21 @@ class AccountExt extends Account
     {
         $this->debug("periodPerformance $from $to");
 
+        // BOR/REP transactions carry value=0 (no cash flow) but the BOR offset
+        // depresses valueAsOf() — so including them creates spurious negative
+        // returns at every draw and repay. Exclude them from the series and
+        // use the gross OWN value at each endpoint (QA_BUGS_2026-05-21 #17).
         $trans = $this->transactions()
             ->select('timestamp', DB::raw('sum(value) as value'))
             ->whereDate('timestamp', '>=', $from)
             ->whereDate('timestamp', '<', $to)
+            ->whereNotIn('type', [TransactionExt::TYPE_BORROW, TransactionExt::TYPE_REPAY])
             ->orderBy('timestamp')
             ->groupBy('timestamp')
             ->get();
 
         $start = $from;
-        $startValue = $this->valueAsOf($start);
+        $startValue = $this->valueWithoutBorrowingAsOf($start);
         $this->debug("per per $start $startValue");
         $data = [];
         /** @var TransactionExt $tran */
@@ -199,13 +234,13 @@ class AccountExt extends Account
             $this->debug($tran);
             $end = $tran->timestamp; // shares are added next day
 
-            $endValue = $this->valueAsOf($end);
+            $endValue = $this->valueWithoutBorrowingAsOf($end);
             $cashFlow = 0+$tran->value;
             $data[] = [$startValue, $endValue, $cashFlow];
 
             $startValue = $endValue;
         }
-        $lastValue = $this->valueAsOf($to);
+        $lastValue = $this->valueWithoutBorrowingAsOf($to);
         $data[] = [$startValue, $lastValue, 0];
         return self::calculateTWR($data);
     }

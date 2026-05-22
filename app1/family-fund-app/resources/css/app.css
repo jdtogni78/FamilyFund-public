@@ -91,7 +91,7 @@
         @apply p-2;
     }
 
-    /* Schedule status filter pills (credit-line payment schedule).
+    /* Schedule status filter pills (loan-share payment schedule).
        Theme-consistent replacement for Bootstrap .btn-group/.btn-outline-secondary,
        which this Tailwind theme does not style. */
     .schedule-filter-group {
@@ -99,11 +99,11 @@
     }
 
     .schedule-filter-btn {
-        @apply px-3 py-1.5 text-xs font-medium rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer;
+        @apply px-3 py-1.5 text-xs font-semibold rounded-full border border-transparent text-white bg-slate-500 hover:bg-cyan-600 hover:text-white transition-colors cursor-pointer shadow-sm;
     }
 
     .schedule-filter-btn.is-active {
-        @apply bg-teal-600 border-teal-600 text-white hover:bg-teal-700 hover:text-white dark:bg-teal-500 dark:border-teal-500;
+        @apply bg-teal-600 text-white hover:bg-teal-700 hover:text-white;
     }
 
     /* Header button - high contrast white on teal headers */
@@ -310,52 +310,74 @@
        Badges / Tags
        ======================================== */
     .badge {
-        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-transparent text-white shadow-sm;
     }
 
     .badge-teal {
-        @apply badge bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300;
+        @apply badge bg-teal-700 text-white;
     }
 
     .badge-cyan {
-        @apply badge bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300;
+        @apply badge bg-cyan-700 text-white;
     }
 
     .badge-success {
-        @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300;
+        @apply badge bg-emerald-700 text-white;
     }
 
     .badge-warning {
-        @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300;
+        @apply badge bg-amber-500 text-slate-900;
     }
 
     .badge-danger {
-        @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+        @apply badge bg-red-600 text-white;
     }
 
     .badge-gray {
-        @apply badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
+        @apply badge bg-slate-600 text-white;
     }
 
     .badge-purple {
-        @apply badge bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300;
+        @apply badge bg-purple-600 text-white;
     }
 
     .badge-blue {
-        @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+        @apply badge bg-blue-600 text-white;
     }
 
-    /* Override Bootstrap's gray bg-secondary for badges - use purple instead */
+    .badge.bg-primary {
+        background-color: #0f766e !important;
+        color: #ffffff !important;
+    }
+
+    .badge.bg-success {
+        background-color: #047857 !important;
+        color: #ffffff !important;
+    }
+
+    .badge.bg-info {
+        background-color: #0e7490 !important;
+        color: #ffffff !important;
+    }
+
+    .badge.bg-warning {
+        background-color: #f59e0b !important;
+        color: #111827 !important;
+    }
+
+    .badge.bg-danger {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+    }
+
+    .badge.bg-light {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+
     .badge.bg-secondary {
-        background-color: #f3e8ff !important;
-        color: #7e22ce !important;
-        border: 1px solid #9333ea;
-    }
-
-    .dark .badge.bg-secondary {
-        background-color: rgba(147, 51, 234, 0.3) !important;
-        color: #c4b5fd !important;
-        border-color: #7c3aed;
+        background-color: #7c3aed !important;
+        color: #ffffff !important;
     }
 
     /* ========================================
@@ -363,89 +385,66 @@
        Use badge-group-0 through badge-group-5 for automatic color assignment
        ======================================== */
     .badge-group-0 { /* Green */
-        background: #dcfce7 !important;
-        color: #15803d !important;
-        border: 1px solid #16a34a;
+        background: #15803d !important;
+        color: #ffffff !important;
     }
     .badge-group-1 { /* Blue */
-        background: #dbeafe !important;
-        color: #1d4ed8 !important;
-        border: 1px solid #2563eb;
+        background: #2563eb !important;
+        color: #ffffff !important;
     }
     .badge-group-2 { /* Amber */
-        background: #fef3c7 !important;
-        color: #b45309 !important;
-        border: 1px solid #d97706;
+        background: #f59e0b !important;
+        color: #111827 !important;
     }
     .badge-group-3 { /* Purple */
-        background: #f3e8ff !important;
-        color: #7e22ce !important;
-        border: 1px solid #9333ea;
+        background: #9333ea !important;
+        color: #ffffff !important;
     }
     .badge-group-4 { /* Rose */
-        background: #ffe4e6 !important;
-        color: #be123c !important;
-        border: 1px solid #e11d48;
+        background: #e11d48 !important;
+        color: #ffffff !important;
     }
     .badge-group-5 { /* Teal */
-        background: #ccfbf1 !important;
-        color: #0f766e !important;
-        border: 1px solid #14b8a6;
+        background: #0f766e !important;
+        color: #ffffff !important;
     }
 
-    /* Dark mode variants */
-    .dark .badge-group-0 { background: rgba(22, 163, 74, 0.2) !important; color: #86efac !important; border-color: #22c55e; }
-    .dark .badge-group-1 { background: rgba(37, 99, 235, 0.2) !important; color: #93c5fd !important; border-color: #3b82f6; }
-    .dark .badge-group-2 { background: rgba(217, 119, 6, 0.2) !important; color: #fcd34d !important; border-color: #f59e0b; }
-    .dark .badge-group-3 { background: rgba(147, 51, 234, 0.2) !important; color: #c4b5fd !important; border-color: #a855f7; }
-    .dark .badge-group-4 { background: rgba(225, 29, 72, 0.2) !important; color: #fda4af !important; border-color: #f43f5e; }
-    .dark .badge-group-5 { background: rgba(20, 184, 166, 0.2) !important; color: #5eead4 !important; border-color: #2dd4bf; }
-
-    /* Transaction type badges - with border styling */
+    /* Transaction type badges */
     .badge-tx-purchase {
-        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
-        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+        @apply badge bg-blue-700 text-white;
     }
 
     .badge-tx-initial {
-        @apply badge bg-teal-50 text-teal-700 border border-teal-500;
-        @apply dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-600;
+        @apply badge bg-violet-700 text-white;
     }
 
     .badge-tx-sale {
-        @apply badge bg-red-50 text-red-700 border border-red-500;
-        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+        @apply badge bg-red-600 text-white;
     }
 
     .badge-tx-matching {
-        @apply badge bg-purple-50 text-purple-700 border border-purple-500;
-        @apply dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-600;
+        @apply badge bg-pink-700 text-white;
     }
 
     .badge-tx-borrow {
-        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
-        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+        @apply badge bg-orange-700 text-white;
     }
 
     .badge-tx-repay {
-        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
-        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+        @apply badge bg-cyan-700 text-white;
     }
 
     /* Transaction status badges */
     .badge-status-pending {
-        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
-        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+        @apply badge bg-amber-500 text-slate-900;
     }
 
     .badge-status-cleared {
-        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
-        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+        @apply badge bg-emerald-700 text-white;
     }
 
     .badge-status-scheduled {
-        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
-        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+        @apply badge bg-cyan-700 text-white;
     }
 
     /* Positive/negative value badges */
@@ -466,49 +465,40 @@
 
     /* Deposit request status badges */
     .badge-dr-pending {
-        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
-        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+        @apply badge bg-amber-500 text-slate-900;
     }
 
     .badge-dr-approved {
-        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
-        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+        @apply badge bg-cyan-700 text-white;
     }
 
     .badge-dr-rejected {
-        @apply badge bg-red-50 text-red-700 border border-red-500;
-        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+        @apply badge bg-red-600 text-white;
     }
 
     .badge-dr-completed {
-        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
-        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+        @apply badge bg-emerald-700 text-white;
     }
 
     /* Cash deposit status badges */
     .badge-cd-pending {
-        @apply badge bg-amber-50 text-amber-700 border border-amber-500;
-        @apply dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-600;
+        @apply badge bg-amber-500 text-slate-900;
     }
 
     .badge-cd-deposited {
-        @apply badge bg-cyan-50 text-cyan-700 border border-cyan-500;
-        @apply dark:bg-cyan-900/40 dark:text-cyan-300 dark:border-cyan-600;
+        @apply badge bg-cyan-700 text-white;
     }
 
     .badge-cd-allocated {
-        @apply badge bg-emerald-50 text-emerald-700 border border-emerald-500;
-        @apply dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-600;
+        @apply badge bg-emerald-700 text-white;
     }
 
     .badge-cd-completed {
-        @apply badge bg-purple-50 text-purple-700 border border-purple-500;
-        @apply dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-600;
+        @apply badge bg-purple-600 text-white;
     }
 
     .badge-cd-cancelled {
-        @apply badge bg-red-50 text-red-700 border border-red-500;
-        @apply dark:bg-red-900/40 dark:text-red-300 dark:border-red-600;
+        @apply badge bg-red-600 text-white;
     }
 
     /* ========================================
@@ -599,33 +589,6 @@
 
     .stat-change-down {
         @apply text-red-600 dark:text-red-400;
-    }
-
-    /* ========================================
-       Modals
-       ======================================== */
-    .modal-backdrop {
-        @apply fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70 backdrop-blur-sm z-40;
-    }
-
-    .modal {
-        @apply fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4;
-    }
-
-    .modal-content {
-        @apply bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden;
-    }
-
-    .modal-header {
-        @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30;
-    }
-
-    .modal-body {
-        @apply p-6 overflow-y-auto;
-    }
-
-    .modal-footer {
-        @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-end space-x-3;
     }
 
     /* ========================================

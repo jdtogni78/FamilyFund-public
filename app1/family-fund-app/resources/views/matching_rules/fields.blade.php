@@ -97,7 +97,7 @@
             <input type="checkbox" name="applies_to_rep" id="applies_to_rep" value="1"
                    class="form-check-input" {{ $appliesToRepChecked ? 'checked' : '' }}>
             <label for="applies_to_rep" class="form-check-label">
-                <i class="fa fa-handshake me-1"></i> Apply to credit-line repayments (REP)
+                <i class="fa fa-handshake me-1"></i> Apply to loan-share repayments (REP)
             </label>
             <div><small class="text-body-secondary">When enabled, beneficiary REP transactions are eligible for contribution matching under this rule. Default: on.</small></div>
         </div>

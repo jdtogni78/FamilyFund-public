@@ -93,7 +93,7 @@ php artisan queue:listen
 
 **IMPORTANT:** Tests must run in Docker (`docker exec familyfund php artisan test`) - database is not accessible from host.
 
-**Current Status (2026-05-14):** 1791 passing (excluding incomplete/needs-data-refactor groups).
+**Current Status (2026-05-14):** 1791 passing. No tests are currently tagged with `incomplete` or `needs-data-refactor` groups — the `<exclude><group>incomplete</group></exclude>` block in `phpunit.xml` is a no-op kept as scaffolding for future use.
 
 Prefer the wrapper `app1/family-fund-app/bin/test.sh`: rebuilds Vite assets if stale, autodetects the container name (`$FF_CONTAINER` → `ffacl-familyfund-1` → `familyfund`), then runs `php artisan test`. Pass-through args work (e.g. `bin/test.sh --filter=Foo`).
 
@@ -110,12 +110,42 @@ Tests organized in `tests/`:
 ```bash
 # Run tests in Docker (REQUIRED - do not run locally)
 docker exec familyfund php artisan test
-docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor  # Skip problematic tests
 docker exec familyfund php artisan test --filter=TransactionTest    # Single test
 
 # Coverage report
 docker exec familyfund ./vendor/bin/phpunit --coverage-text 2>&1 | grep -E "^  (Lines|Methods|Classes):"
 ```
+
+### Isolated-DB test env (testpool) — for coverage, RefreshDatabase, parallel runs
+
+Tests in the main `familyfund` container reset the shared `familyfund_dev` DB
+(RefreshDatabase wipes it), which clobbers any other session using dev. For
+coverage / Dusk / migration trials / parallel-session test runs, lease an
+isolated slot from `~/.familyfund-pool/testpool.sh` instead — each slot has
+its own `familyfund_testN` DB restored from `database/test/test-baseline.sql.gz`
+on every claim.
+
+```bash
+# From this worktree's app1/
+~/.familyfund-pool/testpool.sh list                                # 3 slots: test0..test2
+~/.familyfund-pool/testpool.sh claim "<label>"                     # lease + DB restore + bring up stack
+~/.familyfund-pool/testpool.sh run        -- --filter=Foo          # `php artisan test` in this worktree's slot
+~/.familyfund-pool/testpool.sh tour       -- --filter=FooDuskTest  # Dusk w/ Selenium sidecar
+~/.familyfund-pool/testpool.sh reseed test2                        # re-restore mid-lease
+~/.familyfund-pool/testpool.sh release                             # free the slot
+```
+
+Coverage in a slot (pcov is in `app1/Dockerfile`):
+
+```bash
+docker exec familyfund-<slot> sh -c "cd /app && \
+  ./vendor/bin/phpunit --coverage-text --exclude-group=incomplete,needs-data-refactor" \
+  2>&1 | grep -E '^  (Lines|Methods|Classes):'
+```
+
+**Do not** use `pool.sh` (the preview pool, `pool0..pool5` at ports
+3020–3025) for tests — every preview slot hardcodes `DB_DATABASE=familyfund_dev`,
+so RefreshDatabase will wipe shared dev data.
 
 See `test_plan.md` for detailed test fix progress and remaining issues.
 
@@ -155,8 +185,14 @@ Backups saved to:
 Load prod to dev + anonymize (see README.md for full docs):
 ```bash
 mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod/familyfund_prod_data_*.sql
-mysql -h 127.0.0.1 -u famfun_dev -p1234 familyfund_dev < database/prod_to_dev.sql
+# Anonymize + apply pending migrations + seed permissions/QA users in one step.
+app1/family-fund-app/bin/prod-to-dev.sh
 ```
+
+`bin/prod-to-dev.sh` is the canonical entry point — it runs `database/prod_to_dev.sql`,
+`php artisan migrate --force`, and the `RolesAndPermissionsSeeder` + `QaTestUsersSeeder`
+seeders. Skipping it leaves the credit-line allocation tables un-migrated and the
+spatie permissions table empty.
 
 ## Code Generators
 

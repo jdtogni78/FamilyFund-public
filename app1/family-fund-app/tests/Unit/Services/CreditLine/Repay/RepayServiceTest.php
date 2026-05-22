@@ -291,30 +291,34 @@ class RepayServiceTest extends TestCase
         $this->repayService->repay($line, 5.0);
     }
 
-    public function test_repay_overpayment_caps_at_outstanding_and_sets_paid_off(): void
+    public function test_repay_overpayment_is_rejected(): void
     {
         $account = $this->factory->userAccount;
         $this->seedOwnBalance($account, 100.0);
 
         $line = $this->drawService->open($account, 10.0, 1, 'monthly');
 
-        // Repay 25 against a line that only has 10 outstanding.
-        $repTran = $this->repayService->repay($line, 25.0);
+        // Attempt to repay 25 against a line that only has 10 outstanding.
+        // Rejected: REP > outstanding would leave a BOR/REP mismatch (the
+        // excess "repaid" shares would disappear from the borrow ledger
+        // without returning to OWN). See QA_BUGS_2026-05-20 #1.
+        try {
+            $this->repayService->repay($line, 25.0);
+            $this->fail('Expected InvalidArgumentException for overpayment.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertMatchesRegularExpression('/outstanding/i', $e->getMessage());
+        }
 
+        // Line state is unchanged.
         $line->refresh();
+        $this->assertEquals(AccountCreditLineExt::STATUS_ACTIVE, $line->status);
+        $this->assertEquals(10.0, (float) $line->outstanding_shares);
 
-        // Line should be paid off with no negative outstanding.
-        $this->assertEquals(AccountCreditLineExt::STATUS_PAID_OFF, $line->status);
-        $this->assertEquals(0.0, (float) $line->outstanding_shares);
-
-        // The REP transaction records the full 25 shares passed in.
-        $this->assertEquals(25.0, (float) $repTran->shares);
-
-        // All schedule rows should be paid (none negative).
-        $unpaid = \App\Models\CreditLinePayment::where('account_credit_line_id', $line->id)
-            ->whereNotIn('status', [\App\Models\CreditLinePayment::STATUS_PAID])
+        // No REP transaction was created.
+        $repCount = TransactionExt::where('account_credit_line_id', $line->id)
+            ->where('type', TransactionExt::TYPE_REPAY)
             ->count();
-        $this->assertEquals(0, $unpaid);
+        $this->assertEquals(0, $repCount);
     }
 
     // -----------------------------------------------------------------
@@ -352,7 +356,12 @@ class RepayServiceTest extends TestCase
 
         // 3) Larger payment on row 3: covers row 3 (~33.33) and overflows;
         //    the overflow cascades back toward the oldest open row (row 2).
-        $overflowTran = $this->repayService->repayRow($r3, 50.0);
+        //    Pay exactly the line's remaining outstanding so the cascade
+        //    clears row 2 without overpaying the line total (which is now
+        //    rejected; see test_repay_overpayment_is_rejected).
+        $line->refresh();
+        $remaining = (float) $line->outstanding_shares;
+        $overflowTran = $this->repayService->repayRow($r3, $remaining);
 
         $r2->refresh();
         $r3->refresh();

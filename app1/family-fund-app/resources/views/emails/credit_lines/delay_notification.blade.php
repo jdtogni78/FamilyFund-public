@@ -13,7 +13,7 @@
                     &#9888; Payment Overdue
                 </h2>
                 <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
-                    A credit line payment on your account is past its due date.
+                    A loan share payment on your account is past its due date.
                 </p>
             </td>
         </tr>
@@ -27,7 +27,7 @@
     <!-- Overdue notice -->
     <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
         <strong style="color: #92400e;">Notice {{ $notificationCount }}</strong> — this is a courtesy notification.
-        There are no penalties for late payments on this credit line, but please make your payment when able.
+        There are no penalties for late payments on this loan share, but please make your payment when able.
     </div>
 
     <!-- Payment Details -->
@@ -38,7 +38,7 @@
         <div style="padding: 16px;">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="padding: 8px 0; color: #666;">Credit Line</td>
+                    <td style="padding: 8px 0; color: #666;">Loan Share</td>
                     <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">#{{ $line->id }}</td>
                 </tr>
                 <tr>

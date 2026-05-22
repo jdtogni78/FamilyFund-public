@@ -19,23 +19,20 @@ class MatchResult
     /** @var int[] */
     public readonly array  $candidateLineIds;
     public readonly string $reason;
+    public readonly bool   $isNoOp;
 
-    /**
-     * @param string   $status
-     * @param int|null $creditLineId
-     * @param int[]    $candidateLineIds
-     * @param string   $reason
-     */
     public function __construct(
         string $status,
         ?int   $creditLineId,
         array  $candidateLineIds,
         string $reason,
+        bool   $isNoOp = false,
     ) {
         $this->status           = $status;
         $this->creditLineId     = $creditLineId;
         $this->candidateLineIds = $candidateLineIds;
         $this->reason           = $reason;
+        $this->isNoOp           = $isNoOp;
     }
 
     // ── Factories ──────────────────────────────────────────────────────────
@@ -55,9 +52,15 @@ class MatchResult
         return new self(TransactionExt::MATCH_STATUS_UNMATCHED, null, [], $reason);
     }
 
-    /** Used when the FK is already set — matcher is a no-op. */
+    /**
+     * Used when the matcher should not touch the transaction — FK already set
+     * (DrawService / manual resolution) or wrong type. The classifier must
+     * treat this as "preserve the row's existing status"; persisting the
+     * placeholder status here would clobber a MANUAL/UNMATCHED row that the
+     * observer just re-traversed.
+     */
     public static function noOp(int $lineId, string $reason = 'already assigned'): self
     {
-        return new self(TransactionExt::MATCH_STATUS_AUTO_MATCHED, $lineId, [$lineId], $reason);
+        return new self(TransactionExt::MATCH_STATUS_AUTO_MATCHED, $lineId, [$lineId], $reason, isNoOp: true);
     }
 }

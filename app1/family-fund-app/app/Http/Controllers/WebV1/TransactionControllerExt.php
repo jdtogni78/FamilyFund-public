@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\TransactionTrait;
 use App\Http\Controllers\Traits\AccountSelectorTrait;
-use App\Http\Controllers\TransactionController;
 use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Requests\PreviewTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
@@ -22,10 +22,13 @@ use App\Models\ScheduledJobExt;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class TransactionControllerExt extends TransactionController
+class TransactionControllerExt extends AppBaseController
 {
     use TransactionTrait;
     use AccountSelectorTrait;
+
+    /** @var TransactionRepository $transactionRepository*/
+    protected $transactionRepository;
 
     public function __construct(TransactionRepository $transactionRepo)
     {
@@ -555,6 +558,61 @@ class TransactionControllerExt extends TransactionController
         } else {
             Flash::success("Successfully created $created transaction(s).");
         }
+
+        return redirect(route('transactions.index'));
+    }
+
+    // --- inlined from former base ---
+
+    public function show($id)
+    {
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+
+            return redirect(route('transactions.index'));
+        }
+
+        $this->authorize('view', $transaction);
+
+        return view('transactions.show')->with('transaction', $transaction);
+    }
+
+    public function update($id, UpdateTransactionRequest $request)
+    {
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+
+            return redirect(route('transactions.index'));
+        }
+
+        $this->authorize('update', $transaction);
+
+        $transaction = $this->transactionRepository->update($request->all(), $id);
+
+        Flash::success('Transaction updated successfully.');
+
+        return redirect(route('transactions.index'));
+    }
+
+    public function destroy($id)
+    {
+        $transaction = $this->transactionRepository->withAuthorization()->find($id);
+
+        if (empty($transaction)) {
+            Flash::error('Transaction not found');
+
+            return redirect(route('transactions.index'));
+        }
+
+        $this->authorize('delete', $transaction);
+
+        $this->transactionRepository->delete($id);
+
+        Flash::success('Transaction deleted successfully.');
 
         return redirect(route('transactions.index'));
     }

@@ -28,7 +28,7 @@ class ReminderMail extends Mailable
 
     public function build(): static
     {
-        return $this->subject("Reminder: credit line payment due in {$this->leadDays} day(s)")
+        return $this->subject("Reminder: loan share payment due in {$this->leadDays} day(s)")
             ->view('emails.credit_lines.reminder');
     }
 }

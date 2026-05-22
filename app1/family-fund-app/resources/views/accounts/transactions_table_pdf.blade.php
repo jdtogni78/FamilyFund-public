@@ -1,4 +1,23 @@
 @if(isset($api['transactions']) && count($api['transactions']) > 0)
+@php
+    $runningOwnShares = 0;
+    $runningBorrowedShares = 0;
+    $runningBalancesByTransaction = [];
+    foreach ($api['transactions'] as $transactionForBalance) {
+        $bucket = $transactionForBalance->balance?->type;
+        if ($bucket === 'OWN') {
+            $runningOwnShares = (float) $transactionForBalance->balance->shares;
+        } elseif ($bucket === 'BOR') {
+            $runningBorrowedShares = (float) $transactionForBalance->balance->shares;
+        }
+
+        $runningBalancesByTransaction[$transactionForBalance->id] = [
+            'own' => $runningOwnShares,
+            'borrowed' => $runningBorrowedShares,
+            'net' => $runningOwnShares - $runningBorrowedShares,
+        ];
+    }
+@endphp
 <table style="width: 100%; font-size: 11px;">
     <thead>
         <tr>
@@ -9,7 +28,9 @@
             <th class="col-number">Share Price</th>
             <th class="col-number">Shares</th>
             <th class="col-number">Current Value</th>
-            <th class="col-number">Balance</th>
+            <th class="col-number">OWN</th>
+            <th class="col-number">BOR</th>
+            <th class="col-number">Net</th>
         </tr>
     </thead>
     <tbody>
@@ -17,6 +38,7 @@
         @php
             $typeStr = $trans->type_string();
             $statusStr = $trans->status_string();
+            $runningBalance = $runningBalancesByTransaction[$trans->id] ?? ['own' => 0, 'borrowed' => 0, 'net' => 0];
 
             // Type colors and icons: Purchase green, Initial purple, Matching purple, Withdrawal red
             $typeColor = match($typeStr) {
@@ -83,7 +105,9 @@
                 ${{ number_format($trans->current_value ?? 0, 2) }}
                 <small>({{ number_format($trans->current_performance ?? 0, 1) }}%)</small>
             </td>
-            <td class="col-number">{{ number_format($trans->balance?->shares ?? 0, 2) }}</td>
+            <td class="col-number">{{ number_format($runningBalance['own'], 2) }}</td>
+            <td class="col-number">{{ number_format($runningBalance['borrowed'], 2) }}</td>
+            <td class="col-number">{{ number_format($runningBalance['net'], 2) }}</td>
         </tr>
     @endforeach
     </tbody>

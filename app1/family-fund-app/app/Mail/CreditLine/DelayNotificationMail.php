@@ -28,7 +28,7 @@ class DelayNotificationMail extends Mailable
 
     public function build(): static
     {
-        return $this->subject('Notice: credit line payment is overdue')
+        return $this->subject('Notice: loan share payment is overdue')
             ->view('emails.credit_lines.delay_notification');
     }
 }

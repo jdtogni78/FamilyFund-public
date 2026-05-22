@@ -79,15 +79,17 @@ class CreditLineMessyHistoryTest extends TestCase
         $this->assertSame(
             $before,
             AccountCreditLine::where('account_id', $account->id)->count(),
-            'over-borrow must not persist a new credit line'
+            'over-borrow must not persist a new loan share'
         );
     }
 
     /**
      * Backdating an origination before already-recorded borrow activity is
-     * refused by the OutstandingCalculator guard (surfaced as a flash error).
+     * honoured by splicing the new draw into the BOR balance chain — a closed
+     * historical row covers the backdated period, and the existing open row's
+     * shares are bumped to the new aggregate.
      */
-    public function test_backdating_before_existing_borrow_history_is_rejected(): void
+    public function test_backdating_before_existing_borrow_history_splices_chain(): void
     {
         $this->scenario->withBorrowingPower('main', 500);
         // An existing line whose BOR row starts *today*.
@@ -109,12 +111,30 @@ class CreditLineMessyHistoryTest extends TestCase
             ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('flash_notification');
         $this->assertSame(
-            $before,
+            $before + 1,
             AccountCreditLine::where('account_id', $account->id)->count(),
-            'a draw spliced before existing borrow history must be rejected'
+            'the backdated draw should persist a new loan share'
         );
+
+        $borRows = \App\Models\AccountBalance::where('account_id', $account->id)
+            ->where('type', 'BOR')
+            ->orderBy('start_dt', 'asc')
+            ->get();
+
+        // Exactly two BOR rows: a closed historical splice + the open row.
+        $this->assertCount(2, $borRows, 'splice should yield one closed historical row plus the open row');
+
+        $historical = $borRows[0];
+        $open       = $borRows[1];
+
+        $this->assertEquals(Carbon::yesterday()->toDateString(), $historical->start_dt->toDateString());
+        $this->assertEquals(Carbon::today()->toDateString(),     $historical->end_dt->toDateString());
+        $this->assertEquals(10.0, round((float) $historical->shares, 4));
+
+        $this->assertEquals(Carbon::today()->toDateString(), $open->start_dt->toDateString());
+        $this->assertEquals('9999-12-31',                    $open->end_dt->toDateString());
+        $this->assertEquals(50.0, round((float) $open->shares, 4));
     }
 
     /** Repaying a paid-off line is rejected; no REP transaction is added. */
@@ -145,6 +165,45 @@ class CreditLineMessyHistoryTest extends TestCase
             TransactionExt::where('account_credit_line_id', $paidOff->id)
                 ->where('type', TransactionExt::TYPE_REPAY)->count(),
             'a rejected repay must not append a REP transaction'
+        );
+    }
+
+    /**
+     * Regression for QA_BUGS_2026-05-20 #1: POST overpayment is rejected and
+     * leaves the line + BOR ledger untouched, so REP-shares never exceed
+     * BOR-shares on the line.
+     */
+    public function test_repay_overpayment_is_rejected(): void
+    {
+        $this->scenario->withBorrowingPower('main', 500);
+        $lines = $this->scenario->messyAccount('main');
+        $active = $lines['active'];
+        $this->assertSame(AccountCreditLineExt::STATUS_ACTIVE, $active->status);
+
+        $outstandingBefore = round((float) $active->outstanding_shares, 4);
+        $this->assertGreaterThan(0.0, $outstandingBefore);
+
+        $repsBefore = TransactionExt::where('account_credit_line_id', $active->id)
+            ->where('type', TransactionExt::TYPE_REPAY)->count();
+
+        // Overpay by 1 share — must be rejected.
+        $response = $this->actingAs($this->scenario->admin)
+            ->post(route('credit_lines.repay', ['line' => $active->id]), [
+                'account_credit_line_id' => $active->id,
+                'shares'                 => $outstandingBefore + 1.0,
+            ]);
+
+        $response->assertRedirect(route('credit_lines.show', ['line' => $active->id]));
+        $response->assertSessionHas('flash_notification');
+
+        $active->refresh();
+        $this->assertSame(AccountCreditLineExt::STATUS_ACTIVE, $active->status);
+        $this->assertEquals($outstandingBefore, round((float) $active->outstanding_shares, 4));
+        $this->assertSame(
+            $repsBefore,
+            TransactionExt::where('account_credit_line_id', $active->id)
+                ->where('type', TransactionExt::TYPE_REPAY)->count(),
+            'a rejected overpayment must not append a REP transaction'
         );
     }
 

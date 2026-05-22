@@ -29,6 +29,11 @@ class QaTestUsersSeeder extends Seeder
             ['fund-admin',         'qa-fund-admin@test.local',         'QA Fund Admin'],
             ['financial-manager',  'qa-financial-manager@test.local',  'QA Financial Manager'],
             ['beneficiary',        'qa-beneficiary@test.local',        'QA Beneficiary'],
+            // claude@test.local is documented in CLAUDE.md as the default
+            // dev-login user. Without a role it 403s on every nav link, so
+            // grant it fund-admin on the first fund (matches the QA bug log
+            // #14 in docs/QA_BUGS_2026-05-19.md).
+            ['fund-admin',         'claude@test.local',                'Claude Test'],
         ];
 
         foreach ($users as [$roleName, $email, $name]) {
@@ -67,7 +72,6 @@ class QaTestUsersSeeder extends Seeder
                 [
                     'code' => 'QA-' . $beneficiary->id,
                     'nickname' => 'QA Beneficiary Account',
-                    'type' => 'individual',
                 ]
             );
         }

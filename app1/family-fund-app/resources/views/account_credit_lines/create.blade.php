@@ -3,15 +3,15 @@
 <ol class="breadcrumb">
     @if($account)
         <li class="breadcrumb-item"><a href="{{ route('accounts.show', $account->id) }}">{{ $account->nickname }}</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Credit Lines</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('credit_lines.index', ['account' => $account->id]) }}">Loan Shares</a></li>
     @else
-        <li class="breadcrumb-item"><a href="{{ route('credit_lines.global_index') }}">Credit Lines</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('credit_lines.global_index') }}">Loan Shares</a></li>
     @endif
     <li class="breadcrumb-item active">New</li>
 </ol>
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header"><strong>Open new credit line</strong></div>
+        <div class="card-header"><strong>Open new loan share</strong></div>
         <div class="card-body">
             @include('coreui-templates.common.errors')
             <form method="POST" action="{{ $account ? route('credit_lines.store', ['account' => $account->id]) : route('credit_lines.global_store') }}">
@@ -62,7 +62,7 @@
                         This generates the expected payment rows from the chosen date;
                         any already past their due date are flagged <strong>late</strong>.
                         Register any payments that already happened manually at
-                        <strong>Credit Lines &rarr; (the line) &rarr; Schedule</strong>.
+                        <strong>Loan Shares &rarr; (the line) &rarr; Schedule</strong>.
                     </div>
                 </div>
                 <div class="mb-3">

@@ -64,55 +64,27 @@ class OutstandingCalculator
     }
 
     /**
-     * Calculate how many shares this account can still borrow.
+     * Calculate how many shares this account can still borrow as of a date.
      *
-     * Formula:
-     *   available = AccountExt::sharesAsOf($asOf) − Σ outstanding_shares across all ACTIVE lines
+     *   available($asOf) = OWN_balance($asOf) − BOR_aggregate_balance($asOf)
      *
-     * Explanation of the accounting:
-     *   AccountExt::sharesAsOf() already returns OWN_shares − BOR_aggregate_balance.
-     *   The BOR_aggregate_balance row equals Σ outstanding_shares on ALL lines.
-     *   So:
-     *       sharesAsOf() = OWN − BOR_aggregate = OWN − Σ_outstanding_all_lines
+     * Both sides are read from the `account_balances` ledger, so both reflect
+     * the historical state at $asOf. (QA_BUGS_2026-05-21 #15: an earlier
+     * version subtracted the *current* SUM(outstanding_shares) of active CLs
+     * from OWN-at-$asOf, which goes negative for any $asOf predating a
+     * still-active CL.)
      *
-     *   But "available to borrow" should be:
-     *       OWN − Σ_outstanding_active_lines
-     *
-     *   Since BOR_aggregate = Σ_outstanding_all_lines (including paid_off, cancelled),
-     *   but in practice paid_off lines have outstanding=0 and cancelled lines have outstanding=0,
-     *   Σ_outstanding_all_lines ≈ Σ_outstanding_active_lines.
-     *
-     *   We compute it directly and safely as:
-     *       available = sharesAsOf($asOf) − additional check for any unpaid active lines
-     *
-     *   The simplest correct implementation: read OWN balance directly (before BOR offset),
-     *   then subtract Σ outstanding_shares of active lines.
-     *
-     *   OWN_shares = sharesAsOf($asOf) + BOR_aggregate
-     *   available  = OWN_shares − Σ_outstanding_active_lines
-     *              = (sharesAsOf($asOf) + BOR_aggregate) − Σ_outstanding_active_lines
-     *
-     *   When the aggregate BOR row = Σ_outstanding_active_lines, this simplifies to sharesAsOf().
-     *   We use the explicit computation to be safe.
-     *
-     * @param  AccountExt $account
-     * @param  Carbon|null $asOf   Defaults to today.
-     * @return float Available shares to borrow (may be negative if over-drawn).
+     * @return float May be negative if the account is genuinely over-drawn at $asOf.
      */
     public function availableToBorrow(AccountExt $account, ?Carbon $asOf = null): float
     {
         $asOf = $asOf ?? Carbon::today();
 
-        // Get OWN balance directly (before BOR offset).
-        $allBalances  = $account->allSharesAsOf($asOf->toDateString());
-        $ownShares    = isset($allBalances['OWN']) ? (float) $allBalances['OWN']->shares : 0.0;
+        $allBalances = $account->allSharesAsOf($asOf->toDateString());
+        $ownShares   = isset($allBalances['OWN']) ? (float) $allBalances['OWN']->shares : 0.0;
+        $borShares   = isset($allBalances['BOR']) ? (float) $allBalances['BOR']->shares : 0.0;
 
-        // Sum outstanding_shares on all ACTIVE lines for this account.
-        $activeOutstanding = (float) AccountCreditLine::where('account_id', $account->id)
-            ->where('status', AccountCreditLineExt::STATUS_ACTIVE)
-            ->sum('outstanding_shares');
-
-        return round($ownShares - $activeOutstanding, 4);
+        return round($ownShares - $borShares, 4);
     }
 
     /**
@@ -124,11 +96,13 @@ class OutstandingCalculator
      * @param  AccountExt $account
      * @param  string     $asOf    Date string for balance start_dt (usually today).
      * @param  int        $triggeringTransactionId  The BOR/REP transaction that caused the update.
-     * @param  bool       $rejectBackdate  When true, a settlement date before the
-     *         open BOR row's start_dt is refused loudly (used by the Draw path:
-     *         a backdated origination spliced before existing borrow history
-     *         mis-states historical capacity). When false (Repay path: routine
-     *         late-payment reconciliation) it is clamped forward instead.
+     * @param  bool       $rejectBackdate  When true (Draw path), a backdated
+     *         settlement date is honoured by splicing the change into the
+     *         BOR balance chain — every row overlapping [$asOf, ∞) is bumped
+     *         by the delta and any gap from $asOf forward is filled with a
+     *         closed historical row. When false (Repay path: routine
+     *         late-payment reconciliation) the backdate is loosely clamped
+     *         forward to the open row's start_dt instead.
      */
     public function updateAggregateBorBalance(
         AccountExt $account,
@@ -148,44 +122,40 @@ class OutstandingCalculator
             ->whereDate('end_dt', '9999-12-31')
             ->first();
 
-        // Backdate clamp (wave-2 follow-up): UC-46 admin "create transaction
-        // from scratch" — and routine late-payment reconciliation — allow a
-        // settlement date in the past. The aggregate BOR row is a single
-        // open-ended "current state" projection (it always recomputes the
-        // total from the *current* outstanding across active lines, not an
-        // as-of reconstruction), so it cannot rewrite its already-closed
-        // history. If the settlement date lands before the open row's
-        // start_dt, closing that row with end_dt = $asOf would produce a
-        // temporally inverted row (end_dt < start_dt). Instead we recognise
-        // the balance change at the earliest representable point that does
-        // not invert history — the open row's start_dt. The REP/BOR
-        // transaction itself still carries the admin's real settlement date,
-        // and the per-line schedule reconciliation is unaffected.
         if ($existing && $existing->start_dt && $asOf < $existing->start_dt->toDateString()) {
             if ($rejectBackdate) {
-                throw new \InvalidArgumentException(sprintf(
-                    'Backdated BOR/REP rejected: asOf=%s is before the open BOR balance row\'s start_dt=%s '
-                    . '(account_id=%d, balance_row_id=%d). Update would create a temporally inverted row.',
-                    $asOf,
-                    $existing->start_dt->toDateString(),
-                    $account->id,
-                    $existing->id
-                ));
+                // Draw path: splice the new draw's contribution into the BOR
+                // chain so as-of reads of the period [$asOf, $existing.start_dt)
+                // see the historically-correct outstanding total. The delta
+                // is exactly the new line's principal (the only contributor
+                // to the aggregate that wasn't already reflected in the open
+                // row's shares).
+                $delta = round($totalOutstanding - (float) $existing->shares, 4);
+                $this->spliceBackdatedBorDelta($account, $asOf, $triggeringTransactionId, $delta);
+                return;
             }
+            // Repay path: clamp forward. The aggregate BOR row is a single
+            // open-ended "current state" projection (it always recomputes the
+            // total from the *current* outstanding across active lines, not an
+            // as-of reconstruction). Routine late-payment reconciliation
+            // accepts a loose history — the REP transaction itself still
+            // carries the admin's real settlement date, and the per-line
+            // schedule reconciliation is unaffected.
             $asOf = $existing->start_dt->toDateString();
         }
 
         if ($totalOutstanding <= 0) {
             // No outstanding — close the BOR row if it exists.
+            //
+            // Wave-2 used to delete same-day rows ("zero-length, no value"),
+            // but QA_BUGS_2026-05-20 #5 noted that this erased the audit
+            // trail "this account was borrowed against on this date". The
+            // row is now kept as a zero-length closed record: invisible to
+            // asOf reads (start_dt<=now AND end_dt>now excludes it on
+            // start_dt==end_dt==now) but discoverable via raw queries.
             if ($existing) {
-                // Wave-2 review: if the open row opened today and we are now
-                // closing it today, that's a zero-length row. Delete it instead.
-                if ($existing->start_dt && $existing->start_dt->toDateString() === $asOf) {
-                    $existing->delete();
-                } else {
-                    $existing->end_dt = $asOf;
-                    $existing->save();
-                }
+                $existing->end_dt = $asOf;
+                $existing->save();
             }
             return;
         }
@@ -219,5 +189,94 @@ class OutstandingCalculator
             'previous_balance_id' => $existing?->id,
             'end_dt'              => '9999-12-31',
         ]);
+    }
+
+    /**
+     * Splice a backdated draw's contribution ($delta shares) into the BOR
+     * balance chain starting at $asOf. Every existing BOR row that overlaps
+     * [$asOf, ∞) is bumped by $delta (a row straddling $asOf is split first),
+     * and any uncovered period in [$asOf, openRow.start_dt) is filled with a
+     * closed historical row.
+     *
+     * Called by updateAggregateBorBalance() when the Draw path lands a draw
+     * before the currently-open BOR row's start_dt — splicing the chain
+     * preserves the temporal invariant (end_dt > start_dt on every row) while
+     * still reflecting the new draw at its real historical date.
+     */
+    private function spliceBackdatedBorDelta(
+        AccountExt $account,
+        string $asOf,
+        int $triggeringTransactionId,
+        float $delta
+    ): void {
+        if ($delta == 0.0) {
+            return;
+        }
+
+        $rows = AccountBalance::where('account_id', $account->id)
+            ->where('type', 'BOR')
+            ->orderBy('start_dt', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Step 1: bump every row that overlaps [$asOf, ∞); split any row
+        // whose range straddles $asOf so the "after" piece carries the bump.
+        foreach ($rows as $row) {
+            if (!$row->start_dt || !$row->end_dt) {
+                continue;
+            }
+            $startStr = $row->start_dt->toDateString();
+            $endStr   = $row->end_dt->toDateString();
+
+            if ($endStr <= $asOf) {
+                continue;
+            }
+            if ($startStr >= $asOf) {
+                $row->shares = round((float) $row->shares + $delta, 4);
+                $row->save();
+                continue;
+            }
+            // Row straddles $asOf — split into [start, $asOf) and [$asOf, end).
+            AccountBalance::create([
+                'account_id'          => $row->account_id,
+                'transaction_id'      => $triggeringTransactionId,
+                'type'                => 'BOR',
+                'shares'              => round((float) $row->shares + $delta, 4),
+                'start_dt'            => $asOf,
+                'end_dt'              => $endStr,
+                'previous_balance_id' => $row->id,
+            ]);
+            $row->end_dt = $asOf;
+            $row->save();
+        }
+
+        // Step 2: fill any uncovered period in [$asOf, openRow.start_dt) with
+        // a closed historical row carrying just the new draw's contribution.
+        $rowsAfter = AccountBalance::where('account_id', $account->id)
+            ->where('type', 'BOR')
+            ->whereDate('end_dt', '>', $asOf)
+            ->orderBy('start_dt', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $cursor = $asOf;
+        foreach ($rowsAfter as $row) {
+            $startStr = $row->start_dt->toDateString();
+            if ($startStr > $cursor) {
+                AccountBalance::create([
+                    'account_id'     => $account->id,
+                    'transaction_id' => $triggeringTransactionId,
+                    'type'           => 'BOR',
+                    'shares'         => round($delta, 4),
+                    'start_dt'       => $cursor,
+                    'end_dt'         => $startStr,
+                ]);
+            }
+            $endStr = $row->end_dt->toDateString();
+            if ($endStr === '9999-12-31') {
+                return;
+            }
+            $cursor = $endStr;
+        }
     }
 }

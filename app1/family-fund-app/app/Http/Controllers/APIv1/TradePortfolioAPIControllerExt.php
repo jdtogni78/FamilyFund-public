@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\APIv1;
 
-use App\Http\Controllers\API\TradePortfolioAPIController;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\VerboseTrait;
+use App\Http\Requests\API\CreateTradePortfolioAPIRequest;
+use App\Http\Requests\API\UpdateTradePortfolioAPIRequest;
+use App\Models\TradePortfolio;
 use App\Models\TradePortfolioExt;
 use App\Models\Utils;
 use App\Repositories\TradePortfolioRepository;
@@ -18,13 +21,16 @@ use Response;
  * @package App\Http\Controllers\API
  */
 
-class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
+class TradePortfolioAPIControllerExt extends AppBaseController
 {
     use VerboseTrait;
 
+    /** @var  TradePortfolioRepository */
+    protected TradePortfolioRepository $tradePortfolioRepository;
+
     public function __construct(TradePortfolioRepository $tradePortfolioRepo)
     {
-        parent::__construct($tradePortfolioRepo);
+        $this->tradePortfolioRepository = $tradePortfolioRepo;
     }
 
     public function index(Request $request)
@@ -102,6 +108,47 @@ class TradePortfolioAPIControllerExt extends TradePortfolioAPIController
         $ret['items'] = TradePortfolioItemResource::collection($tradePortfolio->tradePortfolioItems);
 
         return $ret;
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreateTradePortfolioAPIRequest $request)
+    {
+        $input = $request->all();
+
+        $tradePortfolio = $this->tradePortfolioRepository->create($input);
+
+        return $this->sendResponse(new TradePortfolioResource($tradePortfolio), 'Trade Portfolio saved successfully');
+    }
+
+    public function update($id, UpdateTradePortfolioAPIRequest $request)
+    {
+        $input = $request->all();
+
+        /** @var TradePortfolio $tradePortfolio */
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            return $this->sendError('Trade Portfolio not found');
+        }
+
+        $tradePortfolio = $this->tradePortfolioRepository->update($input, $id);
+
+        return $this->sendResponse(new TradePortfolioResource($tradePortfolio), 'TradePortfolio updated successfully');
+    }
+
+    public function destroy($id)
+    {
+        /** @var TradePortfolio $tradePortfolio */
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            return $this->sendError('Trade Portfolio not found');
+        }
+
+        $tradePortfolio->delete();
+
+        return $this->sendSuccess('Trade Portfolio deleted successfully');
     }
 
 }

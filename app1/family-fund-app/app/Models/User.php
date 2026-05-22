@@ -223,4 +223,18 @@ class User extends Authenticatable
     {
         return $this->accounts()->pluck('id')->toArray();
     }
+
+    /**
+     * True if the user has any role (full or readonly) in any fund.
+     * Drives the dashboard nav: a user with no fund roles sees no
+     * fund-scoped links instead of clicking through to a 403.
+     */
+    public function canAccessAnyFund(): bool
+    {
+        if ($this->isSystemAdmin()) {
+            return true;
+        }
+        $ids = $this->getAccessibleFundIds();
+        return !empty($ids['full']) || !empty($ids['readonly']);
+    }
 }

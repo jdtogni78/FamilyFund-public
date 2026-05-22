@@ -1,5 +1,13 @@
 @php
+    // $asOf comes from the as-of view; default to today for live views.
+    $asOf = isset($asOf) && $asOf
+        ? \Carbon\Carbon::parse($asOf)->toDateString()
+        : \Carbon\Carbon::today()->toDateString();
+
+    // Lines that existed at $asOf — an as-of view dated before the CL must not
+    // render the CL (QA_BUGS_2026-05-21 #16).
     $lines = \App\Models\AccountCreditLine::where('account_id', $account->id)
+        ->whereDate('origination_date', '<=', $asOf)
         ->orderByDesc('id')
         ->get();
 
@@ -10,20 +18,23 @@
         ])
         ->count();
 
-    $totalOutstanding = $lines->sum('outstanding_shares');
-    $totalPrincipal   = $lines->sum('principal_shares');
-    $totalRepaid      = max(0.0, $totalPrincipal - $totalOutstanding);
-
     $isAdmin = (bool) (auth()->user()?->is_admin());
 
     $loansSummary = [];
     if ($lines->isNotEmpty()) {
         try {
-            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)->forAccount($account);
+            $loansSummary = app(\App\Services\CreditLine\Reporting\LoansSummaryBuilder::class)
+                ->forAccount($account, \Carbon\Carbon::parse($asOf));
         } catch (\Throwable $e) {
             $loansSummary = [];
         }
     }
+
+    // The inline "Total disbursed / repaid / outstanding" strip mirrors the
+    // loans-summary card so both stay consistent on as-of views.
+    $totalPrincipal   = (float) ($loansSummary['total_disbursed_shares'] ?? $lines->sum('principal_shares'));
+    $totalOutstanding = (float) ($loansSummary['net_outstanding_shares'] ?? $lines->sum('outstanding_shares'));
+    $totalRepaid      = (float) ($loansSummary['total_repaid_shares']    ?? max(0.0, $totalPrincipal - $totalOutstanding));
 @endphp
 
 @if($lines->isNotEmpty() && !empty($loansSummary))
@@ -41,7 +52,7 @@
             <div>
                 <i class="fa fa-exclamation-triangle me-2"></i>
                 <strong>{{ $flaggedCount }}</strong> transaction(s) on this account need
-                credit-line review (ambiguous or unmatched).
+                loan-share review (ambiguous or unmatched).
             </div>
             <a href="{{ route('credit_lines.resolve_index') }}" class="btn btn-sm btn-warning">
                 Review
@@ -57,7 +68,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                     <i class="fa fa-credit-card me-2"></i>
-                    <strong>Credit Lines</strong>
+                    <strong>Loan Shares</strong>
                     <span class="badge bg-primary ms-2">{{ $lines->count() }}</span>
                 </div>
                 <div>
@@ -66,7 +77,7 @@
                     @if($isAdmin)
                     <a href="{{ route('credit_lines.create', ['account' => $account->id]) }}"
                        class="btn btn-sm btn-primary">
-                        <i class="fa fa-plus me-1"></i> New credit line
+                        <i class="fa fa-plus me-1"></i> New loan share
                     </a>
                     @endif
                 </div>
@@ -124,7 +135,7 @@
                     </tbody>
                 </table>
                 @else
-                <p class="text-muted mb-0">No credit lines for this account.</p>
+                <p class="text-muted mb-0">No loan shares for this account.</p>
                 @endif
             </div>
         </div>

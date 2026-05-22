@@ -31,6 +31,7 @@ class CreditLineSimulatorUITest extends DuskTestCase
             $descr = 'E2E simulator UC-Phase9 ' . uniqid();
             $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
                 ->waitFor('form[action*="/credit-lines"]')
+                ->type('input[name="nickname"]', $descr)
                 ->type('input[name="principal_shares"]', '100')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '12')
@@ -95,6 +96,7 @@ class CreditLineSimulatorUITest extends DuskTestCase
             $descr = 'E2E simulator time mode ' . uniqid();
             $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
                 ->waitFor('form[action*="/credit-lines"]')
+                ->type('input[name="nickname"]', $descr)
                 ->type('input[name="principal_shares"]', '100')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '12')

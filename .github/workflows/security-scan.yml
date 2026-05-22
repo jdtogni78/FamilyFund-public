@@ -174,9 +174,79 @@ jobs:
           cp .env.dev .env
           php artisan key:generate --force
 
-      - name: Run route security guardrail tests
+      - name: Capture route inventory
         working-directory: ${{ env.APP_DIR }}
-        run: php artisan test --filter=SecurityRouteAutomationTest
+        run: php artisan route:list --json > route-list.json
+
+      - name: Upload route inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: familyfund-route-list
+          path: ${{ env.APP_DIR }}/route-list.json
+          if-no-files-found: error
+
+      - name: Run security automation tests
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          php artisan test --filter=SecurityRouteAutomationTest
+          php artisan test --filter=SecurityCsrfRouteAutomationTest
+
+  security-access-regressions:
+    name: Security Access Regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: familyfund_dev
+      DB_USERNAME: root
+      DB_PASSWORD: 123456
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: familyfund_dev
+          MARIADB_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare test environment
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cp .env.dev .env
+          php artisan key:generate --force
+
+      - name: Prepare database
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan migrate --force
+
+      - name: Run access regression tests
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          php artisan test --filter=SecurityAccessRegressionTest
+          php artisan test --filter=SecurityApiAclMatrixTest
 
   trivy-filesystem:
     name: Trivy Filesystem

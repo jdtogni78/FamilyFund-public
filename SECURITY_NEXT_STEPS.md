@@ -2,27 +2,26 @@
 
 ## Immediate Automation Work
 
-1. Keep `SecurityAccessRegressionTest` in required CI.
+1. Keep the security access tests in required CI.
    - It captures expected secure behavior for anonymous API access, cross-account API access, account reports, and fund reports.
    - The initial API/report authorization findings covered by this suite are fixed and the suite is green.
+   - `SecurityApiAclMatrixTest` now adds role-based API account matrix checks for anonymous, unassigned, beneficiary, financial manager, fund admin, and system admin.
 
 2. Shrink the temporary route guardrail baselines.
    - Remove API routes from `TEMPORARY_UNAUTHENTICATED_API_READ_ALLOWLIST` as they move behind auth.
    - Remove API routes from `TEMPORARY_UNAUTHENTICATED_API_MUTATION_ALLOWLIST` as they move behind auth.
    - Remove side-effect `GET` routes from `TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST` after converting them to POST/CSRF-protected actions.
 
-3. Add API ACL matrix coverage.
-   - Mirror the existing `AclMatrixTest` approach for API routes.
-   - Cover anonymous, unassigned, beneficiary, financial manager, fund admin, and system admin.
+3. Expand API ACL matrix coverage beyond accounts.
+   - Add funds, transactions, reports, users, people, and id documents after their controllers get policy/scoped-query enforcement.
    - Record both status code and absence of cross-tenant identifiers in response bodies.
 
-4. Add focused CSRF route tests.
-   - Iterate over web `POST`, `PUT`, `PATCH`, and `DELETE` routes.
-   - Assert missing/invalid CSRF tokens are rejected for routes in the web middleware group.
-   - Keep route parameters resolved from fixtures or a small route-specific resolver map.
+4. Tighten CSRF route automation after side-effect GET cleanup.
+   - `SecurityCsrfRouteAutomationTest` now verifies web mutation routes stay in the web middleware group, business web mutations require auth, and no project-level CSRF exemptions are configured.
+   - Add representative HTTP-level missing-token tests for high-risk static routes once the route set is less noisy.
 
-5. Add artifact capture for route drift.
-   - In CI, upload `php artisan route:list --json` as a workflow artifact.
+5. Use route-list artifacts for review.
+   - CI now uploads `php artisan route:list --json` from the security route guardrail job.
    - Compare route count and unauthenticated route count between PRs when practical.
 
 ## Remaining Security Fixes Before Tightening Automation Further
@@ -39,13 +38,15 @@ Run the current route guardrails:
 ```bash
 cd app1/family-fund-app
 php artisan test --filter=SecurityRouteAutomationTest
+php artisan test --filter=SecurityCsrfRouteAutomationTest
 ```
 
-Run the future access regression suite after fixing known findings:
+Run DB-backed security access tests:
 
 ```bash
 cd app1/family-fund-app
 php artisan test --filter=SecurityAccessRegressionTest
+php artisan test --filter=SecurityApiAclMatrixTest
 ```
 
 Run fast local scans:

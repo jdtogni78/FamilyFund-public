@@ -73,6 +73,24 @@ Add `.github/workflows/security-scan.yml` with required jobs that finish quickly
    - Verifies `/dev-login` and `/api/clear` stay guarded by `local`/`dev` environment checks.
    - Treat temporary allowlists as security debt, not approval.
 
+7. **CSRF route guardrails**
+   - Test: `php artisan test --filter=SecurityCsrfRouteAutomationTest`
+   - Verifies web mutation routes stay in the `web` middleware group.
+   - Verifies business web mutation routes require authentication.
+   - Verifies no project-level CSRF exemptions are configured without review.
+
+8. **DB-backed access regressions**
+   - Tests:
+     - `php artisan test --filter=SecurityAccessRegressionTest`
+     - `php artisan test --filter=SecurityApiAclMatrixTest`
+   - Requires MariaDB and migrations.
+   - Covers anonymous API blocking, beneficiary sibling/cross-fund API denial, report-page denial, and role-based account API matrix behavior.
+
+9. **Route inventory artifact**
+   - Command: `php artisan route:list --json > route-list.json`
+   - Upload as a GitHub Actions artifact on PRs.
+   - Use during review to spot route count changes and unauthenticated route drift.
+
 ### Nightly Scheduled Checks: Deeper Coverage
 
 Add a scheduled workflow, or a second job in the same workflow, that runs nightly:
@@ -171,6 +189,8 @@ For Semgrep and Trivy SARIF:
 
 - Add `bin/security-scan.sh`.
 - Add `tests/Feature/SecurityRouteAutomationTest.php` for route-level security drift detection.
+- Add `tests/Feature/SecurityCsrfRouteAutomationTest.php` for CSRF-related route drift detection.
+- Add `tests/Feature/SecurityAccessRegressionTest.php` and `tests/Feature/SecurityApiAclMatrixTest.php` as DB-backed security regression coverage.
 - Add `.gitleaks.toml`.
 - Add `.semgrepignore` if generated/vendor paths create noise.
 - Add `.github/workflows/security-scan.yml` with Composer audit, npm audit, Gitleaks, Semgrep, Trivy config, and security route guardrails.

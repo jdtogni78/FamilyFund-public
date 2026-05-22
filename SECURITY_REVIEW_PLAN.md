@@ -128,6 +128,12 @@ Confirm these fail outside `local` and `dev` environments during config review.
   - blocks new side-effect-like `GET` routes unless explicitly added to a temporary baseline,
   - asserts `/dev-login` is guarded by `local`/`dev`,
   - asserts `/api/clear` is guarded by `local`/`dev`.
+- `tests/Feature/SecurityCsrfRouteAutomationTest.php` guards CSRF-related route drift:
+  - verifies web mutation routes stay in the `web` middleware group,
+  - verifies business web mutations require authentication,
+  - verifies no project-level CSRF exemptions are configured in `bootstrap/app.php`.
+- `tests/Feature/SecurityApiAclMatrixTest.php` adds role-based API account ACL coverage for anonymous, unassigned, beneficiary, financial manager, fund admin, and system admin.
+- `.github/workflows/security-scan.yml` uploads `php artisan route:list --json` as a route inventory artifact.
 - `routes/api.php` now gates `/api/clear` behind `app()->environment('local', 'dev')`.
 - `app1/family-fund-app/bin/security-scan.sh` runs the fast local security scan set.
 - `app1/family-fund-app/bin/zap-baseline.sh` runs the local ZAP baseline scan.
@@ -173,6 +179,9 @@ FF_CONTAINER=familyfund bin/test.sh --filter=CrossTenantIsolationTest
 FF_CONTAINER=familyfund bin/test.sh --filter=AclMatrixTest
 FF_CONTAINER=familyfund bin/test.sh --filter=TwoFactorAuthTest
 FF_CONTAINER=familyfund bin/test.sh --filter=SecurityRouteAutomationTest
+FF_CONTAINER=familyfund bin/test.sh --filter=SecurityCsrfRouteAutomationTest
+FF_CONTAINER=familyfund bin/test.sh --filter=SecurityAccessRegressionTest
+FF_CONTAINER=familyfund bin/test.sh --filter=SecurityApiAclMatrixTest
 ```
 
 ## Phase 1: Threat Model
@@ -471,7 +480,7 @@ Triage order:
 The review is complete when:
 
 - No unauthenticated API mutation route remains unless documented and deliberately public.
-- `AuthorizationTest`, `CrossTenantIsolationTest`, `AclMatrixTest`, `TwoFactorAuthTest`, and `SecurityRouteAutomationTest` pass.
+- `AuthorizationTest`, `CrossTenantIsolationTest`, `AclMatrixTest`, `TwoFactorAuthTest`, `SecurityRouteAutomationTest`, `SecurityCsrfRouteAutomationTest`, `SecurityAccessRegressionTest`, and `SecurityApiAclMatrixTest` pass.
 - New or changed high-risk routes have role/tenant tests.
 - Fast security scans pass or have narrow, documented allowlists.
 - Trivy/OSV critical and high findings are fixed, ignored with justification, or assigned.

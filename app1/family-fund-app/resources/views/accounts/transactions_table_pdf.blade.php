@@ -39,6 +39,9 @@
             $typeStr = $trans->type_string();
             $statusStr = $trans->status_string();
             $runningBalance = $runningBalancesByTransaction[$trans->id] ?? ['own' => 0, 'borrowed' => 0, 'net' => 0];
+            // BOR/REP loan-share rows are debt, not holdings — render their
+            // money columns as a red liability so they don't read as profit.
+            $isLiability = (bool) ($trans->is_liability ?? false);
 
             // Type colors and icons: Purchase green, Initial purple, Matching purple, Withdrawal red
             $typeColor = match($typeStr) {
@@ -95,15 +98,18 @@
                     {{ $statusStr }}
                 </span>
             </td>
-            <td class="col-number">${{ number_format($trans->value ?? 0, 2) }}</td>
+            <td class="col-number"{!! $isLiability ? ' style="color: #dc2626;"' : '' !!}>{{ $isLiability ? '−' : '' }}${{ number_format(abs($trans->value ?? 0), 2) }}</td>
             <td class="col-number">${{ number_format($trans->share_price ?? 0, 4) }}</td>
             <td class="col-number">{{ number_format($trans->shares ?? 0, 2) }}</td>
             @php
-                $perfColor = ($trans->current_performance ?? 0) >= 0 ? '#16a34a' : '#dc2626';
+                $cv = $trans->current_value ?? 0;
+                $cvColor = $isLiability ? '#dc2626' : (($trans->current_performance ?? 0) >= 0 ? '#16a34a' : '#dc2626');
             @endphp
-            <td class="col-number" style="color: {{ $perfColor }};">
-                ${{ number_format($trans->current_value ?? 0, 2) }}
-                <small>({{ number_format($trans->current_performance ?? 0, 1) }}%)</small>
+            <td class="col-number" style="color: {{ $cvColor }};">
+                {{ $cv < 0 ? '−$' . number_format(abs($cv), 2) : '$' . number_format($cv, 2) }}
+                @unless($isLiability)
+                    <small>({{ number_format($trans->current_performance ?? 0, 1) }}%)</small>
+                @endunless
             </td>
             <td class="col-number">{{ number_format($runningBalance['own'], 2) }}</td>
             <td class="col-number">{{ number_format($runningBalance['borrowed'], 2) }}</td>

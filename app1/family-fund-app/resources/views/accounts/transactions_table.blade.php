@@ -61,6 +61,9 @@
                 $statusStyle = $statusClasses[$trans->status] ?? ['class' => 'badge-gray'];
                 $perfValue = floatval($trans->current_performance ?? 0);
                 $runningBalance = $runningBalancesByTransaction[$trans->id] ?? ['own' => 0, 'borrowed' => 0, 'net' => 0];
+                // BOR/REP loan-share rows are debt, not holdings — render their
+                // money columns as a red liability so they don't read as profit.
+                $isLiability = (bool) ($trans->is_liability ?? false);
             @endphp
             <tr>
                 <td><small class="text-muted">{{ $trans->id }}</small></td>
@@ -77,8 +80,8 @@
                     </span>
                 </td>
                 <td class="text-end">
-                    <span class="{{ $trans->value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }} font-medium">
-                        @if($trans->value >= 0)+@endif${{ number_format($trans->value, 2) }}
+                    <span class="{{ $isLiability || $trans->value < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }} font-medium">
+                        @if(!$isLiability && $trans->value >= 0)+@endif{{ $isLiability ? '−' : '' }}${{ number_format(abs($trans->value), 2) }}
                     </span>
                 </td>
                 <td class="text-end">${{ number_format($trans->share_price, 2) }}</td>
@@ -88,10 +91,14 @@
                     </span>
                 </td>
                 <td class="text-end">
-                    ${{ number_format($trans->current_value, 2) }}
-                    <small class="{{ $perfValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
-                        (@if($perfValue >= 0)+@endif{{ number_format($perfValue, 1) }}%)
-                    </small>
+                    <span class="{{ $isLiability || $trans->current_value < 0 ? 'text-red-600 dark:text-red-400' : '' }}">
+                        {{ $trans->current_value < 0 ? '−$' . number_format(abs($trans->current_value), 2) : '$' . number_format($trans->current_value, 2) }}
+                    </span>
+                    @unless($isLiability)
+                        <small class="{{ $perfValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+                            (@if($perfValue >= 0)+@endif{{ number_format($perfValue, 1) }}%)
+                        </small>
+                    @endunless
                 </td>
                 <td class="text-end">{{ number_format($runningBalance['own'], 2) }}</td>
                 <td class="text-end">{{ number_format($runningBalance['borrowed'], 2) }}</td>

@@ -331,7 +331,9 @@ class AccountCreditLineController extends AppBaseController
         $this->ensureAdmin();
         $line = AccountCreditLineExt::findOrFail($id);
         $this->authorize('view', $line);
-        $account = $line->account()->first();
+        // #20: include soft-deleted accounts so the CL show page degrades
+        // gracefully instead of 500ing when its parent account is archived.
+        $account = $line->account()->withTrashed()->first();
         $history = $this->historyBuilder->build($line);
         $schedule = $line->payments()
             ->with('allocations.transaction')

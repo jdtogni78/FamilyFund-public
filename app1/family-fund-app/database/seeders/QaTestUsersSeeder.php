@@ -72,7 +72,6 @@ class QaTestUsersSeeder extends Seeder
                 [
                     'code' => 'QA-' . $beneficiary->id,
                     'nickname' => 'QA Beneficiary Account',
-                    'type' => 'individual',
                 ]
             );
         }

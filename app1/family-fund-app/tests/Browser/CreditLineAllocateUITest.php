@@ -108,6 +108,7 @@ class CreditLineAllocateUITest extends DuskTestCase
 
         $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
             ->waitFor('form[action*="/credit-lines"]')
+            ->type('input[name="nickname"]', 'Allocate UI line')
             ->type('input[name="principal_shares"]', '60')
             ->clear('input[name="term_months"]')
             ->type('input[name="term_months"]', '6')

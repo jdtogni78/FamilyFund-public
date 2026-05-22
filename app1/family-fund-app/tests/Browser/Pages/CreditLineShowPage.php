@@ -35,34 +35,51 @@ class CreditLineShowPage extends Page
     public function elements(): array
     {
         return [
-            '@summaryHeader'     => '.card-header strong',
-            '@scheduleTable'     => 'table.table',
-            '@adjustmentTimeline'=> '.timeline',
-            '@trajectoryChart'   => 'img[alt="Payoff trajectory chart"]',
-            '@repayForm'         => 'form[action$="/repay"]',
-            '@repaySharesInput'  => 'form[action$="/repay"] input[name="shares"]',
-            '@repaySubmit'       => 'form[action$="/repay"] button[type="submit"]',
-            '@readjustForm'      => 'form[action$="/readjust"]',
-            '@readjustTermInput' => 'form[action$="/readjust"] input[name="new_term_months"]',
-            '@readjustSubmit'    => 'form[action$="/readjust"] button[type="submit"]',
+            '@summaryHeader'      => '.card-header strong',
+            '@scheduleTable'      => 'table.table',
+            '@scheduleRows'       => 'table tbody tr[data-due]',
+            '@adjustmentTimeline' => '.timeline',
+            '@trajectoryChart'    => 'img[alt="Payoff trajectory chart"]',
+            '@makePaymentButton'  => 'button[data-bs-target="#makePaymentModal"]',
+            '@repayModal'         => '#makePaymentModal',
+            '@repaySharesInput'   => '#makePaymentShares',
+            '@repaySubmit'        => '#makePaymentModal button[type="submit"]',
         ];
     }
 
     /**
-     * Submit a repayment for the given number of shares.
+     * Submit a repayment via the "Make payment" modal on the show page.
+     *
+     * The credit-line/show page exposes repay through a Bootstrap modal
+     * triggered by the green "Make payment" button. Dusk needs to (1)
+     * open the modal, (2) wait for the modal to be visible, (3) fill the
+     * input, (4) click the submit button inside the modal.
      */
     public function repay(Browser $browser, float $shares): void
     {
-        $browser->type('form[action$="/repay"] input[name="shares"]', (string) $shares)
-            ->press('Record repayment');
+        $browser->click('button[data-bs-target="#makePaymentModal"]')
+            ->waitFor('#makePaymentModal.show', 5)
+            ->waitFor('#makePaymentShares', 2)
+            ->type('#makePaymentShares', (string) $shares)
+            // The modal's submit is "Record payment" (singular -p) — older
+            // tests expected "Record repayment".
+            ->click('#makePaymentModal button[type="submit"]')
+            // After submit the page redirects back; wait for either the
+            // modal to disappear or the heading to re-appear.
+            ->waitUntilMissing('#makePaymentModal.show', 5);
     }
 
     /**
      * Submit a readjustment changing the term to $newTermMonths.
+     *
+     * The readjust form lives on the separate `/credit-lines/{id}/actions`
+     * page (actions.blade.php), not the show page. Navigate there first.
      */
     public function readjust(Browser $browser, int $newTermMonths, ?string $reason = null): void
     {
-        $browser->type('form[action$="/readjust"] input[name="new_term_months"]', (string) $newTermMonths);
+        $browser->visit('/credit-lines/' . $this->lineId . '/actions')
+            ->waitFor('form[action$="/readjust"]', 5)
+            ->type('form[action$="/readjust"] input[name="new_term_months"]', (string) $newTermMonths);
         if ($reason !== null) {
             $browser->type('form[action$="/readjust"] input[name="reason"]', $reason);
         }

@@ -26,7 +26,13 @@ class S9LateNotificationSmokeTest extends DuskTestCase
     public function test_loan_share_show_renders_late_state_for_backdated_line(): void
     {
         $this->browse(function (Browser $browser) {
-            $originationDate = Carbon::today()->subDays(30)->toDateString();
+            // Backdate by 90 days so that with a monthly schedule starting
+            // ~1 month after origination, at least two scheduled rows have
+            // due dates well past the 3-day default grace and get flagged
+            // late by DrawService::detectForLine. (Backdating only 30 days
+            // leaves the first row due today, still inside the grace
+            // window.)
+            $originationDate = Carbon::today()->subDays(90)->toDateString();
             $lineId = $this->openLineViaUiBackdated(
                 $browser,
                 principalShares: 60,
@@ -41,10 +47,11 @@ class S9LateNotificationSmokeTest extends DuskTestCase
                 ->assertDontSee('Whoops!')
                 ->assertDontSee('Undefined');
 
-            // At least one schedule row will be flagged late on a 30-day
-            // backdated draw (default grace is 3 days). The status pill text
-            // appears in the schedule table.
-            $browser->assertSeeIn('table.table', 'Late');
+            // The schedule table renders the late-status pill on each
+            // past-due row as `<span class="badge bg-danger">late</span>`
+            // (account_credit_lines/_payment_status_badge.blade.php:11)
+            // — note the lowercase pill text.
+            $browser->assertSeeIn('table', 'late');
 
             $this->cleanupLine($lineId);
         });
@@ -59,17 +66,24 @@ class S9LateNotificationSmokeTest extends DuskTestCase
     ): int {
         $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
             ->waitFor('form[action*="/credit-lines"]')
+            ->type('input[name="nickname"]', $descr)
             ->type('input[name="principal_shares"]', (string) $principalShares)
             ->clear('input[name="term_months"]')
             ->type('input[name="term_months"]', (string) $termMonths)
             ->select('select[name="payment_frequency"]', 'monthly')
             ->type('input[name="descr"]', $descr);
 
-        // The origination_date input is optional on the form; type into it
-        // only if present.
+        // Set the date via JS — Dusk's ->type() on a native HTML5 date
+        // input enters characters into the month/day/year segments rather
+        // than the field value, which garbles to e.g. year 0421. Setting
+        // .value directly and dispatching 'change' is the supported pattern
+        // for Selenium against <input type="date">.
         if ($browser->element('input[name="origination_date"]')) {
-            $browser->clear('input[name="origination_date"]')
-                ->type('input[name="origination_date"]', $originationDate);
+            $browser->script(
+                "var el = document.querySelector('input[name=\"origination_date\"]');"
+                . "el.value = '" . $originationDate . "';"
+                . "el.dispatchEvent(new Event('change', {bubbles:true}));"
+            );
         }
 
         $browser->press('Open')

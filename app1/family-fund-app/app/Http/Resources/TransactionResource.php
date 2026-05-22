@@ -22,6 +22,9 @@ class TransactionResource extends JsonResource
             'shares' => $this->shares,
             'timestamp' => $this->timestamp,
             'account_id' => $this->account_id,
+            // #19: expose the originating CL id so the UI can link a BOR/REP
+            // row back to its credit line.
+            'account_credit_line_id' => $this->account_credit_line_id,
 //            'account' => $this->account(), // remove from api response
             'descr' => $this->descr,
             'flags' => $this->flags,

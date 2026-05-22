@@ -73,7 +73,8 @@ class CreditLineNegativeUITest extends DuskTestCase
             $browser->script("document.querySelector('input[name=\"principal_shares\"]').removeAttribute('min');");
             $browser->script("document.querySelector('input[name=\"principal_shares\"]').removeAttribute('required');");
 
-            $browser->type('input[name="principal_shares"]', '-10')
+            $browser->type('input[name="nickname"]', 'Negative test: negative principal')
+                ->type('input[name="principal_shares"]', '-10')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '6')
                 ->select('select[name="payment_frequency"]', 'monthly')
@@ -101,7 +102,8 @@ class CreditLineNegativeUITest extends DuskTestCase
             $browser->script("document.querySelector('input[name=\"term_months\"]').removeAttribute('min');");
             $browser->script("document.querySelector('input[name=\"term_months\"]').removeAttribute('required');");
 
-            $browser->type('input[name="principal_shares"]', '50')
+            $browser->type('input[name="nickname"]', 'Negative test: zero term')
+                ->type('input[name="principal_shares"]', '50')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '0')
                 ->select('select[name="payment_frequency"]', 'monthly')
@@ -125,17 +127,30 @@ class CreditLineNegativeUITest extends DuskTestCase
                 ->waitFor('form[action*="/credit-lines"]')
                 ->screenshot('negative/04a_create_form_loaded');
 
-            $browser->type('input[name="principal_shares"]', '9999999')
+            $browser->type('input[name="nickname"]', 'Negative test: over-borrow')
+                ->type('input[name="principal_shares"]', '9999999')
                 ->clear('input[name="term_months"]')
                 ->type('input[name="term_months"]', '12')
                 ->select('select[name="payment_frequency"]', 'monthly')
-                ->type('input[name="descr"]', 'Negative test: over-borrow')
-                ->press('Open')
-                ->pause(1000)
+                ->type('input[name="descr"]', 'Negative test: over-borrow');
+
+            // The form's client-side syncOverBorrow gate disables the
+            // submit button once principal > available — that's the
+            // expected UX. But this test wants to exercise the SERVER-side
+            // OverBorrowException path, so bypass the gate and submit
+            // directly via form.submit() so the request is actually sent.
+            $browser->script("document.getElementById('submit-btn').removeAttribute('disabled'); document.querySelector('form[action*=\"/credit-lines\"]').submit();");
+            $browser->pause(1000)
                 ->screenshot('negative/04b_over_borrow_result');
 
-            // OverBorrowException message contains "Cannot borrow"
-            $browser->assertSee('Cannot borrow');
+            // The form-request validator (CreateAccountCreditLineRequest)
+            // short-circuits before the service-layer OverBorrowException,
+            // so the user sees "Only N shares available to borrow as of …
+            // (OWN minus outstanding on active lines)" rather than the
+            // "Cannot borrow …" service-layer message. Either flash error
+            // contains the phrase "(OWN minus outstanding on active lines)"
+            // which is what the user sees on this form.
+            $browser->assertSee('OWN minus outstanding on active lines');
         });
     }
 
@@ -150,8 +165,10 @@ class CreditLineNegativeUITest extends DuskTestCase
             // Open a line.
             $lineId = $this->openLineViaUi($browser, 50.0, 6, 'Negative test: cancel block');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page)
+            // The "Cancel line" button moved to /credit-lines/{id}/actions
+            // (actions.blade.php:81). Navigate there before pressing.
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/cancel"]', 5)
                 ->screenshot('negative/05a_line_active');
 
             // Attempt to cancel without repaying — bypass the JS confirm dialog.
@@ -231,8 +248,9 @@ class CreditLineNegativeUITest extends DuskTestCase
         $this->browse(function (Browser $browser) use (&$lineId) {
             $lineId = $this->openLineViaUi($browser, 40.0, 6, 'Negative test: no-change readjust');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page)
+            // Readjust form moved to /credit-lines/{id}/actions.
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/readjust"]', 5)
                 ->screenshot('negative/07a_line_before_readjust');
 
             // Submit readjust with the SAME term (6 months) — a no-change.
@@ -308,6 +326,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     ): int {
         $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
             ->waitFor('form[action*="/credit-lines"]')
+            ->type('input[name="nickname"]', $descr)
             ->type('input[name="principal_shares"]', (string) $principalShares)
             ->clear('input[name="term_months"]')
             ->type('input[name="term_months"]', (string) $termMonths)

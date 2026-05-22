@@ -78,17 +78,29 @@ class SecurityAccessRegressionTest extends TestCase
         }
     }
 
-    public function test_beneficiary_cannot_fetch_sibling_account_through_generated_api(): void
+    public function test_beneficiary_cannot_fetch_sibling_account_through_account_api(): void
     {
         Sanctum::actingAs($this->beneficiary);
 
-        $response = $this->getJson('/api/accounts/' . $this->siblingAccount->id);
+        $routes = [
+            '/api/accounts/' . $this->siblingAccount->id,
+            '/api/accounts/' . $this->siblingAccount->id . '/as_of/2026-01-15',
+            '/api/accounts/' . $this->siblingAccount->id . '/transactions_as_of/2026-01-15',
+            '/api/accounts/' . $this->siblingAccount->id . '/performance_as_of/2026-01-15',
+            '/api/accounts/' . $this->siblingAccount->id . '/report_as_of/2026-01-15',
+            '/api/accounts/' . $this->siblingAccount->id . '/share_value_as_of/2026-01-15',
+            '/api/account_matching/' . $this->siblingAccount->id . '/as_of/2026-01-15',
+        ];
 
-        $this->assertContains(
-            $response->getStatusCode(),
-            [403, 404],
-            'Beneficiaries must not fetch same-fund sibling accounts through the generated API.'
-        );
+        foreach ($routes as $route) {
+            $response = $this->getJson($route);
+
+            $this->assertContains(
+                $response->getStatusCode(),
+                [403, 404],
+                "Beneficiaries must not fetch same-fund sibling account data through {$route}."
+            );
+        }
     }
 
     public function test_beneficiary_cannot_view_sibling_account_report_page(): void

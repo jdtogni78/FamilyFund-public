@@ -55,8 +55,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showAsOf($id, $asOf)
     {
-        /** @var Account $account */
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
@@ -78,8 +77,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showPerformanceAsOf($id, $asOf)
     {
-        /** @var Account $account */
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
@@ -103,8 +101,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showTransactionsAsOf($id, $asOf)
     {
-        /** @var Account $account */
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
@@ -127,8 +124,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function showReportAsOf($id, $asOf)
     {
-        /** @var Account $account */
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
@@ -153,11 +149,15 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function accountMatching($id, $asOf)
     {
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
+        if (empty($account)) {
+            return $this->sendError('Account not found');
+        }
+
         $arr = [];
         $arr['matching_rules'] = $this->createAccountMatchingResponse($account, $asOf);
         $arr['matching_available'] = $this->getTotalAvailableMatching($arr['matching_rules']);
-        $arr['nickname'] = $this->accountRepository->find($id)->nickname;
+        $arr['nickname'] = $account->nickname;
         $arr['as_of'] = $asOf;
 
         return $this->sendResponse($arr, 'Record fetched successfully');
@@ -170,8 +170,7 @@ class AccountAPIControllerExt extends AccountAPIController
      */
     public function shareValueAsOf($id, $asOf)
     {
-        /** @var AccountExt $account */
-        $account = $this->accountRepository->find($id);
+        $account = $this->findAuthorizedAccount($id);
 
         if (empty($account)) {
             return $this->sendError('Account not found');
@@ -191,5 +190,16 @@ class AccountAPIControllerExt extends AccountAPIController
         return $this->sendResponse($arr, 'Share value retrieved successfully');
     }
 
+    private function findAuthorizedAccount($id): ?AccountExt
+    {
+        $account = AccountExt::find($id);
+        if (!$account) {
+            return null;
+        }
+
+        abort_unless(auth()->user()?->canAccessAccount($account), 403);
+
+        return $account;
+    }
 
 }

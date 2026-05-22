@@ -2,9 +2,9 @@
 
 ## Immediate Automation Work
 
-1. Turn `SecurityAccessRegressionTest` on after the known API/report authorization findings are fixed.
-   - It currently captures expected secure behavior for anonymous API access, cross-account API access, account reports, and fund reports.
-   - Keep it out of required CI until those fixes land, or mark individual tests skipped with issue IDs if partial rollout is needed.
+1. Keep `SecurityAccessRegressionTest` in required CI.
+   - It captures expected secure behavior for anonymous API access, cross-account API access, account reports, and fund reports.
+   - The initial API/report authorization findings covered by this suite are fixed and the suite is green.
 
 2. Shrink the temporary route guardrail baselines.
    - Remove API routes from `TEMPORARY_UNAUTHENTICATED_API_READ_ALLOWLIST` as they move behind auth.
@@ -25,13 +25,12 @@
    - In CI, upload `php artisan route:list --json` as a workflow artifact.
    - Compare route count and unauthenticated route count between PRs when practical.
 
-## Security Fixes Needed Before Tightening Automation
+## Remaining Security Fixes Before Tightening Automation Further
 
-1. Put generated API routes behind authentication.
-2. Add policy checks and scoped queries to generated API controllers.
-3. Add object-level authorization to account/fund report web controllers.
-4. Replace side-effect `GET` routes such as resend/send/announce endpoints with POST routes.
-5. Decide which exchange holiday and market-data endpoints, if any, are intentionally public.
+1. Add policy checks and scoped queries to the remaining generated API controllers, starting with funds, users, people, reports, and transactions.
+2. Replace side-effect `GET` routes such as resend/send/announce endpoints with POST routes.
+3. Decide which exchange holiday and market-data endpoints, if any, are intentionally public.
+4. Expand API ACL matrix coverage to response-body checks for cross-tenant identifiers.
 
 ## Validation Commands
 

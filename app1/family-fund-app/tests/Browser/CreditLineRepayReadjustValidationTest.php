@@ -4,7 +4,6 @@ namespace Tests\Browser;
 
 use App\Models\AccountCreditLine;
 use Laravel\Dusk\Browser;
-use Tests\Browser\Pages\CreditLineShowPage;
 use Tests\DuskTestCase;
 
 /**
@@ -94,14 +93,16 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'repay-zero validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
-
-            $browser->script("var el=document.querySelector('form[action$=\"/repay\"] input[name=\"shares\"]'); if(el){el.removeAttribute('min');el.removeAttribute('required');}");
+            // Repay/readjust forms live on the /actions sub-page (the show page
+            // exposes repay via a modal). /actions renders the errors bag, so
+            // server-side validation messages are visible here.
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/repay"]', 5);
+            $browser->script("var f=document.querySelector('form[action\$=\"/repay\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
 
             $browser->type('form[action$="/repay"] input[name="shares"]', '0')
                 ->press('Record repayment')
-                ->pause(1000)
+                ->pause(800)
                 ->screenshot('repay-readjust-validation/repay_zero');
 
             // Server rule `min:0.0001` produces an error referring to shares.
@@ -114,14 +115,13 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'repay-negative validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
-
-            $browser->script("var el=document.querySelector('form[action$=\"/repay\"] input[name=\"shares\"]'); if(el){el.removeAttribute('min');}");
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/repay"]', 5);
+            $browser->script("var f=document.querySelector('form[action\$=\"/repay\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
 
             $browser->type('form[action$="/repay"] input[name="shares"]', '-5')
                 ->press('Record repayment')
-                ->pause(1000)
+                ->pause(800)
                 ->screenshot('repay-readjust-validation/repay_negative');
 
             $browser->assertSee('shares');
@@ -143,28 +143,27 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 5.0, 6, 'repay-overpay validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/repay"]', 5);
 
-            // Try to repay 50 against an outstanding of ~5.
+            // Try to repay 50 against an outstanding of ~5. RepayService now
+            // hard-rejects overpayment (QA bug #1 fix); the controller flashes
+            // the error and redirects to the show page.
             $browser->type('form[action$="/repay"] input[name="shares"]', '50')
                 ->press('Record repayment')
-                ->pause(1500)
+                ->pause(1200)
                 ->screenshot('repay-readjust-validation/repay_over_outstanding');
 
-            // Either: validation error referencing outstanding/exceeds, OR
-            // a flash that warns about overpayment / prepayment.
             $source = $browser->driver->getPageSource();
-            $hasWarning = stripos($source, 'exceed') !== false
-                || stripos($source, 'overpay') !== false
-                || stripos($source, 'prepayment') !== false
-                || stripos($source, 'more than outstanding') !== false;
+            $rejected = stripos($source, 'cannot repay') !== false
+                || stripos($source, 'reduce the amount') !== false
+                || stripos($source, 'exceed') !== false;
 
             $this->assertTrue(
-                $hasWarning,
-                'Overpayment must produce a visible warning ("exceeds", "overpay", '
-                . '"prepayment", or "more than outstanding"). Currently the form '
-                . 'silently accepts repay > outstanding — see RepayCreditLineRequest.'
+                $rejected,
+                'Overpayment must be rejected with a visible error ("Cannot repay … '
+                . 'against a credit line with … outstanding. Reduce the amount …"). '
+                . 'See the RepayService overpayment guard.'
             );
         });
     }
@@ -178,16 +177,15 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'readjust-zero-term validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
-
-            $browser->script("var el=document.querySelector('form[action$=\"/readjust\"] input[name=\"new_term_months\"]'); if(el){el.removeAttribute('min');}");
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/readjust"]', 5);
 
             $browser->type('form[action$="/readjust"] input[name="new_term_months"]', '0')
                 ->press('Readjust')
-                ->pause(1000)
+                ->pause(800)
                 ->screenshot('repay-readjust-validation/readjust_term_zero');
 
+            // Server rule min:1 → error mentioning term.
             $browser->assertSee('term');
         });
     }
@@ -197,16 +195,15 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'readjust-481 validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
-
-            $browser->script("var el=document.querySelector('form[action$=\"/readjust\"] input[name=\"new_term_months\"]'); if(el){el.removeAttribute('max');}");
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/readjust"]', 5);
 
             $browser->type('form[action$="/readjust"] input[name="new_term_months"]', '481')
                 ->press('Readjust')
-                ->pause(1000)
+                ->pause(800)
                 ->screenshot('repay-readjust-validation/readjust_term_481');
 
+            // Server rule max:480 → error mentioning term.
             $browser->assertSee('term');
         });
     }
@@ -226,43 +223,26 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'readjust-pre-origin validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/readjust"]', 5);
 
-            // Pick a date a year before today (well before today's freshly
-            // created line's origination_date).
+            // A date a year before today — well before this freshly created
+            // line's origination_date. Set via JS + change event: Dusk ->type()
+            // garbles the year on HTML5 date inputs.
             $way_back = now()->copy()->subYear()->toDateString();
-
             $browser->script(
-                "var f = document.querySelector('form[action$=\"/readjust\"]');"
-                . "if (f && !f.querySelector('input[name=\"effective_date\"]')) {"
-                . "  var i = document.createElement('input');"
-                . "  i.type='date'; i.name='effective_date';"
-                . "  f.appendChild(i);"
-                . "}"
-            );
-
-            $browser->script(
-                "document.querySelector('form[action$=\"/readjust\"] input[name=\"effective_date\"]').value = "
-                . json_encode($way_back) . ";"
+                "var el=document.querySelector('form[action\$=\"/readjust\"] input[name=\"effective_date\"]');"
+                . "el.value=" . json_encode($way_back) . ";"
+                . "el.dispatchEvent(new Event('change'));"
             );
 
             $browser->type('form[action$="/readjust"] input[name="new_term_months"]', '24')
                 ->press('Readjust')
-                ->pause(1500)
+                ->pause(1000)
                 ->screenshot('repay-readjust-validation/readjust_before_origin');
 
-            $source = $browser->driver->getPageSource();
-            $rejected = stripos($source, 'origination') !== false
-                || stripos($source, 'before') !== false
-                || stripos($source, 'invalid') !== false
-                || stripos($source, 'effective') !== false;
-
-            $this->assertTrue(
-                $rejected,
-                'Readjust effective_date before origination_date must be rejected '
-                . '(or at least surface a visible warning). See ReadjustCreditLineRequest.'
-            );
+            // ReadjustCreditLineRequest now rejects effective_date < origination_date.
+            $browser->assertSee('origination');
         });
     }
 
@@ -271,31 +251,22 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 12, 'readjust-frequency validation');
 
-            $page = new CreditLineShowPage($lineId);
-            $browser->on($page);
-
-            $browser->script(
-                "var f = document.querySelector('form[action$=\"/readjust\"]');"
-                . "if (f && !f.querySelector('select[name=\"new_payment_frequency\"]')) {"
-                . "  var s = document.createElement('select');"
-                . "  s.name = 'new_payment_frequency';"
-                . "  ['monthly','quarterly','annual'].forEach(function(v){"
-                . "    var o = document.createElement('option'); o.value=v; o.text=v;"
-                . "    s.appendChild(o);"
-                . "  });"
-                . "  f.appendChild(s);"
-                . "}"
-            );
+            $browser->visit('/credit-lines/' . $lineId . '/actions')
+                ->waitFor('form[action$="/readjust"]', 5);
 
             $browser->select('form[action$="/readjust"] select[name="new_payment_frequency"]', 'quarterly')
                 ->type('form[action$="/readjust"] input[name="new_term_months"]', '12')
                 ->press('Readjust')
-                ->pause(1500)
+                ->pause(1200)
                 ->screenshot('repay-readjust-validation/readjust_frequency_quarterly');
 
-            // After success: page should show the updated frequency on the
-            // line summary card.
-            $browser->assertSee('quarterly');
+            // Readjust succeeded → the line's frequency is now quarterly.
+            $line = AccountCreditLine::find($lineId);
+            $this->assertSame(
+                'quarterly',
+                $line->payment_frequency,
+                'Readjust to quarterly should persist the new payment frequency.'
+            );
         });
     }
 }

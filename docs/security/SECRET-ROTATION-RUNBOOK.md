@@ -125,7 +125,9 @@ Goal: a single `app1/family-fund-app/bin/rotate-dev-secrets.sh` that runs A–C
 non-interactively with the safety rails above. Build it incrementally:
 1. **Pre-flight gate** — refuse to run if a `poolN`/`testN` slot is leased by another
    host/session (parse `pool.sh list` / `testpool.sh list`); print who holds what.
-2. **APP_KEY step** — fully scriptable today (steps A1–A7); lowest risk → ship first.
+2. **APP_KEY step** — ✅ **shipped:** `app1/family-fund-app/bin/rotate-dev-secrets.sh`
+   (pre-flight gate: encrypted-data guard + lease-aware notice; APP_KEY regen +
+   session/token invalidation + restart + verify; no DB downtime). Run with `-y`.
 3. **DB step** — generate value → write `app1/.env` → `ALTER` → recreate app + iterate
    leased pools via their launchers → verify each. Driven off the live lease table so it
    only touches stacks it can safely cycle.

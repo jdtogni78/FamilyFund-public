@@ -6,6 +6,7 @@ use App\Http\Resources\AccountResource;
 use App\Mail\AccountQuarterlyReport;
 use App\Models\AccountExt;
 use App\Models\AssetExt;
+use App\Models\TransactionExt;
 use App\Models\Utils;
 use App\Services\GoalCalculationService;
 use Illuminate\Support\Carbon;
@@ -53,10 +54,33 @@ trait AccountTrait
             if ($transaction->timestamp->gte(Carbon::createFromFormat('Y-m-d', $asOf)))
                 continue;
             $value = $transaction->value;
-            $transaction->share_price = Utils::currency($transaction->shares ? $transaction->value / $transaction->shares : 0);
-            $transaction->current_value = Utils::currency($current = $transaction->shares * $shareValue);
+
+            // BOR/REP loan-share rows defer their cash leg, so they land in the
+            // ledger with value=0 (see docs/credit_lines/fund_cashflow.md). Left
+            // as-is, the Value / Share-Price cells render a meaningless $0.00 and
+            // the Current-Value cell shows a positive "profit" figure for what is
+            // actually debt. Surface the dollar size at the row's own date and
+            // sign the position as a liability so the UI renders it distinctly.
+            $isLoanShare = in_array(
+                $transaction->type,
+                [TransactionExt::TYPE_BORROW, TransactionExt::TYPE_REPAY],
+                true
+            );
+            if ($isLoanShare && (float) $value == 0.0 && $transaction->shares) {
+                $value = $transaction->shares * $fund->shareValueAsOf($transaction->timestamp->format('Y-m-d'));
+                $transaction->value = Utils::currency($value);
+            }
+
+            $transaction->share_price = Utils::currency($transaction->shares ? $value / $transaction->shares : 0);
+
+            $current = $transaction->shares * $shareValue;
+            if ($isLoanShare) {
+                $transaction->is_liability = true;
+                $current = -abs($current);
+            }
+            $transaction->current_value = Utils::currency($current);
             // Guard against value=0 — true for BOR/REP loan-share transactions
-            // (cash leg is deferred per docs/credit_lines/fund_cashflow.md).
+            // whose price-at-date lookup returned 0 (no NAV yet on that date).
             $transaction->current_performance = Utils::percent($value != 0 ? $current/$value - 1 : 0);
             $transaction->balance?->id;
 

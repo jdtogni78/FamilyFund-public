@@ -70,7 +70,11 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
         $this->drawService = new DrawService(new AmortizationScheduleBuilder(), $calc);
         $this->repayService = app(RepayService::class);
 
-        Carbon::setTestNow(Carbon::parse('2026-01-01'));
+        // "Today" must sit after the CL origination (2026-01-02) and the
+        // repayment (2026-02-01) the REP tests record, otherwise RepayService's
+        // date-clamp validation (QA bug #2 fix: repay date <= today) rejects the
+        // fixture before the display contract can be asserted.
+        Carbon::setTestNow(Carbon::parse('2026-03-01'));
     }
 
     protected function tearDown(): void

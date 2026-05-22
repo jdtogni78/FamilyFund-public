@@ -41,8 +41,8 @@ class S5GoalWithBorrowingSmokeTest extends DuskTestCase
                 ->assertDontSee('Undefined');                  // PHP notice surfaces
 
             // The credit line itself is reachable from the dashboard layout.
-            // The page heading was renamed Credit Line -> Loan Share (UI
-            // labels only; route + table names still use credit_line).
+            // The show page heading uses the "Loan Share" UI label
+            // (project_share_loan_rename — classes/routes still say credit_line).
             $browser->visit('/credit-lines/' . $lineId)
                 ->assertSee('Loan Share #' . $lineId);
 

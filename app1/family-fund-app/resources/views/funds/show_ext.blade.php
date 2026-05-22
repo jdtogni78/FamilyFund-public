@@ -40,6 +40,20 @@
                 <div class="flex-grow-1">
                     <strong>Data Warning:</strong>
                     <span class="warning-text">{{ $api['data_staleness']['message'] ?? 'Portfolio data may be stale' }}</span>
+                    @php $staleDetails = collect($api['data_staleness']['details'] ?? [])->where('trading_days_stale', '>', 0); @endphp
+                    @if($staleDetails->isNotEmpty())
+                    <details class="mt-1">
+                        <summary class="warning-text" style="cursor: pointer; font-size: 0.85rem;">
+                            {{ $staleDetails->count() }} of {{ $api['data_staleness']['asset_count'] ?? $staleDetails->count() }} assets behind &mdash; show detail
+                        </summary>
+                        <ul class="mb-0 mt-1 warning-text" style="font-size: 0.85rem;">
+                            @foreach($staleDetails as $d)
+                            <li>{{ $d['name'] }}: latest {{ $d['latest_date'] }}
+                                ({{ $d['trading_days_stale'] }} trading day{{ $d['trading_days_stale'] > 1 ? 's' : '' }} behind)</li>
+                            @endforeach
+                        </ul>
+                    </details>
+                    @endif
                 </div>
                 <span class="badge" style="background: #f59e0b; color: #111827; font-size: 0.75rem; padding: 6px 12px;">
                     {{ $api['data_staleness']['trading_days_stale'] }} TRADING DAY{{ $api['data_staleness']['trading_days_stale'] > 1 ? 'S' : '' }} DELAYED

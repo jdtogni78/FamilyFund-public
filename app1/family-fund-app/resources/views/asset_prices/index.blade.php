@@ -72,7 +72,7 @@
              </div>
 
              <!-- Data Warnings -->
-             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']) || !empty($dataWarnings['longSpans']))
+             @if(!empty($dataWarnings['overlaps']) || !empty($dataWarnings['gaps']) || !empty($dataWarnings['longSpans']) || !empty($dataWarnings['stale']))
              <style>
                  #data-warnings-header { background: #fffbeb !important; border-bottom: 1px solid #f59e0b !important; }
                  .dark #data-warnings-header { background: #78350f !important; border-bottom: 1px solid #f59e0b !important; }
@@ -87,6 +87,21 @@
                      <strong style="color: #d97706;">Data Warnings</strong>
                  </div>
                  <div class="card-body py-2 data-warnings-body" style="max-height: 200px; overflow-y: auto;">
+                     @if(!empty($dataWarnings['stale']))
+                     <div class="mb-2">
+                         <strong style="color: #d97706;"><i class="fa fa-hourglass-end me-1"></i> No Recent Data (Stale):</strong>
+                         <ul class="mb-0 small">
+                             @foreach($dataWarnings['stale'] as $st)
+                             <li>
+                                 {{ $st['name'] }}: latest price <strong>{{ $st['from'] }}</strong>,
+                                 <strong>{{ $st['days'] }} trading day{{ $st['days'] > 1 ? 's' : '' }}</strong> behind
+                                 <span class="text-muted">({{ $st['calendar_days'] }} calendar days)</span>
+                                 as of {{ $st['to'] }}
+                             </li>
+                             @endforeach
+                         </ul>
+                     </div>
+                     @endif
                      @if(!empty($dataWarnings['overlaps']))
                      <div class="mb-2">
                          <strong style="color: #d97706;"><i class="fa fa-clone me-1" style="color: #d97706;"></i> Overlapping Price Ranges:</strong>

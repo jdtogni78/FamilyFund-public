@@ -24,6 +24,13 @@
                         </td>
                     </tr>
                 </table>
+                @php $staleDetails = collect($api['data_staleness']['details'] ?? [])->where('trading_days_stale', '>', 0); @endphp
+                @if($staleDetails->isNotEmpty())
+                <div style="margin-top: 6px; padding-left: 40px; color: #78350f; font-size: 11px;">
+                    {{ $staleDetails->count() }} of {{ $api['data_staleness']['asset_count'] ?? $staleDetails->count() }} assets behind:
+                    @foreach($staleDetails->take(10) as $d){{ $loop->first ? '' : ', ' }}{{ $d['name'] }} ({{ $d['latest_date'] }}, {{ $d['trading_days_stale'] }}d)@endforeach{{ $staleDetails->count() > 10 ? ', …' : '' }}
+                </div>
+                @endif
             </td>
         </tr>
     </table>

@@ -131,7 +131,11 @@ class CreditLineCreateValidationTest extends DuskTestCase
                 ->waitFor('form[action*="/credit-lines"]')
                 ->screenshot('create-validation/principal_subprecision_before');
 
-            $browser->script("var el=document.querySelector('input[name=\"principal_shares\"]'); if(el){el.removeAttribute('min');el.removeAttribute('step');}");
+            // Bypass HTML5 client validation so the submit reaches the
+            // server-side `min:0.0001` rule. (Removing `step` alone reverts the
+            // number input to the browser default step=1, which *blocks* any
+            // sub-integer value and never hits the server.)
+            $browser->script("var f=document.querySelector('form[action*=\"/credit-lines\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
 
             $browser->type('input[name="nickname"]', 'subprecision test')
                 ->type('input[name="principal_shares"]', '0.00001')

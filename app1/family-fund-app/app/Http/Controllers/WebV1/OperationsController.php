@@ -34,8 +34,7 @@ class OperationsController extends AppBaseController
         $user = auth()->user();
         if (!$user) return false;
 
-        // User ID 1 is always admin
-        if ($user->id === 1) return true;
+        if ($user->isSystemAdmin()) return true;
 
         // Check env for additional admin emails (default includes app owner)
         $defaultAdmins = 'admin@dev.familyfund.local';

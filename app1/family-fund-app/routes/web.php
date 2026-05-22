@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Dev-only auto-login route for CLI testing.
-// Default user is claude@test.local; override with ?as=<email> or a role alias
-// (admin / fund-admin / financial-manager / beneficiary -> canonical qa-* users
-// seeded by QaTestUsersSeeder).
-if (app()->environment('local', 'dev')) {
+// Dev-only auto-login route for CLI/browser ACL testing.
+// Default user is claude@test.local; override with ?as=<email>, a role alias,
+// user:<id>, acct<id>, account:<id>, or with explicit ?user_id= / ?account_id=.
+// Role aliases map to canonical qa-* users seeded by QaTestUsersSeeder.
+if (app()->environment('local', 'dev', 'testing')) {
     Route::get('/dev-login/{redirect?}', function (\Illuminate\Http\Request $request, $redirect = '') {
         $aliases = [
             'admin' => 'admin@dev.familyfund.local',
@@ -28,9 +28,29 @@ if (app()->environment('local', 'dev')) {
             'beneficiary' => 'qa-beneficiary@test.local',
         ];
         $as = (string) $request->query('as', 'claude@test.local');
-        $email = $aliases[$as] ?? $as;
-        $user = \App\Models\User::where('email', $email)->first();
-        abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+
+        if ($request->filled('account_id')) {
+            $account = \App\Models\AccountExt::with('user')->find($request->integer('account_id'));
+            abort_unless($account, 404, "dev-login: no account with id '{$request->query('account_id')}'");
+            abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
+            $user = $account->user;
+        } elseif ($request->filled('user_id')) {
+            $user = \App\Models\User::find($request->integer('user_id'));
+            abort_unless($user, 404, "dev-login: no user with id '{$request->query('user_id')}'");
+        } elseif (preg_match('/^user:(\d+)$/', $as, $matches)) {
+            $user = \App\Models\User::find((int) $matches[1]);
+            abort_unless($user, 404, "dev-login: no user with id '{$matches[1]}'");
+        } elseif (preg_match('/^(?:acct|account)[:#-]?(\d+)$/', $as, $matches)) {
+            $account = \App\Models\AccountExt::with('user')->find((int) $matches[1]);
+            abort_unless($account, 404, "dev-login: no account with id '{$matches[1]}'");
+            abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
+            $user = $account->user;
+        } else {
+            $email = $aliases[$as] ?? $as;
+            $user = \App\Models\User::where('email', $email)->first();
+            abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+        }
+
         Auth::loginUsingId($user->id);
         // ltrim guards against '//' protocol-relative redirects when $redirect is empty
         return redirect('/' . ltrim($redirect, '/'));
@@ -132,10 +152,13 @@ Route::middleware('auth')->group(function () {
     Route::post('tradePortfolios/{id}/do_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doCashDeposits')
         ->name('tradePortfolios.do_deposits');
     Route::get('scheduledJobs/{id}/preview/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@previewScheduledJob')
+        ->middleware('fund.full')
         ->name('scheduledJobs.preview');
     Route::post('scheduledJobs/{id}/run/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@runScheduledJob')
+        ->middleware('fund.full')
         ->name('scheduledJobs.run');
     Route::post('scheduledJobs/{id}/force-run/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@forceRunScheduledJob')
+        ->middleware('fund.full')
         ->name('scheduledJobs.force-run');
 
     // Operations Dashboard (admin only - checked in controller)
@@ -184,8 +207,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
     Route::resource('addresses', App\Http\Controllers\AddressController::class);
     Route::resource('assetChangeLogs', App\Http\Controllers\AssetChangeLogController::class);
-    Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class);
-    Route::resource('assets', App\Http\Controllers\AssetController::class);
+    Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('assets', App\Http\Controllers\AssetController::class)
+        ->middleware('fund.full');
     Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
     Route::resource('changeLogs', App\Http\Controllers\ChangeLogController::class);
     Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
@@ -205,22 +230,30 @@ Route::middleware('auth')->group(function () {
         ->name('matchingRules.store_clone');
     Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
         ->name('matchingRules.send-all-emails');
-    Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class);
+    Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class)
+        ->middleware('fund.full');
     Route::resource('people', App\Http\Controllers\PersonController::class);
     Route::resource('persons', App\Http\Controllers\PersonController::class);
     Route::resource('phones', App\Http\Controllers\PhoneController::class);
-    Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class);
-    Route::resource('portfolios', App\Http\Controllers\PortfolioController::class);
-    Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class);
-    Route::resource('schedules', App\Http\Controllers\ScheduleController::class);
+    Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('portfolios', App\Http\Controllers\PortfolioController::class)
+        ->middleware('fund.full');
+    Route::resource('scheduledJobs', App\Http\Controllers\WebV1\ScheduledJobControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('schedules', App\Http\Controllers\ScheduleController::class)
+        ->middleware('fund.full');
     Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\TradeBandReportController@viewPdf')
         ->name('tradeBandReports.viewPdf');
     Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\TradeBandReportController@resend')
         ->name('tradeBandReports.resend');
     Route::resource('tradeBandReports', App\Http\Controllers\TradeBandReportController::class);
-    Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class);
-    Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class);
-    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class);
+    Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('transactionMatchings', App\Http\Controllers\TransactionMatchingController::class)
+        ->middleware('fund.full');
     Route::resource('transactions', App\Http\Controllers\WebV1\TransactionControllerExt::class);
     Route::resource('users', App\Http\Controllers\UserController::class);
 

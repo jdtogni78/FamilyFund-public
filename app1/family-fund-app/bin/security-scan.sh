@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Run the fast local security checks used by CI.
+#
+# By default this exits on the first failing check. Use --continue-on-error
+# or SECURITY_SCAN_CONTINUE=1 to run every check and report all failures.
 
 set -euo pipefail
 
@@ -13,6 +16,40 @@ if [[ -d "$LOCAL_TOOLS_BIN" ]]; then
   export PATH="$LOCAL_TOOLS_BIN:$PATH"
 fi
 
+CONTINUE_ON_ERROR="${SECURITY_SCAN_CONTINUE:-0}"
+FAILURES=()
+
+usage() {
+  cat <<'USAGE'
+Usage: bin/security-scan.sh [--continue-on-error]
+
+Options:
+  --continue-on-error  Run all checks and summarize failures at the end.
+  -h, --help           Show this help.
+
+Environment:
+  SECURITY_SCAN_CONTINUE=1  Same as --continue-on-error.
+  NPM_AUDIT_LEVEL=moderate  npm audit threshold. Defaults to moderate.
+USAGE
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --continue-on-error|--all)
+      CONTINUE_ON_ERROR=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "[security-scan] Unknown argument: $arg" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "[security-scan] Missing required command: $1" >&2
@@ -24,6 +61,27 @@ require_command() {
 run_step() {
   echo "[security-scan] $*" >&2
   "$@"
+}
+
+run_check() {
+  local name="$1"
+  shift
+
+  echo "[security-scan] === $name ===" >&2
+  if "$@"; then
+    echo "[security-scan] PASS: $name" >&2
+    return 0
+  fi
+
+  local exit_code=$?
+  echo "[security-scan] FAIL: $name exited $exit_code" >&2
+
+  if [[ "$CONTINUE_ON_ERROR" == "1" ]]; then
+    FAILURES+=("$name ($exit_code)")
+    return 0
+  fi
+
+  exit "$exit_code"
 }
 
 detect_container() {
@@ -80,8 +138,16 @@ require_command gitleaks
 require_command semgrep
 require_command trivy
 
-run_composer_audit
-run_step npm audit --audit-level="${NPM_AUDIT_LEVEL:-moderate}"
-run_step gitleaks detect --source "$REPO_ROOT" --redact --config "$REPO_ROOT/.gitleaks.toml"
-run_semgrep_scan
-run_step trivy config --severity HIGH,CRITICAL --exit-code 1 "$REPO_ROOT"
+run_check "Composer audit" run_composer_audit
+run_check "npm audit" run_step npm audit --audit-level="${NPM_AUDIT_LEVEL:-moderate}"
+run_check "Gitleaks" run_step gitleaks detect --source "$REPO_ROOT" --redact --config "$REPO_ROOT/.gitleaks.toml"
+run_check "Semgrep" run_semgrep_scan
+run_check "Trivy config" run_step trivy config --severity HIGH,CRITICAL --exit-code 1 "$REPO_ROOT"
+
+if [[ "${#FAILURES[@]}" -gt 0 ]]; then
+  echo "[security-scan] Failed checks:" >&2
+  printf '[security-scan] - %s\n' "${FAILURES[@]}" >&2
+  exit 1
+fi
+
+echo "[security-scan] All checks passed." >&2

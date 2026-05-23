@@ -37,6 +37,16 @@ class TransactionControllerExtTest extends TestCase
         Mail::fake();
     }
 
+    protected function tearDown(): void
+    {
+        // Some transaction views leave output buffers open; close them so the
+        // tests aren't flagged risky (matches OperationsControllerTest, etc.).
+        while (ob_get_level() > 1) {
+            ob_end_clean();
+        }
+        parent::tearDown();
+    }
+
     // ==================== Create Tests ====================
 
     public function test_create_shows_transaction_form()
@@ -563,5 +573,105 @@ class TransactionControllerExtTest extends TestCase
 
         // Validation should fail for invalid account
         $response->assertSessionHasErrors('account_ids.1');
+    }
+
+    // ==================== Index Filter Tests ====================
+
+    public function test_index_filters_by_fund_id()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('transactions.index', ['fund_id' => $this->df->fund->id]));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('transactions.index');
+        $response->assertViewHas('filters');
+        $this->assertEquals($this->df->fund->id, $response->viewData('filters')['fund_id']);
+    }
+
+    public function test_index_filters_by_account_id()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('transactions.index', ['account_id' => $this->df->userAccount->id]));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('filters');
+        $this->assertEquals($this->df->userAccount->id, $response->viewData('filters')['account_id']);
+    }
+
+    // ==================== Update / Destroy Tests ====================
+
+    public function test_update_modifies_transaction()
+    {
+        $transaction = $this->df->createTransaction(100, null, TransactionExt::TYPE_PURCHASE);
+
+        $response = $this->actingAs($this->user)->put(route('transactions.update', $transaction->id), [
+            'account_id' => $this->df->userAccount->id,
+            'type' => TransactionExt::TYPE_PURCHASE,
+            'status' => TransactionExt::STATUS_CLEARED,
+            'value' => 250,
+            'timestamp' => now()->format('Y-m-d'),
+            'descr' => 'Updated descr',
+        ]);
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertDatabaseHas('transactions', [
+            'id' => $transaction->id,
+            'value' => 250,
+        ]);
+    }
+
+    public function test_update_handles_not_found()
+    {
+        $response = $this->actingAs($this->user)->put(route('transactions.update', 99999), [
+            'account_id' => $this->df->userAccount->id,
+            'type' => TransactionExt::TYPE_PURCHASE,
+            'status' => TransactionExt::STATUS_CLEARED,
+            'value' => 100,
+            'timestamp' => now()->format('Y-m-d'),
+        ]);
+
+        $response->assertRedirect(route('transactions.index'));
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_destroy_deletes_transaction()
+    {
+        $transaction = $this->df->createTransaction(100, null, TransactionExt::TYPE_PURCHASE);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('transactions.destroy', $transaction->id));
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertSoftDeleted('transactions', ['id' => $transaction->id]);
+    }
+
+    public function test_destroy_handles_not_found()
+    {
+        $response = $this->actingAs($this->user)
+            ->delete(route('transactions.destroy', 99999));
+
+        $response->assertRedirect(route('transactions.index'));
+        $response->assertSessionHas('flash_notification');
+    }
+
+    // ==================== Bulk Preview: Sale Branch ====================
+
+    public function test_bulk_preview_handles_sale_type()
+    {
+        // Sale takes the non-purchase branch of the fund-shares projection.
+        $input = [
+            'account_ids' => [$this->df->userAccount->id],
+            'type' => TransactionExt::TYPE_SALE,
+            'status' => TransactionExt::STATUS_PENDING,
+            'value' => 50,
+            'timestamp' => now()->format('Y-m-d'),
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->post(route('transactions.preview_bulk'), $input);
+
+        $response->assertStatus(200);
+        $response->assertViewIs('transactions.preview_bulk');
+        $response->assertViewHas('fundSharesData');
     }
 }

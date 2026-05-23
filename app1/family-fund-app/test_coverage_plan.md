@@ -1,6 +1,30 @@
 # Test Coverage Improvement Plan
 
-## Current State
+## Phase 1 status (2026-05-23, issue #22) — DONE
+
+The Phase 1 targets were already largely covered by suites added in prior
+sessions; the "Current State" numbers below are stale. Measured line coverage of
+the Phase 1 classes (pcov, full suite) before/after this pass:
+
+| Class | Before | After |
+|-------|-------:|------:|
+| `Traits\ScheduledJobTrait` | 79.5% | **100.0%** |
+| `WebV1\OperationsController` | 68.6% | **79.3%** |
+| `WebV1\MatchingRuleControllerExt` | 92.5% | **98.5%** |
+| `WebV1\TransactionControllerExt` | 91.6% | **97.0%** |
+| `WebV1\ScheduledJobControllerExt` | 88.0% | **92.3%** |
+| `Traits\TransactionTrait` | 94.3% | 94.3% |
+| `Models\TransactionExt` | 87.6% | 88.4% |
+
+Added: `OperationsControllerAdditionalTest` (validatePortfolioBalances + queue
+worker PID/start/stop + skip-future processPending), `ScheduledJobTraitTest`
+(soft-failure alert + forceRun "no data"), plus gap tests for transaction
+index-filters/update/destroy/bulk-sale, matching-rule destroy, and scheduled-job
+trade-band preview + update-not-found. Also hardened two pre-existing
+order/faker-fragile tests (`TransactionRepositoryTest::read_transaction`,
+`TransactionExtApiTest::validation_errors`).
+
+## Current State (original snapshot — stale, see Phase 1 status above)
 - **Overall Coverage**: 55.67% lines (5338/9588)
 - **Classes Covered**: 46.11% (172/373)
 - **Methods Covered**: 55.83% (785/1406)

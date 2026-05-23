@@ -498,4 +498,44 @@ class ScheduledJobControllerExtAdditionalTest extends TestCase
             'id' => $scheduledJob->id,
         ]);
     }
+
+    public function test_update_redirects_when_not_found()
+    {
+        $response = $this->actingAs($this->user)
+            ->put(route('scheduledJobs.update', 99999), [
+                'schedule_id' => $this->schedule->id,
+                'entity_descr' => ScheduledJobExt::ENTITY_FUND_REPORT,
+                'entity_id' => 1,
+                'start_dt' => now()->format('Y-m-d'),
+                'end_dt' => '9999-12-31',
+            ]);
+
+        $response->assertRedirect(route('scheduledJobs.index'));
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_preview_loads_trade_band_report_children()
+    {
+        // Exercises getChildren()'s trade-band branch (distinct from the
+        // fund-report branch already covered by the children test above).
+        $tradeBandReportTemplate = TradeBandReport::factory()->create([
+            'fund_id' => $this->df->fund->id,
+        ]);
+
+        $scheduledJob = $this->df->createScheduledJob(
+            $this->schedule,
+            ScheduledJobExt::ENTITY_TRADE_BAND_REPORT,
+            $tradeBandReportTemplate->id
+        );
+
+        $response = $this->actingAs($this->user)
+            ->get(route('scheduledJobs.preview', [
+                'id' => $scheduledJob->id,
+                'asOf' => now()->format('Y-m-d'),
+            ]));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('scheduled_jobs.preview');
+        $response->assertViewHas('children');
+    }
 }

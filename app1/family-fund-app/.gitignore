@@ -16,3 +16,8 @@
 storage/coverage/
 .env.prod
 /public/build/
+
+# --- Secrets & data hygiene (post .env.dev leak; mirrors origin/main) ---
+.env
+.env.*
+!.env.example

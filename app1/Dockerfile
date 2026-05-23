@@ -2,7 +2,7 @@
 FROM php:8.4-cli-bookworm
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     unzip \
@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wkhtmltopdf
+# Keep apt recommends here: the wkhtmltox .deb relies on recommended fonts/X
+# libraries for correct PDF rendering, so --no-install-recommends is unsafe.
+#trivy:ignore:AVD-DS-0029
 RUN ARCH=$(dpkg --print-architecture) \
     && curl -sLO https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb \
     && apt-get update && apt-get install -y ./wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb \

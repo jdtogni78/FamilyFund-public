@@ -1,2 +1,9 @@
 # Keep this file narrow. Prefer fixing findings or documenting accepted risk
 # with an issue link before adding ignore IDs here.
+
+# AVD-DS-0002 (Image user should not be 'root'): accepted for our local
+# dev/build images (app1/Dockerfile, app1/Dockerfile.bitnami). They bind-mount
+# the host source tree and run `php artisan serve`/supervisor; a non-root USER
+# breaks bind-mount permissions and the dev workflow. These images are not the
+# production runtime. Revisit if these Dockerfiles are used to build prod.
+AVD-DS-0002

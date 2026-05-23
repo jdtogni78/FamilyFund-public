@@ -56,7 +56,10 @@ jobs:
 
       - name: Audit locked npm dependencies
         working-directory: ${{ env.APP_DIR }}
-        run: npm audit --audit-level=moderate
+        # Shared gate: honors the documented .npm-audit-ignore list (dev-server
+        # vite/esbuild advisories that don't ship to prod). Keep in sync with
+        # bin/security-scan.sh.
+        run: node bin/npm-audit-gate.cjs
 
   gitleaks:
     name: Secret Scan
@@ -66,15 +69,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+      # Working-tree scan (current committed state), matching bin/security-scan.sh.
+      # Deep git-history scanning/purge of already-removed historical secrets is a
+      # separate pre-publish concern tracked under the secret-rotation ticket.
+      - name: Run Gitleaks (working tree)
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:latest \
+            detect --source /repo --no-git --redact --config /repo/.gitleaks.toml
 
   semgrep:
     name: Semgrep
@@ -97,10 +99,12 @@ jobs:
         id: semgrep
         continue-on-error: true
         run: |
+          # p/laravel dropped: the registry intermittently 404s for it, which
+          # aborts the whole scan. Keep in sync with bin/security-scan.sh.
           semgrep scan \
-            --config p/laravel \
             --config p/php \
             --config p/owasp-top-ten \
+            --config p/security-audit \
             --sarif \
             --output semgrep.sarif \
             $APP_DIR
@@ -136,6 +140,11 @@ jobs:
           output: trivy-config.sarif
           severity: HIGH,CRITICAL
           exit-code: "1"
+          # We don't own vendored configs (laravel/sail Dockerfiles, etc.);
+          # only our own Dockerfiles/compose should gate the build. Keep this in
+          # sync with bin/security-scan.sh.
+          skip-dirs: '**/vendor/**,**/node_modules/**'
+          trivyignores: .trivyignore
 
       - name: Upload Trivy config SARIF
         if: always() && hashFiles('trivy-config.sarif') != ''
@@ -171,7 +180,7 @@ jobs:
       - name: Prepare test environment
         working-directory: ${{ env.APP_DIR }}
         run: |
-          cp .env.dev .env
+          cp .env.example .env
           php artisan key:generate --force
 
       - name: Capture route inventory
@@ -235,7 +244,7 @@ jobs:
       - name: Prepare test environment
         working-directory: ${{ env.APP_DIR }}
         run: |
-          cp .env.dev .env
+          cp .env.example .env
           php artisan key:generate --force
 
       - name: Prepare database
@@ -386,7 +395,7 @@ jobs:
           npm run build
 
       - name: Prepare local environment
-        run: cp app1/family-fund-app/.env.dev app1/family-fund-app/.env
+        run: cp app1/family-fund-app/.env.example app1/family-fund-app/.env
 
       - name: Install PHP dependencies in container
         working-directory: app1

@@ -55,6 +55,11 @@
 
         $sv = 0;
         try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
+
+        // Late schedule rows the borrower can clear in one "Catch up" payment (#9).
+        $lateRows   = $schedule->where('status', 'late');
+        $lateCount  = $lateRows->count();
+        $lateShares = (float) $lateRows->sum('shares_due');
     @endphp
 
     <div class="card mb-3">
@@ -150,10 +155,20 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
             @if($isAdmin && $line->status === 'active')
-                <button type="button" class="btn btn-success btn-sm"
-                        data-bs-toggle="modal" data-bs-target="#makePaymentModal">
-                    <i class="fa fa-money-bill me-1"></i>Make payment
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-success btn-sm"
+                            data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                        <i class="fa fa-money-bill me-1"></i>Make payment
+                    </button>
+                    @if($lateCount > 0)
+                        <button type="button" class="btn btn-warning btn-sm" id="catchUpBtn"
+                                data-catchup-shares="{{ number_format($lateShares, 4, '.', '') }}"
+                                data-bs-toggle="modal" data-bs-target="#makePaymentModal"
+                                title="Pre-fill a payment covering all {{ $lateCount }} late row{{ $lateCount === 1 ? '' : 's' }}">
+                            <i class="fa fa-clock-rotate-left me-1"></i>Catch up ({{ number_format($lateShares, 4) }} sh)
+                        </button>
+                    @endif
+                </div>
             @endif
             @unless($schedule->isEmpty())
             <div class="d-flex align-items-center flex-wrap gap-2" id="schedule-filter">
@@ -334,6 +349,21 @@
                 fromInput.value = '';
                 toInput.value = '';
                 apply();
+            });
+        })();
+
+        // The catch-up trigger pre-fills the payment modal's Shares field with
+        // the total shares due across all late rows (read from the trigger
+        // button); a plain payment trigger clears the field instead.
+        (function () {
+            var modal = document.getElementById('makePaymentModal');
+            if (!modal) return;
+            modal.addEventListener('show.bs.modal', function (event) {
+                var sharesInput = document.getElementById('makePaymentShares');
+                if (!sharesInput) return;
+                var trigger = event.relatedTarget;
+                var catchup = trigger && trigger.getAttribute('data-catchup-shares');
+                sharesInput.value = catchup ? catchup : '';
             });
         })();
     </script>

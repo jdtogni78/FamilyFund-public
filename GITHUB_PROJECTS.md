@@ -9,6 +9,7 @@ No server to host, no license — and a single board can span multiple repos.
 |-------|-----------------|---------|
 | **Trading & Fund** (#1) | `dstrader`, `dstrader-aws`, `dstrader_python`, `DSTraderAnalysis`, `FamilyFund` | All trading / portfolio work in one place |
 | **Remote Control** (#2) | `claude-remote-control` | The remote-control supervisor project |
+| **Job Search** (#3) | `job-search` (local-only, no remote) | Job-search tooling, website specs, related notes |
 
 The number in parentheses is the project number used by `gh project` commands.
 
@@ -65,3 +66,4 @@ gh project view <NUMBER> --owner jdtogni78 --web
 
 - Trading & Fund board (#1): <https://github.com/users/jdtogni78/projects/1>
 - Remote Control board (#2): <https://github.com/users/jdtogni78/projects/2>
+- Job Search board (#3): <https://github.com/users/jdtogni78/projects/3>

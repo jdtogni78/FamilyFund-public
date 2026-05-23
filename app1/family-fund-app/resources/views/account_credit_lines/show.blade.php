@@ -55,6 +55,11 @@
 
         $sv = 0;
         try { $sv = (float) $account?->shareValueAsOf(now()->toDateString()); } catch (\Throwable $e) {}
+
+        // Late schedule rows the borrower can clear in one "Catch up" payment (#9).
+        $lateRows   = $schedule->where('status', 'late');
+        $lateCount  = $lateRows->count();
+        $lateShares = (float) $lateRows->sum('shares_due');
     @endphp
 
     <div class="card mb-3">
@@ -150,10 +155,20 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="fa fa-calendar-days me-2"></i>Payment schedule</strong>
             @if($isAdmin && $line->status === 'active')
-                <button type="button" class="btn btn-success btn-sm"
-                        data-bs-toggle="modal" data-bs-target="#makePaymentModal">
-                    <i class="fa fa-money-bill me-1"></i>Make payment
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-success btn-sm"
+                            data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                        <i class="fa fa-money-bill me-1"></i>Make payment
+                    </button>
+                    @if($lateCount > 0)
+                        <button type="button" class="btn btn-warning btn-sm" id="catchUpBtn"
+                                data-catchup-shares="{{ number_format($lateShares, 4, '.', '') }}"
+                                data-bs-toggle="modal" data-bs-target="#makePaymentModal"
+                                title="Pre-fill a payment covering all {{ $lateCount }} late row{{ $lateCount === 1 ? '' : 's' }}">
+                            <i class="fa fa-clock-rotate-left me-1"></i>Catch up ({{ number_format($lateShares, 4) }} sh)
+                        </button>
+                    @endif
+                </div>
             @endif
             @unless($schedule->isEmpty())
             <div class="d-flex align-items-center flex-wrap gap-2" id="schedule-filter">
@@ -183,6 +198,39 @@
             @if($schedule->isEmpty())
                 <p class="text-muted mb-0">No schedule rows.</p>
             @else
+            @php
+                // #10 — roll up runs of >=2 ADJACENT late rows into one
+                // collapsible summary row. DB rows are untouched; this is a
+                // view-only roll-up (the quarterly PDF keeps the expanded view).
+                $rowsList          = $schedule->values();
+                $lateGroupOf       = [];   // row index => group id
+                $lateGroupStartIdx = [];   // group id => first row index in the run
+                $groupAgg          = [];   // group id => [count, shares, from, to]
+                $gid = 0; $i = 0; $rowCount = $rowsList->count();
+                while ($i < $rowCount) {
+                    if ($rowsList[$i]->status === 'late') {
+                        $j = $i;
+                        while ($j < $rowCount && $rowsList[$j]->status === 'late') { $j++; }
+                        if ($j - $i >= 2) {
+                            $gid++;
+                            $shares = 0.0; $from = null; $to = null;
+                            for ($k = $i; $k < $j; $k++) {
+                                $lateGroupOf[$k] = $gid;
+                                $shares += (float) $rowsList[$k]->shares_due;
+                                $d = \Illuminate\Support\Carbon::parse($rowsList[$k]->due_date)->format('Y-m-d');
+                                $from = $from === null ? $d : min($from, $d);
+                                $to   = $to   === null ? $d : max($to, $d);
+                            }
+                            $lateGroupStartIdx[$gid] = $i;
+                            $groupAgg[$gid] = ['count' => $j - $i, 'shares' => $shares, 'from' => $from, 'to' => $to];
+                        }
+                        $i = $j;
+                    } else {
+                        $i++;
+                    }
+                }
+                $scheduleColspan = $isAdmin ? 7 : 6;
+            @endphp
             <table class="table table-sm">
                 <thead>
                     <tr>
@@ -191,8 +239,35 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach($schedule as $row)
-                    <tr data-status="{{ $row->status }}" data-due="{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}">
+                @foreach($rowsList as $idx => $row)
+                    @php $g = $lateGroupOf[$idx] ?? null; @endphp
+                    @if($g && $idx === $lateGroupStartIdx[$g])
+                        @php $agg = $groupAgg[$g]; @endphp
+                        <tr class="late-group-summary" data-status="late" data-due="{{ $agg['from'] }}" data-group="{{ $g }}">
+                            <td></td>
+                            <td class="text-nowrap">{{ $agg['from'] }} &rarr; {{ $agg['to'] }}</td>
+                            <td>{{ number_format($agg['shares'], 4) }}</td>
+                            <td class="text-end"><span class="text-muted">&mdash;</span></td>
+                            <td>@include('account_credit_lines._payment_status_badge', ['status' => 'late'])</td>
+                            <td colspan="{{ $isAdmin ? 2 : 1 }}">
+                                <button type="button"
+                                        class="btn btn-link btn-sm p-0 text-danger late-group-toggle"
+                                        data-group="{{ $g }}" aria-expanded="false"
+                                        title="Show the {{ $agg['count'] }} overdue payments individually">
+                                    <span class="late-caret" aria-hidden="true">&#9656;</span>
+                                    {{ number_format($agg['shares'], 4) }} shares overdue from {{ $agg['from'] }} through {{ $agg['to'] }}
+                                    ({{ $agg['count'] }} payments)
+                                </button>
+                            </td>
+                        </tr>
+                    @endif
+                    <tr
+                        @if($g)
+                            class="late-group-detail" data-group="{{ $g }}" style="display:none;"
+                        @else
+                            data-status="{{ $row->status }}" data-due="{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}"
+                        @endif
+                    >
                         <td>{{ $row->sequence_number ?? $row->id }}</td>
                         <td>{{ \Illuminate\Support\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
                         <td>{{ number_format($row->shares_due, 4) }}</td>
@@ -315,6 +390,22 @@
                     var dateOk = (!from || due >= from) && (!to || due <= to);
                     tr.style.display = (statusOk && dateOk) ? '' : 'none';
                 });
+                // #10: late-group detail rows have no data-status (so they are
+                // not force-shown by the filter). When a group's summary row is
+                // filtered out, collapse its details to keep the table tidy.
+                document.querySelectorAll('tr.late-group-summary').forEach(function (sum) {
+                    if (sum.style.display === 'none') {
+                        var g = sum.getAttribute('data-group');
+                        document.querySelectorAll('tr.late-group-detail[data-group="' + g + '"]')
+                            .forEach(function (d) { d.style.display = 'none'; });
+                        var btn = sum.querySelector('.late-group-toggle');
+                        if (btn) {
+                            btn.setAttribute('aria-expanded', 'false');
+                            var c = btn.querySelector('.late-caret');
+                            if (c) c.innerHTML = '&#9656;';
+                        }
+                    }
+                });
             }
 
             statusBar.addEventListener('click', function (e) {
@@ -334,6 +425,36 @@
                 fromInput.value = '';
                 toInput.value = '';
                 apply();
+            });
+        })();
+
+        // The catch-up trigger pre-fills the payment modal's Shares field with
+        // the total shares due across all late rows (read from the trigger
+        // button); a plain payment trigger clears the field instead.
+        (function () {
+            var modal = document.getElementById('makePaymentModal');
+            if (!modal) return;
+            modal.addEventListener('show.bs.modal', function (event) {
+                var sharesInput = document.getElementById('makePaymentShares');
+                if (!sharesInput) return;
+                var trigger = event.relatedTarget;
+                var catchup = trigger && trigger.getAttribute('data-catchup-shares');
+                sharesInput.value = catchup ? catchup : '';
+            });
+        })();
+
+        // #10: expand/collapse a rolled-up run of adjacent late schedule rows.
+        (function () {
+            document.querySelectorAll('.late-group-toggle').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var g = btn.getAttribute('data-group');
+                    var expand = btn.getAttribute('aria-expanded') !== 'true';
+                    document.querySelectorAll('tr.late-group-detail[data-group="' + g + '"]')
+                        .forEach(function (d) { d.style.display = expand ? '' : 'none'; });
+                    btn.setAttribute('aria-expanded', expand ? 'true' : 'false');
+                    var c = btn.querySelector('.late-caret');
+                    if (c) c.innerHTML = expand ? '&#9662;' : '&#9656;';
+                });
             });
         })();
     </script>

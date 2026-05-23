@@ -4,9 +4,9 @@ namespace App\Services\CreditLine\Reporting;
 
 use App\Models\Account;
 use App\Models\AccountCreditLine;
-use App\Models\AccountCreditLineBalance;
 use App\Models\FundExt;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -39,40 +39,43 @@ class FundReceivableCalculator
 
         // Prefer the temporal balance table when available.
         if (Schema::hasTable('account_credit_line_balances')) {
-            $lines = AccountCreditLine::whereIn('account_id', $accountIds)->get();
-            if ($lines->isEmpty()) {
-                return 0.0;
-            }
+            // Single round-trip: sum each line's contribution in the DB instead
+            // of one covering-row query (plus an existence query) per line.
+            //
+            //   - If a balance interval covers $asOfDate
+            //     (start_dt <= asOf < end_dt), use its outstanding_shares. The
+            //     temporal intervals don't overlap — a same-day change closes a
+            //     zero-length [d, d) interval, which can never cover any date —
+            //     so at most one row matches per line and the join can't fan out.
+            //   - Else, if the line has NO balance history at all AND is active
+            //     AND $asOfDate is on/after origination, fall back to the live
+            //     outstanding_shares column. Preserves lines created outside the
+            //     tracker (legacy data, tests, admin SQL backfills).
+            //   - Otherwise the line contributes 0.
+            $haveHistory = DB::table('account_credit_line_balances')
+                ->select('account_credit_line_id')
+                ->groupBy('account_credit_line_id');
 
-            $total = 0.0;
-            foreach ($lines as $line) {
-                $row = AccountCreditLineBalance::where('account_credit_line_id', $line->id)
-                    ->where('start_dt', '<=', $asOfDate)
-                    ->where('end_dt', '>', $asOfDate)
-                    ->orderByDesc('start_dt')
-                    ->orderByDesc('id')
-                    ->first();
+            $total = DB::table('account_credit_lines as acl')
+                ->whereIn('acl.account_id', $accountIds)
+                ->leftJoin('account_credit_line_balances as cov', function ($join) use ($asOfDate) {
+                    $join->on('cov.account_credit_line_id', '=', 'acl.id')
+                        ->where('cov.start_dt', '<=', $asOfDate)
+                        ->where('cov.end_dt', '>', $asOfDate);
+                })
+                ->leftJoinSub($haveHistory, 'hist', 'hist.account_credit_line_id', '=', 'acl.id')
+                ->selectRaw(
+                    'coalesce(sum(case '
+                    . 'when cov.id is not null then cov.outstanding_shares '
+                    . "when hist.account_credit_line_id is null and acl.status = 'active' "
+                    . 'and (acl.origination_date is null or acl.origination_date <= ?) '
+                    . 'then acl.outstanding_shares '
+                    . 'else 0 end), 0) as total',
+                    [$asOfDate]
+                )
+                ->value('total');
 
-                if ($row) {
-                    $total += (float) $row->outstanding_shares;
-                    continue;
-                }
-
-                // No covering row. Fall back to the live column when the line has
-                // no balance history at all AND it is active AND $asOfDate is on
-                // or after origination — this preserves correct behavior for lines
-                // created outside the tracker (e.g., legacy data, tests, or admin
-                // SQL backfills).
-                $hasAny = AccountCreditLineBalance::where('account_credit_line_id', $line->id)->exists();
-                if (!$hasAny
-                    && $line->status === 'active'
-                    && (!$line->origination_date || $asOfDate >= $line->origination_date->toDateString())
-                ) {
-                    $total += (float) $line->outstanding_shares;
-                }
-            }
-
-            return $total;
+            return (float) $total;
         }
 
         // Fallback: pre-Phase-4 schema. Treat receivable as point-in-time current.

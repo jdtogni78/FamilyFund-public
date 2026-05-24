@@ -23,9 +23,12 @@
                     <a href="{{ route('transactions.clone', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Clone with today's date">
                         <i class="fa fa-copy me-1"></i> Clone
                     </a>
-                    <a href="{{ route('transactions.resend-email', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Resend confirmation email">
-                        <i class="fa fa-envelope me-1"></i> Resend
-                    </a>
+                    <form action="{{ route('transactions.resend-email', [$transaction->id]) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Resend confirmation email" onclick="return confirm('Resend the confirmation email for this transaction?')">
+                            <i class="fa fa-envelope me-1"></i> Resend
+                        </button>
+                    </form>
                     <a href="{{ route('transactions.edit', [$transaction->id]) }}" class="btn btn-sm btn-outline-primary" title="Edit transaction">
                         <i class="fa fa-edit me-1"></i> Edit
                     </a>

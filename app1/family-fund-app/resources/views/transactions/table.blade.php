@@ -65,20 +65,23 @@
                 <td>{{ $transaction->referenceTransactionMatching?->transaction_id }}</td>
                 <td>{{ $transaction->scheduled_job_id }}</td>
                 <td>
-                    <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <div class='btn-group'>
-                            <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                            <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                            <a href="{{ route('transactions.clone', [$transaction->id]) }}" class='btn btn-ghost-warning' title="Clone"><i class="fa fa-copy"></i></a>
-                            <a href="{{ route('transactions.resend-email', [$transaction->id]) }}" class='btn btn-ghost-secondary' title="Resend Email"><i class="fa fa-envelope"></i></a>
-                            @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
-                                <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-primary'><i class="fa fa-play"></i></a>
-                            @endif
+                    <div class='btn-group'>
+                        <a href="{{ route('transactions.show', [$transaction->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('transactions.edit', [$transaction->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('transactions.clone', [$transaction->id]) }}" class='btn btn-ghost-warning' title="Clone"><i class="fa fa-copy"></i></a>
+                        <form action="{{ route('transactions.resend-email', $transaction->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-secondary" title="Resend Email" onclick="return confirm('Resend the confirmation email for this transaction?')"><i class="fa fa-envelope"></i></button>
+                        </form>
+                        @if($transaction->status == \App\Models\TransactionExt::STATUS_PENDING)
+                            <a href="{{ route('transactions.preview_pending', [$transaction->id]) }}" class='btn btn-ghost-primary'><i class="fa fa-play"></i></a>
+                        @endif
+                        <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this transaction?')"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </td>
             </tr>
         @endforeach

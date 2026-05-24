@@ -40,9 +40,12 @@
                                 <i class="fa fa-user-plus me-1"></i>Assign
                             </a>
                         @endif
-                        <a href="{{ route('cashDeposits.resend-email', [$cashDeposit->id]) }}" class="btn btn-outline-light" title="Resend Email">
-                            <i class="fa fa-envelope me-1"></i>Resend
-                        </a>
+                        <form action="{{ route('cashDeposits.resend-email', [$cashDeposit->id]) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-light" title="Resend Email" onclick="return confirm('Resend the cash deposit email?')">
+                                <i class="fa fa-envelope me-1"></i>Resend
+                            </button>
+                        </form>
                         <a href="{{ route('cashDeposits.edit', [$cashDeposit->id]) }}" class="btn btn-outline-light" title="Edit">
                             <i class="fa fa-edit me-1"></i>Edit
                         </a>

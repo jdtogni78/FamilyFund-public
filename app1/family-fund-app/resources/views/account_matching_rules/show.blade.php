@@ -124,11 +124,13 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
-                                <a href="{{ route('accountMatchingRules.resend-email', [$accountMatchingRule->id]) }}"
-                                   class="btn btn-primary"
-                                   onclick="return confirm('Send email notification to {{ $api['account']->email_cc ?? "account" }}?')">
-                                    <i class="fa fa-envelope me-2"></i> Send Notification Email
-                                </a>
+                                <form action="{{ route('accountMatchingRules.resend-email', [$accountMatchingRule->id]) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary w-100"
+                                            onclick="return confirm('Send email notification to {{ $api['account']->email_cc ?? "account" }}?')">
+                                        <i class="fa fa-envelope me-2"></i> Send Notification Email
+                                    </button>
+                                </form>
                                 <a href="{{ route('accountMatchingRules.edit', [$accountMatchingRule->id]) }}" class="btn btn-outline-secondary">
                                     <i class="fa fa-edit me-2"></i> Edit
                                 </a>

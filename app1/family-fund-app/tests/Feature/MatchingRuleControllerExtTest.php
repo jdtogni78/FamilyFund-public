@@ -76,7 +76,7 @@ class MatchingRuleControllerExtTest extends TestCase
         $this->df->userAccount->email_cc = 'test@example.com';
         $this->df->userAccount->save();
 
-        $response = $this->actingAs($this->user)->get('/matchingRules/' . $this->df->matchingRule->id . '/send-all-emails');
+        $response = $this->actingAs($this->user)->post('/matchingRules/' . $this->df->matchingRule->id . '/send-all-emails');
 
         $response->assertRedirect();
         $response->assertSessionHas('flash_notification');
@@ -92,7 +92,7 @@ class MatchingRuleControllerExtTest extends TestCase
         $this->df->userAccount->email_cc = null;
         $this->df->userAccount->save();
 
-        $response = $this->actingAs($this->user)->get('/matchingRules/' . $this->df->matchingRule->id . '/send-all-emails');
+        $response = $this->actingAs($this->user)->post('/matchingRules/' . $this->df->matchingRule->id . '/send-all-emails');
 
         $response->assertRedirect();
         $response->assertSessionHas('flash_notification');
@@ -103,7 +103,7 @@ class MatchingRuleControllerExtTest extends TestCase
 
     public function test_send_all_emails_redirects_when_not_found()
     {
-        $response = $this->actingAs($this->user)->get('/matchingRules/99999/send-all-emails');
+        $response = $this->actingAs($this->user)->post('/matchingRules/99999/send-all-emails');
 
         $response->assertRedirect(route('matchingRules.index'));
     }

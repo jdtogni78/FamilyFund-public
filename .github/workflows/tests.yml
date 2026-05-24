@@ -101,7 +101,9 @@ jobs:
         # public/build/manifest.json or the rendered pages throw.
         working-directory: ${{ env.APP_DIR }}
         run: |
-          npm ci
+          # --legacy-peer-deps: laravel-vite-plugin@1.x peer-requires vite 5/6
+          # but the project pins vite@^4.5, so plain `npm ci` hits ERESOLVE.
+          npm ci --legacy-peer-deps
           npm run build
 
       - name: Prepare test environment
@@ -172,7 +174,9 @@ jobs:
       - name: Build frontend assets
         working-directory: ${{ env.APP_DIR }}
         run: |
-          npm ci
+          # --legacy-peer-deps: laravel-vite-plugin@1.x peer-requires vite 5/6
+          # but the project pins vite@^4.5, so plain `npm ci` hits ERESOLVE.
+          npm ci --legacy-peer-deps
           npm run build
 
       - name: Prepare test environment

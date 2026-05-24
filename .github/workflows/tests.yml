@@ -1,0 +1,198 @@
+name: Tests
+
+# Two-tier strategy, aligned with the project's @group nightly convention
+# (phpunit.xml excludes <group>nightly</group> by default; bin/test-nightly.sh
+# runs them via --group=nightly):
+#
+#   * Pull requests / pushes to main  -> fast tier: the default suite minus the
+#       @group nightly tests (~the everyday `php artisan test` run). Fast feedback.
+#   * Nightly schedule / manual run   -> full tier: fast set PLUS the @group
+#       nightly tests (AclMatrixTest, PDFTest, SmokeTest, OperationsControllerTest),
+#       i.e. the entire suite.
+#
+# Both tiers run on GitHub-hosted runners with a MariaDB service container,
+# mirroring the security-access-regressions job in security-scan.yml. They build
+# Vite assets because Feature tests render Blade layouts that use @vite().
+#
+# --exclude-group / --group are passed explicitly so the workflow is correct
+# regardless of whether the nightly-tagging change has merged to main yet:
+# before it lands they are harmless (nothing is tagged nightly); after it lands
+# they enforce the fast/slow split.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "30 8 * * *"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Run the full suite even on a manual run"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_DIR: app1/family-fund-app
+
+jobs:
+  fast:
+    name: Fast suite (excludes @group nightly)
+    # Skip on schedule and manual runs; the full-suite job covers those.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: familyfund_dev
+      DB_USERNAME: root
+      DB_PASSWORD: 123456
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: familyfund_dev
+          MARIADB_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Build frontend assets
+        # Feature tests render Blade layouts that use @vite(); they need a
+        # public/build/manifest.json or the rendered pages throw.
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare test environment
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Prepare database
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan migrate --force
+
+      - name: Run fast suite
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan test --exclude-group=nightly
+
+  full-suite:
+    name: Full suite (fast + @group nightly)
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: familyfund_dev
+      DB_USERNAME: root
+      DB_PASSWORD: 123456
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: familyfund_dev
+          MARIADB_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Build frontend assets
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare test environment
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Prepare database
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan migrate --force
+
+      - name: Run fast suite
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan test --exclude-group=nightly
+
+      - name: Run nightly suite
+        # The slow @group nightly tests (AclMatrixTest, PDFTest, SmokeTest,
+        # OperationsControllerTest). phpunit.xml excludes this group by default,
+        # so --group=nightly is required to opt back in. No-op until the
+        # nightly-tagging change merges to main.
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan test --group=nightly

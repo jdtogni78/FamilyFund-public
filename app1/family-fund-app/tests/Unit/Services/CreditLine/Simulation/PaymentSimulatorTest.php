@@ -208,4 +208,66 @@ class PaymentSimulatorTest extends TestCase
 
         $this->assertEqualsWithDelta(100.0, $payment, 0.50);
     }
+
+    public function test_total_paid_usd_excludes_unspent_final_month(): void
+    {
+        // owe 100 shares, $30/mo, $1.00 flat share value, 0% growth:
+        //   M1-3 buy 30 shares ($30 each); M4 only 10 shares remain, so the
+        //   final payment is capped to $10 — not a full $30. Total cash is
+        //   $90 + $10 = $100, NOT $30 × 4 = $120. total_paid_usd must agree
+        //   with total_paid_shares × price, never bill the unspent remainder.
+        $line = $this->makeLine(100.0);
+        $result = $this->simulator->simulate($line, 30.0, 0.0, 1.0);
+
+        $this->assertSame(4, $result->payoff_month);
+        $this->assertEqualsWithDelta(100.0, $result->total_paid_usd, 0.01);
+        $this->assertEqualsWithDelta(100.0, $result->total_paid_shares, 0.01);
+        $this->assertLessThan(120.0, $result->total_paid_usd, 'Final partial month must not be billed at the full payment.');
+    }
+
+    public function test_payoff_date_anchored_to_today_not_origination(): void
+    {
+        // The projection starts from the line's CURRENT outstanding and today's
+        // share value, so payoff dates must be anchored to today — even for a
+        // line originated long ago (a backdated draw). Origination + month
+        // would put the payoff date in the past.
+        $line = $this->makeLine(100.0);
+        $line->origination_date = Carbon::today()->subYears(2)->toDateString();
+        $line->maturity_date = Carbon::today()->subYears(1)->toDateString();
+        $line->save();
+
+        $result = $this->simulator->simulate($line, 10.0, 0.0, 1.0);
+
+        $this->assertSame(10, $result->payoff_month);
+        $this->assertNotNull($result->payoff_date);
+        $this->assertSame(
+            Carbon::today()->addMonths(10)->toDateString(),
+            $result->payoff_date,
+            'Payoff date should be today + payoff_month, not origination + month.'
+        );
+        $this->assertTrue(Carbon::parse($result->payoff_date)->gt(Carbon::today()));
+        // First series row is one month out from today, not from origination.
+        $this->assertSame(
+            Carbon::today()->addMonths(1)->toDateString(),
+            $result->monthly_series[0]['date']
+        );
+    }
+
+    public function test_simulate_persists_nothing(): void
+    {
+        // Read-only guarantee: no scenario method may create transactions or
+        // schedule rows. makeLine() saves the line directly (no DrawService),
+        // so the only way these counts move is an unwanted side-effect.
+        $line = $this->makeLine(100.0);
+
+        $txBefore  = \Illuminate\Support\Facades\DB::table('transactions')->count();
+        $payBefore = \Illuminate\Support\Facades\DB::table('credit_line_payments')->count();
+
+        $this->simulator->simulate($line, 25.0, 7.0, 1.0);
+        $this->simulator->simulateAllScenarios($line, 25.0);
+        $this->simulator->solveForPaymentAllScenarios($line, 12);
+
+        $this->assertSame($txBefore, \Illuminate\Support\Facades\DB::table('transactions')->count());
+        $this->assertSame($payBefore, \Illuminate\Support\Facades\DB::table('credit_line_payments')->count());
+    }
 }

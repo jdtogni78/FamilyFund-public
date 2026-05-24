@@ -114,6 +114,32 @@ class CreditLineSimulatorTest extends TestCase
         $response->assertSee('Aggressive', false);
     }
 
+    public function test_simulator_shows_error_on_invalid_payment(): void
+    {
+        // A non-positive payment is rejected by the simulator; the page still
+        // renders (200) with the error surfaced in an alert rather than 500ing.
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id]) . '?monthly_payment_usd=-5'
+        );
+
+        $response->assertOk();
+        // Message text is "... must be > 0"; the ">" is HTML-escaped in the
+        // rendered page, so assert on the substring before it.
+        $response->assertSee('monthly_payment_usd must be', false);
+        $response->assertDontSee('Scenario summary', false);
+    }
+
+    public function test_simulator_time_mode_rejects_out_of_range_target(): void
+    {
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id]) . '?mode=time&target_months=0'
+        );
+
+        $response->assertOk();
+        $response->assertSee('target_months must be between', false);
+        $response->assertDontSee('Scenario summary', false);
+    }
+
     public function test_non_admin_blocked(): void
     {
         // Create a second non-admin user.

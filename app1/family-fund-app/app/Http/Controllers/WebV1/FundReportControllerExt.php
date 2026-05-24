@@ -14,6 +14,7 @@ use App\Models\FundReport;
 use App\Models\FundReportExt;
 use App\Models\OperationLog;
 use App\Repositories\FundReportRepository;
+use Exception;
 use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 use Response;

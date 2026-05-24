@@ -61,6 +61,52 @@ Remaining uncovered lines are dead / unreachable-via-HTTP: `TradePortfolioContro
 (shadowed by the `tradePortfolios.create` → `createWithParams` route) and the
 `showRebalance`/`showAsOf` default-date branches (no route supplies null dates).
 
+## Phase 2 status (2026-05-24, issue #23) — DONE
+
+As in Phases 1 and 3, the Phase 2 "before" percentages in the plan/ticket were
+badly stale — prior sessions had already covered most targets (the report
+controllers via `AccountReportControllerTest` / `FundReportControllerExtTest`,
+the API controller via `AccountReportApiTest`, the data-aggregation tree via
+`PDFTest`, both traits via `FundTraitTest` / `AccountTraitTest`, and the mail
+classes via `FundReportEmailTest` / `TransactionEmailTest`). Measured line/method
+coverage (pcov, full suite) before/after this pass:
+
+| Class | Lines before | Lines after | Methods before | Methods after |
+|-------|-------------:|------------:|---------------:|--------------:|
+| `WebV1\FundReportControllerExt` | 64.7% | **98.0%** | 66.7% | **88.9%** |
+| `Traits\AccountPDF` | 41.2% | **100.0%** | 50.0% | **100.0%** |
+| `Traits\AccountTrait` | 96.4% | **99.4%** | 90.9% | 90.9% |
+
+Already ≥50% before this pass (no work needed; the ticket's low numbers were
+stale): `FundTrait` 95.8%, `WebV1\FundControllerExt` 95.8%, `Traits\FundPDF`
+98.8%, `WebV1\AccountReportControllerExt` 100%, `APIv1\AccountReportAPIControllerExt`
+100%, `Models\TradePortfolioItem(Ext)` 100%, `Mail\TransactionEmail` 100%,
+`Mail\FundReportEmail` 100%.
+
+Added gap tests:
+- **FundReportControllerExt** (`FundReportControllerExtAdditionalTest`): the
+  write/dispatch paths the base suite didn't reach — `store` (happy + template +
+  the no-email catch branch), `update` (happy + template + not-found), `resend`
+  (happy + template-guard + not-found), and the `destroy` happy path.
+- **Account report email-send** (`AccountReportEmailSendTest`): drives
+  `sendAccountReport → createAccountViewData → new AccountPDF → accountEmailReport`
+  under `Mail::fake()` — the happy path (with a trade portfolio so
+  `AccountPDF::createPortfolioComparisonGraph` renders instead of early-returning)
+  and the no-email branch.
+
+Also fixed a latent bug found while covering `store`: `FundReportControllerExt`
+caught `Exception` without importing it, so the catch resolved to a nonexistent
+`App\Http\Controllers\WebV1\Exception` and a thrown `\Exception` (e.g. the
+no-email validation in `createFundReport`) would fatal with "class not found"
+instead of flashing the error. Added `use Exception;`.
+
+The fund-report email path itself (`FundTrait::sendFundReport` → `fundEmailReport`)
+was deliberately left to the existing `FundReportTest::testEmail`, which already
+asserts it with `Mail::fake()`; a duplicate suite was written and then removed.
+
+Full suite in the testpool slot: 2280 tests, 79 failures (the known stale-baseline
+set tracked by #55 — byte-identical before/after, i.e. zero regressions).
+
 ## Current State (original snapshot — stale, see Phase 1 status above)
 - **Overall Coverage**: 55.67% lines (5338/9588)
 - **Classes Covered**: 46.11% (172/373)

@@ -66,13 +66,16 @@ class PaymentSimulator
 
         $monthlyGrowthFactor = ($annualGrowthRatePct / 100.0 + 1.0) ** (1.0 / 12.0);
 
-        $origination = $line->origination_date
-            ? Carbon::parse($line->origination_date)
-            : Carbon::today();
+        // Anchor projected dates to today: the simulation starts from the
+        // line's CURRENT outstanding and today's share value, so a seasoned
+        // or backdated origination_date would otherwise produce payoff dates
+        // in the past. The answer to "when is it paid off if I start paying
+        // $X/month now" is today + payoff_month, not origination + month.
+        $startDate = Carbon::today();
 
         $series = [];
         $cumulativeShares = 0.0;
-        $monthsRun = 0;
+        $cumulativeUsd = 0.0;
         $capped = false;
         $payoffMonth = null;
 
@@ -81,20 +84,31 @@ class PaymentSimulator
             $sharesPaid = round($monthlyPaymentUsd / $shareValue, 4);
 
             // Cap shares paid so we don't over-repay.
+            $cappedThisMonth = false;
             if ($sharesPaid > $outstanding) {
                 $sharesPaid = round($outstanding, 4);
+                $cappedThisMonth = true;
             }
+
+            // USD actually paid this month: the full monthly payment for a
+            // normal month, but only the cost of the remaining shares on the
+            // final (capped) month — otherwise total_paid_usd bills an
+            // unspent fraction of the last payment and disagrees with the
+            // (capped) total_paid_shares.
+            $usdThisMonth = $cappedThisMonth
+                ? round($sharesPaid * $shareValue, 2)
+                : $monthlyPaymentUsd;
+            $cumulativeUsd = round($cumulativeUsd + $usdThisMonth, 2);
 
             $outstanding = round($outstanding - $sharesPaid, 4);
             if ($outstanding < 0) {
                 $outstanding = 0.0;
             }
             $cumulativeShares = round($cumulativeShares + $sharesPaid, 4);
-            $monthsRun = $m;
 
             $series[] = [
                 'month'                  => $m,
-                'date'                   => $origination->copy()->addMonths($m)->toDateString(),
+                'date'                   => $startDate->copy()->addMonths($m)->toDateString(),
                 'outstanding_shares'     => $outstanding,
                 'share_value'            => round($shareValue, 4),
                 'shares_paid'            => $sharesPaid,
@@ -112,15 +126,13 @@ class PaymentSimulator
         }
 
         $payoffDate = $payoffMonth !== null
-            ? $origination->copy()->addMonths($payoffMonth)->toDateString()
+            ? $startDate->copy()->addMonths($payoffMonth)->toDateString()
             : null;
-
-        $totalPaidUsd = $monthlyPaymentUsd * $monthsRun;
 
         return new SimulationResult(
             payoff_month: $payoffMonth,
             payoff_date: $payoffDate,
-            total_paid_usd: round($totalPaidUsd, 2),
+            total_paid_usd: round($cumulativeUsd, 2),
             total_paid_shares: $cumulativeShares,
             annual_growth_rate_pct: $annualGrowthRatePct,
             monthly_payment_usd: $monthlyPaymentUsd,
@@ -149,7 +161,25 @@ class PaymentSimulator
             throw new InvalidArgumentException('monthly_payment_usd must be > 0');
         }
 
-        // Resolve expected growth rate from the account's fund.
+        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line);
+
+        $out = [];
+        foreach ($rates as $key => $rate) {
+            $out[$key] = $this->simulate($line, $monthlyPaymentUsd, $rate, $startShareValue);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Resolve the three growth-rate scenarios (conservative / expected /
+     * aggressive) for a line's account, plus a single starting share value
+     * shared by all three so they project off the same baseline.
+     *
+     * @return array{rates: array<string,float>, startShareValue: float|null}
+     */
+    private function resolveScenarios(AccountCreditLine $line): array
+    {
         $expected = 7.0;
         $account = $line->account()->first();
         if ($account) {
@@ -160,10 +190,6 @@ class PaymentSimulator
             }
         }
 
-        $conservative = $expected * self::CONSERVATIVE_MULTIPLIER;
-        $aggressive = $expected * self::AGGRESSIVE_MULTIPLIER;
-
-        // Use the same starting share value for all three so they share a baseline.
         $startShareValue = null;
         if ($account) {
             try {
@@ -174,9 +200,12 @@ class PaymentSimulator
         }
 
         return [
-            'conservative' => $this->simulate($line, $monthlyPaymentUsd, $conservative, $startShareValue),
-            'expected'     => $this->simulate($line, $monthlyPaymentUsd, $expected, $startShareValue),
-            'aggressive'   => $this->simulate($line, $monthlyPaymentUsd, $aggressive, $startShareValue),
+            'rates' => [
+                'conservative' => $expected * self::CONSERVATIVE_MULTIPLIER,
+                'expected'     => $expected,
+                'aggressive'   => $expected * self::AGGRESSIVE_MULTIPLIER,
+            ],
+            'startShareValue' => $startShareValue,
         ];
     }
 
@@ -238,15 +267,13 @@ class PaymentSimulator
             $payoff = $result->payoff_month;
 
             if ($payoff !== null && $payoff <= $targetMonths) {
-                // Pays off at or before target — record as candidate, try cheaper.
+                // Pays off at or before target — record as candidate, then try
+                // a lower payment (smallest payment that still hits the target,
+                // whether it lands exactly on or before it).
                 if ($best === null || $mid < $best['payment']) {
                     $best = ['payment' => $mid, 'payoff_month' => $payoff];
                 }
-                if ($payoff === $targetMonths) {
-                    $hi = $mid; // try slightly lower to find the smallest payment that still hits target
-                } else {
-                    $hi = $mid; // pays off too fast → try lower payment
-                }
+                $hi = $mid;
             } else {
                 // Doesn't pay off in time (or capped) — must pay more.
                 $lo = $mid;
@@ -279,34 +306,10 @@ class PaymentSimulator
             throw new InvalidArgumentException('target_months must be > 0');
         }
 
-        $expected = 7.0;
-        $account = $line->account()->first();
-        if ($account) {
-            /** @var FundExt|null $fund */
-            $fund = $account->fund()->first();
-            if ($fund) {
-                $expected = (float) $fund->getExpectedGrowthRate();
-            }
-        }
-
-        $conservative = $expected * self::CONSERVATIVE_MULTIPLIER;
-        $aggressive = $expected * self::AGGRESSIVE_MULTIPLIER;
-
-        $startShareValue = null;
-        if ($account) {
-            try {
-                $startShareValue = (float) $account->shareValueAsOf(Carbon::today()->toDateString());
-            } catch (\Throwable $e) {
-                $startShareValue = null;
-            }
-        }
+        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line);
 
         $out = [];
-        foreach ([
-            'conservative' => $conservative,
-            'expected'     => $expected,
-            'aggressive'   => $aggressive,
-        ] as $key => $rate) {
+        foreach ($rates as $key => $rate) {
             $payment = $this->solveForPayment($line, $targetMonths, $rate, $startShareValue);
             $result = $this->simulate($line, $payment, $rate, $startShareValue);
             $out[$key] = ['payment' => $payment, 'result' => $result];

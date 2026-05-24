@@ -3,12 +3,14 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Models\TransactionExt;
+use App\Models\User;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Log;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
+use Tests\Fixtures\TestFixtures;
 
 class AccountMatchingReportTest extends TestCase
 {
@@ -26,6 +28,12 @@ class AccountMatchingReportTest extends TestCase
         $this->date = '2022-01-01';
         $this->verbose = false;
 //        $this->verbose = true;
+
+        // accountMatching gates access via auth()->user()->canAccessAccount();
+        // act as a system admin so any account is reachable.
+        $admin = User::factory()->create();
+        TestFixtures::makeSystemAdmin($admin);
+        $this->actingAs($admin);
     }
 
     public function testBasic()

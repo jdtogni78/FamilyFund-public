@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\AssetPrice;
 use App\Models\ExchangeHoliday;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -19,6 +21,12 @@ class AssetPriceGapsAPITest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // The /api routes are behind auth:sanctum; authenticate as a system
+        // admin so the gaps endpoint is reachable.
+        $user = User::factory()->create();
+        TestFixtures::makeSystemAdmin($user);
+        $this->actingAs($user);
 
         // Clear existing asset price data to ensure clean test state
         \DB::table('asset_prices')->delete();

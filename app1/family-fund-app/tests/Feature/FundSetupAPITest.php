@@ -10,6 +10,7 @@ use App\Models\AccountBalance;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\DataFactory;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,10 @@ class FundSetupAPITest extends TestCase
         $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
+
+        // /api routes are behind auth:sanctum; act as a system admin.
+        TestFixtures::makeSystemAdmin($this->user);
+        $this->actingAs($this->user);
     }
 
     // ==================== Basic Creation Tests ====================

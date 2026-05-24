@@ -4,15 +4,28 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Fixtures\TestFixtures;
 use App\Models\Account;
 use App\Models\AccountExt;
 use App\Models\TransactionExt;
+use App\Models\User;
 use App\Models\Utils;
 
 use PHPUnit\Framework\Attributes\Test;
 class AccountApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Account endpoints gate access via auth()->user()->canAccessAccount();
+        // act as a system admin so the golden account is reachable.
+        $admin = User::factory()->create();
+        TestFixtures::makeSystemAdmin($admin);
+        $this->actingAs($admin);
+    }
 
     public function create_own_balance($account, $asOf, $shares, $value)
     {

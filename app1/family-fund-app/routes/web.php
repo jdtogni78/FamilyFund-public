@@ -102,20 +102,28 @@ Route::middleware('auth')->group(function () {
     Route::get('accounts/{id}/pdf_as_of/{as_of}', 'App\Http\Controllers\WebV1\AccountControllerExt@showPDFAsOf')
         ->where('as_of', $asOfRegex);
     Route::get('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@rebalance')
+        ->middleware('fund.full')
         ->name('tradePortfolios.rebalance');
     Route::post('tradePortfolios/{id}/rebalance', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doRebalance')
+        ->middleware('fund.full')
         ->name('tradePortfolios.doRebalance');
     Route::get('tradePortfolios/{id}/show_diff', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showDiff')
+        ->middleware('fund.full')
         ->name('tradePortfolios.show_diff');
     Route::get('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')
+        ->middleware('fund.full')
         ->name('tradePortfolios.announce');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
+        ->middleware('fund.full')
         ->name('tradePortfolios.showRebalance');
     Route::get('portfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\PortfolioControllerExt@showRebalance')
+        ->middleware('fund.full')
         ->name('portfolios.showRebalance');
     Route::get('portfolios/{id}/rebalance_pdf/{start}/{end}', 'App\Http\Controllers\WebV1\PortfolioControllerExt@showRebalancePDF')
+        ->middleware('fund.full')
         ->name('portfolios.showRebalancePDF');
     Route::get('tradePortfoliosItems/createWithParams', 'App\Http\Controllers\WebV1\TradePortfolioItemControllerExt@createWithParams')
+        ->middleware('fund.full')
         ->name('tradePortfoliosItems.createWithParams');
     Route::post('transactions/preview', 'App\Http\Controllers\WebV1\TransactionControllerExt@preview')
         ->name('transactions.preview');
@@ -136,20 +144,28 @@ Route::middleware('auth')->group(function () {
     Route::get('transactions/{id}/resend-email', 'App\Http\Controllers\WebV1\TransactionControllerExt@resendEmail')
         ->name('transactions.resend-email');
     Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkCreate')
+        ->middleware('fund.full')
         ->name('accountMatchingRules.create_bulk');
     Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkStore')
+        ->middleware('fund.full')
         ->name('accountMatchingRules.store_bulk');
     Route::get('accountMatchingRules/{id}/resend-email', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@resendEmail')
+        ->middleware('fund.full')
         ->name('accountMatchingRules.resend-email');
     Route::get('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@assign')
+        ->middleware('fund.full')
         ->name('cashDeposits.assign');
     Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
+            ->middleware('fund.full')
             ->name('cashDeposits.do_assign');
     Route::get('cashDeposits/{id}/resend-email', 'App\Http\Controllers\WebV1\CashDepositControllerExt@resendEmail')
+        ->middleware('fund.full')
         ->name('cashDeposits.resend-email');
     Route::get('tradePortfolios/{id}/preview_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@previewCashDeposits')
+        ->middleware('fund.full')
         ->name('tradePortfolios.preview_deposits');
     Route::post('tradePortfolios/{id}/do_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@doCashDeposits')
+        ->middleware('fund.full')
         ->name('tradePortfolios.do_deposits');
     Route::get('scheduledJobs/{id}/preview/{asOf}', 'App\Http\Controllers\WebV1\ScheduledJobControllerExt@previewScheduledJob')
         ->middleware('fund.full')
@@ -200,41 +216,60 @@ Route::middleware('auth')->group(function () {
     Route::get('emails/{filename}', 'App\Http\Controllers\WebV1\EmailController@show')
         ->name('emails.show');
 
-    Route::resource('accountBalances', App\Http\Controllers\WebV1\AccountBalanceControllerExt::class);
-    Route::resource('accountGoals', App\Http\Controllers\WebV1\AccountGoalControllerExt::class);
-    Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class);
-    Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class);
+    Route::resource('accountBalances', App\Http\Controllers\WebV1\AccountBalanceControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('accountGoals', App\Http\Controllers\WebV1\AccountGoalControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('accountMatchingRules', App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('accountReports', App\Http\Controllers\WebV1\AccountReportControllerExt::class)
+        ->middleware('fund.full');
     Route::resource('accounts', App\Http\Controllers\WebV1\AccountControllerExt::class);
-    Route::resource('addresses', App\Http\Controllers\Web\AddressController::class);
-    Route::resource('assetChangeLogs', App\Http\Controllers\Web\AssetChangeLogController::class);
+    Route::resource('addresses', App\Http\Controllers\Web\AddressController::class)
+        ->middleware('fund.full');
+    Route::resource('assetChangeLogs', App\Http\Controllers\Web\AssetChangeLogController::class)
+        ->middleware('fund.full');
     Route::resource('assetPrices', App\Http\Controllers\WebV1\AssetPriceControllerExt::class)
         ->middleware('fund.full');
     Route::resource('assets', App\Http\Controllers\Web\AssetController::class)
         ->middleware('fund.full');
-    Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class);
-    Route::resource('changeLogs', App\Http\Controllers\Web\ChangeLogController::class);
-    Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class);
+    Route::resource('cashDeposits', App\Http\Controllers\WebV1\CashDepositControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('changeLogs', App\Http\Controllers\Web\ChangeLogController::class)
+        ->middleware('fund.full');
+    Route::resource('depositRequests', App\Http\Controllers\WebV1\DepositRequestControllerExt::class)
+        ->middleware('fund.full');
     Route::post('fundReports/{id}/resend', 'App\Http\Controllers\WebV1\FundReportControllerExt@resend')
+        ->middleware('fund.full')
         ->name('fundReports.resend');
-    Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class);
+    Route::resource('fundReports', App\Http\Controllers\WebV1\FundReportControllerExt::class)
+        ->middleware('fund.full');
     Route::get('funds/create-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@createWithSetup')
         ->name('funds.createWithSetup');
     Route::post('funds/store-with-setup', 'App\Http\Controllers\WebV1\FundControllerExt@storeWithSetup')
         ->name('funds.storeWithSetup');
     Route::resource('funds', App\Http\Controllers\WebV1\FundControllerExt::class);
-    Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class);
-    Route::resource('id_documents', App\Http\Controllers\Web\IdDocumentController::class);
+    Route::resource('goals', App\Http\Controllers\WebV1\GoalControllerExt::class)
+        ->middleware('fund.full');
+    Route::resource('id_documents', App\Http\Controllers\Web\IdDocumentController::class)
+        ->middleware('fund.full');
     Route::get('matchingRules/{id}/clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@clone')
+        ->middleware('fund.full')
         ->name('matchingRules.clone');
     Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
+        ->middleware('fund.full')
         ->name('matchingRules.store_clone');
     Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
+        ->middleware('fund.full')
         ->name('matchingRules.send-all-emails');
     Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class)
         ->middleware('fund.full');
-    Route::resource('people', App\Http\Controllers\Web\PersonController::class);
-    Route::resource('persons', App\Http\Controllers\Web\PersonController::class);
-    Route::resource('phones', App\Http\Controllers\Web\PhoneController::class);
+    Route::resource('people', App\Http\Controllers\Web\PersonController::class)
+        ->middleware('fund.full');
+    Route::resource('persons', App\Http\Controllers\Web\PersonController::class)
+        ->middleware('fund.full');
+    Route::resource('phones', App\Http\Controllers\Web\PhoneController::class)
+        ->middleware('fund.full');
     Route::resource('portfolioAssets', App\Http\Controllers\WebV1\PortfolioAssetControllerExt::class)
         ->middleware('fund.full');
     Route::resource('portfolios', App\Http\Controllers\Web\PortfolioController::class)
@@ -244,10 +279,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('schedules', App\Http\Controllers\Web\ScheduleController::class)
         ->middleware('fund.full');
     Route::get('tradeBandReports/{id}/view-pdf', 'App\Http\Controllers\Web\TradeBandReportController@viewPdf')
+        ->middleware('fund.full')
         ->name('tradeBandReports.viewPdf');
     Route::post('tradeBandReports/{id}/resend', 'App\Http\Controllers\Web\TradeBandReportController@resend')
+        ->middleware('fund.full')
         ->name('tradeBandReports.resend');
-    Route::resource('tradeBandReports', App\Http\Controllers\Web\TradeBandReportController::class);
+    Route::resource('tradeBandReports', App\Http\Controllers\Web\TradeBandReportController::class)
+        ->middleware('fund.full');
     Route::resource('tradePortfolioItems', App\Http\Controllers\WebV1\TradePortfolioItemControllerExt::class)
         ->middleware('fund.full');
     Route::resource('tradePortfolios', App\Http\Controllers\WebV1\TradePortfolioControllerExt::class)
@@ -255,9 +293,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('transactionMatchings', App\Http\Controllers\Web\TransactionMatchingController::class)
         ->middleware('fund.full');
     Route::resource('transactions', App\Http\Controllers\WebV1\TransactionControllerExt::class);
-    Route::resource('users', App\Http\Controllers\Web\UserController::class);
+    Route::resource('users', App\Http\Controllers\Web\UserController::class)
+        ->middleware('fund.full');
 
     Route::get('tradePortfolios/create', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@createWithParams')
+        ->middleware('fund.full')
         ->name('tradePortfolios.create');
 
     Route::get('/change-password', [App\Http\Controllers\HomeController::class, 'changePassword'])->name('change-password');

@@ -198,7 +198,12 @@ class TestFixtures
         ];
     }
 
-    private static function makeSystemAdmin(User $user): void
+    /**
+     * Grant the user the global system-admin role (fund_id=0). Public so
+     * controller coverage tests can elevate their acting user past the
+     * `fund.full` middleware / admin-only controller checks.
+     */
+    public static function makeSystemAdmin(User $user): void
     {
         $role = Role::firstOrCreate([
             'name' => 'system-admin',

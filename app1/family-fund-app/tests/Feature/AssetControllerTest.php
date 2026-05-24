@@ -21,6 +21,7 @@ class AssetControllerTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
     }
 
     protected function tearDown(): void

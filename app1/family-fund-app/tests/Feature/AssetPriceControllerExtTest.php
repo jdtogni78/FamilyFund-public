@@ -34,6 +34,7 @@ class AssetPriceControllerExtTest extends TestCase
         $this->df->createUser();
 
         $this->user = $this->df->user;
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
         $this->fund = $this->df->fund;
 
         // Create an asset and some prices

@@ -31,6 +31,7 @@ class AccountMatchingRuleControllerTest extends TestCase
         $this->df->createFund();
         $this->df->createUser();
         $this->user = $this->df->user;
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
 
         Mail::fake();
     }

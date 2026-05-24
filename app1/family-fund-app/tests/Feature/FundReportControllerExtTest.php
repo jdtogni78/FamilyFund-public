@@ -23,6 +23,7 @@ class FundReportControllerExtTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
         $this->fund = Fund::factory()->create();
     }
 

@@ -69,7 +69,7 @@ class OutstandingCalculator
      *   available($asOf) = OWN_balance($asOf) − BOR_aggregate_balance($asOf)
      *
      * Both sides are read from the `account_balances` ledger, so both reflect
-     * the historical state at $asOf. (QA_BUGS_2026-05-21 #15: an earlier
+     * the historical state at $asOf. (QA-2026-05-21 #15: an earlier
      * version subtracted the *current* SUM(outstanding_shares) of active CLs
      * from OWN-at-$asOf, which goes negative for any $asOf predating a
      * still-active CL.)
@@ -148,7 +148,7 @@ class OutstandingCalculator
             // No outstanding — close the BOR row if it exists.
             //
             // Wave-2 used to delete same-day rows ("zero-length, no value"),
-            // but QA_BUGS_2026-05-20 #5 noted that this erased the audit
+            // but QA-2026-05-20 #5 noted that this erased the audit
             // trail "this account was borrowed against on this date". The
             // row is now kept as a zero-length closed record: invisible to
             // asOf reads (start_dt<=now AND end_dt>now excludes it on

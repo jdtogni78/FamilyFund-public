@@ -305,7 +305,7 @@ class RepayService implements ScheduleAdvancer
      * Reject repayments dated outside [origination_date, today]: backdated
      * REPs corrupt the account_balances chain (out-of-order rows), future-
      * dated REPs create phantom balance rows that become the active row at
-     * that future date. See QA_BUGS_2026-05-20 #2.
+     * that future date. See QA-2026-05-20 #2.
      */
     private function assertDateInRepayWindow(AccountCreditLine $line, Carbon $date): void
     {

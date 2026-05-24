@@ -5,7 +5,7 @@
         : \Carbon\Carbon::today()->toDateString();
 
     // Lines that existed at $asOf — an as-of view dated before the CL must not
-    // render the CL (QA_BUGS_2026-05-21 #16).
+    // render the CL (QA-2026-05-21 #16).
     $lines = \App\Models\AccountCreditLine::where('account_id', $account->id)
         ->whereDate('origination_date', '<=', $asOf)
         ->orderByDesc('id')

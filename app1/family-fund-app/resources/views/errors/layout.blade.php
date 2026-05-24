@@ -2,7 +2,7 @@
     Shared chrome for 403 / 404 / 500 pages. Wrap the message in
     x-app-layout so the user keeps the dashboard nav + a Back to dashboard
     CTA, avoiding the bare-stub error pages that left users stranded
-    (QA_BUGS_2026-05-19 #8).
+    (QA-2026-05-19 #8).
 --}}
 <x-app-layout>
     <ol class="breadcrumb">

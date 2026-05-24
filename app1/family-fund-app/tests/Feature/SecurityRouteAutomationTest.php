@@ -47,7 +47,7 @@ class SecurityRouteAutomationTest extends TestCase
     /**
      * Temporary baseline for current unauthenticated API read routes.
      *
-     * These routes include known security findings in SECURITY_PENTEST_FINDINGS.md.
+     * These routes include known security findings from the 2026-05 pentest (doc removed; see git history; tickets #49/#13).
      * New public API reads must not be added silently.
      */
     private const TEMPORARY_UNAUTHENTICATED_API_READ_ALLOWLIST = [];

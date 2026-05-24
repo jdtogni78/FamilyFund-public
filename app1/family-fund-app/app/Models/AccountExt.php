@@ -215,7 +215,7 @@ class AccountExt extends Account
         // BOR/REP transactions carry value=0 (no cash flow) but the BOR offset
         // depresses valueAsOf() — so including them creates spurious negative
         // returns at every draw and repay. Exclude them from the series and
-        // use the gross OWN value at each endpoint (QA_BUGS_2026-05-21 #17).
+        // use the gross OWN value at each endpoint (QA-2026-05-21 #17).
         $trans = $this->transactions()
             ->select('timestamp', DB::raw('sum(value) as value'))
             ->whereDate('timestamp', '>=', $from)

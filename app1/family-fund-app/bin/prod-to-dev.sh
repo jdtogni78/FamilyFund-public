@@ -2,8 +2,8 @@
 # Restore a fresh dev DB from a prod dump:
 #   1. Anonymize (database/prod_to_dev.sql).
 #   2. Run pending migrations (e.g. credit-line allocation backfill —
-#      QA_BUGS_2026-05-19 #2).
-#   3. Seed permissions + QA test users (QA_BUGS_2026-05-19 #5 / #14).
+#      QA-2026-05-19 #2).
+#   3. Seed permissions + QA test users (QA-2026-05-19 #5 / #14).
 #
 # Usage (from any directory; the FF container must be running):
 #   app1/family-fund-app/bin/prod-to-dev.sh

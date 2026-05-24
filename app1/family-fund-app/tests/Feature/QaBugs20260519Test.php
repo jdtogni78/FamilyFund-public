@@ -13,7 +13,7 @@ use Tests\DataFactory;
 use Tests\TestCase;
 
 /**
- * Regression coverage for the open items in docs/QA_BUGS_2026-05-19.md.
+ * Regression coverage for the open items from the QA-2026-05-19 bug pass (log removed; see git history).
  *
  * One test per bug number; each one asserts the post-fix behavior so the
  * file as a whole serves as the reproducer and the guard against regression.

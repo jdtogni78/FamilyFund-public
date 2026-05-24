@@ -301,7 +301,7 @@ class RepayServiceTest extends TestCase
         // Attempt to repay 25 against a line that only has 10 outstanding.
         // Rejected: REP > outstanding would leave a BOR/REP mismatch (the
         // excess "repaid" shares would disappear from the borrow ledger
-        // without returning to OWN). See QA_BUGS_2026-05-20 #1.
+        // without returning to OWN). See QA-2026-05-20 #1.
         try {
             $this->repayService->repay($line, 25.0);
             $this->fail('Expected InvalidArgumentException for overpayment.');

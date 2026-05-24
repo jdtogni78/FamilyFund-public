@@ -16,7 +16,7 @@ use Tests\DataFactory;
 use Tests\TestCase;
 
 /**
- * Regression coverage for the open items in docs/QA_BUGS_2026-05-20.md.
+ * Regression coverage for the open items from the QA-2026-05-20 bug pass (log removed; see git history).
  *
  * Each test asserts the POST-FIX correct behavior and is expected to FAIL
  * against the branch HEAD as of 2026-05-20 (41a158d1) — the failures are

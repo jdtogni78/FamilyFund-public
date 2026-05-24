@@ -169,7 +169,7 @@ class CreditLineMessyHistoryTest extends TestCase
     }
 
     /**
-     * Regression for QA_BUGS_2026-05-20 #1: POST overpayment is rejected and
+     * Regression for QA-2026-05-20 #1: POST overpayment is rejected and
      * leaves the line + BOR ledger untouched, so REP-shares never exceed
      * BOR-shares on the line.
      */

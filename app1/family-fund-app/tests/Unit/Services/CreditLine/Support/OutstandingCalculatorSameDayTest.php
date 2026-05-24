@@ -121,7 +121,7 @@ class OutstandingCalculatorSameDayTest extends TestCase
         $open = $borRows->filter(fn ($r) => $r->end_dt && $r->end_dt->toDateString() === '9999-12-31')->values();
         $this->assertCount(0, $open, 'No open BOR row should remain when same-day full repay clears outstanding.');
 
-        // QA_BUGS_2026-05-20 #5: same-day BOR→full REP previously deleted the
+        // QA-2026-05-20 #5: same-day BOR→full REP previously deleted the
         // BOR row entirely (wave-2 "zero-length cleanup"), erasing the audit
         // trail. The row is now kept as a zero-length closed record so the
         // event "this account was borrowed against on this date" stays
@@ -134,7 +134,7 @@ class OutstandingCalculatorSameDayTest extends TestCase
     }
 
     /**
-     * QA_BUGS_2026-05-20 #2: a REP dated before the line's origination_date
+     * QA-2026-05-20 #2: a REP dated before the line's origination_date
      * is now rejected at the service layer — it would otherwise produce an
      * out-of-order account_balances chain. The OutstandingCalculator's
      * clamp-forward logic still protects direct (non-service) transaction

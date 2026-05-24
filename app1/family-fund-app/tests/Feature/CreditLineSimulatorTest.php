@@ -114,6 +114,74 @@ class CreditLineSimulatorTest extends TestCase
         $response->assertSee('Aggressive', false);
     }
 
+    public function test_simulator_accepts_expected_rate_override_and_rescales_bands(): void
+    {
+        // Overriding only the expected rate re-scales the bands via ×0.8/×1.2:
+        // expected=12 → conservative=9.60, aggressive=14.40.
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id])
+            . '?monthly_payment_usd=50&rate_expected=12'
+        );
+
+        $response->assertOk();
+        $response->assertSee('Scenario summary', false);
+        $response->assertSee('12.00%', false);
+        $response->assertSee('9.60%', false);
+        $response->assertSee('14.40%', false);
+    }
+
+    public function test_simulator_accepts_full_per_scenario_rate_overrides(): void
+    {
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id])
+            . '?monthly_payment_usd=50&rate_conservative=3&rate_expected=6&rate_aggressive=9'
+        );
+
+        $response->assertOk();
+        $response->assertSee('Scenario summary', false);
+        $response->assertSee('3.00%', false);
+        $response->assertSee('6.00%', false);
+        $response->assertSee('9.00%', false);
+    }
+
+    public function test_simulator_rejects_non_numeric_rate(): void
+    {
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id])
+            . '?monthly_payment_usd=50&rate_expected=abc'
+        );
+
+        $response->assertOk();
+        $response->assertSee('rate_expected must be a number', false);
+        $response->assertDontSee('Scenario summary', false);
+    }
+
+    public function test_simulator_rejects_out_of_range_rate(): void
+    {
+        // rate <= -100 makes the monthly growth factor undefined; rejected.
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id])
+            . '?monthly_payment_usd=50&rate_conservative=-100'
+        );
+
+        $response->assertOk();
+        $response->assertSee('rate_conservative must be greater than', false);
+        $response->assertDontSee('Scenario summary', false);
+    }
+
+    public function test_simulator_time_mode_honours_rate_override(): void
+    {
+        $response = $this->actingAs($this->admin)->get(
+            route('credit_lines.simulator', ['line' => $this->line->id])
+            . '?mode=time&target_months=12&rate_expected=6'
+        );
+
+        $response->assertOk();
+        $response->assertSee('Scenario summary', false);
+        $response->assertSee('Required monthly payment', false);
+        $response->assertSee('6.00%', false);
+    }
+
     public function test_simulator_shows_error_on_invalid_payment(): void
     {
         // A non-positive payment is rejected by the simulator; the page still

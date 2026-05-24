@@ -923,14 +923,22 @@ class AccountCreditLineController extends AppBaseController
         $solvedPayments = [];
         $error = null;
 
-        if ($mode === 'time') {
+        // Optional growth-rate overrides. When omitted, the simulator falls
+        // back to the account's fund expected growth rate (the same rate the
+        // account and fund forecasts use) with the ×0.8/×1.2 bands.
+        [$rateOverrides, $rateInputs, $rateError] = $this->parseRateOverrides($request);
+        if ($rateError !== null) {
+            $error = $rateError;
+        }
+
+        if ($error === null && $mode === 'time') {
             if ($targetMonths !== null && $targetMonths !== '') {
                 $targetMonths = (int) $targetMonths;
                 if ($targetMonths < 1 || $targetMonths > 600) {
                     $error = 'target_months must be between 1 and 600';
                 } else {
                     try {
-                        $all = $simulator->solveForPaymentAllScenarios($line, $targetMonths);
+                        $all = $simulator->solveForPaymentAllScenarios($line, $targetMonths, $rateOverrides);
                         foreach ($all as $k => $row) {
                             $results[$k] = $row['result'];
                             $solvedPayments[$k] = $row['payment'];
@@ -942,11 +950,11 @@ class AccountCreditLineController extends AppBaseController
             } else {
                 $targetMonths = null;
             }
-        } else {
+        } elseif ($error === null) {
             if ($monthlyPaymentUsd !== null && $monthlyPaymentUsd !== '') {
                 $monthlyPaymentUsd = (float) $monthlyPaymentUsd;
                 try {
-                    $results = $simulator->simulateAllScenarios($line, $monthlyPaymentUsd);
+                    $results = $simulator->simulateAllScenarios($line, $monthlyPaymentUsd, $rateOverrides);
                 } catch (InvalidArgumentException $e) {
                     $error = $e->getMessage();
                 }
@@ -954,6 +962,12 @@ class AccountCreditLineController extends AppBaseController
                 $monthlyPaymentUsd = null;
             }
         }
+
+        // Rates the simulator would use (defaults + any valid overrides) so the
+        // form can show them as placeholders, plus the pure fund-forecast
+        // defaults for the help text.
+        $resolvedRates = $simulator->resolveRates($line, $rateError === null ? $rateOverrides : null);
+        $defaultRates = $simulator->resolveRates($line, null);
 
         return view('account_credit_lines.simulator')
             ->with('line', $line)
@@ -964,6 +978,47 @@ class AccountCreditLineController extends AppBaseController
             ->with('targetMonths', is_numeric($targetMonths) ? (int) $targetMonths : null)
             ->with('results', $results)
             ->with('solvedPayments', $solvedPayments)
+            ->with('rateInputs', $rateInputs)
+            ->with('resolvedRates', $resolvedRates)
+            ->with('defaultRates', $defaultRates)
             ->with('simError', $error);
+    }
+
+    /**
+     * Parse optional per-scenario growth-rate overrides from the request.
+     *
+     * Reads `rate_conservative` / `rate_expected` / `rate_aggressive` query
+     * params (annual percentages). Each must be numeric and in the open range
+     * (-100, 1000]; -100 is excluded because (rate/100 + 1) would be <= 0 and
+     * the monthly growth factor (that base raised to 1/12) would be undefined.
+     *
+     * @return array{0: array<string,float>|null, 1: array<string,string>, 2: string|null}
+     *   [overrides-or-null for the simulator, raw inputs to re-fill the form, error-or-null]
+     */
+    private function parseRateOverrides(Request $request): array
+    {
+        $overrides = [];
+        $inputs = [];
+        $error = null;
+
+        foreach (['conservative', 'expected', 'aggressive'] as $key) {
+            $raw = $request->query('rate_' . $key);
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+            $inputs[$key] = (string) $raw;
+            if (!is_numeric($raw)) {
+                $error = "rate_$key must be a number";
+                break;
+            }
+            $val = (float) $raw;
+            if ($val <= -100 || $val > 1000) {
+                $error = "rate_$key must be greater than -100 and at most 1000";
+                break;
+            }
+            $overrides[$key] = $val;
+        }
+
+        return [$overrides === [] ? null : $overrides, $inputs, $error];
     }
 }

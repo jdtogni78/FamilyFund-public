@@ -31,20 +31,47 @@
     </div>
 
     @if($line->status === 'active')
-    <div class="card mb-3">
-        <div class="card-header"><strong>Repay / Readjust / Cancel</strong></div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <form method="POST" action="{{ route('credit_lines.repay', ['line' => $line->id]) }}">
-                        @csrf
-                        <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
-                        <label class="form-label">Repay (shares)</label>
-                        <input type="number" step="0.0001" name="shares" required class="form-control mb-2">
-                        <button type="submit" class="btn btn-success btn-sm">Record repayment</button>
-                    </form>
+    <div class="row">
+        {{-- Register payment — no inline form here. Opens the dedicated
+             create-payment page (settlement date + shares; overpayment cascades
+             to later rows). That page is per schedule row, so we target the next
+             open installment (earliest scheduled/partial/late row); when the
+             schedule is fully settled there is nothing to register. --}}
+        @php
+            $nextOpenRow = $schedule->first(fn ($r) => in_array($r->status, [
+                \App\Models\CreditLinePayment::STATUS_SCHEDULED,
+                \App\Models\CreditLinePayment::STATUS_PARTIAL,
+                \App\Models\CreditLinePayment::STATUS_LATE,
+            ], true));
+        @endphp
+        <div class="col-md-4">
+            <div class="card mb-3 h-100">
+                <div class="card-header"><strong>Register payment</strong></div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted small flex-grow-1 mb-3">
+                        Opens the payment page for the next open installment, where you
+                        set the settlement date and shares paid. Overpayment cascades
+                        to later open rows.
+                    </p>
+                    @if($nextOpenRow)
+                        <a href="{{ route('credit_lines.payments.register_form', ['line' => $line->id, 'payment' => $nextOpenRow->id]) }}"
+                           class="btn btn-success btn-sm align-self-start">
+                            <i class="fa fa-money-bill me-1"></i>Register payment
+                        </a>
+                    @else
+                        <span class="text-muted small align-self-start">
+                            <i class="fa fa-circle-check me-1"></i>No open installments to settle.
+                        </span>
+                    @endif
                 </div>
-                <div class="col-md-4">
+            </div>
+        </div>
+
+        {{-- Readjust — its own section with the form. --}}
+        <div class="col-md-4">
+            <div class="card mb-3 h-100">
+                <div class="card-header"><strong>Readjust loan</strong></div>
+                <div class="card-body">
                     <form method="POST" action="{{ route('credit_lines.readjust', ['line' => $line->id]) }}">
                         @csrf
                         <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
@@ -71,14 +98,24 @@
                         <button type="submit" class="btn btn-warning btn-sm">Readjust</button>
                     </form>
                 </div>
-                <div class="col-md-4">
+            </div>
+        </div>
+
+        {{-- Delete — button only, behaviour unchanged. --}}
+        <div class="col-md-4">
+            <div class="card mb-3 h-100 border-danger">
+                <div class="card-header text-danger"><strong>Danger zone</strong></div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted small flex-grow-1 mb-3">
+                        Cancelling closes this loan share. Prior schedule rows are
+                        kept (cancelled) for history.
+                    </p>
                     <form method="POST"
                           action="{{ route('credit_lines.cancel', ['line' => $line->id]) }}"
                           onsubmit="return confirm('Cancel this loan share?');">
                         @csrf
                         <input type="hidden" name="account_credit_line_id" value="{{ $line->id }}">
-                        <label class="form-label">Danger zone</label>
-                        <button type="submit" class="btn btn-danger btn-sm d-block">Cancel line</button>
+                        <button type="submit" class="btn btn-danger btn-sm align-self-start d-block">Cancel line</button>
                     </form>
                 </div>
             </div>

@@ -88,20 +88,33 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
     // REPAY validations
     // ---------------------------------------------------------------
 
+    /**
+     * The repay form now lives only in the show-page "Make payment" modal — the
+     * old /actions repay form was replaced by a button when payment moved out of
+     * the admin-actions page. Open that modal and disable HTML5 validation so the
+     * server-side rules under test actually run. Repay POSTs redirect to the show
+     * page on both validation failure (errors bag) and the overpayment guard
+     * (flash), so the messages are visible there afterwards.
+     */
+    private function openRepayModal(Browser $browser, int $lineId): void
+    {
+        $browser->visit('/credit-lines/' . $lineId)
+            ->waitFor('button[data-bs-target="#makePaymentModal"]', 5)
+            ->press('Make payment')
+            ->waitFor('#makePaymentModal.show', 5)
+            ->pause(400);
+        $browser->script("var f=document.querySelector('#makePaymentModal form[action\$=\"/repay\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
+    }
+
     public function test_repay_with_zero_shares_is_rejected(): void
     {
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'repay-zero validation');
 
-            // Repay/readjust forms live on the /actions sub-page (the show page
-            // exposes repay via a modal). /actions renders the errors bag, so
-            // server-side validation messages are visible here.
-            $browser->visit('/credit-lines/' . $lineId . '/actions')
-                ->waitFor('form[action$="/repay"]', 5);
-            $browser->script("var f=document.querySelector('form[action\$=\"/repay\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
+            $this->openRepayModal($browser, $lineId);
 
-            $browser->type('form[action$="/repay"] input[name="shares"]', '0')
-                ->press('Record repayment')
+            $browser->type('#makePaymentModal input[name="shares"]', '0')
+                ->press('Record payment')
                 ->pause(800)
                 ->screenshot('repay-readjust-validation/repay_zero');
 
@@ -115,12 +128,10 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 30.0, 6, 'repay-negative validation');
 
-            $browser->visit('/credit-lines/' . $lineId . '/actions')
-                ->waitFor('form[action$="/repay"]', 5);
-            $browser->script("var f=document.querySelector('form[action\$=\"/repay\"]'); if(f){f.setAttribute('novalidate','novalidate');}");
+            $this->openRepayModal($browser, $lineId);
 
-            $browser->type('form[action$="/repay"] input[name="shares"]', '-5')
-                ->press('Record repayment')
+            $browser->type('#makePaymentModal input[name="shares"]', '-5')
+                ->press('Record payment')
                 ->pause(800)
                 ->screenshot('repay-readjust-validation/repay_negative');
 
@@ -143,14 +154,13 @@ class CreditLineRepayReadjustValidationTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $lineId = $this->openLineViaUi($browser, 5.0, 6, 'repay-overpay validation');
 
-            $browser->visit('/credit-lines/' . $lineId . '/actions')
-                ->waitFor('form[action$="/repay"]', 5);
-
             // Try to repay 50 against an outstanding of ~5. RepayService now
             // hard-rejects overpayment (QA bug #1 fix); the controller flashes
             // the error and redirects to the show page.
-            $browser->type('form[action$="/repay"] input[name="shares"]', '50')
-                ->press('Record repayment')
+            $this->openRepayModal($browser, $lineId);
+
+            $browser->type('#makePaymentModal input[name="shares"]', '50')
+                ->press('Record payment')
                 ->pause(1200)
                 ->screenshot('repay-readjust-validation/repay_over_outstanding');
 

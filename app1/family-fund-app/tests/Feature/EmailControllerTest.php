@@ -47,6 +47,9 @@ class EmailControllerTest extends TestCase
                 putenv('ADMIN_EMAILS=' . $adminEmail);
             }
         }
+        // EmailController gates on OperationsController::isAdmin(), which now
+        // requires the system-admin role rather than user id 1.
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->adminUser);
 
         // Create regular user (not admin)
         $this->regularUser = $this->df->user;

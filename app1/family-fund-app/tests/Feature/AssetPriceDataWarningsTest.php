@@ -26,6 +26,7 @@ class AssetPriceDataWarningsTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
         $this->asset = Asset::factory()->create(['name' => 'TEST']);
 
         Carbon::setTestNow('2026-01-20 16:00:00'); // Tuesday

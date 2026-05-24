@@ -6,6 +6,7 @@ use App\Http\Controllers\WebV1\OperationsController;
 use App\Models\OperationLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\DataFactory;
 use Tests\TestCase;
@@ -30,14 +31,11 @@ class OperationsControllerTest extends TestCase
         $this->df->createFund();
         $this->df->createUser();
 
-        // Create admin user - either use existing user ID 1 or create with admin email
-        $userOne = User::find(1);
-        if ($userOne) {
-            $this->adminUser = $userOne;
-        } else {
-            // Create user with email from ADMIN_EMAILS env (default: admin@dev.familyfund.local)
-            $this->adminUser = User::factory()->create(['email' => 'admin@dev.familyfund.local']);
-        }
+        // Create user with email from ADMIN_EMAILS env (default: admin@dev.familyfund.local)
+        $this->adminUser = User::firstOrCreate(
+            ['email' => 'admin@dev.familyfund.local'],
+            ['name' => 'Operations Admin', 'password' => bcrypt('password')]
+        );
 
         // Create regular user (not admin)
         $this->regularUser = $this->df->user;
@@ -66,6 +64,23 @@ class OperationsControllerTest extends TestCase
     {
         // Regular user should be redirected with error
         $response = $this->actingAs($this->regularUser)->get('/operations');
+        $response->assertRedirect('/');
+        $response->assertSessionHas('flash_notification');
+    }
+
+    public function test_user_id_one_is_not_implicitly_operations_admin()
+    {
+        $userOne = User::find(1);
+
+        if (! $userOne) {
+            $userOne = User::factory()->create(['id' => 1]);
+        }
+
+        $userOne->email = 'regular-id-one@test.local';
+        $userOne->save();
+        DB::table('model_has_roles')->where('model_id', $userOne->id)->delete();
+
+        $response = $this->actingAs($userOne)->get('/operations');
         $response->assertRedirect('/');
         $response->assertSessionHas('flash_notification');
     }

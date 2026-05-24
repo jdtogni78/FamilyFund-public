@@ -33,6 +33,7 @@ class ScheduledJobControllerExtTest extends TestCase
         $this->df->createUser();
 
         $this->user = $this->df->user;
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
 
         // Get or create a schedule (use existing or create basic one)
         $this->schedule = Schedule::first();

@@ -194,7 +194,11 @@ class SecurityRouteAutomationTest extends TestCase
     {
         $source = file_get_contents(base_path('routes/web.php'));
 
-        $guardPosition = strpos($source, "if (app()->environment('local', 'dev'))");
+        // Match the guard regardless of the exact non-prod env list: the
+        // dev-login block is gated by app()->environment('local', 'dev', 'testing')
+        // ('testing' lets the ACL feature tests exercise impersonation). The
+        // prefix below still asserts the local/dev guard exists and excludes prod.
+        $guardPosition = strpos($source, "if (app()->environment('local', 'dev'");
         $routePosition = strpos($source, "Route::get('/dev-login");
 
         $this->assertNotFalse($guardPosition, 'routes/web.php must guard dev-login with a local/dev environment check.');

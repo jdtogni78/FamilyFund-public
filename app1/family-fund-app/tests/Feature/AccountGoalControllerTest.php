@@ -28,6 +28,7 @@ class AccountGoalControllerTest extends TestCase
         $this->df->createFund();
         $this->df->createUser();
         $this->user = $this->df->user;
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
     }
 
     protected function tearDown(): void

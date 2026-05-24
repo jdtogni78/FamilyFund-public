@@ -11,9 +11,38 @@ use Laravel\Sanctum\Sanctum;
 use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
+/**
+ * API ACL matrix.
+ *
+ * Account API access is covered in depth below (object-level authorization is
+ * enforced by AccountAPIController). The remaining generated resource
+ * controllers (funds, transactions, account/fund reports, users, people, id
+ * documents) are currently only protected by the `auth:sanctum` route lock and
+ * do NOT yet enforce object-level / tenant scoping — see issue #49 (item A).
+ * Until that lands, the cross-resource coverage here asserts the one boundary
+ * that IS enforced for every resource: unauthenticated requests are rejected.
+ * The per-role / response-body cross-tenant assertions for those resources
+ * should be added alongside the scoping fixes in #49.
+ */
 class SecurityApiAclMatrixTest extends TestCase
 {
     use DatabaseTransactions;
+
+    /**
+     * Generated API resources whose index + detail GET routes must reject
+     * unauthenticated callers. `auth:sanctum` runs before route-model binding,
+     * so a placeholder id exercises the auth boundary without seeded rows.
+     */
+    private const AUTH_REQUIRED_RESOURCES = [
+        'accounts',
+        'funds',
+        'transactions',
+        'account_reports',
+        'fund_reports',
+        'users',
+        'people',
+        'id_documents',
+    ];
 
     private User $beneficiary;
     private User $fundAdmin;
@@ -124,6 +153,34 @@ class SecurityApiAclMatrixTest extends TestCase
         $response->assertSee($this->siblingAccount->code, false);
         $response->assertDontSee($this->crossFundAccount->code, false);
         $response->assertDontSee($this->crossFundAccount->nickname, false);
+    }
+
+    /**
+     * Every generated resource API (index + detail) must reject unauthenticated
+     * callers. This is the cross-resource expansion of the account-only matrix:
+     * it is the strongest invariant that holds for all resources today, and it
+     * trips if any future resource route escapes the `auth:sanctum` lock.
+     */
+    public function test_target_api_resources_require_authentication(): void
+    {
+        foreach (self::AUTH_REQUIRED_RESOURCES as $resource) {
+            foreach (["/api/{$resource}", "/api/{$resource}/1"] as $url) {
+                $this->resetAuth();
+
+                $response = $this->getJson($url);
+
+                $this->assertSame(
+                    401,
+                    $response->getStatusCode(),
+                    "Unauthenticated GET {$url} must be rejected (401), got {$response->getStatusCode()}."
+                );
+                $this->assertStringNotContainsString(
+                    '"success":true',
+                    $response->getContent(),
+                    "Unauthenticated GET {$url} returned a success payload."
+                );
+            }
+        }
     }
 
     private function resetAuth(): void

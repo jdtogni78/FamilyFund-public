@@ -13,8 +13,14 @@
    - Remove side-effect `GET` routes from `TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST` after converting them to POST/CSRF-protected actions.
 
 3. Expand API ACL matrix coverage beyond accounts.
-   - Add funds, transactions, reports, users, people, and id documents after their controllers get policy/scoped-query enforcement.
-   - Record both status code and absence of cross-tenant identifiers in response bodies.
+   - DONE (#44): `SecurityApiAclMatrixTest` now asserts the unauthenticated→401
+     boundary for funds, transactions, account/fund reports, users, people, and
+     id documents (index + detail) — the invariant that holds for every resource
+     today.
+   - TODO (#49, item A): once those controllers get policy/scoped-query
+     enforcement, add their full role→status matrix and assert the absence of
+     cross-tenant identifiers in response bodies (deferred because 7 of 8
+     controllers have no object-level scoping yet).
 
 4. Tighten CSRF route automation after side-effect GET cleanup.
    - `SecurityCsrfRouteAutomationTest` now verifies web mutation routes stay in the web middleware group, business web mutations require auth, and no project-level CSRF exemptions are configured.

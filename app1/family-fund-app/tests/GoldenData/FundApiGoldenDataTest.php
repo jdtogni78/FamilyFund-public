@@ -14,6 +14,7 @@ use PHPUnit\Framework\Attributes\Test;
 class FundApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
     use TimestampTestTrait;
 
     protected function setUp(): void
@@ -191,7 +192,14 @@ class FundApiGoldenDataTest extends TestCase
     #[Test]
     public function test_fund_balances_as_of()
     {
-        $this->loginWithFakeUser();
+        // Fund balance detail is admin-only. Authenticate as a real system admin
+        // whose email is also in the legacy isAdmin() allowlist, so both the
+        // object-level access guard (#13/#49) and the admin-detail flag pass.
+        $admin = \App\Models\User::firstWhere('email', 'admin@dev.familyfund.local')
+            ?? \App\Models\User::factory()->create(['email' => 'admin@dev.familyfund.local']);
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($admin);
+        $this->actingAs($admin);
+
         // Test fund 2 balances at various dates
         $this->_test_fund_balances_as_of(2, '2021-01-02');
         $this->_test_fund_balances_as_of(2, '2021-07-02');

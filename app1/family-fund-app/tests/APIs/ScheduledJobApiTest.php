@@ -4,12 +4,13 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Concerns\ActsAsApiSystemAdmin;
 use App\Models\ScheduledJob;
 
 use PHPUnit\Framework\Attributes\Test;
 class ScheduledJobApiTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, ActsAsApiSystemAdmin;
 
     #[Test]
     public function test_create_scheduled_job()

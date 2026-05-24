@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Requests\API\CreateTradePortfolioAPIRequest;
 use App\Http\Requests\API\UpdateTradePortfolioAPIRequest;
@@ -24,6 +25,7 @@ use Response;
 class TradePortfolioAPIControllerExt extends AppBaseController
 {
     use VerboseTrait;
+    use AuthorizesApiAccess;
 
     /** @var  TradePortfolioRepository */
     protected TradePortfolioRepository $tradePortfolioRepository;
@@ -50,6 +52,11 @@ class TradePortfolioAPIControllerExt extends AppBaseController
         $this->debug("TRADE PORTFOLIOS: " . json_encode($tradePortfolios));
         $arr = [];
         foreach ($tradePortfolios as $tradePortfolio) {
+            // Trade portfolios are fund-management data: skip any whose owning
+            // fund the caller cannot access (system admins see all).
+            if (!$this->canAccessPortfolio($tradePortfolio->portfolio)) {
+                continue;
+            }
             $arr[] = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
         }
         return $this->sendResponse($arr, 'Trade Portfolios retrieved successfully');
@@ -87,6 +94,8 @@ class TradePortfolioAPIControllerExt extends AppBaseController
             return $this->sendError('Trade Portfolio not found');
         }
 
+        $this->requirePortfolioAccess($tradePortfolio->portfolio);
+
         $arr = $this->createTradePortfolioResponse($tradePortfolio, $asOf);
 
         return $this->sendResponse($arr, 'Trade Portfolio retrieved successfully');
@@ -116,6 +125,9 @@ class TradePortfolioAPIControllerExt extends AppBaseController
     {
         $input = $request->all();
 
+        // Creating a trade portfolio requires modify rights on its portfolio's fund.
+        $this->requirePortfolioAccess($this->resolvePortfolio($input['portfolio_id'] ?? null), modify: true);
+
         $tradePortfolio = $this->tradePortfolioRepository->create($input);
 
         return $this->sendResponse(new TradePortfolioResource($tradePortfolio), 'Trade Portfolio saved successfully');
@@ -132,6 +144,8 @@ class TradePortfolioAPIControllerExt extends AppBaseController
             return $this->sendError('Trade Portfolio not found');
         }
 
+        $this->requirePortfolioAccess($tradePortfolio->portfolio, modify: true);
+
         $tradePortfolio = $this->tradePortfolioRepository->update($input, $id);
 
         return $this->sendResponse(new TradePortfolioResource($tradePortfolio), 'TradePortfolio updated successfully');
@@ -145,6 +159,8 @@ class TradePortfolioAPIControllerExt extends AppBaseController
         if (empty($tradePortfolio)) {
             return $this->sendError('Trade Portfolio not found');
         }
+
+        $this->requirePortfolioAccess($tradePortfolio->portfolio, modify: true);
 
         $tradePortfolio->delete();
 

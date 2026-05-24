@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateAccountMatchingRuleAPIRequest;
 use App\Http\Requests\API\UpdateAccountMatchingRuleAPIRequest;
 use App\Models\AccountMatchingRule;
@@ -18,6 +19,8 @@ use Response;
 
 class AccountMatchingRuleAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  AccountMatchingRuleRepository */
     protected $accountMatchingRuleRepository;
 
@@ -35,11 +38,21 @@ class AccountMatchingRuleAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $accountMatchingRules = $this->accountMatchingRuleRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByAccountRelation(AccountMatchingRule::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $accountMatchingRules = $query->get();
 
         return $this->sendResponse(AccountMatchingRuleResource::collection($accountMatchingRules), 'Account Matching Rules retrieved successfully');
     }
@@ -55,6 +68,8 @@ class AccountMatchingRuleAPIController extends AppBaseController
     public function store(CreateAccountMatchingRuleAPIRequest $request)
     {
         $input = $request->all();
+
+        $this->requireAccountAccess($this->resolveAccount($input['account_id'] ?? null), modify: true);
 
         $accountMatchingRule = $this->accountMatchingRuleRepository->create($input);
 
@@ -77,6 +92,8 @@ class AccountMatchingRuleAPIController extends AppBaseController
         if (empty($accountMatchingRule)) {
             return $this->sendError('Account Matching Rule not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountMatchingRule->account_id));
 
         return $this->sendResponse(new AccountMatchingRuleResource($accountMatchingRule), 'Account Matching Rule retrieved successfully');
     }
@@ -101,6 +118,8 @@ class AccountMatchingRuleAPIController extends AppBaseController
             return $this->sendError('Account Matching Rule not found');
         }
 
+        $this->requireAccountAccess($this->resolveAccount($accountMatchingRule->account_id), modify: true);
+
         $accountMatchingRule = $this->accountMatchingRuleRepository->update($input, $id);
 
         return $this->sendResponse(new AccountMatchingRuleResource($accountMatchingRule), 'AccountMatchingRule updated successfully');
@@ -124,6 +143,8 @@ class AccountMatchingRuleAPIController extends AppBaseController
         if (empty($accountMatchingRule)) {
             return $this->sendError('Account Matching Rule not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountMatchingRule->account_id), modify: true);
 
         $accountMatchingRule->delete();
 

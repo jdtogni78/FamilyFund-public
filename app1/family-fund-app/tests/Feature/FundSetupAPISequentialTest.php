@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\DataFactory;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,12 @@ class FundSetupAPISequentialTest extends TestCase
         $this->df->createFund();  // Must create fund first - createUser depends on it
         $this->df->createUser();
         $this->user = $this->df->user;
+
+        // Fund setup is a privileged operation (FundAPIControllerExt::storeWithSetup
+        // requires full fund access); authenticate as a system admin. Controller-level
+        // authz runs even under WithoutMiddleware, so this is required, not cosmetic.
+        TestFixtures::makeSystemAdmin($this->user);
+        $this->actingAs($this->user);
     }
 
     // ==================== Monarch 16 Portfolio Scenario ====================

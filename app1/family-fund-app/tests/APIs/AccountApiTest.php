@@ -15,6 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 class AccountApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
     #[Test]
     public function test_create_account()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Models\PortfolioBalance;
 use App\Models\PortfolioExt;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Exception;
  */
 class PortfolioBalanceAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /**
      * Bulk update portfolio balances with temporal stitching.
      *
@@ -33,6 +36,10 @@ class PortfolioBalanceAPIController extends AppBaseController
      */
     public function bulkUpdate(Request $request)
     {
+        // Bulk balance updates are a fund-management / trade-execution
+        // operation; require full access to a fund (system admin bypasses).
+        $this->requireFullAccessToAnyFund();
+
         $validator = Validator::make($request->all(), [
             'balances' => 'required|array|min:1',
             'balances.*.source' => 'required|string',

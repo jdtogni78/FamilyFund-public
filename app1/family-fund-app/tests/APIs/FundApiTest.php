@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Concerns\ActsAsApiSystemAdmin;
 use Tests\DataFactory;
 use App\Models\Fund;
 use App\Http\Resources\FundResource;
@@ -11,7 +12,7 @@ use App\Http\Resources\FundResource;
 use PHPUnit\Framework\Attributes\Test;
 class FundApiTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, ActsAsApiSystemAdmin;
 
     #[Test]
     public function test_create_fund()

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreatePortfolioAssetAPIRequest;
 use App\Http\Requests\API\UpdatePortfolioAssetAPIRequest;
 use App\Models\PortfolioAsset;
@@ -18,6 +19,8 @@ use Response;
 
 class PortfolioAssetAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  PortfolioAssetRepository */
     protected $portfolioAssetRepository;
 
@@ -35,12 +38,26 @@ class PortfolioAssetAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $portfolioAssets = $this->portfolioAssetRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
-//         $portfolioAssets = $this->portfolioAssetRepository->with(['asset'])->get();
+        $query = PortfolioAsset::query();
+        if (!$this->currentApiUser()?->isSystemAdmin()) {
+            $query->whereHas('portfolio', function ($pq) {
+                $this->scopePortfolioQuery($pq);
+            });
+        }
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $portfolioAssets = $query->get();
 
         return $this->sendResponse(PortfolioAssetResource::collection($portfolioAssets), 'Portfolio Assets retrieved successfully');
     }
@@ -56,6 +73,8 @@ class PortfolioAssetAPIController extends AppBaseController
     public function store(CreatePortfolioAssetAPIRequest $request)
     {
         $input = $request->all();
+
+        $this->requirePortfolioAccess($this->resolvePortfolio($input['portfolio_id'] ?? null), modify: true);
 
         $portfolioAsset = $this->portfolioAssetRepository->create($input);
 
@@ -78,6 +97,8 @@ class PortfolioAssetAPIController extends AppBaseController
         if (empty($portfolioAsset)) {
             return $this->sendError('Portfolio Asset not found');
         }
+
+        $this->requirePortfolioAccess($portfolioAsset->portfolio);
 
         return $this->sendResponse(new PortfolioAssetResource($portfolioAsset), 'Portfolio Asset retrieved successfully');
     }
@@ -102,6 +123,8 @@ class PortfolioAssetAPIController extends AppBaseController
             return $this->sendError('Portfolio Asset not found');
         }
 
+        $this->requirePortfolioAccess($portfolioAsset->portfolio, modify: true);
+
         $portfolioAsset = $this->portfolioAssetRepository->update($input, $id);
 
         return $this->sendResponse(new PortfolioAssetResource($portfolioAsset), 'PortfolioAsset updated successfully');
@@ -125,6 +148,8 @@ class PortfolioAssetAPIController extends AppBaseController
         if (empty($portfolioAsset)) {
             return $this->sendError('Portfolio Asset not found');
         }
+
+        $this->requirePortfolioAccess($portfolioAsset->portfolio, modify: true);
 
         $portfolioAsset->delete();
 

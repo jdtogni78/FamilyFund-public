@@ -24,6 +24,15 @@ class UserAPIController extends AppBaseController
     public function __construct(UserRepository $userRepo)
     {
         $this->userRepository = $userRepo;
+
+        // PII resource: the generated user CRUD API has no legitimate non-admin
+        // consumer (user data is served through the web UI and the /api/user
+        // self endpoint). Restrict every action to system admins to prevent
+        // authenticated cross-user PII access (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     /**

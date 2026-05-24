@@ -15,6 +15,7 @@ use Tests\Fixtures\TestFixtures;
 class FundReportTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
     public $asOf;
     public $fund;

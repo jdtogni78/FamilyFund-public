@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Requests\API\CreateFundReportAPIRequest;
 use App\Http\Requests\API\UpdateFundReportAPIRequest;
@@ -26,6 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 class FundReportAPIControllerExt extends AppBaseController
 {
     use FundTrait;
+    use AuthorizesApiAccess;
 
     /** @var  FundReportRepository */
     public FundReportRepository $fundReportRepository;
@@ -37,6 +39,10 @@ class FundReportAPIControllerExt extends AppBaseController
 
     public function store(CreateFundReportAPIRequest $request)
     {
+        // Generating/sending a fund report requires modify rights on the target
+        // fund (fund-admin). Kept outside the try so a 403 is not rewritten to 422.
+        $this->requireFundAccess($this->resolveFund($request->input('fund_id')), modify: true);
+
         try {
             $input = $request->all();
 
@@ -60,11 +66,21 @@ class FundReportAPIControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $fundReports = $this->fundReportRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByFundColumn(FundReport::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $fundReports = $query->get();
 
         return $this->sendResponse(FundReportResource::collection($fundReports), 'Fund Reports retrieved successfully');
     }
@@ -77,6 +93,8 @@ class FundReportAPIControllerExt extends AppBaseController
         if (empty($fundReport)) {
             return $this->sendError('Fund Report not found');
         }
+
+        $this->requireFundAccess($this->resolveFund($fundReport->fund_id));
 
         return $this->sendResponse(new FundReportResource($fundReport), 'Fund Report retrieved successfully');
     }
@@ -92,6 +110,8 @@ class FundReportAPIControllerExt extends AppBaseController
             return $this->sendError('Fund Report not found');
         }
 
+        $this->requireFundAccess($this->resolveFund($fundReport->fund_id), modify: true);
+
         $fundReport = $this->fundReportRepository->update($input, $id);
 
         return $this->sendResponse(new FundReportResource($fundReport), 'FundReport updated successfully');
@@ -105,6 +125,8 @@ class FundReportAPIControllerExt extends AppBaseController
         if (empty($fundReport)) {
             return $this->sendError('Fund Report not found');
         }
+
+        $this->requireFundAccess($this->resolveFund($fundReport->fund_id), modify: true);
 
         $fundReport->delete();
 

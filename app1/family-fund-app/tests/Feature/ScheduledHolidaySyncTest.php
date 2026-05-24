@@ -35,7 +35,10 @@ class ScheduledHolidaySyncTest extends TestCase
         // data, missing fixtures, or fund-report dependencies that error out).
         ScheduledJob::query()->update(['end_dt' => '2020-01-01']);
 
+        // Scheduling jobs via /api/schedule_jobs is a system-admin operation
+        // (ScheduledJobAPIControllerExt is admin-gated, #13/#49).
         $this->user = User::factory()->create();
+        \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->user);
     }
 
     public function test_scheduled_holiday_sync_executes_on_due_date()

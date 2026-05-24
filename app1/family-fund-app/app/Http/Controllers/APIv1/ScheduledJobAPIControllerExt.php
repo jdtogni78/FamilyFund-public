@@ -31,6 +31,14 @@ class ScheduledJobAPIControllerExt extends AppBaseController
     {
         $this->scheduledJobRepository = $scheduledJobRepo;
         $this->setupHandlers();
+
+        // Scheduled jobs are system/ops data (cron scheduling, report dispatch)
+        // with no per-tenant dimension and no legitimate beneficiary consumer.
+        // Restrict every action to system admins (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     public function scheduleJobs(Request $request)

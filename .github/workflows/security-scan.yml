@@ -439,3 +439,92 @@ jobs:
         if: always()
         working-directory: app1
         run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+
+  zap-authenticated:
+    name: OWASP ZAP Authenticated (beneficiary)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Build frontend assets
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare local environment
+        run: cp app1/family-fund-app/.env.example app1/family-fund-app/.env
+
+      - name: Install PHP dependencies in container
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm familyfund composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Boot FamilyFund stack
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build familyfund mariadb mailhog quickchart
+
+      - name: Prepare database
+        working-directory: app1
+        run: |
+          for attempt in {1..60}; do
+            if docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T mariadb mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent; then
+              break
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T familyfund php artisan migrate --force
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T familyfund php artisan db:seed --class=Database\\Seeders\\RolesAndPermissionsSeeder --force
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T familyfund php artisan db:seed --class=Database\\Seeders\\QaTestUsersSeeder --force
+
+      - name: Wait for app
+        run: |
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:3001 >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker ps
+          docker compose -f app1/docker-compose.yml -f app1/docker-compose.dev.yml logs familyfund || true
+          exit 1
+
+      - name: Mint beneficiary API token
+        id: token
+        working-directory: app1
+        run: |
+          TOKEN=$(docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T familyfund php artisan security:dev-token --as=beneficiary | tail -1 | tr -d '\r')
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Run authenticated ZAP baseline scan (beneficiary bearer token)
+        working-directory: app1/family-fund-app
+        env:
+          ZAP_TARGET: http://localhost:3001
+          ZAP_DOCKER_NET: host
+          ZAP_AUTH_TOKEN: ${{ steps.token.outputs.token }}
+        run: bin/zap-authenticated.sh
+
+      - name: Upload authenticated ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-authenticated-report
+          path: app1/family-fund-app/storage/security/zap/zap-authenticated.*
+          if-no-files-found: ignore
+
+      - name: Stop FamilyFund stack
+        if: always()
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v

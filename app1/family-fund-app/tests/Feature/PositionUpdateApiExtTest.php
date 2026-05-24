@@ -11,6 +11,7 @@ use Tests\ApiTestTrait;
 class PositionUpdateApiExtTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
     use BulkStoreTestTrait;
 
     protected function setUp(): void

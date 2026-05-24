@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateAccountAPIRequest;
 use App\Http\Requests\API\UpdateAccountAPIRequest;
 use App\Models\Account;
@@ -20,6 +21,8 @@ use Response;
 
 class AccountAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  AccountRepository */
     protected $accountRepository;
 
@@ -69,6 +72,10 @@ class AccountAPIController extends AppBaseController
     {
         $input = $request->all();
 
+        // Creating an account requires modify rights on its target fund
+        // (fund-admin / financial-manager); beneficiaries cannot create accounts.
+        $this->requireFundAccess($this->resolveFund($input['fund_id'] ?? null), modify: true);
+
         $account = $this->accountRepository->create($input);
 
         return $this->sendResponse(new AccountResource($account), 'Account saved successfully');
@@ -116,6 +123,8 @@ class AccountAPIController extends AppBaseController
             return $this->sendError('Account not found');
         }
 
+        $this->requireAccountAccess(AccountExt::find($id), modify: true);
+
         $account = $this->accountRepository->update($input, $id);
 
         return $this->sendResponse(new AccountResource($account), 'Account updated successfully');
@@ -139,6 +148,8 @@ class AccountAPIController extends AppBaseController
         if (empty($account)) {
             return $this->sendError('Account not found');
         }
+
+        $this->requireAccountAccess(AccountExt::find($id), modify: true);
 
         $account->delete();
 

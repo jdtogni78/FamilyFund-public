@@ -34,6 +34,10 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
      */
     public function bulkStore(CreatePositionUpdateAPIRequest $request)
     {
+        // Bulk position updates are a fund-management / trade-execution
+        // operation; require full access to a fund (system admin bypasses).
+        $this->requireFullAccessToAnyFund();
+
         $input = $request->all();
         $source = $input['source'];
         $timestamp = $input['timestamp'];
@@ -59,6 +63,8 @@ class PortfolioAssetAPIControllerExt extends PortfolioAssetAPIController
      */
     public function store(CreatePortfolioAssetAPIRequest $request)
     {
+        $this->requireFullAccessToAnyFund();
+
         $input = $request->all();
 
         $PortfolioAsset = $this->insertHistoricalPrice($input['asset_id'], $input['start_dt'], $input['price']);

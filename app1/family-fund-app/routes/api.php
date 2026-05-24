@@ -58,6 +58,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('schedule_jobs', 'App\Http\Controllers\APIv1\ScheduledJobAPIControllerExt@scheduleJobs');
 
+    /*
+     | Object-level / tenant authorization (#13 / #49 item A)
+     |--------------------------------------------------------------------------
+     | Every resource below is auth-locked by the `auth:sanctum` group. On top of
+     | that, the generated controllers now enforce object-level scoping so an
+     | authenticated caller cannot read/modify another tenant's rows:
+     |
+     |  - Tenant-scoped (fund/account): funds, accounts, portfolios, transactions,
+     |    account_balances, account_matching_rules, transaction_matchings,
+     |    fund_reports, account_reports, trade_portfolios, trade_portfolio_items,
+     |    portfolio_assets, portfolio_balances — scoped index + object-level guards
+     |    via App\Http\Controllers\Traits\AuthorizesApiAccess (mirrors AccountAPIController).
+     |  - PII (admin-only): users, people, phones, addresses, id_documents.
+     |  - System/ops (admin-only): scheduled_jobs.
+     |  - Shared/reference, NON-tenant (no IDOR dimension), reads open to any
+     |    authenticated caller: assets, asset_prices, matching_rules, schedules,
+     |    change_logs, asset_change_logs, exchange_holidays. Write-authz hardening
+     |    for these (admin-only create/update/delete of global reference data) is
+     |    tracked in #50 / #51 — their generated CRUD tests use WithoutMiddleware
+     |    without auth and must be updated alongside.
+     */
     Route::post('funds/setup', 'App\Http\Controllers\APIv1\FundAPIControllerExt@storeWithSetup')->name('api.funds.setup');
     Route::resource('funds', App\Http\Controllers\API\FundAPIController::class)->names('api.funds');
     Route::resource('accounts', App\Http\Controllers\API\AccountAPIController::class)->names('api.accounts');

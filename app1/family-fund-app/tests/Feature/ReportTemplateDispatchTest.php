@@ -21,6 +21,7 @@ use Tests\Fixtures\TestFixtures;
 class ReportTemplateDispatchTest extends TestCase
 {
     use DatabaseTransactions, WithoutMiddleware;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
     use FundTrait, TradeBandReportTrait, ScheduledJobTrait;
 
     private $factory;

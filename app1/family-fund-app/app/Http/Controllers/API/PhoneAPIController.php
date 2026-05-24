@@ -24,6 +24,13 @@ class PhoneAPIController extends AppBaseController
     public function __construct(PhoneRepository $phoneRepo)
     {
         $this->phoneRepository = $phoneRepo;
+
+        // PII resource: no legitimate non-admin API consumer; PII is served
+        // through the web UI. Restrict every action to system admins (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     /**

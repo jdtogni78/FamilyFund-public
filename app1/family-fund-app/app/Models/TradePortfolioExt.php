@@ -32,7 +32,9 @@ class TradePortfolioExt extends TradePortfolio
 
     public function previous()
     {
-        $tp = TradePortfolio::where('start_dt', '<', $this->start_dt)
+        // Return the Ext variant so callers (e.g. createDiffAPIResponse) can use
+        // the extended business-logic methods such as annotateTotalShares().
+        $tp = TradePortfolioExt::where('start_dt', '<', $this->start_dt)
             ->where('portfolio_id', $this->portfolio_id)
             ->orderBy('start_dt', 'desc')
             ->first();

@@ -24,6 +24,43 @@ trade-band preview + update-not-found. Also hardened two pre-existing
 order/faker-fragile tests (`TransactionRepositoryTest::read_transaction`,
 `TransactionExtApiTest::validation_errors`).
 
+## Phase 3 status (2026-05-24, issue #24) — DONE
+
+As in Phase 1, the Phase 3 targets were already largely covered and the "Worst
+Coverage Areas" table below is stale: the base `TradePortfolioController`,
+`TradePortfolioItemController`, `PortfolioAssetController` and `AssetPriceController`
+classes no longer exist — their logic was inlined into the `*Ext` variants. The four
+real Phase 3 classes, measured by line/method coverage (pcov, full suite)
+before/after this pass:
+
+| Class | Lines before | Lines after | Methods before | Methods after |
+|-------|-------------:|------------:|---------------:|--------------:|
+| `WebV1\PortfolioAssetControllerExt` | 91.6% | **100.0%** | 78.6% | **100.0%** |
+| `WebV1\AssetPriceControllerExt` | 92.5% | **100.0%** | 69.2% | **100.0%** |
+| `WebV1\TradePortfolioControllerExt` | 82.1% | **98.1%** | 45.0% | **85.0%** |
+| `Web\TradeBandReportController` | 100.0% | 100.0% | 100.0% | 100.0% |
+
+Added gap tests:
+- **TradePortfolio**: `store`/`update` happy paths, `show_diff` (happy + abort-404),
+  `announce` (email), `doRebalance` not-found/catch path, `preview_deposits` 404,
+  `do_deposits` (stubbed IB Flex via `Http::fake`).
+- **AssetPrice**: `store`/`update` (+ update-not-found), `sort=type`, multi-asset
+  chart end-date and unknown-asset branches.
+- **PortfolioAsset**: chart-helper branches — closed positions (`end_dt != 9999`),
+  fund-filtered single/multi charts, the >8-asset skip, and empty/unknown returns.
+
+Also fixed a latent bug found while covering `show_diff`/`announce`:
+`TradePortfolioExt::previous()` queried the base `TradePortfolio`, so
+`createDiffAPIResponse()` fataled when it called the Ext-only
+`annotateTotalShares()` on the result — making both routes unreachable (hence
+uncovered). It now returns `TradePortfolioExt`. Hardened `AssetApiTest`
+create/update against an order-dependent flake (`faker->word` can yield a 1-letter
+`type` that fails the Asset `type` validation regex).
+
+Remaining uncovered lines are dead / unreachable-via-HTTP: `TradePortfolioControllerExt::create()`
+(shadowed by the `tradePortfolios.create` → `createWithParams` route) and the
+`showRebalance`/`showAsOf` default-date branches (no route supplies null dates).
+
 ## Current State (original snapshot — stale, see Phase 1 status above)
 - **Overall Coverage**: 55.67% lines (5338/9588)
 - **Classes Covered**: 46.11% (172/373)

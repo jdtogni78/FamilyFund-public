@@ -398,4 +398,95 @@ class AssetPriceControllerExtTest extends TestCase
         $assetPrices = $response->viewData('assetPrices');
         $this->assertGreaterThanOrEqual(1, $assetPrices->total());
     }
+
+    public function test_index_sorts_by_type()
+    {
+        AssetPrice::factory()->create(['asset_id' => $this->asset->id]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('assetPrices.index', ['sort' => 'type', 'dir' => 'asc']));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('assetPrices');
+    }
+
+    public function test_index_multi_asset_chart_respects_end_date()
+    {
+        $asset2 = Asset::factory()->create(['name' => 'End Date Asset']);
+        AssetPrice::factory()->create(['asset_id' => $this->asset->id, 'start_dt' => '2023-03-01']);
+        AssetPrice::factory()->create(['asset_id' => $asset2->id, 'start_dt' => '2023-03-01']);
+
+        $response = $this->actingAs($this->user)->get(route('assetPrices.index', [
+            'asset_id' => [$this->asset->id, $asset2->id],
+            'start_dt' => '2023-01-01',
+            'end_dt' => '2023-12-31',
+        ]));
+
+        $response->assertStatus(200);
+        $chartData = $response->viewData('chartData');
+        $this->assertNotNull($chartData);
+        $this->assertTrue($chartData['multiAsset']);
+    }
+
+    public function test_index_multi_asset_chart_null_for_unknown_assets()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('assetPrices.index', ['asset_id' => [999998, 999999]]));
+
+        $response->assertStatus(200);
+        $this->assertNull($response->viewData('chartData'));
+    }
+
+    // ==================== Store Tests ====================
+
+    public function test_store_creates_asset_price()
+    {
+        $response = $this->actingAs($this->user)->post(route('assetPrices.store'), [
+            'asset_id' => $this->asset->id,
+            'price' => 123.45,
+            'start_dt' => '2024-01-01',
+            'end_dt' => '9999-12-31',
+        ]);
+
+        $response->assertRedirect(route('assetPrices.index'));
+        $this->assertDatabaseHas('asset_prices', [
+            'asset_id' => $this->asset->id,
+            'price' => 123.45,
+        ]);
+    }
+
+    // ==================== Update Tests ====================
+
+    public function test_update_modifies_asset_price()
+    {
+        $assetPrice = AssetPrice::factory()->create([
+            'asset_id' => $this->asset->id,
+            'price' => 100,
+        ]);
+
+        $response = $this->actingAs($this->user)->put(route('assetPrices.update', $assetPrice->id), [
+            'asset_id' => $this->asset->id,
+            'price' => 250.00,
+            'start_dt' => $assetPrice->start_dt->format('Y-m-d'),
+            'end_dt' => '9999-12-31',
+        ]);
+
+        $response->assertRedirect(route('assetPrices.index'));
+        $this->assertDatabaseHas('asset_prices', [
+            'id' => $assetPrice->id,
+            'price' => 250.00,
+        ]);
+    }
+
+    public function test_update_redirects_when_not_found()
+    {
+        $response = $this->actingAs($this->user)->put(route('assetPrices.update', 99999), [
+            'asset_id' => $this->asset->id,
+            'price' => 100,
+            'start_dt' => '2024-01-01',
+            'end_dt' => '9999-12-31',
+        ]);
+
+        $response->assertRedirect(route('assetPrices.index'));
+    }
 }

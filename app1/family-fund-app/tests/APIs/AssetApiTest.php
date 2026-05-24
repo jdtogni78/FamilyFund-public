@@ -15,6 +15,10 @@ class AssetApiTest extends TestCase
     public function test_create_asset()
     {
         $asset = Asset::factory()->make()->toArray();
+        // faker->word can yield a 1-letter value that fails the Asset 'type'
+        // rule (regex:/[a-zA-Z][a-zA-Z]+/), making this test order-dependent.
+        // Pin to a valid type so the result is independent of the faker sequence.
+        $asset['type'] = 'STK';
 
         $this->response = $this->json(
             'POST',
@@ -42,6 +46,9 @@ class AssetApiTest extends TestCase
     {
         $asset = Asset::factory()->create();
         $editedAsset = Asset::factory()->make()->toArray();
+        // See test_create_asset: pin 'type' to a regex-valid value so this
+        // update is not faker-order-dependent.
+        $editedAsset['type'] = 'STK';
 
         $this->response = $this->json(
             'PUT',

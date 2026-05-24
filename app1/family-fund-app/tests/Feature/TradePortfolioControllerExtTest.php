@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\TradePortfolio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\DataFactory;
 use Tests\TestCase;
@@ -379,6 +380,169 @@ class TradePortfolioControllerExtTest extends TestCase
         $response->assertRedirect(route('tradePortfolios.index'));
     }
 
-    // Note: preview_deposits test requires external IBFlex service configuration
+    // ==================== Store / Update Happy Paths ====================
+
+    public function test_store_creates_trade_portfolio()
+    {
+        // Fresh portfolio with no existing trade portfolio -> no date-range overlap.
+        $df2 = new DataFactory();
+        $df2->createFund();
+
+        $response = $this->actingAs($this->user)->post('/tradePortfolios', [
+            'portfolio_id' => $df2->portfolio->id,
+            'account_name' => 'FFTEST' . uniqid(),
+            'cash_target' => 0.10,
+            'cash_reserve_target' => 0.05,
+            'max_single_order' => 0.05,
+            'minimum_order' => 100,
+            'rebalance_period' => 30,
+            'mode' => 'STD',
+            'start_dt' => '2024-02-01',
+            'end_dt' => '9999-12-31',
+        ]);
+
+        // store() redirects to tradePortfolios.show for the new record
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+        $this->assertDatabaseHas('trade_portfolios', [
+            'portfolio_id' => $df2->portfolio->id,
+            'rebalance_period' => 30,
+            'start_dt' => '2024-02-01',
+        ]);
+    }
+
+    public function test_update_modifies_trade_portfolio()
+    {
+        $response = $this->actingAs($this->user)->put('/tradePortfolios/' . $this->tradePortfolio->id, [
+            'portfolio_id' => $this->tradePortfolio->portfolio_id,
+            'cash_target' => 0.15,
+            'cash_reserve_target' => 0.05,
+            'max_single_order' => 0.05,
+            'minimum_order' => 200,
+            'rebalance_period' => 45,
+            'mode' => 'MAX',
+            'start_dt' => '2024-01-01',
+            'end_dt' => '9999-12-31',
+        ]);
+
+        $response->assertRedirect(route('tradePortfolios.show', $this->tradePortfolio->id));
+        $this->assertDatabaseHas('trade_portfolios', [
+            'id' => $this->tradePortfolio->id,
+            'rebalance_period' => 45,
+            'mode' => 'MAX',
+        ]);
+    }
+
+    // ==================== Show Diff / Announce Tests ====================
+
+    /** Create an earlier trade portfolio so $this->tradePortfolio has a previous() to diff against. */
+    protected function createPreviousTradePortfolio(): TradePortfolio
+    {
+        $prev = TradePortfolio::factory()
+            ->for($this->df->portfolio, 'portfolio')
+            ->create(['start_dt' => '2023-01-01', 'end_dt' => '2024-01-01']);
+
+        \App\Models\TradePortfolioItem::factory()
+            ->for($prev, 'tradePortfolio')
+            ->create([
+                'symbol' => 'AAPL',
+                'type' => 'STK',
+                'target_share' => 0.5,
+                'deviation_trigger' => 0.05,
+            ]);
+
+        return $prev;
+    }
+
+    public function test_show_diff_displays_comparison()
+    {
+        $this->createPreviousTradePortfolio();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('tradePortfolios.show_diff', $this->tradePortfolio->id));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('api');
+    }
+
+    public function test_show_diff_aborts_when_no_previous()
+    {
+        // $this->tradePortfolio is the only TP for its portfolio -> no previous -> 404
+        $response = $this->actingAs($this->user)
+            ->get(route('tradePortfolios.show_diff', $this->tradePortfolio->id));
+
+        $response->assertStatus(404);
+    }
+
+    public function test_announce_sends_announcement_email()
+    {
+        $this->createPreviousTradePortfolio();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('tradePortfolios.announce', $this->tradePortfolio->id));
+
+        $response->assertRedirect(route('tradePortfolios.show', $this->tradePortfolio->id));
+        Mail::assertSent(\App\Mail\TradePortfolioAnnouncementMail::class);
+    }
+
+    // ==================== doRebalance Failure Path ====================
+
+    public function test_do_rebalance_redirects_back_when_not_found()
+    {
+        // Valid payload (passes request validation) but a non-existent portfolio id,
+        // so the controller's find() returns null and the catch block runs.
+        $response = $this->actingAs($this->user)->post('/tradePortfolios/99999/rebalance', [
+            'start_dt' => now()->addDay()->format('Y-m-d'),
+            'end_dt' => '9999-12-31',
+            'cash_target' => 0.10,
+            'cash_reserve_target' => 0.05,
+            'rebalance_period' => 30,
+            'mode' => 'STD',
+            'minimum_order' => 100,
+            'max_single_order' => 0.05,
+            'items' => [
+                [
+                    'symbol' => 'AAPL',
+                    'type' => 'STK',
+                    'target_share' => 0.5,
+                    'deviation_trigger' => 0.05,
+                    'deleted' => false,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('flash_notification');
+    }
+
+    // ==================== Cash Deposit Tests ====================
+
+    public function test_preview_deposits_aborts_when_not_found()
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('tradePortfolios.preview_deposits', 99999));
+
+        $response->assertStatus(404);
+    }
+
+    public function test_do_cash_deposits_processes_empty_flex_statement()
+    {
+        // Stub the IB Flex web service: a successful (but empty) statement so the
+        // real do_deposits path runs end-to-end without hitting the network.
+        Http::fake([
+            '*SendRequest*' => Http::response(
+                '<FlexStatementResponse><Status>Success</Status>'
+                . '<Url>https://flex.example.test/stmt</Url>'
+                . '<ReferenceCode>1234</ReferenceCode></FlexStatementResponse>',
+                200
+            ),
+            '*flex.example.test*' => Http::response("\"ClientAccountID\",\"Amount\"\n", 200),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('tradePortfolios.do_deposits', $this->tradePortfolio->id));
+
+        $response->assertRedirect(route('tradePortfolios.index'));
+    }
 }
 

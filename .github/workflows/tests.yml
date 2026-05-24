@@ -112,9 +112,23 @@ jobs:
           cp .env.example .env
           php artisan key:generate --force
 
-      - name: Prepare database
+      - name: Load test baseline DB
+        # The suite uses DatabaseTransactions (227 files), NOT RefreshDatabase:
+        # it rolls back per test but never creates schema/data, so the DB must
+        # be pre-loaded from the committed baseline -- exactly what testpool.sh
+        # does locally. A bare `migrate` leaves data-dependent tests failing.
+        # Load via a mariadb:11 client (the dump uses MariaDB-11 collation) on
+        # the host network, into the service container's familyfund_dev.
         working-directory: ${{ env.APP_DIR }}
-        run: php artisan migrate --force
+        run: |
+          set -o pipefail
+          gunzip -c database/test/test-baseline.sql.gz \
+            | docker run --rm -i --network host mariadb:11 \
+                mariadb -h127.0.0.1 -P3306 -uroot -p123456 familyfund_dev
+          # Fail fast if the baseline didn't actually load (empty schema).
+          docker run --rm --network host mariadb:11 \
+            mariadb -h127.0.0.1 -P3306 -uroot -p123456 familyfund_dev \
+            -N -e "SELECT CONCAT('baseline users rows: ', COUNT(*)) FROM users;"
 
       - name: Run fast suite
         working-directory: ${{ env.APP_DIR }}
@@ -185,9 +199,23 @@ jobs:
           cp .env.example .env
           php artisan key:generate --force
 
-      - name: Prepare database
+      - name: Load test baseline DB
+        # The suite uses DatabaseTransactions (227 files), NOT RefreshDatabase:
+        # it rolls back per test but never creates schema/data, so the DB must
+        # be pre-loaded from the committed baseline -- exactly what testpool.sh
+        # does locally. A bare `migrate` leaves data-dependent tests failing.
+        # Load via a mariadb:11 client (the dump uses MariaDB-11 collation) on
+        # the host network, into the service container's familyfund_dev.
         working-directory: ${{ env.APP_DIR }}
-        run: php artisan migrate --force
+        run: |
+          set -o pipefail
+          gunzip -c database/test/test-baseline.sql.gz \
+            | docker run --rm -i --network host mariadb:11 \
+                mariadb -h127.0.0.1 -P3306 -uroot -p123456 familyfund_dev
+          # Fail fast if the baseline didn't actually load (empty schema).
+          docker run --rm --network host mariadb:11 \
+            mariadb -h127.0.0.1 -P3306 -uroot -p123456 familyfund_dev \
+            -N -e "SELECT CONCAT('baseline users rows: ', COUNT(*)) FROM users;"
 
       - name: Run fast suite
         working-directory: ${{ env.APP_DIR }}

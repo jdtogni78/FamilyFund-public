@@ -1,23 +1,19 @@
 name: Tests
 
-# Two-tier strategy, aligned with the project's @group nightly convention
-# (phpunit.xml excludes <group>nightly</group> by default; bin/test-nightly.sh
-# runs them via --group=nightly):
+# Runs the suite the same way it runs locally: inside the project's docker
+# compose stack (familyfund + mariadb + quickchart + mailhog), against the
+# committed baseline DB. The suite is tightly coupled to that environment --
+# it uses DatabaseTransactions (so the DB must be pre-loaded from
+# database/test/test-baseline.sql.gz, not just migrated), it calls the
+# quickchart service at quickchart:3400, and PDF tests need wkhtmltopdf (baked
+# into the familyfund image). Reproducing all that on a bare runner is brittle;
+# booting the real stack mirrors testpool.sh, so "green locally => green in CI".
+# This is the same compose-stack pattern security-scan.yml uses for its ZAP jobs.
 #
-#   * Pull requests / pushes to main  -> fast tier: the default suite minus the
-#       @group nightly tests (~the everyday `php artisan test` run). Fast feedback.
-#   * Nightly schedule / manual run   -> full tier: fast set PLUS the @group
-#       nightly tests (AclMatrixTest, PDFTest, SmokeTest, OperationsControllerTest),
-#       i.e. the entire suite.
-#
-# Both tiers run on GitHub-hosted runners with a MariaDB service container,
-# mirroring the security-access-regressions job in security-scan.yml. They build
-# Vite assets because Feature tests render Blade layouts that use @vite().
-#
-# --exclude-group / --group are passed explicitly so the workflow is correct
-# regardless of whether the nightly-tagging change has merged to main yet:
-# before it lands they are harmless (nothing is tagged nightly); after it lands
-# they enforce the fast/slow split.
+# Tiering (the @group nightly convention from phpunit.xml):
+#   * PR / push to main        -> fast tier only (--exclude-group=nightly)
+#   * nightly schedule / manual -> fast tier + the slow @group nightly tests
+#       (AclMatrixTest, PDFTest, SmokeTest, OperationsControllerTest)
 
 on:
   pull_request:
@@ -27,63 +23,33 @@ on:
   schedule:
     - cron: "30 8 * * *"
   workflow_dispatch:
-    inputs:
-      full:
-        description: "Run the full suite even on a manual run"
-        type: boolean
-        default: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: tests-${{ github.workflow }}-${{ github.ref }}
+  group: tests-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   APP_DIR: app1/family-fund-app
+  COMPOSE: docker compose -f docker-compose.yml -f docker-compose.dev.yml
+  # Self-consistent throwaway creds for the ephemeral CI DB: the app connects as
+  # root (dev compose sets DB_USERNAME=root), so FF_DB_PASSWORD must match
+  # FF_DB_ROOT_PASSWORD. No real secrets involved.
+  FF_DB_ROOT_PASSWORD: ci-secret
+  FF_DB_PASSWORD: ci-secret
+  FF_DB_USER_PASSWORD: ci-secret
 
 jobs:
-  fast:
-    name: Fast suite (excludes @group nightly)
-    # Skip on schedule and manual runs; the full-suite job covers those.
-    if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'push'
+  tests:
+    name: Test suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      DB_CONNECTION: mariadb
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: familyfund_dev
-      DB_USERNAME: root
-      DB_PASSWORD: 123456
-
-    services:
-      mariadb:
-        image: mariadb:11
-        env:
-          MARIADB_DATABASE: familyfund_dev
-          MARIADB_ROOT_PASSWORD: 123456
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.4"
-          tools: composer:v2
-          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -92,111 +58,59 @@ jobs:
           cache: npm
           cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
 
-      - name: Install PHP dependencies
-        working-directory: ${{ env.APP_DIR }}
-        run: composer install --no-interaction --no-progress --prefer-dist
-
       - name: Build frontend assets
-        # Feature tests render Blade layouts that use @vite(); they need a
-        # public/build/manifest.json or the rendered pages throw.
+        # Built on the host (mounted into the container via ./family-fund-app:/app).
+        # --legacy-peer-deps: laravel-vite-plugin@1.x peer-requires vite 5/6 but
+        # the project pins vite@^4.5, so plain `npm ci` hits ERESOLVE.
         working-directory: ${{ env.APP_DIR }}
         run: |
-          # --legacy-peer-deps: laravel-vite-plugin@1.x peer-requires vite 5/6
-          # but the project pins vite@^4.5, so plain `npm ci` hits ERESOLVE.
           npm ci --legacy-peer-deps
           npm run build
 
-      - name: Prepare test environment
-        working-directory: ${{ env.APP_DIR }}
-        run: |
-          cp .env.example .env
-          php artisan key:generate --force
+      - name: Prepare .env
+        run: cp ${{ env.APP_DIR }}/.env.example ${{ env.APP_DIR }}/.env
 
-      - name: Prepare database
-        working-directory: ${{ env.APP_DIR }}
-        run: php artisan migrate --force
+      - name: Install PHP dependencies (in container)
+        working-directory: app1
+        run: $COMPOSE run --rm familyfund composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Boot compose stack
+        working-directory: app1
+        run: $COMPOSE up -d --build familyfund mariadb quickchart mailhog
+
+      - name: Wait for DB and load baseline
+        # DatabaseTransactions needs the schema+data pre-loaded; restore the
+        # committed baseline into the dev DB (same as testpool.sh), then assert
+        # it actually loaded.
+        working-directory: app1
+        run: |
+          for i in $(seq 1 60); do
+            if $COMPOSE exec -T mariadb mariadb-admin ping -h127.0.0.1 -uroot -p"$FF_DB_ROOT_PASSWORD" --silent; then
+              break
+            fi
+            sleep 2
+          done
+          gunzip -c family-fund-app/database/test/test-baseline.sql.gz \
+            | $COMPOSE exec -T mariadb mariadb -uroot -p"$FF_DB_ROOT_PASSWORD" familyfund_dev
+          $COMPOSE exec -T mariadb mariadb -uroot -p"$FF_DB_ROOT_PASSWORD" familyfund_dev \
+            -N -e "SELECT CONCAT('baseline users rows: ', COUNT(*)) FROM users;"
+
+      - name: Generate app key
+        working-directory: app1
+        run: $COMPOSE exec -T familyfund php artisan key:generate --force
 
       - name: Run fast suite
-        working-directory: ${{ env.APP_DIR }}
-        run: php artisan test --exclude-group=nightly
-
-  full-suite:
-    name: Full suite (fast + @group nightly)
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
-    env:
-      DB_CONNECTION: mariadb
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: familyfund_dev
-      DB_USERNAME: root
-      DB_PASSWORD: 123456
-
-    services:
-      mariadb:
-        image: mariadb:11
-        env:
-          MARIADB_DATABASE: familyfund_dev
-          MARIADB_ROOT_PASSWORD: 123456
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.4"
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
-
-      - name: Install PHP dependencies
-        working-directory: ${{ env.APP_DIR }}
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Build frontend assets
-        working-directory: ${{ env.APP_DIR }}
-        run: |
-          # --legacy-peer-deps: laravel-vite-plugin@1.x peer-requires vite 5/6
-          # but the project pins vite@^4.5, so plain `npm ci` hits ERESOLVE.
-          npm ci --legacy-peer-deps
-          npm run build
-
-      - name: Prepare test environment
-        working-directory: ${{ env.APP_DIR }}
-        run: |
-          cp .env.example .env
-          php artisan key:generate --force
-
-      - name: Prepare database
-        working-directory: ${{ env.APP_DIR }}
-        run: php artisan migrate --force
-
-      - name: Run fast suite
-        working-directory: ${{ env.APP_DIR }}
-        run: php artisan test --exclude-group=nightly
+        working-directory: app1
+        run: $COMPOSE exec -T familyfund php artisan test --exclude-group=nightly
 
       - name: Run nightly suite
-        # The slow @group nightly tests (AclMatrixTest, PDFTest, SmokeTest,
-        # OperationsControllerTest). phpunit.xml excludes this group by default,
-        # so --group=nightly is required to opt back in. No-op until the
-        # nightly-tagging change merges to main.
-        working-directory: ${{ env.APP_DIR }}
-        run: php artisan test --group=nightly
+        # The slow @group nightly tests, only on the nightly schedule / manual run.
+        # phpunit.xml excludes this group by default, so --group=nightly opts in.
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        working-directory: app1
+        run: $COMPOSE exec -T familyfund php artisan test --group=nightly
+
+      - name: Tear down stack
+        if: always()
+        working-directory: app1
+        run: $COMPOSE down -v

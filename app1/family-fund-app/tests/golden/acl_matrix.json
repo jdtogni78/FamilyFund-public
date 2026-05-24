@@ -154,7 +154,7 @@
         },
         "accounts\/{account}": {
             "anonymous": 302,
-            "unassigned": 403,
+            "unassigned": 302,
             "beneficiary": 302,
             "financialManager": 200,
             "fundAdmin": 200,
@@ -186,7 +186,7 @@
         },
         "accounts\/{account}\/edit": {
             "anonymous": 302,
-            "unassigned": 403,
+            "unassigned": 302,
             "beneficiary": 302,
             "financialManager": 200,
             "fundAdmin": 200,
@@ -1138,7 +1138,7 @@
         },
         "transactions\/{transaction}": {
             "anonymous": 302,
-            "unassigned": 403,
+            "unassigned": 302,
             "beneficiary": 302,
             "financialManager": 200,
             "fundAdmin": 200,
@@ -1146,7 +1146,7 @@
         },
         "transactions\/{transaction}\/edit": {
             "anonymous": 302,
-            "unassigned": 403,
+            "unassigned": 302,
             "beneficiary": 302,
             "financialManager": 200,
             "fundAdmin": 200,

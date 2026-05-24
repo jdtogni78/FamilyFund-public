@@ -74,12 +74,14 @@ class SecurityApiAclMatrixTest extends TestCase
         $this->ownAccount = $users['beneficiaryAccount'];
         $this->crossFundAccount = $crossUsers['beneficiaryAccount'];
 
+        // accounts.code is varchar(15); account auto-increment ids in seeded
+        // data can be 6+ digits, so keep the prefix tiny to avoid overflow.
         $this->ownAccount->forceFill([
-            'code' => 'API-OWN-' . $this->ownAccount->id,
+            'code' => 'AO-' . $this->ownAccount->id,
             'nickname' => 'API Own Account ' . $this->ownAccount->id,
         ])->save();
         $this->crossFundAccount->forceFill([
-            'code' => 'API-XFUND-' . $this->crossFundAccount->id,
+            'code' => 'AX-' . $this->crossFundAccount->id,
             'nickname' => 'API Cross Fund Account ' . $this->crossFundAccount->id,
         ])->save();
 
@@ -87,7 +89,7 @@ class SecurityApiAclMatrixTest extends TestCase
         $this->siblingAccount = AccountExt::create([
             'fund_id' => $fund->id,
             'user_id' => $sibling->id,
-            'code' => 'API-SIB-' . $sibling->id,
+            'code' => 'AS-' . $sibling->id,
             'nickname' => 'API Sibling Account ' . $sibling->id,
             'type' => 'individual',
         ]);

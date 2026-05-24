@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -33,6 +34,12 @@ class AccountAPIControllerExtTest extends TestCase
         // Create a transaction so the account has data
         $this->df->createTransaction(100);
         $this->user = $this->df->user;
+
+        // Controllers gate account access via auth()->user()->canAccessAccount();
+        // act as a system admin so that check passes (WithoutMiddleware skips the
+        // auth:sanctum route guard but not the in-controller authorization).
+        TestFixtures::makeSystemAdmin($this->user);
+        $this->actingAs($this->user);
     }
 
     protected function tearDown(): void

@@ -300,16 +300,23 @@ class FundTraitTest extends TestCase
 
     // ==================== Data Staleness Tests ====================
 
+    private ?\App\Models\Asset $stalenessAsset = null;
+
     /**
      * Helper to create a test asset with price
      */
     private function createTestAssetPrice(string $date, float $price = 100.00): AssetPrice
     {
-        // Use the cash asset from factory or create one
-        $asset = $this->factory->cash ?? \App\Models\Asset::first();
+        // calculateDataStaleness() deliberately ignores the synthetic CASH asset
+        // (it is never repriced), so staleness must be measured against a real,
+        // non-CASH asset. Pricing CASH here would leave the calculation with no
+        // eligible prices and return nulls. Reuse one dedicated asset per test.
+        if ($this->stalenessAsset === null) {
+            $this->stalenessAsset = \App\Models\Asset::factory()->create();
+        }
 
         return AssetPrice::create([
-            'asset_id' => $asset->id,
+            'asset_id' => $this->stalenessAsset->id,
             'price' => $price,
             'start_dt' => $date,
             'end_dt' => '9999-12-31',

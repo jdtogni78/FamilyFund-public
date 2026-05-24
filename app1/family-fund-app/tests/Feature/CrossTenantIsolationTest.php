@@ -135,6 +135,38 @@ class CrossTenantIsolationTest extends TestCase
         $this->assertTrue($r->isRedirect(), 'anonymous -> accountX should redirect to login');
     }
 
+    // ==================== Dev-login account impersonation ====================
+
+    public function test_dev_login_can_impersonate_account_owner_for_manual_acl_checks(): void
+    {
+        $r = $this->get('/dev-login/accounts/' . $this->accountX->id . '?as=acct' . $this->accountX->id);
+
+        $r->assertRedirect('/accounts/' . $this->accountX->id);
+        $this->assertAuthenticatedAs($this->beneficiaryX);
+
+        $this->get('/accounts/' . $this->accountX->id)->assertOk();
+    }
+
+    public function test_dev_login_account_impersonation_cannot_see_sibling_account(): void
+    {
+        $this->get('/dev-login/dashboard?as=acct' . $this->accountX->id)
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($this->beneficiaryX);
+
+        $r = $this->get('/accounts/' . $this->siblingAccountX->id);
+        $this->assertBlocked($r, $this->siblingAccountX->code, 'acct' . $this->accountX->id . ' -> sibling account');
+    }
+
+    public function test_dev_login_account_impersonation_cannot_see_another_fund_account(): void
+    {
+        $this->get('/dev-login/dashboard?account_id=' . $this->accountX->id)
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($this->beneficiaryX);
+
+        $r = $this->get('/accounts/' . $this->accountY->id);
+        $this->assertBlocked($r, $this->accountY->code, 'acct' . $this->accountX->id . ' -> accountY');
+    }
+
     // ==================== Funds page ====================
 
     public function test_beneficiary_can_view_own_fund(): void
@@ -153,6 +185,56 @@ class CrossTenantIsolationTest extends TestCase
     {
         $r = $this->actingAs($this->unassigned)->get('/funds/' . $this->fundX->id);
         $this->assertBlocked($r, $this->fundX->name, 'unassigned -> fundX');
+    }
+
+    public function test_beneficiary_cannot_reach_fund_writable_pages(): void
+    {
+        foreach ([
+            '/funds/' . $this->fundX->id . '/edit',
+            '/funds/' . $this->fundX->id . '/withdrawal_goal/edit',
+        ] as $uri) {
+            $r = $this->actingAs($this->beneficiaryX)->get($uri);
+            $this->assertBlocked($r, $this->fundX->name, 'beneficiaryX -> ' . $uri);
+        }
+    }
+
+    public function test_beneficiary_cannot_reach_non_account_admin_surfaces(): void
+    {
+        foreach ([
+            '/assets',
+            '/assets/create',
+            '/matchingRules',
+            '/matchingRules/create',
+            '/operations',
+            '/portfolioAssets',
+            '/portfolioAssets/create',
+            '/scheduledJobs',
+            '/scheduledJobs/create',
+            '/schedules',
+            '/schedules/create',
+            '/transactions/create',
+        ] as $uri) {
+            $r = $this->actingAs($this->beneficiaryX)->get($uri);
+            $this->assertBlocked($r, 'Access denied', 'beneficiaryX -> ' . $uri);
+        }
+    }
+
+    public function test_dev_login_account_impersonation_cannot_reach_non_account_admin_surfaces(): void
+    {
+        $this->get('/dev-login/dashboard?as=acct' . $this->accountX->id)
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($this->beneficiaryX);
+
+        foreach ([
+            '/operations',
+            '/assets/create',
+            '/scheduledJobs/create',
+            '/schedules/create',
+            '/transactions/create',
+        ] as $uri) {
+            $r = $this->get($uri);
+            $this->assertBlocked($r, 'Access denied', 'acct' . $this->accountX->id . ' -> ' . $uri);
+        }
     }
 
     // ==================== Admin-only data ====================

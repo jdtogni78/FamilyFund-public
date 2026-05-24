@@ -21,6 +21,11 @@ use Tests\TestCase;
  * forceRunJob()'s "no data" branch. A trade-band-report job pointing at a
  * missing template triggers both, since tradeBandReportScheduleDue() cleanly
  * returns null when the template can't be found.
+ *
+ * Regression (#32): transactionScheduleDue() used to declare a non-nullable
+ * return type, so a missing transaction template threw a TypeError (an Error,
+ * not an Exception) that bypassed scheduleDueJob()'s catch and the soft-failure
+ * path. With the return type now ?TransactionExt it soft-fails like the others.
  */
 class ScheduledJobTraitTest extends TestCase
 {
@@ -70,6 +75,33 @@ class ScheduledJobTraitTest extends TestCase
 
         $this->assertNull($model, 'Handler returned null, so no model should be produced');
         $this->assertInstanceOf(\Exception::class, $error, 'Soft failure should surface a synthetic exception');
+        $this->assertStringContainsString('null', $error->getMessage());
+        $this->assertNotNull($shouldRunBy);
+
+        Mail::assertSent(ScheduledJobFailureMail::class);
+    }
+
+    /**
+     * Regression for #32: a due transaction job whose template was deleted must
+     * soft-fail (return null + failure alert) instead of throwing a TypeError.
+     * Before the ?TransactionExt fix this branch raised an uncaught Error.
+     */
+    public function test_soft_failure_when_transaction_template_missing()
+    {
+        $schedule = $this->df->createSchedule(ScheduleExt::TYPE_DAY_OF_MONTH, 1);
+        // entity_id points at a transaction template that does not exist.
+        $job = $this->df->createScheduledJob(
+            $schedule,
+            ScheduledJobExt::ENTITY_TRANSACTION,
+            999999,
+            '2020-01-01'
+        );
+        $jobExt = ScheduledJobExt::find($job->id);
+
+        [$model, $error, $shouldRunBy] = $this->trait->callScheduleDueJob(Carbon::now(), $jobExt);
+
+        $this->assertNull($model, 'Missing transaction template should yield no model');
+        $this->assertInstanceOf(\Exception::class, $error, 'Soft failure should surface a synthetic exception, not a TypeError');
         $this->assertStringContainsString('null', $error->getMessage());
         $this->assertNotNull($shouldRunBy);
 

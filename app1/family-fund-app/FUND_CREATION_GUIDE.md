@@ -724,8 +724,6 @@ System calculates shares based on fund's current share price (or defaults).
 
 ## Related Documentation
 
-- **Implementation Details**: `FUND_SETUP_WITH_PREVIEW_IMPLEMENTATION.md`
-- **Test Coverage**: `TEST_COVERAGE_FUND_SETUP.md`
 - **Bulk APIs**: `BULK_UPDATE_APIS.md` (from plan mode)
 - **Python Setup Script**: `/Users/dtogni/dev/finex/setup_familyfund_via_api.py`
 - **Monarch Sync**: `/Users/dtogni/dev/finex/QUICK_START_MONARCH_SYNC.md`

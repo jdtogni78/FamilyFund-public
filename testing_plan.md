@@ -3,9 +3,9 @@
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
 **Last Updated:** 2026-05-13 (rev 3 — added test cases for the 18 accepted plan-review items: reversal flow, backdated creation, admin-only RBAC, closure-block, loans summary, share-value copy, USD-only booking, pending-attribution, line-item reconciliation, RBAC matrix, PII email policy, idempotency retention, two-phase coexistence)
 **Branch:** `claude/plan-credit-lines-cCjWG`
-**Related docs:** [`credit_lines_plan.md`](credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md), [`test_plan.md`](test_plan.md) (the broader codebase test status).
+**Related docs:** [`credit_lines_plan.md`](credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md); broader codebase test status lives in the CLAUDE.md Testing section.
 
-This document defines the testing strategy for the two new subsystems planned on this branch (credit lines + money flow). It does not duplicate or replace `test_plan.md`, which tracks coverage of the existing app.
+This document defines the testing strategy for the two new subsystems planned on this branch (credit lines + money flow). It does not duplicate or replace the CLAUDE.md Testing section, which tracks coverage of the existing app.
 
 ---
 
@@ -43,7 +43,7 @@ Target proportions, by count, **for the new subsystems** (not the existing app):
           ╱─────────────────────────╲
 ```
 
-Note: the **existing** codebase test_plan.md targets 50% line coverage overall. For the new subsystems we target **higher** — ≥80% line coverage on credit-line and money-flow code, because we're writing it from scratch and the math is unforgiving.
+Note: the **existing** codebase targets 50% line coverage overall (see the CLAUDE.md Testing section). For the new subsystems we target **higher** — ≥80% line coverage on credit-line and money-flow code, because we're writing it from scratch and the math is unforgiving.
 
 **Speed budget.** A full local run (`docker exec familyfund php artisan test`) for the new tests must stay under 60 seconds for the unit tier and under 5 minutes for unit + integration. Browser tests run on demand or in CI, not in every local cycle.
 
@@ -128,7 +128,7 @@ The repo already has **164 test files across 5 suites**. The new work must exten
 
 Default exclusions (already in `phpunit.xml`): `@group incomplete`, plus the convention from `CLAUDE.md` of `--exclude-group=incomplete,needs-data-refactor` in development.
 
-`test_plan.md` at the repo root tracks the broader-codebase test status (288 passing as of 2026-01-10, ~45% line coverage). This document does not duplicate or replace it — **`test_plan.md` is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
+The CLAUDE.md Testing section tracks the broader-codebase test status (1791 passing as of 2026-05-14). This document does not duplicate or replace it — **the CLAUDE.md Testing section is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
 
 ### 3.5.2 Existing tests that touch code we plan to change
 
@@ -829,7 +829,7 @@ For **new code only** (the credit-line and money-flow namespaces):
 | UC-* / MF-* coverage | 100% (every tracker row has at least one named test) | this doc's tables |
 | Mutation coverage *(stretch)* | ≥ 60% on the matcher service | Infection PHP, run weekly |
 
-The existing codebase coverage tracking in `test_plan.md` remains its own metric — this doc doesn't try to raise it.
+The existing codebase coverage tracking (CLAUDE.md Testing section) remains its own metric — this doc doesn't try to raise it.
 
 ---
 

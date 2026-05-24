@@ -147,7 +147,7 @@ docker exec familyfund-<slot> sh -c "cd /app && \
 3020–3025) for tests — every preview slot hardcodes `DB_DATABASE=familyfund_dev`,
 so RefreshDatabase will wipe shared dev data.
 
-See `test_plan.md` for detailed test fix progress and remaining issues.
+See the **Trading & Fund** GitHub Project board (#1) for remaining test-fix work (issues prefixed `test:`).
 
 ## Docker Services
 

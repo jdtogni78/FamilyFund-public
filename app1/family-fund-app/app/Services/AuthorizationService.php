@@ -42,6 +42,13 @@ class AuthorizationService
         $accessibleFunds = $this->user->getAccessibleFundIds();
         $ownAccountIds = $this->user->getOwnAccountIds();
 
+        // Deny-by-default: with neither full-fund access nor own accounts, an
+        // empty nested closure below would compile to no WHERE and leak every
+        // row (matches scopeByAccountRelation). "No access" must mean no rows.
+        if (empty($accessibleFunds['full']) && empty($ownAccountIds)) {
+            return $query->whereRaw('1 = 0');
+        }
+
         // User can see accounts in funds they have full access to
         // OR their own accounts (as beneficiary)
         return $query->where(function ($q) use ($accessibleFunds, $ownAccountIds) {
@@ -72,6 +79,11 @@ class AuthorizationService
 
         $accessibleFunds = $this->user->getAccessibleFundIds();
         $ownAccountIds = $this->user->getOwnAccountIds();
+
+        // Deny-by-default (see scopeAccountsQuery): an empty closure leaks all rows.
+        if (empty($accessibleFunds['full']) && empty($ownAccountIds)) {
+            return $query->whereRaw('1 = 0');
+        }
 
         // User can see transactions for accounts in funds they have full access to
         // OR transactions for their own accounts (as beneficiary)
@@ -105,6 +117,11 @@ class AuthorizationService
 
         $accessibleFunds = $this->user->getAccessibleFundIds();
         $ownAccountIds = $this->user->getOwnAccountIds();
+
+        // Deny-by-default (see scopeAccountsQuery): an empty closure leaks all rows.
+        if (empty($accessibleFunds['full']) && empty($ownAccountIds)) {
+            return $query->whereRaw('1 = 0');
+        }
 
         // User can see credit lines for accounts in funds they have full access to
         // OR credit lines for their own accounts (as beneficiary)

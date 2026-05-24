@@ -61,6 +61,46 @@ Remaining uncovered lines are dead / unreachable-via-HTTP: `TradePortfolioContro
 (shadowed by the `tradePortfolios.create` → `createWithParams` route) and the
 `showRebalance`/`showAsOf` default-date branches (no route supplies null dates).
 
+## Phase 4 status (2026-05-23, issue #25) — DONE
+
+Phase 4 targets the RBAC layer: `AuthorizationService`, the `SetFundPermissions`
+middleware, and `UserRoleController`. As in Phases 1 and 3 the classes were
+already partly covered. Coverage measured by line/method (pcov) across the
+RBAC/ACL suites that exercise these classes — `AuthorizationTest`,
+`UserRoleManagementTest`, the new `SetFundPermissionsTest`, `AclMatrixTest`,
+`AclWriteBlockingTest`, `SecurityApiAclMatrixTest` — before/after this pass
+(the full suite OOMs the slot's 512M pcov run, so coverage is scoped to these
+suites; `AuthorizationTest` alone was confirmed to be the sole driver of
+`AuthorizationService`'s number):
+
+| Class | Lines before | Lines after | Methods before | Methods after |
+|-------|-------------:|------------:|---------------:|--------------:|
+| `Middleware\SetFundPermissions`   | 72.2% | **100.0%** | 50.0% | **100.0%** |
+| `WebV1\UserRoleController`         | 92.0% | **99.1%**  | 60.0% | **80.0%**  |
+| `Services\AuthorizationService`   | 82.2% | **98.9%**  | 75.0% | **91.7%**  |
+
+Added:
+- **New `SetFundPermissionsTest`** — a unit test per `determineFundId()` branch
+  (route `fund` object / bare id, `fund_id` param, request input, `account`
+  object, `account_id` lookup) plus the non-resolving fall-throughs (no fund
+  handle, non-object `account` param, unknown `account_id`). Drives the
+  middleware to 100%.
+- **`AuthorizationTest`** — 4 tests for the previously-untested
+  `scopeCreditLinesQuery` (system-admin full / fund-admin / beneficiary-own /
+  null-user no-access), plus a non-null `getAccessibleFundIds()` passthrough.
+- **`UserRoleManagementTest`** — idempotent assign (system-admin + fund role),
+  invalid-role rejection, revoke system-admin of *another* user (success path),
+  revoke role-not-held no-op, and assign/revoke denied for non-admins.
+
+Remaining uncovered (both reachable only via states the HTTP/service layer
+doesn't reach in practice, left as-is):
+- `UserRoleController:125` — the "already has system admin role" `Flash::info`.
+  Unreached because line 121 gates on Spatie's team-scoped `hasRole('system-admin')`,
+  which (unlike the controller's own `isSystemAdmin()`) doesn't detect the
+  `fund_id=0` global role on re-assign, so the re-assign branch runs instead.
+- `AuthorizationService:213` — the `return false` guard for a transaction with
+  no `account`; every transaction in the system has one.
+
 ## Current State (original snapshot — stale, see Phase 1 status above)
 - **Overall Coverage**: 55.67% lines (5338/9588)
 - **Classes Covered**: 46.11% (172/373)

@@ -183,6 +183,110 @@ class UserRoleManagementTest extends TestCase
         $this->assertTrue($this->adminUser->isSystemAdmin());
     }
 
+    public function test_assign_system_admin_role_is_idempotent()
+    {
+        // Already a system admin → second assign hits the "already has" branch.
+        $response = $this->actingAs($this->adminUser)->post('/admin/user-roles/' . $this->adminUser->id . '/assign', [
+            'role' => 'system-admin',
+        ]);
+
+        $response->assertRedirect('/admin/user-roles/' . $this->adminUser->id);
+        $response->assertSessionHas('flash_notification');
+
+        $this->adminUser->refresh();
+        $this->assertTrue($this->adminUser->isSystemAdmin());
+    }
+
+    public function test_assign_fund_role_is_idempotent()
+    {
+        $fundId = $this->fund->id;
+        $this->assignFundRole($this->regularUser, 'fund-admin', $fundId);
+
+        // Assigning the same fund role again hits the "already has" branch.
+        $response = $this->actingAs($this->adminUser)->post('/admin/user-roles/' . $this->regularUser->id . '/assign', [
+            'role' => 'fund-admin',
+            'fund_id' => $fundId,
+        ]);
+
+        $response->assertRedirect('/admin/user-roles/' . $this->regularUser->id);
+        $response->assertSessionHas('flash_notification');
+
+        $this->regularUser->refresh();
+        $this->assertTrue($this->regularUser->hasRoleInFund('fund-admin', $fundId));
+    }
+
+    public function test_assign_rejects_invalid_role()
+    {
+        $response = $this->actingAs($this->adminUser)->post('/admin/user-roles/' . $this->regularUser->id . '/assign', [
+            'role' => 'super-duper-admin',
+        ]);
+
+        $response->assertSessionHasErrors('role');
+    }
+
+    // ==================== Role Revocation Tests (cont.) ====================
+
+    public function test_revoke_system_admin_from_another_user()
+    {
+        // A second system admin so we exercise the success (not "own role") path.
+        $target = User::factory()->create();
+        $this->makeSystemAdmin($target);
+        $this->assertTrue($target->isSystemAdmin());
+
+        $response = $this->actingAs($this->adminUser)->post('/admin/user-roles/' . $target->id . '/revoke', [
+            'role' => 'system-admin',
+            'fund_id' => 0,
+        ]);
+
+        $response->assertRedirect('/admin/user-roles/' . $target->id);
+        $response->assertSessionHas('flash_notification');
+
+        $target->refresh();
+        $this->assertFalse($target->isSystemAdmin());
+    }
+
+    public function test_revoke_role_user_does_not_have_is_noop()
+    {
+        $fundId = $this->fund->id;
+        $this->assertFalse($this->regularUser->hasRoleInFund('fund-admin', $fundId));
+
+        // Revoking a role the user never had hits the "does not have" info branch.
+        $response = $this->actingAs($this->adminUser)->post('/admin/user-roles/' . $this->regularUser->id . '/revoke', [
+            'role' => 'fund-admin',
+            'fund_id' => $fundId,
+        ]);
+
+        $response->assertRedirect('/admin/user-roles/' . $this->regularUser->id);
+        $response->assertSessionHas('flash_notification');
+
+        $this->regularUser->refresh();
+        $this->assertFalse($this->regularUser->hasRoleInFund('fund-admin', $fundId));
+    }
+
+    public function test_assign_denied_for_regular_user()
+    {
+        $response = $this->actingAs($this->regularUser)->post('/admin/user-roles/' . $this->adminUser->id . '/assign', [
+            'role' => 'system-admin',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->adminUser->refresh();
+        // Nothing changed; the regular user never passed the admin gate.
+        $this->assertTrue($this->adminUser->isSystemAdmin());
+    }
+
+    public function test_revoke_denied_for_regular_user()
+    {
+        $response = $this->actingAs($this->regularUser)->post('/admin/user-roles/' . $this->adminUser->id . '/revoke', [
+            'role' => 'system-admin',
+            'fund_id' => 0,
+        ]);
+
+        $response->assertRedirect('/');
+        $this->adminUser->refresh();
+        $this->assertTrue($this->adminUser->isSystemAdmin());
+    }
+
     // ==================== User Model Role Tests ====================
 
     public function test_user_is_system_admin()

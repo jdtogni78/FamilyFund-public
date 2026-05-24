@@ -393,6 +393,15 @@ class AuthorizationTest extends TestCase
         $this->assertEmpty($fundIds['readonly']);
     }
 
+    public function test_authorization_service_get_accessible_fund_ids_for_fund_admin()
+    {
+        // Non-null user → the service delegates to the user's own lookup.
+        $service = new AuthorizationService($this->fundAdmin);
+        $fundIds = $service->getAccessibleFundIds();
+
+        $this->assertContains($this->fund->id, $fundIds['full']);
+    }
+
     public function test_authorization_service_can_view_account_for_null_user()
     {
         $service = new AuthorizationService(null);
@@ -542,7 +551,78 @@ class AuthorizationTest extends TestCase
         $this->assertFalse(Gate::forUser($this->beneficiary)->allows('delete', $fund));
     }
 
+    // ==================== Credit Line Scoping Tests ====================
+
+    public function test_authorization_service_scopes_credit_lines_for_system_admin()
+    {
+        $this->createTestCreditLine();
+
+        $service = new AuthorizationService($this->systemAdmin);
+        $query = \App\Models\AccountCreditLineExt::query();
+
+        $service->scopeCreditLinesQuery($query);
+
+        // System admin should see all credit lines.
+        $this->assertGreaterThan(0, $query->count());
+    }
+
+    public function test_authorization_service_scopes_credit_lines_for_fund_admin()
+    {
+        $this->createTestCreditLine();
+
+        $service = new AuthorizationService($this->fundAdmin);
+        $query = \App\Models\AccountCreditLineExt::query();
+
+        $service->scopeCreditLinesQuery($query);
+
+        // Fund admin should only see credit lines for accounts in their fund.
+        $creditLines = $query->get();
+        $this->assertGreaterThan(0, $creditLines->count());
+        foreach ($creditLines as $cl) {
+            $account = AccountExt::find($cl->account_id);
+            $this->assertEquals($this->fund->id, $account->fund_id);
+        }
+    }
+
+    public function test_authorization_service_scopes_credit_lines_for_beneficiary()
+    {
+        $this->createTestCreditLine();
+
+        $service = new AuthorizationService($this->beneficiary);
+        $query = \App\Models\AccountCreditLineExt::query();
+
+        $service->scopeCreditLinesQuery($query);
+
+        // Beneficiary should only see credit lines on their own account.
+        $creditLines = $query->get();
+        foreach ($creditLines as $cl) {
+            $this->assertEquals($this->account->id, $cl->account_id);
+        }
+    }
+
+    public function test_authorization_service_scopes_credit_lines_for_null_user()
+    {
+        $this->createTestCreditLine();
+
+        $service = new AuthorizationService(null);
+        $query = \App\Models\AccountCreditLineExt::query();
+
+        $service->scopeCreditLinesQuery($query);
+
+        // Null user should see no credit lines.
+        $this->assertEquals(0, $query->count());
+    }
+
     // ==================== Helper Methods ====================
+
+    private function createTestCreditLine(): \App\Models\AccountCreditLineExt
+    {
+        // AccountCreditLineExt has no convention-named factory; the existing
+        // factory class is keyed to the base name but builds the Ext model.
+        return \Database\Factories\AccountCreditLineFactory::new()->create([
+            'account_id' => $this->account->id,
+        ]);
+    }
 
     private function createTestTransaction(): TransactionExt
     {

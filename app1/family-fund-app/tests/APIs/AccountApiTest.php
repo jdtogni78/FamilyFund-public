@@ -6,6 +6,8 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use App\Models\Account;
 use App\Models\Fund;
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Tests\DataFactory;
 use App\Http\Resources\AccountResource;
 
@@ -40,6 +42,7 @@ class AccountApiTest extends TestCase
     public function test_read_account()
     {
         $account = $this->createAccount();
+        $this->actingAsFundAdminFor($account->fund);
 
         $this->response = $this->json(
             'GET',
@@ -47,6 +50,21 @@ class AccountApiTest extends TestCase
         );
 
         $this->assertApiResponse((new AccountResource($account))->toArray(null));
+    }
+
+    private function actingAsFundAdminFor(Fund $fund): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $user = User::factory()->create();
+        $role = RolesAndPermissionsSeeder::createFundRole('fund-admin', $fund->id);
+
+        $original = getPermissionsTeamId();
+        setPermissionsTeamId($fund->id);
+        $user->assignRole($role);
+        setPermissionsTeamId($original);
+
+        $this->actingAs($user);
     }
 
     #[Test]

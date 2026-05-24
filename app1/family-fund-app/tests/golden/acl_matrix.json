@@ -130,8 +130,8 @@
         },
         "accountReports\/{accountReport}": {
             "anonymous": 302,
-            "unassigned": 200,
-            "beneficiary": 200,
+            "unassigned": 403,
+            "beneficiary": 403,
             "financialManager": 200,
             "fundAdmin": 200,
             "systemAdmin": 200
@@ -506,8 +506,8 @@
         },
         "fundReports\/{fundReport}": {
             "anonymous": 302,
-            "unassigned": 200,
-            "beneficiary": 200,
+            "unassigned": 403,
+            "beneficiary": 403,
             "financialManager": 200,
             "fundAdmin": 200,
             "systemAdmin": 200

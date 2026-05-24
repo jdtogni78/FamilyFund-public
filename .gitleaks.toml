@@ -1,0 +1,49 @@
+title = "FamilyFund Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Third-party/vendored code is not ours to secret-scan (matches the Trivy/Semgrep ignores). Avoids false positives like symfony/mime MimeTypes.php."
+paths = [
+  '''(^|/)vendor/''',
+  '''(^|/)node_modules/''',
+]
+
+[[allowlists]]
+description = "Known local-only FamilyFund development credentials"
+condition = "AND"
+paths = [
+  '''^app1/docker-compose\.(dev|dev2|acl|ffacl|env)\.yml$''',
+  '''^app1/family-fund-app/\.env\.dev$''',
+  '''^AGENTS\.md$''',
+  '''^SECURITY_SCAN_AUTOMATION_PLAN\.md$'''
+]
+regexes = [
+  '''famfun_dev''',
+  '''Codex-test-2024''',
+  '''MARIADB_PASSWORD=1234''',
+  '''MARIADB_ROOT_PASSWORD=123456''',
+  '''DB_PASSWORD=123456''',
+  '''DB_PASSWORD=1234'''
+]
+
+[[allowlists]]
+description = "Local-only, git-ignored dev/test env + compose artifacts (never committed). The routine gate scans the working tree, so on a machine holding a leased pool/test slot these files exist on disk and hold only rotated local dev creds. They are absent from a clean checkout / CI."
+paths = [
+  '''(^|/)\.env\.dev$''',
+  '''(^|/)\.env\.pool[0-9]*$''',
+  '''(^|/)\.env\.test[0-9]*$''',
+  '''(^|/)docker-compose\.(pool|test)[0-9]*\.local\.yml$''',
+]
+
+[[allowlists]]
+description = "Historical local database backup filenames documented in gitignore"
+condition = "AND"
+paths = [
+  '''^\.gitignore$'''
+]
+regexes = [
+  '''familyfund_dev_data_[0-9]+\.sql''',
+  '''familyfund_ddl_[0-9]+\.sql'''
+]

@@ -1,0 +1,16 @@
+.git/
+.claude/
+.playwright-cli/
+app1/datadir*/
+app1/family-fund-app/bootstrap/cache/
+app1/family-fund-app/docker_tmp/
+app1/family-fund-app/node_modules/
+app1/family-fund-app/public/build/
+app1/family-fund-app/storage/
+app1/family-fund-app/vendor/
+backups/
+coverage-html/
+database/dev/*.sql
+database/prod/*.sql
+output/
+vendor/

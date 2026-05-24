@@ -1,0 +1,441 @@
+name: Security Scan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+env:
+  APP_DIR: app1/family-fund-app
+
+jobs:
+  composer-audit:
+    name: Composer Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Audit locked Composer dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer audit --locked --format=plain
+
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Audit locked npm dependencies
+        working-directory: ${{ env.APP_DIR }}
+        # Shared gate: honors the documented .npm-audit-ignore list (dev-server
+        # vite/esbuild advisories that don't ship to prod). Keep in sync with
+        # bin/security-scan.sh.
+        run: node bin/npm-audit-gate.cjs
+
+  gitleaks:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Working-tree scan (current committed state), matching bin/security-scan.sh.
+      # Deep git-history scanning/purge of already-removed historical secrets is a
+      # separate pre-publish concern tracked under the secret-rotation ticket.
+      - name: Run Gitleaks (working tree)
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:latest \
+            detect --source /repo --no-git --redact --config /repo/.gitleaks.toml
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade semgrep
+
+      - name: Run Semgrep
+        id: semgrep
+        continue-on-error: true
+        run: |
+          # p/laravel dropped: the registry intermittently 404s for it, which
+          # aborts the whole scan. Keep in sync with bin/security-scan.sh.
+          semgrep scan \
+            --config p/php \
+            --config p/owasp-top-ten \
+            --config p/security-audit \
+            --sarif \
+            --output semgrep.sarif \
+            $APP_DIR
+
+      - name: Upload Semgrep SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      - name: Fail on Semgrep findings
+        if: steps.semgrep.outcome == 'failure'
+        run: exit 1
+
+  trivy-config:
+    name: Trivy Config
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy config scan
+        id: trivy
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          # We don't own vendored configs (laravel/sail Dockerfiles, etc.);
+          # only our own Dockerfiles/compose should gate the build. Keep this in
+          # sync with bin/security-scan.sh.
+          skip-dirs: '**/vendor/**,**/node_modules/**'
+          trivyignores: .trivyignore
+
+      - name: Upload Trivy config SARIF
+        if: always() && hashFiles('trivy-config.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
+      - name: Fail on Trivy config findings
+        if: steps.trivy.outcome == 'failure'
+        run: exit 1
+
+  security-route-guardrails:
+    name: Security Route Guardrails
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare test environment
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Capture route inventory
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan route:list --json > route-list.json
+
+      - name: Upload route inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: familyfund-route-list
+          path: ${{ env.APP_DIR }}/route-list.json
+          if-no-files-found: error
+
+      - name: Run security automation tests
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          php artisan test --filter=SecurityRouteAutomationTest
+          php artisan test --filter=SecurityCsrfRouteAutomationTest
+
+  security-access-regressions:
+    name: Security Access Regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: familyfund_dev
+      DB_USERNAME: root
+      DB_PASSWORD: 123456
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: familyfund_dev
+          MARIADB_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare test environment
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Prepare database
+        working-directory: ${{ env.APP_DIR }}
+        run: php artisan migrate --force
+
+      - name: Run access regression tests
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          php artisan test --filter=SecurityAccessRegressionTest
+          php artisan test --filter=SecurityApiAclMatrixTest
+
+  trivy-filesystem:
+    name: Trivy Filesystem
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        id: trivy
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          vuln-type: os,library
+
+      - name: Upload Trivy filesystem SARIF
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-filesystem
+
+      - name: Fail on Trivy filesystem findings
+        if: steps.trivy.outcome == 'failure'
+        run: exit 1
+
+  trivy-image:
+    name: Trivy Docker Image
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build FamilyFund image
+        working-directory: app1
+        run: docker build -t familyfund-security-scan:ci .
+
+      - name: Run Trivy image scan
+        id: trivy
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: familyfund-security-scan:ci
+          format: sarif
+          output: trivy-image.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+
+      - name: Upload Trivy image SARIF
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      - name: Fail on Trivy image findings
+        if: steps.trivy.outcome == 'failure'
+        run: exit 1
+
+  sbom:
+    name: Generate SBOM
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate repository SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: familyfund-sbom.cdx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: familyfund-sbom
+          path: familyfund-sbom.cdx.json
+          if-no-files-found: error
+
+  osv-scanner:
+    name: OSV Scanner
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run OSV scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --lockfile app1/family-fund-app/composer.lock
+            --lockfile app1/family-fund-app/package-lock.json
+
+  zap-baseline:
+    name: OWASP ZAP Baseline
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Build frontend assets
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare local environment
+        run: cp app1/family-fund-app/.env.example app1/family-fund-app/.env
+
+      - name: Install PHP dependencies in container
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm familyfund composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Boot FamilyFund stack
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build familyfund mariadb mailhog quickchart
+
+      - name: Prepare database
+        working-directory: app1
+        run: |
+          for attempt in {1..60}; do
+            if docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T mariadb mariadb-admin ping -h 127.0.0.1 -uroot -p123456 --silent; then
+              break
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T familyfund php artisan migrate --force
+
+      - name: Wait for app
+        run: |
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:3001 >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker ps
+          docker compose -f app1/docker-compose.yml -f app1/docker-compose.dev.yml logs familyfund || true
+          exit 1
+
+      - name: Run ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:3001
+          fail_action: false
+          artifact_name: zap-baseline-report
+
+      - name: Stop FamilyFund stack
+        if: always()
+        working-directory: app1
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v

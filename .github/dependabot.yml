@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /app1/family-fund-app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    groups:
+      composer-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /app1/family-fund-app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:30"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-and-patch:
+        update-types:
+          - minor
+          - patch

@@ -49,6 +49,17 @@ class FundReportControllerExt extends AppBaseController
             return redirect(route('fundReports.index'));
         }
 
+        $user = auth()->user();
+        $fundId = (int) $fundReport->fund_id;
+        abort_unless(
+            $user && (
+                $user->isSystemAdmin()
+                || $user->hasRoleInFund('fund-admin', $fundId)
+                || $user->hasRoleInFund('financial-manager', $fundId)
+            ),
+            403
+        );
+
         // Check email status from OperationLog
         $emailStatus = [
             'fundEmailSent' => OperationLog::jobCompletedForModel(

@@ -117,7 +117,7 @@ docker exec familyfund php artisan test --filter=TransactionTest    # Single tes
 docker exec familyfund ./vendor/bin/phpunit --coverage-text 2>&1 | grep -E "^  (Lines|Methods|Classes):"
 ```
 
-See `test_plan.md` for detailed test fix progress and remaining issues.
+See the **Trading & Fund** GitHub Project board (#1) for remaining test-fix work (issues prefixed `test:`).
 
 ## Docker Services
 

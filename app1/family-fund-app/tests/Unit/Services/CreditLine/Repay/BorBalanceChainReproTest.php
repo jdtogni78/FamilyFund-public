@@ -47,7 +47,7 @@ class BorBalanceChainReproTest extends TestCase
 
         // Anchor origination in the past so the repayment dates below all
         // fall within [origination_date, today] — future-dated REPs are
-        // rejected (QA_BUGS_2026-05-20 #2).
+        // rejected (QA-2026-05-20 #2).
         $origination = Carbon::today()->copy()->subMonths(4);
         $line = $draw->open($account, 3000.0, 18, 'monthly', 'Buy Home', $origination);
 

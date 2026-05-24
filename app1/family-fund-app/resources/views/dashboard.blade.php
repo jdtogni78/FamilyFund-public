@@ -5,7 +5,7 @@
 
     @php
         // Gate fund-scoped sections behind any-fund access so a no-role user
-        // doesn't see links that 403 on click (QA_BUGS_2026-05-19 #7).
+        // doesn't see links that 403 on click (QA-2026-05-19 #7).
         $u = auth()->user();
         $canFundUi = $u && method_exists($u, 'canAccessAnyFund') && $u->canAccessAnyFund();
     @endphp

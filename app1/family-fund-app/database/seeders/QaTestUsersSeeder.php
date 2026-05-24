@@ -31,8 +31,8 @@ class QaTestUsersSeeder extends Seeder
             ['beneficiary',        'qa-beneficiary@test.local',        'QA Beneficiary'],
             // claude@test.local is documented in CLAUDE.md as the default
             // dev-login user. Without a role it 403s on every nav link, so
-            // grant it fund-admin on the first fund (matches the QA bug log
-            // #14 in docs/QA_BUGS_2026-05-19.md).
+            // grant it fund-admin on the first fund (matches QA-2026-05-19
+            // bug #14; QA log removed from the tree, see git history).
             ['fund-admin',         'claude@test.local',                'Claude Test'],
         ];
 

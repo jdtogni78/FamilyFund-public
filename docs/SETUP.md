@@ -140,8 +140,7 @@ app1/family-fund-app/bin/prod-to-dev.sh
 ```
 
 `bin/prod-to-dev.sh` wraps `database/prod_to_dev.sql` plus the two artisan
-follow-ups a fresh prod dump otherwise misses (per
-[`docs/QA_BUGS_2026-05-19.md`](QA_BUGS_2026-05-19.md) #2 + #5): the credit-line
+follow-ups a fresh prod dump otherwise misses: the credit-line
 backfill migration and the spatie permissions/QA-users seeders. The SQL itself
 resets passwords (`devpassword123`), anonymizes names/emails, and preserves
 `admin@dev.familyfund.local` and `claude@test.local`.

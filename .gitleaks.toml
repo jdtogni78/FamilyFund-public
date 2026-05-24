@@ -16,8 +16,7 @@ condition = "AND"
 paths = [
   '''^app1/docker-compose\.(dev|dev2|acl|ffacl|env)\.yml$''',
   '''^app1/family-fund-app/\.env\.dev$''',
-  '''^AGENTS\.md$''',
-  '''^SECURITY_SCAN_AUTOMATION_PLAN\.md$'''
+  '''^AGENTS\.md$'''
 ]
 regexes = [
   '''famfun_dev''',

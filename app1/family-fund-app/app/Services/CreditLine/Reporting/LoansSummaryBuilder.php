@@ -31,7 +31,7 @@ class LoansSummaryBuilder
      *         at that date — lines whose origination_date is in the future
      *         relative to $asOf are excluded, totals are recomputed from the
      *         transaction history at that date, and net outstanding comes
-     *         from the BOR ledger row that was open at $asOf. (QA_BUGS_2026-05-21
+     *         from the BOR ledger row that was open at $asOf. (QA-2026-05-21
      *         #7, #16: the present-day version corrupts as-of views and the
      *         "Lifetime repaid" tile.)
      */
@@ -51,7 +51,7 @@ class LoansSummaryBuilder
         // Lifetime repaid is the share of principal actually paid back across
         // lines: Σ (principal − outstanding_at_$asOf). Using SUM(transactions
         // WHERE type=REP) here would let overpayments and corrupted REP rows
-        // inflate the figure (QA_BUGS_2026-05-21 #7).
+        // inflate the figure (QA-2026-05-21 #7).
         $isLive = $asOfStr >= $today->toDateString();
         $totalRepaid = 0.0;
         foreach ($lines as $line) {

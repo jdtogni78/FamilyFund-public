@@ -25,6 +25,7 @@ use App\Mail\TransactionEmail;
 class TransactionExtApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
 
     private DataFactory $factory;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateAccountBalanceAPIRequest;
 use App\Http\Requests\API\UpdateAccountBalanceAPIRequest;
 use App\Models\AccountBalance;
@@ -18,6 +19,8 @@ use Response;
 
 class AccountBalanceAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  AccountBalanceRepository */
     protected $accountBalanceRepository;
 
@@ -35,11 +38,21 @@ class AccountBalanceAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $accountBalances = $this->accountBalanceRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByAccountRelation(AccountBalance::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $accountBalances = $query->get();
 
         return $this->sendResponse(AccountBalanceResource::collection($accountBalances), 'Account Balances retrieved successfully');
     }
@@ -55,6 +68,8 @@ class AccountBalanceAPIController extends AppBaseController
     public function store(CreateAccountBalanceAPIRequest $request)
     {
         $input = $request->all();
+
+        $this->requireAccountAccess($this->resolveAccount($input['account_id'] ?? null), modify: true);
 
         $accountBalance = $this->accountBalanceRepository->create($input);
 
@@ -77,6 +92,8 @@ class AccountBalanceAPIController extends AppBaseController
         if (empty($accountBalance)) {
             return $this->sendError('Account Balance not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountBalance->account_id));
 
         return $this->sendResponse(new AccountBalanceResource($accountBalance), 'Account Balance retrieved successfully');
     }
@@ -101,6 +118,8 @@ class AccountBalanceAPIController extends AppBaseController
             return $this->sendError('Account Balance not found');
         }
 
+        $this->requireAccountAccess($this->resolveAccount($accountBalance->account_id), modify: true);
+
         $accountBalance = $this->accountBalanceRepository->update($input, $id);
 
         return $this->sendResponse(new AccountBalanceResource($accountBalance), 'AccountBalance updated successfully');
@@ -124,6 +143,8 @@ class AccountBalanceAPIController extends AppBaseController
         if (empty($accountBalance)) {
             return $this->sendError('Account Balance not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountBalance->account_id), modify: true);
 
         $accountBalance->delete();
 

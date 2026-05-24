@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateTransactionAPIRequest;
 use App\Http\Requests\API\UpdateTransactionAPIRequest;
 use App\Models\AccountExt;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 class TransactionAPIControllerExt extends AppBaseController
 {
     use TransactionTrait;
+    use AuthorizesApiAccess;
 
     /** @var  TransactionRepository */
     protected $transactionRepository;
@@ -47,6 +49,9 @@ class TransactionAPIControllerExt extends AppBaseController
      */
     public function store(CreateTransactionAPIRequest $request)
     {
+        // Creating transactions requires full access to a fund (TransactionPolicy::create).
+        $this->requireFullAccessToAnyFund();
+
         $input = $request->all();
         $transaction = null;
         try {
@@ -62,11 +67,21 @@ class TransactionAPIControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $transactions = $this->transactionRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByAccountRelation(TransactionExt::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $transactions = $query->get();
 
         return $this->sendResponse(TransactionResource::collection($transactions), 'Transactions retrieved successfully');
     }
@@ -79,6 +94,8 @@ class TransactionAPIControllerExt extends AppBaseController
         if (empty($transaction)) {
             return $this->sendError('Transaction not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($transaction->account_id));
 
         return $this->sendResponse(new TransactionResource($transaction), 'Transaction retrieved successfully');
     }
@@ -94,6 +111,8 @@ class TransactionAPIControllerExt extends AppBaseController
             return $this->sendError('Transaction not found');
         }
 
+        $this->requireAccountAccess($this->resolveAccount($transaction->account_id), modify: true);
+
         $transaction = $this->transactionRepository->update($input, $id);
 
         return $this->sendResponse(new TransactionResource($transaction), 'Transaction updated successfully');
@@ -107,6 +126,8 @@ class TransactionAPIControllerExt extends AppBaseController
         if (empty($transaction)) {
             return $this->sendError('Transaction not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($transaction->account_id), modify: true);
 
         $transaction->delete();
 

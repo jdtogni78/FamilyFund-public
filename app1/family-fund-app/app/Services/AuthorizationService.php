@@ -150,6 +150,80 @@ class AuthorizationService
     }
 
     /**
+     * Scope a query whose model belongs to an account, returning only rows the
+     * user can access. Generalizes scopeTransactionsQuery/scopeCreditLinesQuery
+     * for any account-owned resource (account_reports, account_balances,
+     * account_matching_rules, ...).
+     *
+     * Access = rows whose account is in a fully-accessible fund OR whose
+     * account is one the user owns directly (beneficiary). Unlike the older
+     * per-model scopes, this denies-by-default when the user has no access.
+     *
+     * @param string $accountFk foreign-key column on the model (e.g. account_id)
+     * @param string $relation  the belongsTo-account relation name on the model
+     */
+    public function scopeByAccountRelation(Builder $query, string $accountFk = 'account_id', string $relation = 'account'): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $accessibleFunds = $this->user->getAccessibleFundIds();
+        $ownAccountIds = $this->user->getOwnAccountIds();
+
+        // Deny-by-default: a user with neither full-fund access nor own accounts
+        // must not see any account-owned rows.
+        if (empty($accessibleFunds['full']) && empty($ownAccountIds)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($q) use ($accessibleFunds, $ownAccountIds, $accountFk, $relation) {
+            if (!empty($accessibleFunds['full'])) {
+                $q->orWhereHas($relation, function ($accountQuery) use ($accessibleFunds) {
+                    $accountQuery->whereIn('fund_id', $accessibleFunds['full']);
+                });
+            }
+
+            if (!empty($ownAccountIds)) {
+                $q->orWhereIn($accountFk, $ownAccountIds);
+            }
+        });
+    }
+
+    /**
+     * Scope a query whose model has a direct fund column, returning only rows
+     * in funds the user can access (full or readonly). Denies by default.
+     *
+     * @param string $fundFk foreign-key column on the model (e.g. fund_id)
+     */
+    public function scopeByFundColumn(Builder $query, string $fundFk = 'fund_id'): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $accessibleFunds = $this->user->getAccessibleFundIds();
+        $allAccessibleFundIds = array_merge(
+            $accessibleFunds['full'],
+            $accessibleFunds['readonly']
+        );
+
+        if (empty($allAccessibleFundIds)) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        return $query->whereIn($fundFk, $allAccessibleFundIds);
+    }
+
+    /**
      * Get all fund IDs the user has access to.
      *
      * @return array{full: array<int>, readonly: array<int>}

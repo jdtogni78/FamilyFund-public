@@ -24,6 +24,14 @@ class PersonAPIController extends AppBaseController
     public function __construct(PersonRepository $personRepo)
     {
         $this->personRepository = $personRepo;
+
+        // PII resource (people + linked phones/addresses/id_documents): no
+        // legitimate non-admin API consumer; PII is served through the web UI.
+        // Restrict every action to system admins (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     /**

@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Concerns\ActsAsApiSystemAdmin;
 use App\Models\Portfolio;
 use App\Models\Fund;
 use App\Http\Resources\PortfolioResource;
@@ -11,7 +12,7 @@ use App\Http\Resources\PortfolioResource;
 use PHPUnit\Framework\Attributes\Test;
 class PortfolioApiTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, ActsAsApiSystemAdmin;
 
     public function makePortfolio() {
         $fund = Fund::factory()->create();

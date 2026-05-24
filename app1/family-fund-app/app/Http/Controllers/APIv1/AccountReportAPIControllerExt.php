@@ -4,6 +4,7 @@ namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\AccountTrait;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateAccountReportAPIRequest;
 use App\Http\Requests\API\UpdateAccountReportAPIRequest;
 use App\Http\Resources\AccountReportResource;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 class AccountReportAPIControllerExt extends AppBaseController
 {
     use AccountTrait;
+    use AuthorizesApiAccess;
 
     /** @var  AccountReportRepository */
     private $accountReportRepository;
@@ -32,6 +34,10 @@ class AccountReportAPIControllerExt extends AppBaseController
     public function store(CreateAccountReportAPIRequest $request)
     {
         $input = $request->all();
+
+        // Generating/sending an account report requires modify rights on the
+        // target account (fund-admin / financial-manager).
+        $this->requireAccountAccess($this->resolveAccount($input['account_id'] ?? null), modify: true);
 
         $accountReport = AccountReport::create($input);
 
@@ -46,11 +52,21 @@ class AccountReportAPIControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $accountReports = $this->accountReportRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByAccountRelation(AccountReport::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $accountReports = $query->get();
 
         return $this->sendResponse(AccountReportResource::collection($accountReports), 'Account Reports retrieved successfully');
     }
@@ -63,6 +79,8 @@ class AccountReportAPIControllerExt extends AppBaseController
         if (empty($accountReport)) {
             return $this->sendError('Account Report not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountReport->account_id));
 
         return $this->sendResponse(new AccountReportResource($accountReport), 'Account Report retrieved successfully');
     }
@@ -78,6 +96,8 @@ class AccountReportAPIControllerExt extends AppBaseController
             return $this->sendError('Account Report not found');
         }
 
+        $this->requireAccountAccess($this->resolveAccount($accountReport->account_id), modify: true);
+
         $accountReport = $this->accountReportRepository->update($input, $id);
 
         return $this->sendResponse(new AccountReportResource($accountReport), 'AccountReport updated successfully');
@@ -91,6 +111,8 @@ class AccountReportAPIControllerExt extends AppBaseController
         if (empty($accountReport)) {
             return $this->sendError('Account Report not found');
         }
+
+        $this->requireAccountAccess($this->resolveAccount($accountReport->account_id), modify: true);
 
         $accountReport->delete();
 

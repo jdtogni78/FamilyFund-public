@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\Test;
 class PortfolioApiGoldenDataTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
     protected function setUp(): void
     {

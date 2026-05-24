@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Concerns\ActsAsApiSystemAdmin;
 use Tests\DataFactory;
 use App\Models\Transaction;
 use App\Models\TransactionExt;
@@ -11,7 +12,7 @@ use App\Models\TransactionExt;
 use PHPUnit\Framework\Attributes\Test;
 class TransactionApiTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, ActsAsApiSystemAdmin;
 
     private $factory;
     private $account;

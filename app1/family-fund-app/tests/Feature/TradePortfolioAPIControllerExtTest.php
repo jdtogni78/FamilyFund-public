@@ -19,6 +19,7 @@ use Tests\TestCase;
 class TradePortfolioAPIControllerExtTest extends TestCase
 {
     use DatabaseTransactions, WithoutMiddleware, ApiTestTrait;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
     protected DataFactory $df;
     protected User $user;

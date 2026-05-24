@@ -24,6 +24,13 @@ class IdDocumentAPIController extends AppBaseController
     public function __construct(IdDocumentRepository $idDocumentRepo)
     {
         $this->idDocumentRepository = $idDocumentRepo;
+
+        // PII resource (identity documents): no legitimate non-admin API
+        // consumer; served through the web UI. Restrict to system admins (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     /**

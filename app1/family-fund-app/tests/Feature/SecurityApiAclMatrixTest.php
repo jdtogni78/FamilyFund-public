@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\AccountBalance;
 use App\Models\AccountExt;
+use App\Models\AccountReport;
 use App\Models\Fund;
+use App\Models\FundReport;
+use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -14,15 +18,22 @@ use Tests\TestCase;
 /**
  * API ACL matrix.
  *
- * Account API access is covered in depth below (object-level authorization is
- * enforced by AccountAPIController). The remaining generated resource
- * controllers (funds, transactions, account/fund reports, users, people, id
- * documents) are currently only protected by the `auth:sanctum` route lock and
- * do NOT yet enforce object-level / tenant scoping — see issue #49 (item A).
- * Until that lands, the cross-resource coverage here asserts the one boundary
- * that IS enforced for every resource: unauthenticated requests are rejected.
- * The per-role / response-body cross-tenant assertions for those resources
- * should be added alongside the scoping fixes in #49.
+ * Object-level / tenant authorization is now enforced across the generated
+ * resource controllers (#13 / #49 item A), mirroring AccountAPIController via
+ * App\Http\Controllers\Traits\AuthorizesApiAccess:
+ *
+ *  - Tenant-scoped (fund/account): funds, accounts, portfolios, transactions,
+ *    account_balances, account_matching_rules, transaction_matchings,
+ *    fund_reports, account_reports, trade_portfolios/items, portfolio_assets —
+ *    scoped index + object-level guards on show/update/destroy.
+ *  - PII / system (admin-only): users, people, phones, addresses, id_documents,
+ *    scheduled_jobs.
+ *  - Shared/reference (non-tenant, no IDOR dimension): assets, asset_prices,
+ *    matching_rules, schedules, change_logs, asset_change_logs — auth-locked
+ *    only; write-authz hardening tracked in #50 / #51.
+ *
+ * This suite asserts both the auth boundary (unauthenticated → 401) and the
+ * per-role / cross-tenant object-level boundaries for the scoped resources.
  */
 class SecurityApiAclMatrixTest extends TestCase
 {
@@ -182,6 +193,159 @@ class SecurityApiAclMatrixTest extends TestCase
                     "Unauthenticated GET {$url} returned a success payload."
                 );
             }
+        }
+    }
+
+    /**
+     * /api/funds/{id} must enforce the same object-level matrix as accounts:
+     * a fund is visible only to callers with a role in it (and system admins).
+     */
+    public function test_fund_api_detail_acl_matrix(): void
+    {
+        $ownFundId = $this->ownAccount->fund_id;
+        $crossFundId = $this->crossFundAccount->fund_id;
+
+        $cases = [
+            'anonymous own fund' => [null, $ownFundId, [401]],
+            'unassigned own fund' => [$this->unassigned, $ownFundId, [403]],
+            'beneficiary own fund' => [$this->beneficiary, $ownFundId, [200]],
+            'beneficiary cross-fund' => [$this->beneficiary, $crossFundId, [403, 404]],
+            'fund admin own fund' => [$this->fundAdmin, $ownFundId, [200]],
+            'fund admin cross-fund' => [$this->fundAdmin, $crossFundId, [403, 404]],
+            'system admin cross-fund' => [$this->systemAdmin, $crossFundId, [200]],
+        ];
+
+        foreach ($cases as $label => [$user, $fundId, $expected]) {
+            $this->resetAuth();
+            if ($user) {
+                Sanctum::actingAs($user);
+            }
+
+            $response = $this->getJson('/api/funds/' . $fundId);
+
+            $this->assertContains(
+                $response->getStatusCode(),
+                $expected,
+                "{$label}: unexpected status for /api/funds/{$fundId}"
+            );
+        }
+    }
+
+    /**
+     * Account-owned resources (transactions, balances, reports) must not be
+     * readable for a sibling or cross-fund account through their detail routes.
+     */
+    public function test_account_owned_resources_reject_cross_tenant_reads(): void
+    {
+        $siblingTxn = Transaction::factory()->create(['account_id' => $this->siblingAccount->id]);
+        $crossTxn = Transaction::factory()->create(['account_id' => $this->crossFundAccount->id]);
+        $siblingBalance = AccountBalance::factory()->create(['account_id' => $this->siblingAccount->id]);
+        $siblingReport = AccountReport::factory()->create([
+            'account_id' => $this->siblingAccount->id,
+            'type' => 'ALL',
+            'as_of' => '2026-01-15',
+        ]);
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->beneficiary);
+
+        $routes = [
+            '/api/transactions/' . $siblingTxn->id,
+            '/api/transactions/' . $crossTxn->id,
+            '/api/account_balances/' . $siblingBalance->id,
+            '/api/account_reports/' . $siblingReport->id,
+        ];
+
+        foreach ($routes as $route) {
+            $response = $this->getJson($route);
+            $this->assertContains(
+                $response->getStatusCode(),
+                [403, 404],
+                "Beneficiary must not read another account's data via {$route}."
+            );
+        }
+    }
+
+    /**
+     * Fund-owned resources (fund reports) must not be readable across funds.
+     */
+    public function test_fund_reports_reject_cross_tenant_reads(): void
+    {
+        $crossFundReport = FundReport::factory()->create([
+            'fund_id' => $this->crossFundAccount->fund_id,
+            'type' => 'ALL',
+            'as_of' => '2026-01-15',
+        ]);
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->beneficiary);
+
+        $response = $this->getJson('/api/fund_reports/' . $crossFundReport->id);
+
+        $this->assertContains(
+            $response->getStatusCode(),
+            [403, 404],
+            'Beneficiary must not read a cross-fund fund report.'
+        );
+    }
+
+    /**
+     * Scoped index endpoints must not leak sibling / cross-fund rows to a
+     * beneficiary (object-level scoping applied to the listing query).
+     */
+    public function test_scoped_index_does_not_leak_cross_tenant_records_to_beneficiary(): void
+    {
+        $ownTxn = Transaction::factory()->create(['account_id' => $this->ownAccount->id]);
+        $siblingTxn = Transaction::factory()->create(['account_id' => $this->siblingAccount->id]);
+        $crossTxn = Transaction::factory()->create(['account_id' => $this->crossFundAccount->id]);
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->beneficiary);
+
+        $response = $this->getJson('/api/transactions');
+        $response->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id')->all();
+        $this->assertContains($ownTxn->id, $ids, 'Beneficiary should see their own transaction.');
+        $this->assertNotContains($siblingTxn->id, $ids, 'Beneficiary must not see a sibling transaction.');
+        $this->assertNotContains($crossTxn->id, $ids, 'Beneficiary must not see a cross-fund transaction.');
+    }
+
+    /**
+     * PII / system resources have no legitimate non-admin API consumer and are
+     * restricted to system admins.
+     */
+    public function test_pii_and_system_resources_are_admin_only(): void
+    {
+        $adminOnly = [
+            '/api/users',
+            '/api/people',
+            '/api/phones',
+            '/api/addresses',
+            '/api/id_documents',
+            '/api/scheduled_jobs',
+        ];
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->beneficiary);
+        foreach ($adminOnly as $url) {
+            $response = $this->getJson($url);
+            $this->assertSame(
+                403,
+                $response->getStatusCode(),
+                "{$url} must be admin-only (beneficiary should get 403)."
+            );
+        }
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->systemAdmin);
+        foreach ($adminOnly as $url) {
+            $response = $this->getJson($url);
+            $this->assertSame(
+                200,
+                $response->getStatusCode(),
+                "{$url} should be reachable by a system admin (got {$response->getStatusCode()})."
+            );
         }
     }
 

@@ -24,6 +24,13 @@ class AddressAPIController extends AppBaseController
     public function __construct(AddressRepository $addressRepo)
     {
         $this->addressRepository = $addressRepo;
+
+        // PII resource: no legitimate non-admin API consumer; PII is served
+        // through the web UI. Restrict every action to system admins (#13 / #49).
+        $this->middleware(function ($request, $next) {
+            abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            return $next($request);
+        });
     }
 
     /**

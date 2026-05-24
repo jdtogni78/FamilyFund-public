@@ -4,12 +4,13 @@ use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
+use Tests\Concerns\ActsAsApiSystemAdmin;
 use App\Models\PortfolioAsset;
 
 use PHPUnit\Framework\Attributes\Test;
 class PortfolioAssetApiTest extends TestCase
 {
-    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use ApiTestTrait, WithoutMiddleware, DatabaseTransactions, ActsAsApiSystemAdmin;
 
     #[Test]
     public function test_create_portfolio_asset()

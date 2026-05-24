@@ -19,6 +19,7 @@ use Tests\DataFactory;
 class TransactionExtApiBasicsTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
+    use \Tests\Concerns\ActsAsApiSystemAdmin;
 
     public function testBasics()
     {

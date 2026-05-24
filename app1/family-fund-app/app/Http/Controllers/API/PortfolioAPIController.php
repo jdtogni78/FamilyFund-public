@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreatePortfolioAPIRequest;
 use App\Http\Requests\API\UpdatePortfolioAPIRequest;
 use App\Models\Portfolio;
@@ -18,6 +19,8 @@ use Response;
 
 class PortfolioAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  PortfolioRepository */
     protected $portfolioRepository;
 
@@ -35,11 +38,21 @@ class PortfolioAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $portfolios = $this->portfolioRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->scopePortfolioQuery(Portfolio::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $portfolios = $query->get();
 
         return $this->sendResponse(PortfolioResource::collection($portfolios), 'Portfolios retrieved successfully');
     }
@@ -54,6 +67,26 @@ class PortfolioAPIController extends AppBaseController
      */
     public function store(CreatePortfolioAPIRequest $request)
     {
+        // Creating a portfolio requires fund-management rights. If target funds
+        // are given, the caller must have modify rights on every one; otherwise
+        // (portfolios may be created without a fund) require full access to some
+        // fund. System admins bypass.
+        $user = $this->currentApiUser();
+        if (!$user?->isSystemAdmin()) {
+            $targetFundIds = $request->input('fund_ids', []);
+            if (empty($targetFundIds) && $request->filled('fund_id')) {
+                $targetFundIds = [$request->input('fund_id')];
+            }
+            $targetFundIds = array_values(array_filter(array_map('intval', $targetFundIds)));
+            $full = array_map('intval', $user?->getAccessibleFundIds()['full'] ?? []);
+
+            if (!empty($targetFundIds)) {
+                abort_unless(empty(array_diff($targetFundIds, $full)), 403);
+            } else {
+                abort_unless(!empty($full), 403);
+            }
+        }
+
         $input = $request->except(['fund_ids']);
 
         $portfolio = $this->portfolioRepository->create($input);
@@ -88,6 +121,8 @@ class PortfolioAPIController extends AppBaseController
             return $this->sendError('Portfolio not found');
         }
 
+        $this->requirePortfolioAccess($portfolio);
+
         return $this->sendResponse(new PortfolioResource($portfolio), 'Portfolio retrieved successfully');
     }
 
@@ -110,6 +145,8 @@ class PortfolioAPIController extends AppBaseController
         if (empty($portfolio)) {
             return $this->sendError('Portfolio not found');
         }
+
+        $this->requirePortfolioAccess($portfolio, modify: true);
 
         $portfolio = $this->portfolioRepository->update($input, $id);
 
@@ -144,6 +181,8 @@ class PortfolioAPIController extends AppBaseController
         if (empty($portfolio)) {
             return $this->sendError('Portfolio not found');
         }
+
+        $this->requirePortfolioAccess($portfolio, modify: true);
 
         $portfolio->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\APIv1;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Controllers\Traits\FundTrait;
 use App\Http\Controllers\Traits\FundSetupTrait;
 use App\Http\Requests\API\CreateFundWithSetupAPIRequest;
@@ -21,6 +22,7 @@ class FundAPIControllerExt extends AppBaseController
 {
     use FundTrait;
     use FundSetupTrait;
+    use AuthorizesApiAccess;
 
     protected $fundRepository;
     protected $transactionRepository;
@@ -62,6 +64,8 @@ class FundAPIControllerExt extends AppBaseController
             return $this->sendError('Fund not found');
         }
 
+        $this->requireFundAccess($this->resolveFund($id));
+
         $arr = $this->createFundResponse($fund, $asOf);
         return $this->sendResponse($arr, 'Fund retrieved successfully');
     }
@@ -82,6 +86,8 @@ class FundAPIControllerExt extends AppBaseController
         if (empty($fund)) {
             return $this->sendError('Fund not found');
         }
+
+        $this->requireFundAccess($this->resolveFund($id));
 
         $arr = $this->createFundArray($fund, $asOf);
         $this->perfObject = $fund;
@@ -106,6 +112,8 @@ class FundAPIControllerExt extends AppBaseController
         if (empty($fund)) {
             return $this->sendError('Fund not found');
         }
+
+        $this->requireFundAccess($this->resolveFund($id));
 
         $arr = $this->createFundArray($fund, $asOf);
         $isAdmin = $this->isAdmin();
@@ -134,6 +142,8 @@ class FundAPIControllerExt extends AppBaseController
             return $this->sendError('Fund not found');
         }
 
+        $this->requireFundAccess($this->resolveFund($id));
+
         $arr = $this->createFullFundResponse($fund, $asOf, $this->isAdmin());
 
         return $this->sendResponse($arr, 'Fund retrieved successfully');
@@ -149,6 +159,11 @@ class FundAPIControllerExt extends AppBaseController
      */
     public function storeWithSetup(CreateFundWithSetupAPIRequest $request)
     {
+        // Creating a fund (with its account/portfolio/seed transaction) is a
+        // privileged operation; require full access to a fund (system admin
+        // bypasses). Kept outside the try so a 403 is not rewritten to an error.
+        $this->requireFullAccessToAnyFund();
+
         $input = $request->all();
         $isDryRun = $request->input('dry_run', false);
 

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Requests\API\CreateFundAPIRequest;
 use App\Http\Requests\API\UpdateFundAPIRequest;
 use App\Models\Fund;
+use App\Models\FundExt;
 use App\Repositories\FundRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
@@ -18,6 +20,8 @@ use Response;
 
 class FundAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  FundRepository */
     protected $fundRepository;
 
@@ -35,11 +39,21 @@ class FundAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $funds = $this->fundRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $query = $this->apiAuthz()->scopeByFundColumn(FundExt::query());
+
+        foreach ($request->except(['skip', 'limit']) as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        if ($request->get('skip')) {
+            $query->skip((int) $request->get('skip'));
+        }
+
+        if ($request->get('limit')) {
+            $query->limit((int) $request->get('limit'));
+        }
+
+        $funds = $query->get();
 
         return $this->sendResponse(FundResource::collection($funds), 'Funds retrieved successfully');
     }
@@ -54,6 +68,9 @@ class FundAPIController extends AppBaseController
      */
     public function store(CreateFundAPIRequest $request)
     {
+        // Only system admins may create funds (FundPolicy::create).
+        $this->requireSystemAdmin();
+
         $input = $request->all();
 
         $fund = $this->fundRepository->create($input);
@@ -78,6 +95,8 @@ class FundAPIController extends AppBaseController
             return $this->sendError('Fund not found');
         }
 
+        $this->requireFundAccess($this->resolveFund($id));
+
         return $this->sendResponse(new FundResource($fund), 'Fund retrieved successfully');
     }
 
@@ -100,6 +119,8 @@ class FundAPIController extends AppBaseController
         if (empty($fund)) {
             return $this->sendError('Fund not found');
         }
+
+        $this->requireFundAccess($this->resolveFund($id), modify: true);
 
         $fund = $this->fundRepository->update($input, $id);
 
@@ -124,6 +145,9 @@ class FundAPIController extends AppBaseController
         if (empty($fund)) {
             return $this->sendError('Fund not found');
         }
+
+        // Only system admins may delete funds (FundPolicy::delete).
+        $this->requireSystemAdmin();
 
         $fund->delete();
 

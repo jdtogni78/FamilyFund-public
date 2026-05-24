@@ -14,6 +14,11 @@ use Tests\TestCase;
 /**
  * Tests for OperationsController
  * Target: Get coverage from 10% to 50%+
+ *
+ * Slow (~54s), so it is excluded from the default run and exercised by the
+ * nightly job instead.
+ *
+ * @group nightly
  */
 class OperationsControllerTest extends TestCase
 {

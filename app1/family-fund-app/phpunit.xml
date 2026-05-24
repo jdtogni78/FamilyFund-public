@@ -25,6 +25,10 @@
     <groups>
         <exclude>
             <group>incomplete</group>
+            <!-- Long-running tests (50s or more each). Skipped by the default
+                 `php artisan test` run for fast feedback; run them via
+                 bin/test-nightly.sh (passes group=nightly to phpunit). -->
+            <group>nightly</group>
         </exclude>
     </groups>
     <source>

@@ -13,6 +13,11 @@ use Tests\TestCase;
  *
  * Note: Some pages require complex data setup and are tested separately
  * in their respective feature tests.
+ *
+ * Slow (~63s — many full-HTTP page renders), so it is excluded from the
+ * default run and exercised by the nightly job instead.
+ *
+ * @group nightly
  */
 class SmokeTest extends TestCase
 {

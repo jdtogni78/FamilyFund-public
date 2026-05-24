@@ -17,6 +17,12 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 use Tests\DataFactory;
 
+/**
+ * Slow (~82s — wkhtmltopdf renders), so it is excluded from the default run
+ * and exercised by the nightly job instead.
+ *
+ * @group nightly
+ */
 class PDFTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;

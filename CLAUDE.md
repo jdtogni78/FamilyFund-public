@@ -97,9 +97,11 @@ php artisan queue:listen
 
 Prefer the wrapper `app1/family-fund-app/bin/test.sh`: rebuilds Vite assets if stale, autodetects the container name (`$FF_CONTAINER` → `ffacl-familyfund-1` → `familyfund`), then runs `php artisan test`. Pass-through args work (e.g. `bin/test.sh --filter=Foo`).
 
+**Nightly (long-running) tests.** The slowest tests are tagged `@group nightly` and **excluded from the default run** via `phpunit.xml`, so `bin/test.sh` / `php artisan test` is ~6min instead of ~17min. Tagged: `PDFTest`, `SmokeTest`, `OperationsControllerTest` (whole classes, each ≥50s) and `AclMatrixTest::test_acl_matrix_matches_golden` (the exhaustive 151-route × 6-role sweep, ~7min — tagged at the method level). `AclMatrixTest` still keeps a fast critical-routes subset (`test_acl_matrix_critical_routes_match_golden`, ~6s) that runs **every time** over the security-sensitive surface (admin, credit lines, PII, money, user management). Run the slow group with `bin/test-nightly.sh` (passes `--group=nightly`, which overrides the config exclude) — intended for a nightly job. To rank slow tests for re-tagging: `./vendor/bin/phpunit --log-junit junit.xml` then sort `<testcase time=...>` by class.
+
 Tests organized in `tests/`:
 - `Feature/` - Full HTTP request tests
-- `Feature/AclMatrixTest.php` - Discoverable ACL matrix: walks every GET route × every named role, diffs against `tests/golden/acl_matrix.json`. Refresh with `ACL_MATRIX_UPDATE=1`.
+- `Feature/AclMatrixTest.php` - Discoverable ACL matrix: walks every GET route × every named role, diffs against `tests/golden/acl_matrix.json`. Refresh with `ACL_MATRIX_UPDATE=1`. Full sweep is `@group nightly`; a curated critical-routes subset runs every time (see `CRITICAL_ROUTES`).
 - `Feature/AuthorizationTest.php` - Policy/service unit tests
 - `APIs/` - API endpoint tests (28+ suites)
 - `Repositories/` - Repository pattern tests (30+ suites)

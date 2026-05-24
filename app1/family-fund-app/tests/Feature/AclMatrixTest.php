@@ -38,6 +38,14 @@ use Tests\TestCase;
  *   - A resolver returned null (e.g. table empty or missing).
  *
  * If the dev DB has no funds at all the whole test is skipped.
+ *
+ * Two entry points:
+ *   - test_acl_matrix_critical_routes_match_golden() runs on every test run
+ *     over a curated allowlist of the highest-risk routes (~6s).
+ *   - test_acl_matrix_matches_golden() is the exhaustive 151-route × 6-role
+ *     sweep (~7 min); it is tagged @group nightly and excluded from the
+ *     default run (see phpunit.xml / bin/test-nightly.sh).
+ * Both compare against the same golden file, so there is one source of truth.
  */
 class AclMatrixTest extends TestCase
 {
@@ -45,6 +53,61 @@ class AclMatrixTest extends TestCase
 
     private const GOLDEN_PATH = __DIR__ . '/../golden/acl_matrix.json';
     private const AUTH_MIDDLEWARE = 'auth';
+
+    /**
+     * Highest-risk routes, re-checked on every run by
+     * test_acl_matrix_critical_routes_match_golden(). This is the whole
+     * security-sensitive surface (admin, privileged ops, credit lines, user
+     * management, PII, money movement) restricted to routes that resolve
+     * deterministically — only params that always resolve to a constant
+     * ({fund}/{id} → fund, {user} → fixture user, date params) — so they never
+     * false-skip on a fresh DB. Entries are Route::uri() strings and must
+     * exist as keys in the golden's "routes" map. Keep this list in sync as
+     * the sensitive route surface grows.
+     */
+    private const CRITICAL_ROUTES = [
+        // systemAdmin-only privileged surfaces (everyone else redirected/forbidden)
+        'admin/transactions/create',
+        'admin/user-roles',
+        'admin/user-roles/{id}',
+        'operations',
+        'operations/validate-portfolio-balances',
+        'emails',
+        'credit-lines',
+        'credit-lines/available-shares',
+        'credit-lines/create',
+        'credit-lines/payments',
+        'credit-lines/resolve',
+        // manager+ only — beneficiary/unassigned must be forbidden.
+        // User management
+        'users',
+        'users/create',
+        'users/{user}',
+        'users/{user}/edit',
+        // PII (identity documents, persons, contact details)
+        'id_documents',
+        'id_documents/create',
+        'persons',
+        'persons/create',
+        'people',
+        'people/create',
+        'addresses',
+        'addresses/create',
+        'phones',
+        'phones/create',
+        // Financial reports (PII) and money movement
+        'accountReports',
+        'accountReports/create',
+        'cashDeposits',
+        'cashDeposits/create',
+        'cashDeposits/{id}/assign',
+        'depositRequests',
+        'depositRequests/create',
+        // Privileged scheduling
+        'scheduledJobs',
+        'scheduledJobs/create',
+        'scheduledJobs/{id}/preview/{asOf}',
+    ];
 
     /** @var array<string,callable():mixed> */
     private array $paramMap;
@@ -148,7 +211,85 @@ class AclMatrixTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Exhaustive sweep: every auth GET route × every role. Slowest test in
+     * the suite (~7 min), so it is excluded from the default run and exercised
+     * by the nightly job instead. The fast critical-routes subset below keeps
+     * everyday coverage of the highest-risk routes.
+     *
+     * @group nightly
+     */
     public function test_acl_matrix_matches_golden(): void
+    {
+        $actual = $this->buildMatrix(null);
+
+        if (!file_exists(self::GOLDEN_PATH) || getenv('ACL_MATRIX_UPDATE') === '1') {
+            @mkdir(dirname(self::GOLDEN_PATH), 0777, true);
+            file_put_contents(self::GOLDEN_PATH, json_encode($actual, JSON_PRETTY_PRINT) . "\n");
+            $this->markTestSkipped('Wrote ACL matrix golden file at ' . self::GOLDEN_PATH);
+        }
+
+        $expected = json_decode(file_get_contents(self::GOLDEN_PATH), true);
+        $this->assertSame(
+            $expected,
+            $actual,
+            'ACL matrix drifted from golden. Re-run with ACL_MATRIX_UPDATE=1 to accept.'
+        );
+    }
+
+    /**
+     * Fast guard that runs every time: re-checks only the curated high-risk
+     * routes (self::CRITICAL_ROUTES) against all roles and compares each row
+     * to the same golden the nightly sweep maintains. Catches the worst
+     * regressions (a sensitive route opening up to a lower-privilege role)
+     * without the full ~7-minute sweep.
+     */
+    public function test_acl_matrix_critical_routes_match_golden(): void
+    {
+        if (!file_exists(self::GOLDEN_PATH)) {
+            $this->markTestSkipped(
+                'ACL golden missing; generate it via the nightly matrix with ACL_MATRIX_UPDATE=1.'
+            );
+        }
+        $expected = json_decode(file_get_contents(self::GOLDEN_PATH), true);
+
+        $allow = array_flip(self::CRITICAL_ROUTES);
+        $actual = $this->buildMatrix(fn(string $uri) => isset($allow[$uri]));
+
+        // Guard against silent coverage loss: every critical route must have
+        // been discovered and resolved (not renamed away, removed, or skipped
+        // for missing data).
+        $missing = array_values(array_diff(self::CRITICAL_ROUTES, array_keys($actual['routes'])));
+        $this->assertSame(
+            [],
+            $missing,
+            'Critical ACL routes were not exercised (renamed, removed, or unresolved params): '
+            . implode(', ', $missing)
+        );
+
+        foreach ($actual['routes'] as $uri => $row) {
+            $this->assertArrayHasKey(
+                $uri,
+                $expected['routes'],
+                "Critical route {$uri} is missing from the golden; refresh with ACL_MATRIX_UPDATE=1."
+            );
+            $this->assertSame(
+                $expected['routes'][$uri],
+                $row,
+                "ACL drifted from golden on critical route {$uri}."
+            );
+        }
+    }
+
+    /**
+     * Walk every auth-protected, non-API GET route and record the HTTP status
+     * each actor receives. When $accept is given, only routes whose URI passes
+     * it are exercised. Returns ['routes' => [...], 'skipped' => [...]].
+     *
+     * @param  null|callable(string):bool  $accept
+     * @return array{routes: array<string,array<string,int>>, skipped: array<string,string>}
+     */
+    private function buildMatrix(?callable $accept): array
     {
         $rows = [];
         $skipped = [];
@@ -166,6 +307,10 @@ class AclMatrixTest extends TestCase
             }
 
             $uri = $route->uri();
+            if ($accept !== null && !$accept($uri)) {
+                continue;
+            }
+
             [$resolved, $reason] = $this->resolveUri($uri);
             if ($resolved === null) {
                 $skipped[$uri] = $reason;
@@ -180,20 +325,8 @@ class AclMatrixTest extends TestCase
 
         ksort($rows);
         ksort($skipped);
-        $actual = ['routes' => $rows, 'skipped' => $skipped];
 
-        if (!file_exists(self::GOLDEN_PATH) || getenv('ACL_MATRIX_UPDATE') === '1') {
-            @mkdir(dirname(self::GOLDEN_PATH), 0777, true);
-            file_put_contents(self::GOLDEN_PATH, json_encode($actual, JSON_PRETTY_PRINT) . "\n");
-            $this->markTestSkipped('Wrote ACL matrix golden file at ' . self::GOLDEN_PATH);
-        }
-
-        $expected = json_decode(file_get_contents(self::GOLDEN_PATH), true);
-        $this->assertSame(
-            $expected,
-            $actual,
-            'ACL matrix drifted from golden. Re-run with ACL_MATRIX_UPDATE=1 to accept.'
-        );
+        return ['routes' => $rows, 'skipped' => $skipped];
     }
 
     /**

@@ -479,7 +479,7 @@ class TradePortfolioControllerExtTest extends TestCase
         $this->createPreviousTradePortfolio();
 
         $response = $this->actingAs($this->user)
-            ->get(route('tradePortfolios.announce', $this->tradePortfolio->id));
+            ->post(route('tradePortfolios.announce', $this->tradePortfolio->id));
 
         $response->assertRedirect(route('tradePortfolios.show', $this->tradePortfolio->id));
         Mail::assertSent(\App\Mail\TradePortfolioAnnouncementMail::class);

@@ -55,16 +55,11 @@ class SecurityRouteAutomationTest extends TestCase
     /**
      * Legacy GET endpoints whose names imply side effects.
      *
-     * Prefer migrating these to POST with CSRF and authorization checks. Until
-     * then, this list prevents similar new GET actions from being added quietly.
+     * Empty: the resend/send-all/announce endpoints were migrated to POST with
+     * CSRF (#50). This list now exists only to catch any new side-effect-like
+     * GET action being added quietly — keep it empty.
      */
-    private const TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST = [
-        'accountMatchingRules/{id}/resend-email',
-        'cashDeposits/{id}/resend-email',
-        'matchingRules/{id}/send-all-emails',
-        'tradePortfolios/{id}/announce',
-        'transactions/{id}/resend-email',
-    ];
+    private const TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST = [];
 
     public function test_api_mutation_routes_require_auth_or_are_in_temporary_baseline(): void
     {

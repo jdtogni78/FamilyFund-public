@@ -16,7 +16,10 @@
                         <div class="card-header">
                             <strong>Trade Portfolio Diff</strong>
                             @if(!isset($is_announce))
-                                <a href="{{ route('tradePortfolios.announce', [$api['new']->id]) }}" class='btn btn-ghost-primary'><i class="fa fa-envelope"></i></a>
+                                <form action="{{ route('tradePortfolios.announce', [$api['new']->id]) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-ghost-primary" title="Announce" onclick="return confirm('Send the announcement email for this trade portfolio?')"><i class="fa fa-envelope"></i></button>
+                                </form>
                             @endif
                         </div>
                         <div class="card-body">

@@ -35,20 +35,23 @@
                 <td>{{ $cashDeposit->account->nickname }}</td>
                 <td>{{ $cashDeposit->transaction_id }}</td>
                 <td>
-                    <form action="{{ route('cashDeposits.destroy', $cashDeposit->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <div class='btn-group'>
-                            <a href="{{ route('cashDeposits.show', [$cashDeposit->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
-                            <a href="{{ route('cashDeposits.edit', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
-                            <a href="{{ route('cashDeposits.resend-email', [$cashDeposit->id]) }}" class='btn btn-ghost-secondary' title="Resend Email"><i class="fa fa-envelope"></i></a>
-                            @if($cashDeposit->status != \App\Models\CashDepositExt::STATUS_COMPLETED &&
-                            $cashDeposit->status != \App\Models\CashDepositExt::STATUS_CANCELLED)
-                                <a href="{{ route('cashDeposits.assign', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-link"></i></a>
-                            @endif
+                    <div class='btn-group'>
+                        <a href="{{ route('cashDeposits.show', [$cashDeposit->id]) }}" class='btn btn-ghost-success'><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('cashDeposits.edit', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-edit"></i></a>
+                        <form action="{{ route('cashDeposits.resend-email', $cashDeposit->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost-secondary" title="Resend Email" onclick="return confirm('Resend the cash deposit email?')"><i class="fa fa-envelope"></i></button>
+                        </form>
+                        @if($cashDeposit->status != \App\Models\CashDepositExt::STATUS_COMPLETED &&
+                        $cashDeposit->status != \App\Models\CashDepositExt::STATUS_CANCELLED)
+                            <a href="{{ route('cashDeposits.assign', [$cashDeposit->id]) }}" class='btn btn-ghost-info'><i class="fa fa-link"></i></a>
+                        @endif
+                        <form action="{{ route('cashDeposits.destroy', $cashDeposit->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
                             <button type="submit" class="btn btn-ghost-danger" onclick="return confirm('Are you sure you want to delete this cash deposit?')"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </td>
             </tr>
         @endforeach

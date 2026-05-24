@@ -110,7 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::get('tradePortfolios/{id}/show_diff', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showDiff')
         ->middleware('fund.full')
         ->name('tradePortfolios.show_diff');
-    Route::get('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')
+    Route::post('tradePortfolios/{id}/announce', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@announce')
         ->middleware('fund.full')
         ->name('tradePortfolios.announce');
     Route::get('tradePortfolios/{id}/rebalance/{start}/{end}', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@showRebalance')
@@ -141,7 +141,7 @@ Route::middleware('auth')->group(function () {
         ->name('transactions.process_all_pending');
     Route::get('transactions/{id}/clone', 'App\Http\Controllers\WebV1\TransactionControllerExt@clone')
         ->name('transactions.clone');
-    Route::get('transactions/{id}/resend-email', 'App\Http\Controllers\WebV1\TransactionControllerExt@resendEmail')
+    Route::post('transactions/{id}/resend-email', 'App\Http\Controllers\WebV1\TransactionControllerExt@resendEmail')
         ->name('transactions.resend-email');
     Route::get('accountMatchingRules/create_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkCreate')
         ->middleware('fund.full')
@@ -149,7 +149,7 @@ Route::middleware('auth')->group(function () {
     Route::post('accountMatchingRules/store_bulk', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@bulkStore')
         ->middleware('fund.full')
         ->name('accountMatchingRules.store_bulk');
-    Route::get('accountMatchingRules/{id}/resend-email', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@resendEmail')
+    Route::post('accountMatchingRules/{id}/resend-email', 'App\Http\Controllers\WebV1\AccountMatchingRuleControllerExt@resendEmail')
         ->middleware('fund.full')
         ->name('accountMatchingRules.resend-email');
     Route::get('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@assign')
@@ -158,7 +158,7 @@ Route::middleware('auth')->group(function () {
     Route::post('cashDeposits/{id}/assign', 'App\Http\Controllers\WebV1\CashDepositControllerExt@doAssign')
             ->middleware('fund.full')
             ->name('cashDeposits.do_assign');
-    Route::get('cashDeposits/{id}/resend-email', 'App\Http\Controllers\WebV1\CashDepositControllerExt@resendEmail')
+    Route::post('cashDeposits/{id}/resend-email', 'App\Http\Controllers\WebV1\CashDepositControllerExt@resendEmail')
         ->middleware('fund.full')
         ->name('cashDeposits.resend-email');
     Route::get('tradePortfolios/{id}/preview_deposits', 'App\Http\Controllers\WebV1\TradePortfolioControllerExt@previewCashDeposits')
@@ -259,7 +259,7 @@ Route::middleware('auth')->group(function () {
     Route::post('matchingRules/store_clone', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@storeClone')
         ->middleware('fund.full')
         ->name('matchingRules.store_clone');
-    Route::get('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
+    Route::post('matchingRules/{id}/send-all-emails', 'App\Http\Controllers\WebV1\MatchingRuleControllerExt@sendAllEmails')
         ->middleware('fund.full')
         ->name('matchingRules.send-all-emails');
     Route::resource('matchingRules', App\Http\Controllers\WebV1\MatchingRuleControllerExt::class)

@@ -104,14 +104,6 @@
             "fundAdmin": 200,
             "systemAdmin": 200
         },
-        "accountMatchingRules\/{id}\/resend-email": {
-            "anonymous": 302,
-            "unassigned": 403,
-            "beneficiary": 403,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
-        },
         "accountReports": {
             "anonymous": 302,
             "unassigned": 403,
@@ -367,14 +359,6 @@
             "financialManager": 404,
             "fundAdmin": 404,
             "systemAdmin": 404
-        },
-        "cashDeposits\/{id}\/resend-email": {
-            "anonymous": 302,
-            "unassigned": 403,
-            "beneficiary": 403,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
         },
         "change-password": {
             "anonymous": 302,
@@ -695,14 +679,6 @@
             "financialManager": 200,
             "fundAdmin": 200,
             "systemAdmin": 200
-        },
-        "matchingRules\/{id}\/send-all-emails": {
-            "anonymous": 302,
-            "unassigned": 403,
-            "beneficiary": 403,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
         },
         "matchingRules\/{matchingRule}": {
             "anonymous": 302,
@@ -1032,14 +1008,6 @@
             "fundAdmin": 200,
             "systemAdmin": 200
         },
-        "tradePortfolios\/{id}\/announce": {
-            "anonymous": 302,
-            "unassigned": 403,
-            "beneficiary": 403,
-            "financialManager": 404,
-            "fundAdmin": 404,
-            "systemAdmin": 404
-        },
         "tradePortfolios\/{id}\/preview_deposits": {
             "anonymous": 302,
             "unassigned": 403,
@@ -1161,14 +1129,6 @@
             "systemAdmin": 302
         },
         "transactions\/{id}\/clone": {
-            "anonymous": 302,
-            "unassigned": 302,
-            "beneficiary": 302,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
-        },
-        "transactions\/{id}\/resend-email": {
             "anonymous": 302,
             "unassigned": 302,
             "beneficiary": 302,

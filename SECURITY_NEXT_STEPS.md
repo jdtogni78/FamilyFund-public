@@ -10,7 +10,9 @@
 2. Shrink the temporary route guardrail baselines.
    - Remove API routes from `TEMPORARY_UNAUTHENTICATED_API_READ_ALLOWLIST` as they move behind auth.
    - Remove API routes from `TEMPORARY_UNAUTHENTICATED_API_MUTATION_ALLOWLIST` as they move behind auth.
-   - Remove side-effect `GET` routes from `TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST` after converting them to POST/CSRF-protected actions.
+   - DONE (#50): the resend/send-all/announce `GET` endpoints were converted to
+     POST with CSRF and removed from `TEMPORARY_SIDE_EFFECT_GET_ALLOWLIST` (now
+     empty — the guardrail now blocks any new side-effect-like GET).
 
 3. Expand API ACL matrix coverage beyond accounts.
    - DONE (#44): `SecurityApiAclMatrixTest` now asserts the unauthenticated→401
@@ -33,7 +35,7 @@
 ## Remaining Security Fixes Before Tightening Automation Further
 
 1. Add policy checks and scoped queries to the remaining generated API controllers, starting with funds, users, people, reports, and transactions.
-2. Replace side-effect `GET` routes such as resend/send/announce endpoints with POST routes.
+2. DONE (#50): side-effect `GET` routes (resend/send-all/announce) replaced with POST + CSRF routes.
 3. Decide which exchange holiday and market-data endpoints, if any, are intentionally public.
 4. Expand API ACL matrix coverage to response-body checks for cross-tenant identifiers.
 

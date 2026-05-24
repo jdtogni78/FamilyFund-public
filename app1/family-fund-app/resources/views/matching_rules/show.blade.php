@@ -69,11 +69,14 @@
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <strong><i class="fa fa-users me-2"></i> Assigned Accounts</strong>
                             @if($accountMatchingRules->count() > 0)
-                            <a href="{{ route('matchingRules.send-all-emails', $matchingRule->id) }}"
-                               class="btn btn-sm btn-outline-primary"
-                               onclick="return confirm('Send email notifications to all {{ $accountMatchingRules->count() }} account(s)?')">
-                                <i class="fa fa-envelope me-1"></i> Email All
-                            </a>
+                            <form action="{{ route('matchingRules.send-all-emails', $matchingRule->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="return confirm('Send email notifications to all {{ $accountMatchingRules->count() }} account(s)?')">
+                                    <i class="fa fa-envelope me-1"></i> Email All
+                                </button>
+                            </form>
                             @endif
                         </div>
                         <div class="card-body">
@@ -115,9 +118,12 @@
                                                         <i class="fa fa-eye"></i>
                                                     </a>
                                                     @if($amr->account->email_cc)
-                                                    <a href="{{ route('accountMatchingRules.resend-email', $amr->id) }}" class="btn btn-outline-secondary" title="Send Email">
-                                                        <i class="fa fa-envelope"></i>
-                                                    </a>
+                                                    <form action="{{ route('accountMatchingRules.resend-email', $amr->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-secondary" title="Send Email" onclick="return confirm('Send email notification to {{ $amr->account->email_cc }}?')">
+                                                            <i class="fa fa-envelope"></i>
+                                                        </button>
+                                                    </form>
                                                     @endif
                                                 </div>
                                             </td>
@@ -152,11 +158,14 @@
                                     <i class="fa fa-copy me-1"></i> Clone
                                 </a>
                                 @if($accountMatchingRules->count() > 0)
-                                <a href="{{ route('matchingRules.send-all-emails', $matchingRule->id) }}"
-                                   class="btn btn-outline-secondary"
-                                   onclick="return confirm('Send email notifications to all {{ $accountMatchingRules->count() }} account(s)?')">
-                                    <i class="fa fa-envelope me-1"></i> Resend Email
-                                </a>
+                                <form action="{{ route('matchingRules.send-all-emails', $matchingRule->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit"
+                                            class="btn btn-outline-secondary"
+                                            onclick="return confirm('Send email notifications to all {{ $accountMatchingRules->count() }} account(s)?')">
+                                        <i class="fa fa-envelope me-1"></i> Resend Email
+                                    </button>
+                                </form>
                                 @endif
                                 <a href="{{ route('matchingRules.edit', $matchingRule->id) }}" class="btn btn-outline-info">
                                     <i class="fa fa-edit me-1"></i> Edit

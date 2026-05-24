@@ -381,7 +381,7 @@ class TransactionControllerExtTest extends TestCase
         $transaction->account->save();
 
         $response = $this->actingAs($this->user)
-            ->get(route('transactions.resend-email', $transaction->id));
+            ->post(route('transactions.resend-email', $transaction->id));
 
         $response->assertRedirect(route('transactions.show', $transaction->id));
         $response->assertSessionHas('flash_notification');
@@ -396,7 +396,7 @@ class TransactionControllerExtTest extends TestCase
         $transaction->account->save();
 
         $response = $this->actingAs($this->user)
-            ->get(route('transactions.resend-email', $transaction->id));
+            ->post(route('transactions.resend-email', $transaction->id));
 
         $response->assertRedirect(route('transactions.show', $transaction->id));
         $response->assertSessionHas('flash_notification');
@@ -405,7 +405,7 @@ class TransactionControllerExtTest extends TestCase
     public function test_resend_email_handles_not_found()
     {
         $response = $this->actingAs($this->user)
-            ->get(route('transactions.resend-email', 99999));
+            ->post(route('transactions.resend-email', 99999));
 
         $response->assertRedirect(route('transactions.index'));
         $response->assertSessionHas('flash_notification');

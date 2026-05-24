@@ -164,7 +164,7 @@ class AccountMatchingRuleControllerExtTest extends TestCase
         $this->df->userAccount->email_cc = 'resend@example.com';
         $this->df->userAccount->save();
 
-        $response = $this->actingAs($this->user)->get('/accountMatchingRules/' . $amr->id . '/resend-email');
+        $response = $this->actingAs($this->user)->post('/accountMatchingRules/' . $amr->id . '/resend-email');
 
         $response->assertRedirect();
         $response->assertSessionHas('flash_notification');
@@ -185,7 +185,7 @@ class AccountMatchingRuleControllerExtTest extends TestCase
         $this->df->userAccount->email_cc = null;
         $this->df->userAccount->save();
 
-        $response = $this->actingAs($this->user)->get('/accountMatchingRules/' . $amr->id . '/resend-email');
+        $response = $this->actingAs($this->user)->post('/accountMatchingRules/' . $amr->id . '/resend-email');
 
         $response->assertRedirect();
         // Should have error flash
@@ -196,7 +196,7 @@ class AccountMatchingRuleControllerExtTest extends TestCase
 
     public function test_resend_email_redirects_when_not_found()
     {
-        $response = $this->actingAs($this->user)->get('/accountMatchingRules/99999/resend-email');
+        $response = $this->actingAs($this->user)->post('/accountMatchingRules/99999/resend-email');
 
         $response->assertRedirect(route('accountMatchingRules.index'));
     }

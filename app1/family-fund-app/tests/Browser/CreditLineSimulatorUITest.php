@@ -141,6 +141,60 @@ class CreditLineSimulatorUITest extends DuskTestCase
         });
     }
 
+    public function test_simulator_rate_override_rescales_bands(): void
+    {
+        $this->browse(function (Browser $browser) {
+            // Open a fresh line.
+            $descr = 'E2E simulator rate override ' . uniqid();
+            $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
+                ->waitFor('form[action*="/credit-lines"]')
+                ->type('input[name="nickname"]', $descr)
+                ->type('input[name="principal_shares"]', '100')
+                ->clear('input[name="term_months"]')
+                ->type('input[name="term_months"]', '12')
+                ->select('select[name="payment_frequency"]', 'monthly')
+                ->type('input[name="descr"]', $descr)
+                ->press('Open')
+                ->waitUsing(10, 200, function () use ($browser) {
+                    $path = parse_url($browser->driver->getCurrentURL(), PHP_URL_PATH);
+                    return (bool) preg_match('#/credit-lines/\d+$#', $path);
+                });
+
+            $path = parse_url($browser->driver->getCurrentURL(), PHP_URL_PATH);
+            preg_match('#/credit-lines/(\d+)$#', $path, $m);
+            $lineId = (int) $m[1];
+
+            $browser->visit('/credit-lines/' . $lineId . '/simulator')
+                ->waitForText('Payment simulator')
+                ->assertSee('Growth-rate assumptions')
+                // Expand the optional rate section (it's a collapsed <details>).
+                ->click('details summary')
+                ->pause(200)
+                ->type('input[name="monthly_payment_usd"]', '50')
+                ->type('input[name="rate_expected"]', '12')
+                ->press('Simulate')
+                ->waitForText('Scenario summary', 10);
+
+            // Overriding only Expected re-scales the bands ×0.8 / ×1.2:
+            // 12 → conservative 9.60, aggressive 14.40. The growth-rate column
+            // shows the actual per-scenario rate.
+            $html = $browser->driver->getPageSource();
+            foreach (['9.60%', '12.00%', '14.40%'] as $needle) {
+                $this->assertStringContainsString(
+                    $needle,
+                    $html,
+                    "Expected overridden growth rate $needle in the scenario summary."
+                );
+            }
+
+            $browser->script("window.scrollTo(0, 400);");
+            $browser->pause(200);
+            $browser->screenshot('simulator/04_rate_override');
+
+            $this->cleanupLine($lineId);
+        });
+    }
+
     private function cleanupLine(int $lineId): void
     {
         try {

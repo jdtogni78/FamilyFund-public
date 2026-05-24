@@ -13,8 +13,15 @@ use InvalidArgumentException;
  * Projects when a credit line would be paid off given a hypothetical
  * monthly USD payment and a fund growth-rate assumption. Three scenarios
  * are produced: conservative (expected × 0.8), expected, aggressive
- * (expected × 1.2). The conservative/aggressive multipliers match the
- * convention used by ChartBaseTrait and QuickChartService::generateForecastChart().
+ * (expected × 1.2). By default the expected rate is the account's fund
+ * expected growth rate ({@see FundExt::getExpectedGrowthRate()}) — the same
+ * rate the account and fund forecasts use — and the conservative/aggressive
+ * multipliers match the convention used by ChartBaseTrait and
+ * QuickChartService::generateForecastChart().
+ *
+ * Callers may override any of the three scenario rates (see $rateOverrides on
+ * {@see resolveRates()}): supplying only `expected` re-scales the bands via the
+ * ×0.8/×1.2 multipliers; supplying a band sets it verbatim.
  *
  * Read-only — never mutates the credit line, transactions, or balances.
  */
@@ -151,17 +158,21 @@ class PaymentSimulator
      *   conservative = expected × 0.8
      *   aggressive   = expected × 1.2
      *
+     * @param  array<string,float|null>|null $rateOverrides  Optional per-scenario
+     *         annual-rate overrides keyed 'conservative'/'expected'/'aggressive'.
+     *         See {@see resolveRates()} for resolution semantics.
      * @return array<string,SimulationResult>  Keys: 'conservative', 'expected', 'aggressive'.
      */
     public function simulateAllScenarios(
         AccountCreditLine $line,
-        float $monthlyPaymentUsd
+        float $monthlyPaymentUsd,
+        ?array $rateOverrides = null
     ): array {
         if ($monthlyPaymentUsd <= 0) {
             throw new InvalidArgumentException('monthly_payment_usd must be > 0');
         }
 
-        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line);
+        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line, $rateOverrides);
 
         $out = [];
         foreach ($rates as $key => $rate) {
@@ -173,12 +184,24 @@ class PaymentSimulator
 
     /**
      * Resolve the three growth-rate scenarios (conservative / expected /
-     * aggressive) for a line's account, plus a single starting share value
-     * shared by all three so they project off the same baseline.
+     * aggressive) for a line's account.
      *
-     * @return array{rates: array<string,float>, startShareValue: float|null}
+     * The default expected rate is the account's fund expected growth rate
+     * ({@see FundExt::getExpectedGrowthRate()}, default 7%) — the same rate
+     * driving the account and fund forecasts — with the conservative/aggressive
+     * bands derived via the ×0.8/×1.2 multipliers.
+     *
+     * $rateOverrides (keys 'conservative'/'expected'/'aggressive', each a float
+     * annual percentage or null/absent for "use default") lets a caller override
+     * the assumptions:
+     *   - Overriding only `expected` re-scales BOTH bands from the new expected
+     *     via the multipliers (so the ±20% spread follows the new anchor).
+     *   - Overriding a band sets that band verbatim, leaving the others intact.
+     *
+     * @param  array<string,float|null>|null $rateOverrides
+     * @return array<string,float>  Keys: 'conservative', 'expected', 'aggressive'.
      */
-    private function resolveScenarios(AccountCreditLine $line): array
+    public function resolveRates(AccountCreditLine $line, ?array $rateOverrides = null): array
     {
         $expected = 7.0;
         $account = $line->account()->first();
@@ -190,7 +213,65 @@ class PaymentSimulator
             }
         }
 
+        $rates = [
+            'conservative' => $expected * self::CONSERVATIVE_MULTIPLIER,
+            'expected'     => $expected,
+            'aggressive'   => $expected * self::AGGRESSIVE_MULTIPLIER,
+        ];
+
+        return $this->applyRateOverrides($rates, $rateOverrides);
+    }
+
+    /**
+     * Apply per-scenario rate overrides onto the resolved defaults.
+     *
+     * @param  array<string,float>            $rates      Resolved default rates.
+     * @param  array<string,float|null>|null  $overrides
+     * @return array<string,float>
+     */
+    private function applyRateOverrides(array $rates, ?array $overrides): array
+    {
+        if (empty($overrides)) {
+            return $rates;
+        }
+
+        $has = static fn (string $k): bool => array_key_exists($k, $overrides) && $overrides[$k] !== null;
+
+        // Overriding the expected anchor re-scales any band the caller didn't
+        // pin explicitly, so the conservative/aggressive spread tracks it.
+        if ($has('expected')) {
+            $expected = (float) $overrides['expected'];
+            $rates['expected'] = $expected;
+            if (!$has('conservative')) {
+                $rates['conservative'] = $expected * self::CONSERVATIVE_MULTIPLIER;
+            }
+            if (!$has('aggressive')) {
+                $rates['aggressive'] = $expected * self::AGGRESSIVE_MULTIPLIER;
+            }
+        }
+        if ($has('conservative')) {
+            $rates['conservative'] = (float) $overrides['conservative'];
+        }
+        if ($has('aggressive')) {
+            $rates['aggressive'] = (float) $overrides['aggressive'];
+        }
+
+        return $rates;
+    }
+
+    /**
+     * Resolve the three growth-rate scenarios plus a single starting share value
+     * shared by all three so they project off the same baseline.
+     *
+     * @param  array<string,float|null>|null $rateOverrides
+     * @return array{rates: array<string,float>, startShareValue: float|null}
+     */
+    private function resolveScenarios(AccountCreditLine $line, ?array $rateOverrides = null): array
+    {
+        $rates = $this->resolveRates($line, $rateOverrides);
+
         $startShareValue = null;
+        $account = $line->account()->first();
         if ($account) {
             try {
                 $startShareValue = (float) $account->shareValueAsOf(Carbon::today()->toDateString());
@@ -200,11 +281,7 @@ class PaymentSimulator
         }
 
         return [
-            'rates' => [
-                'conservative' => $expected * self::CONSERVATIVE_MULTIPLIER,
-                'expected'     => $expected,
-                'aggressive'   => $expected * self::AGGRESSIVE_MULTIPLIER,
-            ],
+            'rates' => $rates,
             'startShareValue' => $startShareValue,
         ];
     }
@@ -295,18 +372,21 @@ class PaymentSimulator
     /**
      * Solve for required monthly payment under all three scenarios.
      *
+     * @param  array<string,float|null>|null $rateOverrides  Optional per-scenario
+     *         annual-rate overrides; see {@see resolveRates()}.
      * @return array<string,array{payment: float, result: SimulationResult}>
      *   Keys: 'conservative', 'expected', 'aggressive'.
      */
     public function solveForPaymentAllScenarios(
         AccountCreditLine $line,
-        int $targetMonths
+        int $targetMonths,
+        ?array $rateOverrides = null
     ): array {
         if ($targetMonths <= 0) {
             throw new InvalidArgumentException('target_months must be > 0');
         }
 
-        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line);
+        ['rates' => $rates, 'startShareValue' => $startShareValue] = $this->resolveScenarios($line, $rateOverrides);
 
         $out = [];
         foreach ($rates as $key => $rate) {

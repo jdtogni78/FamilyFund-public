@@ -132,6 +132,86 @@ class PaymentSimulatorTest extends TestCase
         );
     }
 
+    public function test_resolve_rates_defaults_to_fund_expected_with_bands(): void
+    {
+        // No overrides: expected = fund expected growth rate, bands = ×0.8/×1.2.
+        $line = $this->makeLine(50.0);
+        $expected = (float) $this->factory->fund->getExpectedGrowthRate();
+
+        $rates = $this->simulator->resolveRates($line);
+
+        $this->assertEqualsWithDelta($expected, $rates['expected'], 0.0001);
+        $this->assertEqualsWithDelta($expected * 0.8, $rates['conservative'], 0.0001);
+        $this->assertEqualsWithDelta($expected * 1.2, $rates['aggressive'], 0.0001);
+    }
+
+    public function test_resolve_rates_expected_override_rescales_bands(): void
+    {
+        // Overriding only `expected` re-scales both bands from the new anchor.
+        $line = $this->makeLine(50.0);
+
+        $rates = $this->simulator->resolveRates($line, ['expected' => 10.0]);
+
+        $this->assertEqualsWithDelta(10.0, $rates['expected'], 0.0001);
+        $this->assertEqualsWithDelta(8.0, $rates['conservative'], 0.0001);
+        $this->assertEqualsWithDelta(12.0, $rates['aggressive'], 0.0001);
+    }
+
+    public function test_resolve_rates_individual_band_override_is_verbatim(): void
+    {
+        // A band override is taken verbatim; the others keep their defaults.
+        $line = $this->makeLine(50.0);
+        $expected = (float) $this->factory->fund->getExpectedGrowthRate();
+
+        $rates = $this->simulator->resolveRates($line, ['aggressive' => 99.0]);
+
+        $this->assertEqualsWithDelta($expected, $rates['expected'], 0.0001);
+        $this->assertEqualsWithDelta($expected * 0.8, $rates['conservative'], 0.0001);
+        $this->assertEqualsWithDelta(99.0, $rates['aggressive'], 0.0001);
+    }
+
+    public function test_resolve_rates_full_override_uses_all_three(): void
+    {
+        $line = $this->makeLine(50.0);
+
+        $rates = $this->simulator->resolveRates($line, [
+            'conservative' => 3.0,
+            'expected'     => 6.0,
+            'aggressive'   => 9.0,
+        ]);
+
+        $this->assertEqualsWithDelta(3.0, $rates['conservative'], 0.0001);
+        $this->assertEqualsWithDelta(6.0, $rates['expected'], 0.0001);
+        $this->assertEqualsWithDelta(9.0, $rates['aggressive'], 0.0001);
+    }
+
+    public function test_simulate_all_scenarios_honours_rate_overrides(): void
+    {
+        // The override flows through to each scenario's growth rate.
+        $line = $this->makeLine(50.0);
+
+        $results = $this->simulator->simulateAllScenarios($line, 25.0, ['expected' => 10.0]);
+
+        $this->assertEqualsWithDelta(8.0, $results['conservative']->annual_growth_rate_pct, 0.0001);
+        $this->assertEqualsWithDelta(10.0, $results['expected']->annual_growth_rate_pct, 0.0001);
+        $this->assertEqualsWithDelta(12.0, $results['aggressive']->annual_growth_rate_pct, 0.0001);
+    }
+
+    public function test_solve_for_payment_all_scenarios_honours_rate_overrides(): void
+    {
+        $line = $this->makeLine(50.0);
+
+        $all = $this->simulator->solveForPaymentAllScenarios($line, 12, [
+            'conservative' => 3.0,
+            'expected'     => 6.0,
+            'aggressive'   => 9.0,
+        ]);
+
+        $this->assertEqualsWithDelta(3.0, $all['conservative']['result']->annual_growth_rate_pct, 0.0001);
+        $this->assertEqualsWithDelta(6.0, $all['expected']['result']->annual_growth_rate_pct, 0.0001);
+        $this->assertEqualsWithDelta(9.0, $all['aggressive']['result']->annual_growth_rate_pct, 0.0001);
+    }
+
     public function test_simulate_zero_or_negative_payment_throws(): void
     {
         $line = $this->makeLine(100.0);

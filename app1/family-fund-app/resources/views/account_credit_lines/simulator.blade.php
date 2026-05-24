@@ -88,7 +88,44 @@
                            value="{{ $targetMonths !== null ? (int) $targetMonths : '' }}">
                     <small class="text-muted">Integer between 1 and 600.</small>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 mt-1">
+                    <details @if(!empty($rateInputs)) open @endif>
+                        <summary class="form-label mb-0" style="cursor:pointer;">
+                            Growth-rate assumptions (annual %, optional)
+                        </summary>
+                        <div class="row g-2 mt-1">
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted" for="rate_conservative">Conservative</label>
+                                <input type="number" name="rate_conservative" id="rate_conservative"
+                                       step="0.01" class="form-control"
+                                       value="{{ $rateInputs['conservative'] ?? '' }}"
+                                       placeholder="{{ number_format($resolvedRates['conservative'], 2) }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted" for="rate_expected">Expected</label>
+                                <input type="number" name="rate_expected" id="rate_expected"
+                                       step="0.01" class="form-control"
+                                       value="{{ $rateInputs['expected'] ?? '' }}"
+                                       placeholder="{{ number_format($resolvedRates['expected'], 2) }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted" for="rate_aggressive">Aggressive</label>
+                                <input type="number" name="rate_aggressive" id="rate_aggressive"
+                                       step="0.01" class="form-control"
+                                       value="{{ $rateInputs['aggressive'] ?? '' }}"
+                                       placeholder="{{ number_format($resolvedRates['aggressive'], 2) }}">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            Leave blank to use the fund's expected growth rate
+                            ({{ number_format($defaultRates['expected'], 2) }}%) with the
+                            conservative &times;0.8 / aggressive &times;1.2 bands &mdash; the same rates the
+                            account and fund forecasts use. Set <em>Expected</em> alone to re-scale the bands,
+                            or set any field to override it directly.
+                        </small>
+                    </details>
+                </div>
+                <div class="col-md-3 mt-2">
                     <button type="submit" class="btn btn-primary">Simulate</button>
                     <a href="{{ route('credit_lines.show', ['line' => $line->id]) }}" class="btn btn-link">Back</a>
                 </div>
@@ -106,10 +143,12 @@
 
     @if(!empty($results))
         @php
+            // Plain labels: the per-row growth-rate column shows the actual
+            // rate, which may be overridden away from the ×0.8/×1.2 defaults.
             $labelMap = [
-                'conservative' => 'Conservative (expected &times; 0.8)',
+                'conservative' => 'Conservative',
                 'expected'     => 'Expected',
-                'aggressive'   => 'Aggressive (expected &times; 1.2)',
+                'aggressive'   => 'Aggressive',
             ];
             $rowOrder = ['conservative', 'expected', 'aggressive'];
         @endphp

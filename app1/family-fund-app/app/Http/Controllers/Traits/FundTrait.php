@@ -384,8 +384,8 @@ Trait FundTrait
 
         $arr['asOf'] = $asOf;
 
-        // Add data staleness info for display warning banner
-        $arr['data_staleness'] = $this->calculateDataStaleness($asOf);
+        // Add data staleness info for display warning banner (fund-scoped)
+        $arr['data_staleness'] = $this->calculateDataStaleness($asOf, $fund);
 
         // Flag fund-level data-completeness issues so the view can show flash
         // warnings (rather than the page crashing). Aggregator-style funds are
@@ -659,44 +659,96 @@ Trait FundTrait
      * @param string $asOf The as-of date (Y-m-d format)
      * @return array Data staleness info: latest_price_date, trading_days_stale, is_stale
      */
-    protected function calculateDataStaleness(string $asOf): array
+    protected function calculateDataStaleness(string $asOf, $fund = null): array
     {
         $asOfDate = Carbon::parse($asOf);
 
-        // Find the most recent asset price on or before the as-of date
-        $latestPrice = AssetPrice::query()
-            ->where('start_dt', '<=', $asOf)
-            ->orderBy('start_dt', 'desc')
-            ->first();
+        // Fund-aware: evaluate only the assets this fund actually holds (across
+        // its portfolios). Without a fund, fall back to every asset (legacy
+        // global behaviour).
+        $assetIds = null;
+        if ($fund) {
+            $assetIds = PortfolioAsset::whereHas('portfolio', function ($q) use ($fund) {
+                $q->where('fund_id', $fund->id);
+            })->distinct()->pluck('asset_id')->all();
 
-        if (!$latestPrice) {
+            if (empty($assetIds)) {
+                return [
+                    'latest_price_date' => null,
+                    'trading_days_stale' => null,
+                    'is_stale' => false,
+                    'details' => [],
+                ];
+            }
+        }
+
+        // Most recent price per asset on or before the as-of date. The latest
+        // record's end_dt is usually 9999 ("current"), so freshness is measured
+        // from its start_dt -- the high date -- to the as-of date.
+        $latestQuery = AssetPrice::query()
+            ->selectRaw('asset_id, MAX(start_dt) as latest_start')
+            ->where('start_dt', '<=', $asOf)
+            ->groupBy('asset_id');
+        if ($assetIds !== null) {
+            $latestQuery->whereIn('asset_id', $assetIds);
+        }
+        $latestPerAsset = $latestQuery->get();
+
+        // Map asset id -> display name and drop synthetic CASH (never repriced).
+        $assets = AssetExt::whereIn('id', $latestPerAsset->pluck('asset_id'))->get()->keyBy('id');
+        $latestPerAsset = $latestPerAsset->reject(function ($row) use ($assets) {
+            return strtoupper($assets->get($row->asset_id)->name ?? '') === 'CASH';
+        })->values();
+
+        if ($latestPerAsset->isEmpty()) {
             return [
                 'latest_price_date' => null,
                 'trading_days_stale' => null,
                 'is_stale' => true,
                 'message' => 'No asset price data available',
+                'details' => [],
             ];
         }
 
-        $latestPriceDate = Carbon::parse($latestPrice->start_dt);
+        // Holidays across the full span we will measure.
+        $holidays = $this->loadExchangeHolidays('NYSE', $latestPerAsset->min('latest_start'), $asOfDate);
 
-        // Load exchange holidays
-        $holidays = $this->loadExchangeHolidays('NYSE', $latestPriceDate, $asOfDate);
+        // Per-asset trailing staleness + the fund's freshest data point.
+        $details = [];
+        $freshest = null;
+        foreach ($latestPerAsset as $row) {
+            $date = Carbon::parse($row->latest_start);
+            $days = $this->calculateTradingDays($date, $asOfDate, $holidays);
+            $details[] = [
+                'asset_id' => $row->asset_id,
+                'name' => $assets->get($row->asset_id)->name ?? ('Asset #' . $row->asset_id),
+                'latest_date' => $date->format('Y-m-d'),
+                'trading_days_stale' => $days,
+            ];
+            if ($freshest === null || $date->gt($freshest)) {
+                $freshest = $date;
+            }
+        }
 
-        // Calculate trading days between latest price and as-of date
-        $tradingDaysStale = $this->calculateTradingDays($latestPriceDate, $asOfDate, $holidays);
+        // Stalest assets first.
+        usort($details, fn($a, $b) => $b['trading_days_stale'] <=> $a['trading_days_stale']);
 
-        // Data is considered stale if there's any missing trading day
+        // Headline reflects the freshest data the fund has: if even the most
+        // recent price is behind, the whole fund's valuation is stale.
+        $tradingDaysStale = $this->calculateTradingDays($freshest, $asOfDate, $holidays);
         $isStale = $tradingDaysStale > 0;
 
         $result = [
-            'latest_price_date' => $latestPriceDate->format('Y-m-d'),
+            'latest_price_date' => $freshest->format('Y-m-d'),
             'trading_days_stale' => $tradingDaysStale,
             'is_stale' => $isStale,
+            'asset_count' => count($details),
+            'stale_asset_count' => collect($details)->where('trading_days_stale', '>', 0)->count(),
+            'details' => $details,
         ];
 
         if ($isStale) {
-            $result['message'] = "Portfolio data as of {$latestPriceDate->format('M j, Y')} ({$tradingDaysStale} trading day" . ($tradingDaysStale > 1 ? 's' : '') . " before report date)";
+            $result['message'] = "Portfolio data as of {$freshest->format('M j, Y')} ({$tradingDaysStale} trading day" . ($tradingDaysStale > 1 ? 's' : '') . " before report date)";
         }
 
         return $result;

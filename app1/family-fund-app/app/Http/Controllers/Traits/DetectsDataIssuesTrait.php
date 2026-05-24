@@ -16,18 +16,27 @@ trait DetectsDataIssuesTrait
      * @param int $gapThreshold Minimum trading days to flag as gap (default 1)
      * @param string $exchangeCode Exchange to use for holiday calendar (default 'NYSE')
      */
-    protected function detectDataIssues($records, string $groupByField = 'asset_id', string $nameField = 'asset', int $gapThreshold = 1, string $exchangeCode = 'NYSE'): array
+    protected function detectDataIssues($records, string $groupByField = 'asset_id', string $nameField = 'asset', int $gapThreshold = 1, string $exchangeCode = 'NYSE', $reportDate = null): array
     {
         $overlaps = [];
         $gaps = [];
         $longSpans = [];
+        $stale = [];
         $overlappingIds = [];
         $gapIds = [];
         $longSpanIds = [];
+        $staleIds = [];
 
         if ($records->isEmpty()) {
-            return compact('overlaps', 'gaps', 'longSpans', 'overlappingIds', 'gapIds', 'longSpanIds');
+            return compact('overlaps', 'gaps', 'longSpans', 'stale', 'overlappingIds', 'gapIds', 'longSpanIds', 'staleIds');
         }
+
+        // Report date for trailing-staleness detection (how far the most recent
+        // record for each group lags behind "now"). Open-ended records
+        // (end_dt = 9999) are treated as covering only their start_dt -- the
+        // "high date" -- so a current price that never advances still registers
+        // as stale once it falls behind the report date.
+        $report = $reportDate ? Carbon::parse($reportDate) : Carbon::now();
 
         // Load exchange holidays for the date range covered by records
         $minDate = $records->min('start_dt');
@@ -100,20 +109,45 @@ trait DetectsDataIssuesTrait
                     }
                 }
             }
+
+            // Trailing staleness: how far this group's most recent record lags
+            // behind the report date. The latest record's end_dt is typically
+            // 9999 ("current"), so we measure from its start_dt (the high date)
+            // to the report date -- this is the check the gap loop above can't
+            // make, since there is no "next" record after the latest one.
+            $latest = $sorted->last();
+            if ($latest->start_dt && $latest->start_dt < $report) {
+                $staleDays = $this->calculateTradingDays($latest->start_dt, $report, $holidays);
+
+                if ($staleDays > $gapThreshold) {
+                    $stale[] = [
+                        'name' => $displayName,
+                        'from' => $latest->start_dt->format('Y-m-d'),
+                        'to' => $report->format('Y-m-d'),
+                        'days' => $staleDays,
+                        'calendar_days' => $latest->start_dt->diffInDays($report),
+                    ];
+                    $staleIds[$latest->id] = true;
+                }
+            }
         }
 
         // Sort all warnings by date descending (newest first)
         usort($overlaps, fn($a, $b) => strcmp($b['record1'] ?? '', $a['record1'] ?? ''));
         usort($gaps, fn($a, $b) => strcmp($b['from'] ?? '', $a['from'] ?? ''));
         usort($longSpans, fn($a, $b) => strcmp($b['from'] ?? '', $a['from'] ?? ''));
+        // Stalest first (largest trailing gap at the top)
+        usort($stale, fn($a, $b) => ($b['days'] ?? 0) <=> ($a['days'] ?? 0));
 
         return [
             'overlaps' => $overlaps,
             'gaps' => $gaps,
             'longSpans' => $longSpans,
+            'stale' => $stale,
             'overlappingIds' => array_keys($overlappingIds),
             'gapIds' => array_keys($gapIds),
             'longSpanIds' => array_keys($longSpanIds),
+            'staleIds' => array_keys($staleIds),
         ];
     }
 
@@ -211,6 +245,13 @@ trait DetectsDataIssuesTrait
             }
             if (!empty($span['to'])) {
                 $dates[$span['to']] = $spanInfo;
+            }
+        }
+
+        // Collect dates from trailing staleness (latest price that fell behind)
+        foreach ($dataWarnings['stale'] ?? [] as $st) {
+            if (!empty($st['from'])) {
+                $dates[$st['from']] = ['type' => 'stale', 'days' => $st['days'] ?? 0];
             }
         }
 

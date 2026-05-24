@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\WebV1;
 
-use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\Web\PortfolioController;
 use App\Http\Controllers\Traits\PortfolioRebalancePDF;
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Resources\PortfolioAssetResource;

@@ -8,8 +8,8 @@ services:
       - ALLOW_EMPTY_PASSWORD=no
       - MARIADB_USER=famfun_dev
       - MARIADB_DATABASE=familyfund_acl
-      - MARIADB_PASSWORD=1234
-      - MARIADB_ROOT_PASSWORD=123456
+      - MARIADB_PASSWORD=${FF_DB_USER_PASSWORD:-changeme}
+      - MARIADB_ROOT_PASSWORD=${FF_DB_ROOT_PASSWORD:-changeme}
     ports:
       - 3307:3306
     volumes:
@@ -20,7 +20,7 @@ services:
     environment:
       - DB_DATABASE=familyfund_acl
       - DB_USERNAME=root
-      - DB_PASSWORD=123456
+      - DB_PASSWORD=${FF_DB_PASSWORD:-changeme}
       - APP_ENV=local
     ports:
       - 3001:8000

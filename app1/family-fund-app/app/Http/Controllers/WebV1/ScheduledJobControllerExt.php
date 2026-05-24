@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Flash;
 use Response;
 use App\Models\ScheduledJobExt;
-use App\Http\Controllers\ScheduledJobController;
 use App\Http\Controllers\Traits\ScheduledJobTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -22,9 +21,17 @@ use App\Models\Schedule;
 use App\Models\FundExt;
 use Illuminate\Support\MessageBag;
 
-class ScheduledJobControllerExt extends ScheduledJobController
+class ScheduledJobControllerExt extends AppBaseController
 {
     use ScheduledJobTrait;
+
+    /** @var ScheduledJobRepository $scheduledJobRepository*/
+    public $scheduledJobRepository;
+
+    public function __construct(ScheduledJobRepository $scheduledJobRepo)
+    {
+        $this->scheduledJobRepository = $scheduledJobRepo;
+    }
 
     public function index(Request $request)
     {
@@ -208,5 +215,52 @@ class ScheduledJobControllerExt extends ScheduledJobController
                 ->get();
         }
         return $children;
+    }
+
+    // --- inlined from former base ---
+
+    public function store(CreateScheduledJobRequest $request)
+    {
+        $input = $request->all();
+
+        $scheduledJob = $this->scheduledJobRepository->create($input);
+
+        Flash::success('Scheduled Job saved successfully.');
+
+        return redirect(route('scheduledJobs.index'));
+    }
+
+    public function update($id, UpdateScheduledJobRequest $request)
+    {
+        $scheduledJob = $this->scheduledJobRepository->find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+
+            return redirect(route('scheduledJobs.index'));
+        }
+
+        $scheduledJob = $this->scheduledJobRepository->update($request->all(), $id);
+
+        Flash::success('Scheduled Job updated successfully.');
+
+        return redirect(route('scheduledJobs.index'));
+    }
+
+    public function destroy($id)
+    {
+        $scheduledJob = $this->scheduledJobRepository->find($id);
+
+        if (empty($scheduledJob)) {
+            Flash::error('Scheduled Job not found');
+
+            return redirect(route('scheduledJobs.index'));
+        }
+
+        $this->scheduledJobRepository->delete($id);
+
+        Flash::success('Scheduled Job deleted successfully.');
+
+        return redirect(route('scheduledJobs.index'));
     }
 }

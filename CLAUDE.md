@@ -252,3 +252,21 @@ docker exec familyfund php artisan db:seed --class=QaTestUsersSeeder --force
 # Misc
 
 * FamilyFund .env should be a link to .env.<ENV>
+
+## Project tracking
+
+Work for this repo is tracked on the **Trading & Fund** GitHub Project board
+(user-level project **#1**, shared with `dstrader`, `dstrader-aws`,
+`dstrader_python`, `DSTraderAnalysis`).
+
+- Board: <https://github.com/users/jdtogni78/projects/1>
+- Add an issue to the board:
+  ```bash
+  gh issue create --repo jdtogni78/FamilyFund --title "..." --body "..."
+  gh project item-add 1 --owner jdtogni78 --url <ISSUE_URL>
+  ```
+- Quick note without an issue: `gh project item-create 1 --owner jdtogni78 --title "..."`
+- Open the board: `gh project view 1 --owner jdtogni78 --web`
+
+Full setup notes: `~/dev/GITHUB_PROJECTS.md`. Managing boards via CLI needs the
+`project` token scope (`gh auth refresh -s project --hostname github.com`).

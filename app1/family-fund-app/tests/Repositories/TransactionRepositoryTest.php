@@ -38,6 +38,12 @@ class TransactionRepositoryTest extends TestCase
 
         $dbTransaction = $this->transactionRepo->find($transaction->id);
 
+        // The TransactionExt observer eager-loads the `account` relation for
+        // credit-line transaction types (PUR/BOR/REP), which the factory picks at
+        // random. That would leak `account` into the expected toArray() and make
+        // this assertion order/faker-dependent, so compare attributes only.
+        $transaction->setRelations([]);
+
         $dbTransaction = $dbTransaction->toArray();
         $this->assertModelData($transaction->toArray(), $dbTransaction);
     }

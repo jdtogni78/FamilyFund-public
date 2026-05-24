@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -36,19 +37,25 @@ return new class extends Migration
 
         // Idempotent backfill: one active row per existing AccountCreditLine
         // with the current outstanding_shares, starting at origination_date.
-        // Only inserts where no row exists yet, so re-running this migration
-        // (e.g., on a partial restore) is safe.
-        $lines = DB::table('account_credit_lines')->get();
+        //
+        // Done in a single round-trip rather than N per-line existence checks:
+        // pull the line IDs that already have a balance row in one query, then
+        // bulk-insert the rest. (A literal insertOrIgnore on (line, start_dt)
+        // would need a unique index there, but the temporal model permits two
+        // rows sharing a start_dt for the same line — a same-day draw+repay
+        // closes a zero-length interval — so a unique index is unsafe. Filtering
+        // existing line IDs gives the same "safe to re-run on a partial restore"
+        // guarantee without that constraint.)
+        $existingLineIds = DB::table('account_credit_line_balances')
+            ->distinct()
+            ->pluck('account_credit_line_id')
+            ->all();
+
         $now = now();
-        $rowCount = 0;
-        foreach ($lines as $line) {
-            $exists = DB::table('account_credit_line_balances')
-                ->where('account_credit_line_id', $line->id)
-                ->exists();
-            if ($exists) {
-                continue;
-            }
-            DB::table('account_credit_line_balances')->insert([
+        $rows = DB::table('account_credit_lines')
+            ->when($existingLineIds, fn ($q) => $q->whereNotIn('id', $existingLineIds))
+            ->get()
+            ->map(fn ($line) => [
                 'account_credit_line_id' => $line->id,
                 'outstanding_shares'     => $line->outstanding_shares,
                 'start_dt'               => $line->origination_date,
@@ -56,13 +63,19 @@ return new class extends Migration
                 'transaction_id'         => null,
                 'created_at'             => $now,
                 'updated_at'             => $now,
-            ]);
-            $rowCount++;
+            ])
+            ->all();
+
+        if (! empty($rows)) {
+            DB::table('account_credit_line_balances')->insert($rows);
         }
-        // Print a one-liner so the migration output records what was backfilled.
-        if (function_exists('fwrite')) {
-            @fwrite(STDOUT, "  backfilled {$rowCount} account_credit_line_balances row(s)\n");
-        }
+
+        // Record what was backfilled via the log channel (respects config and
+        // does not pollute test-runner stdout the way fwrite(STDOUT) did).
+        Log::info(sprintf(
+            'account_credit_line_balances backfill: inserted %d row(s)',
+            count($rows)
+        ));
     }
 
     public function down(): void

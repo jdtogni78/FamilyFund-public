@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\WebV1;
 
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Traits\VerboseTrait;
 use App\Http\Controllers\Traits\MailTrait;
 use App\Http\Controllers\Traits\CashDepositTrait;
 
+use App\Http\Requests\CreateTradePortfolioRequest;
 use App\Http\Requests\RebalanceTradePortfolioRequest;
+use App\Http\Requests\UpdateTradePortfolioRequest;
 use App\Http\Resources\PortfolioAssetResource;
 use App\Models\AssetExt;
 use App\Models\AssetPrice;
@@ -22,7 +25,6 @@ use Illuminate\Support\Facades\Log;
 use Laracasts\Flash\Flash;
 use Mockery\Exception;
 use Response;
-use App\Http\Controllers\TradePortfolioController;
 use Symfony\Component\HttpFoundation\Request;
 use App\Mail\TradePortfolioAnnouncementMail;
 use Illuminate\Support\MessageBag;
@@ -31,13 +33,16 @@ use App\Models\AccountExt;
 use App\Models\TransactionExt;
 use App\Http\Controllers\Traits\TransactionTrait;
 
-class TradePortfolioControllerExt extends TradePortfolioController
+class TradePortfolioControllerExt extends AppBaseController
 {
     use VerboseTrait, MailTrait, CashDepositTrait, TransactionTrait;
 
+    /** @var TradePortfolioRepository $tradePortfolioRepository*/
+    protected $tradePortfolioRepository;
+
     public function __construct(TradePortfolioRepository $tradePortfolioRepo)
     {
-        parent::__construct($tradePortfolioRepo);
+        $this->tradePortfolioRepository = $tradePortfolioRepo;
     }
 
     public function index(\Illuminate\Http\Request $request)
@@ -57,7 +62,7 @@ class TradePortfolioControllerExt extends TradePortfolioController
     public function createWithParams(Request $request)
     {
         $portfolio_id = $request->input('portfolio_id');
-        return parent::create()->with('portfolio_id', $portfolio_id);
+        return view('trade_portfolios.create')->with('portfolio_id', $portfolio_id);
     }
 
     public function showRebalance($id, $start=null, $end=null)
@@ -356,6 +361,72 @@ class TradePortfolioControllerExt extends TradePortfolioController
         $errors = $ret['errors'];
         return redirect(route('tradePortfolios.index'))
             ->withErrors(new MessageBag($errors));
+    }
+
+    // --- inlined from former base ---
+
+    public function create()
+    {
+        return view('trade_portfolios.create');
+    }
+
+    public function store(CreateTradePortfolioRequest $request)
+    {
+        $input = $request->all();
+
+        $tradePortfolio = $this->tradePortfolioRepository->create($input);
+
+        Flash::success('Trade Portfolio saved successfully.');
+
+        return redirect(route('tradePortfolios.show', [$tradePortfolio->id]));
+    }
+
+    public function edit($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            Flash::error('Trade Portfolio not found');
+
+            return redirect(route('tradePortfolios.index'));
+        }
+
+        return view('trade_portfolios.edit')->with('tradePortfolio', $tradePortfolio);
+    }
+
+    public function update($id, UpdateTradePortfolioRequest $request)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            Flash::error('Trade Portfolio not found');
+
+            return redirect(route('tradePortfolios.index'));
+        }
+
+        $tradePortfolio = $this->tradePortfolioRepository->update($request->all(), $id);
+
+        Flash::success('Trade Portfolio updated successfully.');
+
+        return redirect(route('tradePortfolios.show', [$tradePortfolio->id]));
+    }
+
+    public function destroy($id)
+    {
+        $tradePortfolio = $this->tradePortfolioRepository->find($id);
+
+        if (empty($tradePortfolio)) {
+            Flash::error('Trade Portfolio not found');
+
+            return redirect(route('tradePortfolios.index'));
+        }
+
+        $port = $tradePortfolio->portfolio()->first();
+        $this->tradePortfolioRepository->delete($id);
+
+        Flash::success('Trade Portfolio deleted successfully.');
+
+        return redirect(route('portfolios.show', [$port->id]));
     }
 
 }

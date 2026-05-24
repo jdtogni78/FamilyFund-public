@@ -95,8 +95,11 @@ class TransactionExtApiTest extends TestCase
         $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, '9999-12-31');
         //  reject timestamp year old
         $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, now()->subYears(2)->format('Y-m-d'));
-        //  reject no timestamp - now handled by form validation
-        $this->postTransactionValidationError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING);
+        // NB: a genuinely-missing timestamp is *valid* -- create_rules marks
+        // `timestamp` nullable. The former "reject no timestamp" assertion never
+        // actually sent a null timestamp (makeTransaction's factory injects a
+        // random faker date), so it flipped to 200 whenever that date happened to
+        // fall inside the last year. Removed as flaky / contradicting the rule.
 
         // TODO: investigate - API now allows shares on purchase transactions
         // $this->postTransactionError(100, TransactionExt::TYPE_PURCHASE, TransactionExt::STATUS_PENDING, $timestamp, 200);

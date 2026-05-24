@@ -386,7 +386,7 @@ class CreditLineNegativeUITest extends DuskTestCase
     // ---------------------------------------------------------------
      // Wave-2 review (2026-05-14): admin-gate enforcement on GET endpoints.
      //
-     // Before the fix, AccountCreditLineControllerExt::{index,show,edit} and
+     // Before the fix, AccountCreditLineController::{index,show,edit} and
      // AdminTransactionController::create() were only auth-protected. A non-
      // admin authenticated user could GET other accounts' credit-line data.
      // These four tests assert the gate now returns 403 / "Forbidden" /

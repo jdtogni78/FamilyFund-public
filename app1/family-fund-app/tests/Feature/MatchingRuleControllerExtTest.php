@@ -254,4 +254,24 @@ class MatchingRuleControllerExtTest extends TestCase
 
         $response->assertRedirect(route('matchingRules.index'));
     }
+
+    // ==================== Destroy Tests ====================
+
+    public function test_destroy_deletes_matching_rule()
+    {
+        $this->df->createMatchingRule(500, 100, '2024-01-01', '2025-12-31');
+        $id = $this->df->matchingRule->id;
+
+        $response = $this->actingAs($this->user)->delete('/matchingRules/' . $id);
+
+        $response->assertRedirect(route('matchingRules.index'));
+        $this->assertDatabaseMissing('matching_rules', ['id' => $id]);
+    }
+
+    public function test_destroy_redirects_when_not_found()
+    {
+        $response = $this->actingAs($this->user)->delete('/matchingRules/99999');
+
+        $response->assertRedirect(route('matchingRules.index'));
+    }
 }

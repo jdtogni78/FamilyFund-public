@@ -17,7 +17,16 @@ storage/coverage/
 .env.prod
 /public/build/
 
-# --- Secrets & data hygiene (post .env.dev leak; mirrors origin/main) ---
+# --- Secrets & data hygiene (2026-05-21, post .env.dev leak) ---
 .env
 .env.*
 !.env.example
+*.sql.gz
+*.sqlite
+*.ibd
+*.frm
+*.log
+*.log.*
+database/**/*data*.sql
+database/test/*.sql*
+database/csv/*password*

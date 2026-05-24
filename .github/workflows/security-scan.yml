@@ -9,10 +9,11 @@ on:
     - cron: "17 10 * * *"
   workflow_dispatch:
 
+# security-events:write was only needed to upload SARIF to the Security tab,
+# which requires GitHub Advanced Security (unavailable on this private repo).
+# Restore it alongside SARIF uploads when the repo goes public (board #1).
 permissions:
-  actions: read
   contents: read
-  security-events: write
 
 env:
   APP_DIR: app1/family-fund-app
@@ -109,12 +110,17 @@ jobs:
             --output semgrep.sarif \
             $APP_DIR
 
+      # SARIF upload to GitHub's Security tab needs GitHub Advanced Security,
+      # unavailable on this private personal-account repo. Until the repo goes
+      # public (see board #1), publish the SARIF as a downloadable artifact and
+      # rely on the "Fail on … findings" step below to gate the build.
       - name: Upload Semgrep SARIF
         if: always() && hashFiles('semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: semgrep.sarif
-          category: semgrep
+          name: semgrep-sarif
+          path: semgrep.sarif
+          if-no-files-found: error
 
       - name: Fail on Semgrep findings
         if: steps.semgrep.outcome == 'failure'
@@ -148,10 +154,11 @@ jobs:
 
       - name: Upload Trivy config SARIF
         if: always() && hashFiles('trivy-config.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: trivy-config.sarif
-          category: trivy-config
+          name: trivy-config-sarif
+          path: trivy-config.sarif
+          if-no-files-found: error
 
       - name: Fail on Trivy config findings
         if: steps.trivy.outcome == 'failure'
@@ -282,10 +289,11 @@ jobs:
 
       - name: Upload Trivy filesystem SARIF
         if: always() && hashFiles('trivy-fs.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: trivy-fs.sarif
-          category: trivy-filesystem
+          name: trivy-filesystem-sarif
+          path: trivy-fs.sarif
+          if-no-files-found: error
 
       - name: Fail on Trivy filesystem findings
         if: steps.trivy.outcome == 'failure'
@@ -320,10 +328,11 @@ jobs:
 
       - name: Upload Trivy image SARIF
         if: always() && hashFiles('trivy-image.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: trivy-image.sarif
-          category: trivy-image
+          name: trivy-image-sarif
+          path: trivy-image.sarif
+          if-no-files-found: error
 
       - name: Fail on Trivy image findings
         if: steps.trivy.outcome == 'failure'

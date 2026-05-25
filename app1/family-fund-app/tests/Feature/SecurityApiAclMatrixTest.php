@@ -168,6 +168,22 @@ class SecurityApiAclMatrixTest extends TestCase
         $response->assertDontSee($this->crossFundAccount->nickname, false);
     }
 
+    public function test_account_api_index_does_not_leak_any_records_to_unassigned_user(): void
+    {
+        // Regression for #74: an authenticated user with no fund roles and no own
+        // accounts previously hit the empty-closure bug in scopeAccountsQuery and
+        // received every account from GET /api/accounts (no viewAny gate here).
+        Sanctum::actingAs($this->unassigned);
+
+        $response = $this->getJson('/api/accounts');
+
+        $response->assertOk();
+        $response->assertDontSee($this->ownAccount->code, false);
+        $response->assertDontSee($this->siblingAccount->code, false);
+        $response->assertDontSee($this->crossFundAccount->code, false);
+        $this->assertSame([], $response->json('data'), 'unassigned user must get an empty account list');
+    }
+
     /**
      * Every generated resource API (index + detail) must reject unauthenticated
      * callers. This is the cross-resource expansion of the account-only matrix:

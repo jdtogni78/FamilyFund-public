@@ -101,6 +101,34 @@ class AuthorizationTest extends TestCase
         }
     }
 
+    public function test_legacy_scopes_deny_user_without_fund_access_or_own_accounts()
+    {
+        // Regression for #74: the legacy scopes built their predicate as
+        // ->where(fn ($q) => ...orWhere...). For a user with no full-fund access
+        // AND no own accounts, neither inner clause was added, the nested closure
+        // compiled to no WHERE, and the query leaked every row. Create real rows
+        // owned by the beneficiary, then assert the unassigned user sees none.
+        $transaction = \Database\Factories\TransactionFactory::new()
+            ->create(['account_id' => $this->account->id]);
+        \Database\Factories\AccountCreditLineFactory::new()
+            ->create(['account_id' => $this->account->id]);
+
+        $unassigned = new AuthorizationService($this->unassignedUser);
+        $this->assertSame(0, $unassigned->scopeAccountsQuery(AccountExt::query())->count(),
+            'unassigned user must see no accounts');
+        $this->assertSame(0, $unassigned->scopeTransactionsQuery(TransactionExt::query())->count(),
+            'unassigned user must see no transactions');
+        $this->assertSame(0, $unassigned->scopeCreditLinesQuery(\App\Models\AccountCreditLineExt::query())->count(),
+            'unassigned user must see no credit lines');
+
+        // Sanity: the owner still sees their own rows, so the scope filters
+        // rather than simply returning nothing.
+        $owner = new AuthorizationService($this->beneficiary);
+        $this->assertGreaterThan(0, $owner->scopeAccountsQuery(AccountExt::query())->count());
+        $this->assertGreaterThan(0, $owner->scopeTransactionsQuery(TransactionExt::query())->count());
+        $this->assertGreaterThan(0, $owner->scopeCreditLinesQuery(\App\Models\AccountCreditLineExt::query())->count());
+    }
+
     public function test_authorization_service_can_view_account()
     {
         $account = $this->account;

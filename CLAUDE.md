@@ -134,16 +134,18 @@ Tests in the main `familyfund` container reset the shared `familyfund_dev` DB
 (RefreshDatabase wipes it), which clobbers any other session using dev. For
 coverage / Dusk / migration trials / parallel-session test runs, lease an
 isolated slot from `~/.familyfund-pool/testpool.sh` instead — each slot has
-its own `familyfund_testN` DB restored from `database/test/test-baseline.sql.gz`
-on every claim.
+its own `familyfund_testN` DB built fresh on every claim by `migrate:fresh` +
+the synthetic `Database\Seeders\TestBaselineSeeder` (no real-data dump lives in
+the repo — see #78). `account 7` / `user1@dev.familyfund.local` / the first fund
+come from that seeder.
 
 ```bash
 # From this worktree's app1/
-~/.familyfund-pool/testpool.sh list                                # 3 slots: test0..test2
-~/.familyfund-pool/testpool.sh claim "<label>"                     # lease + DB restore + bring up stack
+~/.familyfund-pool/testpool.sh list                                # 5 slots: test0..test4
+~/.familyfund-pool/testpool.sh claim "<label>"                     # lease + seed DB + bring up stack
 ~/.familyfund-pool/testpool.sh run        -- --filter=Foo          # `php artisan test` in this worktree's slot
 ~/.familyfund-pool/testpool.sh tour       -- --filter=FooDuskTest  # Dusk w/ Selenium sidecar
-~/.familyfund-pool/testpool.sh reseed test2                        # re-restore mid-lease
+~/.familyfund-pool/testpool.sh reseed test2                        # re-seed mid-lease
 ~/.familyfund-pool/testpool.sh release                             # free the slot
 ```
 

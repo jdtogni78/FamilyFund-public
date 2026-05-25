@@ -19,9 +19,12 @@ use Tests\DuskTestCase;
  * the feature test owns the math; this smoke proves the new HTML survives
  * a real borrowing.
  *
- * INFRA NOTE: run from familyfund container (pool slots lack ChromeDriver
- * per memory project_dusk_pool_infra_gap). Creates real rows on the dev DB
- * and self-cancels in tearDown.
+ * INFRA NOTE: run via `testpool.sh tour` (Selenium sidecar) against an
+ * isolated familyfund_testN DB, or from the familyfund container directly.
+ * The whole credit-line surface is system-admin gated, so this drives
+ * dev-login as ?as=admin (the seeded system-admin), not the default
+ * fund-admin user. Creates a real loan-share row and self-cancels via
+ * cleanupLine().
  */
 class S7FundSummarySmokeTest extends DuskTestCase
 {
@@ -59,7 +62,13 @@ class S7FundSummarySmokeTest extends DuskTestCase
         int $termMonths,
         string $descr,
     ): int {
-        $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create')
+        // The whole credit-line controller is system-admin gated
+        // (AccountCreditLineController::ensureAdmin → is_admin → isSystemAdmin).
+        // dev-login's default user (claude@test.local) is only a fund-admin on
+        // the synthetic baseline, so it 403s here and the create form never
+        // renders. Log in as the seeded system-admin via ?as=admin (same as the
+        // fund-show visit below and the sibling AccountDetailUITest).
+        $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '/credit-lines/create?as=admin')
             ->waitFor('form[action*="/credit-lines"]')
             ->type('input[name="nickname"]', $descr)
             ->type('input[name="principal_shares"]', (string) $principalShares)

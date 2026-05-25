@@ -325,7 +325,7 @@ class FundControllerExt extends AppBaseController
     {
         $this->authorize('viewAny', FundExt::class);
 
-        $funds = $this->fundRepository->all();
+        $funds = $this->fundRepository->withAuthorization()->all();
 
         return view('funds.index')
             ->with('funds', $funds);

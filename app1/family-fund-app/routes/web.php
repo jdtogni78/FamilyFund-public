@@ -27,9 +27,26 @@ if (app()->environment('local', 'dev', 'testing')) {
             'financial-manager' => 'qa-financial-manager@test.local',
             'beneficiary' => 'qa-beneficiary@test.local',
         ];
-        $as = (string) $request->query('as', 'claude@test.local');
+        // An explicit ?as= wins over the ?account_id= / ?user_id= helpers, so the
+        // RedirectStrayImpersonation middleware can forward a stray ?as= even onto
+        // a URL that also carries account_id/fund_id as legit filters.
+        $as = (string) $request->query('as', '');
 
-        if ($request->filled('account_id')) {
+        if ($as !== '') {
+            if (preg_match('/^user:(\d+)$/', $as, $matches)) {
+                $user = \App\Models\User::find((int) $matches[1]);
+                abort_unless($user, 404, "dev-login: no user with id '{$matches[1]}'");
+            } elseif (preg_match('/^(?:acct|account)[:#-]?(\d+)$/', $as, $matches)) {
+                $account = \App\Models\AccountExt::with('user')->find((int) $matches[1]);
+                abort_unless($account, 404, "dev-login: no account with id '{$matches[1]}'");
+                abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
+                $user = $account->user;
+            } else {
+                $email = $aliases[$as] ?? $as;
+                $user = \App\Models\User::where('email', $email)->first();
+                abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+            }
+        } elseif ($request->filled('account_id')) {
             $account = \App\Models\AccountExt::with('user')->find($request->integer('account_id'));
             abort_unless($account, 404, "dev-login: no account with id '{$request->query('account_id')}'");
             abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
@@ -37,23 +54,25 @@ if (app()->environment('local', 'dev', 'testing')) {
         } elseif ($request->filled('user_id')) {
             $user = \App\Models\User::find($request->integer('user_id'));
             abort_unless($user, 404, "dev-login: no user with id '{$request->query('user_id')}'");
-        } elseif (preg_match('/^user:(\d+)$/', $as, $matches)) {
-            $user = \App\Models\User::find((int) $matches[1]);
-            abort_unless($user, 404, "dev-login: no user with id '{$matches[1]}'");
-        } elseif (preg_match('/^(?:acct|account)[:#-]?(\d+)$/', $as, $matches)) {
-            $account = \App\Models\AccountExt::with('user')->find((int) $matches[1]);
-            abort_unless($account, 404, "dev-login: no account with id '{$matches[1]}'");
-            abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
-            $user = $account->user;
         } else {
-            $email = $aliases[$as] ?? $as;
-            $user = \App\Models\User::where('email', $email)->first();
-            abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+            $user = \App\Models\User::where('email', 'claude@test.local')->first();
+            abort_unless($user, 404, "dev-login: no user with email 'claude@test.local'");
         }
 
         Auth::loginUsingId($user->id);
+
+        // Preserve any non-impersonation query params (e.g. ?fund_id=&account_id=
+        // filters carried in by the stray-?as= redirect) onto the destination.
+        $passthrough = collect($request->query())
+            ->except(['as', 'user_id', 'account_id'])
+            ->all();
         // ltrim guards against '//' protocol-relative redirects when $redirect is empty
-        return redirect('/' . ltrim($redirect, '/'));
+        $target = '/' . ltrim($redirect, '/');
+        if (! empty($passthrough)) {
+            $target .= '?' . http_build_query($passthrough);
+        }
+
+        return redirect($target);
     })->where('redirect', '.*');
 }
 

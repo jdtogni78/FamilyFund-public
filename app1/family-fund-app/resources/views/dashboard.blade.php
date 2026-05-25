@@ -4,14 +4,26 @@
     </ol>
 
     @php
-        // Gate fund-scoped sections behind any-fund access so a no-role user
-        // doesn't see links that 403 on click (QA-2026-05-19 #7).
+        // Tier the dashboard by role so users never see links that 403 on click:
+        //  - $canManage    : fund-admin / financial-manager / system-admin (full
+        //                    access) — sees the full fund-management surface.
+        //  - $isBeneficiary : readonly-only owner — sees ONLY their own scoped
+        //                    pages (accounts / transactions / fund). Every
+        //                    management page is fund.full-gated and would 403.
+        // (Previously gated on the coarse canAccessAnyFund(), which handed
+        // beneficiaries the whole admin-tier link set — QA-2026-05-19 #7 / leak.)
         $u = auth()->user();
-        $canFundUi = $u && method_exists($u, 'canAccessAnyFund') && $u->canAccessAnyFund();
+        $isSystemAdmin = $u && method_exists($u, 'isSystemAdmin') && $u->isSystemAdmin();
+        $fundAccess = $u && method_exists($u, 'getAccessibleFundIds')
+            ? $u->getAccessibleFundIds()
+            : ['full' => [], 'readonly' => []];
+        $canManage = $isSystemAdmin || !empty($fundAccess['full']);
+        $isBeneficiary = !$canManage && !empty($fundAccess['readonly']);
+        $canAnyFund = $canManage || $isBeneficiary;
     @endphp
 
     <div class="container-fluid py-4">
-        @unless($canFundUi || ($u && method_exists($u, 'isSystemAdmin') && $u->isSystemAdmin()))
+        @unless($canAnyFund)
             <div class="alert alert-info mb-4">
                 Your account isn't linked to a fund yet. Ask an administrator to assign you a role
                 so you can view funds, accounts, transactions, and reports.
@@ -19,7 +31,31 @@
         @endunless
 
         <div class="row g-4">
-            @if($canFundUi)
+            @if($isBeneficiary)
+            <!-- Beneficiary: own scoped pages only -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488, #0891b2);">
+                        <h5 class="mb-0"><i class="fa fa-bank me-2"></i>My Account</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="{{ route('accounts.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="fa fa-bank text-teal-600 me-3" style="width: 20px;"></i>My Accounts
+                            </a>
+                            <a href="{{ route('transactions.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="fa fa-exchange-alt text-teal-600 me-3" style="width: 20px;"></i>My Transactions
+                            </a>
+                            <a href="{{ route('funds.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="fa fa-money text-teal-600 me-3" style="width: 20px;"></i>My Fund
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($canManage)
             <!-- Funds -->
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm">

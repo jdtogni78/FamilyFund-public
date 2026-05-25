@@ -19,9 +19,11 @@ Done (branch `secret-rotation-dev`, container `app1-familyfund-1`):
   `DB_PASSWORD` updated. New value backed up off-repo (perms 600).
 
 Deferred / open:
-- [ ] **Testpool DB** (`db-testpool` on :3315) NOT rotated — an active test slot (`test0`) was
-  leased mid-rotation; rotating broke its auth so it was reverted to `123456`. Rotate
-  `db-testpool` + `testpool.sh` DB_PASS together when no test slots are leased.
+- [x] **Testpool DB** (`db-testpool` on :3315) **rotated 2026-05-24** (all `testN` slots free):
+  `ALTER USER` root@`%`+root@`localhost` `123456`→dev-root value (runbook §C); `testpool.sh`
+  line 73 `DB_PASS=` updated to match (no `123456` left). Verified via `dbup`/`list` + a
+  `claim`→`run`→`release` smoke (app connected, RefreshDatabase OK). New value noted off-repo
+  (perms 600). The committed `test-baseline.sql.gz` is unaffected (pw lives only in the grant + tooling).
 - [ ] **Stage APP_KEY** left as-is per "dev only" scope (dormant; no running stage env; only its
   DB_PASSWORD was refreshed).
 - [ ] **Prod APP_KEY ≠ leaked dev key** check — read-only SSH failed host-key verification; user to run.

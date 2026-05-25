@@ -1,16 +1,11 @@
 # npm audit ignore list — one GHSA id per line; `#` starts a comment.
-# Read by app1/family-fund-app/bin/security-scan.sh (run_npm_audit). Keep this
-# narrow: only accept advisories that genuinely don't affect what we ship, and
-# note the remediation plan.
+# Read by app1/family-fund-app/bin/security-scan.sh (run_npm_audit) and
+# bin/npm-audit-gate.cjs. Keep this narrow: only accept advisories that
+# genuinely don't affect what we ship, and note the remediation plan.
 #
-# Vite dev-server advisory cluster (vite@4 / bundled esbuild@0.18). These are
-# all DEV-SERVER-only issues: they require `npm run dev` (the Vite dev server)
-# to be running and reachable. Production serves pre-built static assets, so the
-# Vite/esbuild dev server never runs there — `npm audit --omit=dev` reports 0.
-# Proper fix is a vite 4 -> 5/6 upgrade (also resolves the laravel-vite-plugin
-# peer-dependency mismatch); tracked as a follow-up, not safe to force-bump here.
-GHSA-67mh-4wv8-2f99   # esbuild: dev server allows any site to send requests
-GHSA-93m4-6634-74q7   # vite: server.fs.deny bypass via backslash (Windows)
-GHSA-4w7w-66w2-5vf9   # vite: path traversal in optimized deps `.map`
-GHSA-g4jq-h2w9-997c   # vite: dev server may serve same-name-prefixed files
-GHSA-jqfw-vq24-v9c3   # vite: server.fs not applied to HTML files
+# Currently empty. The former Vite dev-server advisory cluster
+# (GHSA-67mh-4wv8-2f99, GHSA-93m4-6634-74q7, GHSA-4w7w-66w2-5vf9,
+# GHSA-g4jq-h2w9-997c, GHSA-jqfw-vq24-v9c3 — all dev-server-only on
+# vite@4 / bundled esbuild@0.18) was resolved by upgrading vite 4 -> 6
+# (esbuild >= 0.25), which also cleared the laravel-vite-plugin peer
+# mismatch. See #34. `npm audit` now reports 0 vulnerabilities.

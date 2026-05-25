@@ -17,7 +17,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
-                        <div class="card-header" style="background: #0d9488; color: white;">
+                        <div class="card-header card-header-dark" style="color: white;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5 class="mb-0">
@@ -215,7 +215,7 @@
                                         </div>
 
                                         {{-- Add New Item --}}
-                                        <div class="card mt-3" style="background: #f8f9fa;">
+                                        <div class="card mt-3 bg-slate-50 dark:bg-slate-700">
                                             <div class="card-body">
                                                 <h6 class="card-title"><i class="fa fa-plus me-2"></i>Add New Holding</h6>
                                                 <div class="row align-items-end">

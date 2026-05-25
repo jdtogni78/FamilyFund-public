@@ -14,7 +14,7 @@
                 <div class="col">
                     <div class="card">
                         <div class="card-header">
-                            <strong>Trade Portfolio Diff</strong>
+                            <i class="fa fa-random me-2"></i><strong>Trade Portfolio Diff</strong>
                             @if(!isset($is_announce))
                                 <form action="{{ route('tradePortfolios.announce', [$api['new']->id]) }}" method="POST" class="d-inline">
                                     @csrf

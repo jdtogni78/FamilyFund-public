@@ -20,10 +20,10 @@
             <!-- Report Header -->
             <div class="row mb-4">
                 <div class="col-lg-12">
-                    <div class="card border-primary">
-                        <div class="card-header bg-primary text-white">
+                    <div class="card">
+                        <div class="card-header card-header-dark">
                             <h4 class="mb-0">
-                                <i class="fa fa-chart-line mr-2"></i>
+                                <i class="fa fa-chart-line me-2"></i>
                                 Portfolio Rebalance Analysis
                             </h4>
                         </div>
@@ -34,7 +34,7 @@
                                     <p class="mb-1"><strong>Trade Portfolio:</strong> #{{ $api['tradePortfolio']->id }}</p>
                                     @if(\Carbon\Carbon::parse($api['tradePortfolio']->end_dt)->isAfter(\Carbon\Carbon::today()))
                                     <a href="{{ route('tradePortfolios.rebalance', $api['tradePortfolio']->id) }}" class="btn btn-sm btn-warning mt-2">
-                                        <i class="fa fa-balance-scale mr-1"></i> Edit Allocations
+                                        <i class="fa fa-balance-scale me-1"></i> Edit Allocations
                                     </a>
                                     @endif
                                 </div>
@@ -63,25 +63,25 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <i class="fa fa-table mr-2"></i>
+                            <i class="fa fa-table me-2"></i>
                             <strong>Asset Allocation Targets</strong>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-striped table-sm">
-                                    <thead class="thead-light">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Symbol</th>
                                             <th>Type</th>
-                                            <th class="text-right">Target %</th>
-                                            <th class="text-right">Deviation Trigger</th>
-                                            <th class="text-right">Min %</th>
-                                            <th class="text-right">Max %</th>
+                                            <th class="text-end">Target %</th>
+                                            <th class="text-end">Deviation Trigger</th>
+                                            <th class="text-end">Min %</th>
+                                            <th class="text-end">Max %</th>
                                             @php
                                                 $lastDate = array_key_last($api['rebalance']);
                                                 $lastData = $lastDate ? $api['rebalance'][$lastDate] : null;
                                             @endphp
-                                            <th class="text-right">Current %</th>
+                                            <th class="text-end">Current %</th>
                                             <th class="text-center">Status</th>
                                         </tr>
                                     </thead>
@@ -98,11 +98,11 @@
                                             <tr>
                                                 <td><strong>{{ $item->symbol }}</strong></td>
                                                 <td>{{ $item->type }}</td>
-                                                <td class="text-right">{{ number_format($item->target_share * 100, 1) }}%</td>
-                                                <td class="text-right">± {{ number_format($item->deviation_trigger * 100, 1) }}%</td>
-                                                <td class="text-right text-muted">{{ number_format($minPerc, 1) }}%</td>
-                                                <td class="text-right text-muted">{{ number_format($maxPerc, 1) }}%</td>
-                                                <td class="text-right {{ $currentPerc !== null ? ($isWithinBounds ? 'text-success' : 'text-danger font-weight-bold') : '' }}">
+                                                <td class="text-end">{{ number_format($item->target_share * 100, 1) }}%</td>
+                                                <td class="text-end">± {{ number_format($item->deviation_trigger * 100, 1) }}%</td>
+                                                <td class="text-end text-muted">{{ number_format($minPerc, 1) }}%</td>
+                                                <td class="text-end text-muted">{{ number_format($maxPerc, 1) }}%</td>
+                                                <td class="text-end {{ $currentPerc !== null ? ($isWithinBounds ? 'text-success' : 'text-danger fw-bold') : '' }}">
                                                     {{ $currentPerc !== null ? number_format($currentPerc, 2) . '%' : 'N/A' }}
                                                 </td>
                                                 <td class="text-center">
@@ -115,7 +115,7 @@
                                                             <span class="badge badge-warning">Over</span>
                                                         @endif
                                                     @else
-                                                        <span class="badge badge-secondary">N/A</span>
+                                                        <span class="badge bg-secondary">N/A</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -135,13 +135,13 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div>
-                                    <i class="fa fa-chart-area mr-2"></i>
+                                    <i class="fa fa-chart-area me-2"></i>
                                     <strong>{{ $item->symbol }}</strong>
-                                    <span class="text-muted ml-2">
+                                    <span class="text-muted ms-2">
                                         (Target: {{ number_format($item->target_share * 100, 1) }}% ± {{ number_format($item->deviation_trigger * 100, 1) }}%)
                                     </span>
                                 </div>
-                                <span class="badge badge-info">{{ $item->type }}</span>
+                                <span class="badge bg-info">{{ $item->type }}</span>
                             </div>
                             <div class="card-body">
                                 @include("trade_portfolio_items.rebalance_line_graph")
@@ -155,9 +155,9 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header" id="heading{{ $item->id }}">
-                                <a class="btn btn-link text-muted" data-toggle="collapse" href="#collapse{{ $item->id }}"
+                                <a class="btn btn-link text-muted" data-bs-toggle="collapse" href="#collapse{{ $item->id }}"
                                    role="button" aria-expanded="false" aria-controls="collapse{{ $item->id }}">
-                                    <i class="fa fa-chevron-down mr-2"></i>
+                                    <i class="fa fa-chevron-down me-2"></i>
                                     Portfolio Asset History for {{ $item->symbol }}
                                 </a>
                             </div>

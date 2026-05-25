@@ -122,7 +122,7 @@
     </div>
 
     <!-- Total Share Field: calculate cash target plus sum of all item shares -->
-    <div class="form-group col-sm-6 font-weight-bold {{ $api['old']->total_shares - 100 == 0 ? 'text-success' : 'text-danger' }}">
+    <div class="form-group col-sm-6 fw-bold {{ $api['old']->total_shares - 100 == 0 ? 'text-success' : 'text-danger' }}">
 <label for="total_share">Total Shares:</label>
         <p>{{ $api['old']->total_shares }}%
             @if(isset($api['new']) && $api['new']['total_shares'] != $api['old']['total_shares'])

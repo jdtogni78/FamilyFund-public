@@ -11,6 +11,9 @@ with a date and a source you can verify (commit, PR/issue, or doc).
 - Never supersede in place — add a new entry and flip the old one's **Status** to
   `Superseded by ED-NNNN`. History stays readable.
 - Keep secret VALUES out of this file (decisions only).
+- **Cross-repo** decisions (the worktree workflow, multi-agent ticket
+  coordination, the env/test pools, secrets posture, etc.) live in the
+  ai-harness `DECISIONS.md` (`GD-NNNN`) — this file is FamilyFund-only.
 
 ## Index
 
@@ -29,6 +32,7 @@ with a date and a source you can verify (commit, PR/issue, or doc).
 | [ED-0011](#ed-0011--frontend-build-pinned-to-vite-6-not-5-not-latest) | 2026-05 | Accepted | Frontend build pinned to Vite 6 (lowest major with patched esbuild + current plugin's peer range) |
 | [ED-0012](#ed-0012--no-intentionally-public-api-endpoints) | 2026-05-24 | Accepted | No intentionally-public API endpoints; overview-data + exchange holidays are auth-locked |
 | [ED-0013](#ed-0013--larastanphpstan-static-analysis-behind-a-baseline-non-blocking) | 2026-05-24 | Accepted | Larastan/PHPStan static analysis at level 5 behind a baseline; non-blocking gate to start |
+| [ED-0014](#ed-0014--test-baseline-is-a-synthetic-seeder-not-a-committed-data-dump) | 2026-05 | Accepted | Test baseline is a synthetic seeder (`TestBaselineSeeder`), not a committed real-data dump |
 
 ---
 
@@ -273,6 +277,7 @@ with a date and a source you can verify (commit, PR/issue, or doc).
 - **Source:** #77; `app1/family-fund-app/phpstan.neon`, `phpstan-baseline.neon`,
   `bin/security-scan.sh` (`run_phpstan`), `.github/workflows/security-scan.yml`
   (`phpstan` job).
+
 ## ED-0014 — Test baseline is a synthetic seeder, not a committed data dump
 
 - **Date:** 2026-05 · **Status:** Accepted

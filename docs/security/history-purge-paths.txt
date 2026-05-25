@@ -1,0 +1,24 @@
+# git-filter-repo --invert-paths --paths-from-file <this>
+# The exact spec EXECUTED for issue #66 (2026-05-25): 14 data paths + 4 dead
+# legacy dirs. All were already removed from HEAD, so purging only scrubbed
+# history. Paired with --replace-text rule:
+#     regex:jd?togni(78)?@gmail\.com==>admin@dev.familyfund.local
+# See HISTORY-AUDIT-66.md. Post-rewrite audit: PII/hashes/APP_KEYs = 0.
+app1/datadir_acl/
+app1/family-fund-app/.env.dev
+app1/family-fund-app/.env.local
+app1/family-fund-app/.env.test0
+database/csv/familyfund_password_resets.csv
+database/csv/familyfund_users.csv
+database/dev/familyfund_dev_data.sql
+database/dev/familyfund_data.sql
+database/familyfund_data.sql
+database/familyfund_dump.sql
+database/familyfund_only_dump.sql
+app1/familyfund_dump.sql
+app1/core_dump.sql
+app1/family-fund-app/database/test/test-baseline.sql.gz
+php_app/
+php_app2/
+app1/coreui-generator/
+leadconcept_app/

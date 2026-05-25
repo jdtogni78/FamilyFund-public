@@ -19,12 +19,15 @@ class SecurityDevTokenCommand extends Command
 
     protected $description = 'Dev-only: mint a Sanctum API token for a QA user (for authenticated DAST/ZAP scans)';
 
+    // Each alias maps to an ordered list of candidate emails; the first that
+    // resolves to a real user wins. The admin is renamed to a non-PII dev
+    // address by prod_to_dev.sql, so fall back to the pre-anonymization address.
     private const ALIASES = [
-        'admin' => 'admin@dev.familyfund.local',
-        'system-admin' => 'admin@dev.familyfund.local',
-        'fund-admin' => 'qa-fund-admin@test.local',
-        'financial-manager' => 'qa-financial-manager@test.local',
-        'beneficiary' => 'qa-beneficiary@test.local',
+        'admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
+        'system-admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
+        'fund-admin' => ['qa-fund-admin@test.local'],
+        'financial-manager' => ['qa-financial-manager@test.local'],
+        'beneficiary' => ['qa-beneficiary@test.local'],
     ];
 
     public function handle(): int
@@ -36,11 +39,11 @@ class SecurityDevTokenCommand extends Command
         }
 
         $as = (string) $this->option('as');
-        $email = self::ALIASES[$as] ?? $as;
+        $candidates = self::ALIASES[$as] ?? [$as];
 
-        $user = User::where('email', $email)->first();
+        $user = User::whereIn('email', $candidates)->first();
         if (! $user) {
-            $this->error("No user with email '{$email}'. Seed QaTestUsersSeeder first.");
+            $this->error('No user for ' . $as . ' (tried: ' . implode(', ', $candidates) . '). Seed QaTestUsersSeeder first.');
 
             return self::FAILURE;
         }

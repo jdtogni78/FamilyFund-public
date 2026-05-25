@@ -14,9 +14,11 @@
                                  <strong>Funds</strong>
                                  <span class="badge bg-primary ms-2">{{ $funds->count() }}</span>
                              </div>
-                             <a class="btn btn-sm btn-primary" href="{{ route('funds.create') }}">
-                                 <i class="fa fa-plus me-1"></i> New Fund
-                             </a>
+                             @can('create', \App\Models\FundExt::class)
+                                 <a class="btn btn-sm btn-primary" href="{{ route('funds.create') }}">
+                                     <i class="fa fa-plus me-1"></i> New Fund
+                                 </a>
+                             @endcan
                          </div>
                          <div class="card-body">
                              @include('funds.table')

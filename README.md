@@ -105,18 +105,30 @@ The `database/prod_to_dev.sql` script sanitizes production data:
 
 | Table | Field | Action |
 |-------|-------|--------|
-| users | name | Changed to "XUser{id}" (keeps first initial) |
-| users | email | Changed to "user{id}@dev.familyfund.local" |
-| users | password | Reset to 'devpassword123' |
-| accounts | nickname | Changed to "Acct{id}" |
-| accounts | email_cc | Changed to "account{id}@dev.familyfund.local" |
+| users | password | Rotated for **all** users incl. admin to `devpassword123` — no real prod hash survives |
+| users | name / email | "XUser{id}" / "user{id}@dev.familyfund.local" (admin → `Dev Admin` / `admin@dev.familyfund.local`) |
+| users | two_factor_secret / recovery / confirmed_at | Cleared (guarded) |
 | users | remember_token | Cleared |
-| password_resets | * | Deleted |
-| personal_access_tokens | * | Deleted |
+| persons | first_name / last_name / email / birthday | "First{id}" / "Last{id}" / `person{id}@dev.familyfund.local` / `1990-01-01` |
+| addresses | street / number / complement / city / state / zip_code | Replaced with dev placeholders |
+| phones | number | Replaced with `+1555…` placeholder |
+| iddocuments | number (CPF/RG/CNH/Passport/SSN) | Replaced with `DEV-{type}-{id}` |
+| accounts | nickname / email_cc | "Acct{id}" / `account{id}@dev.familyfund.local` |
+| trade_portfolios | account_name | "Portfolio Acct {id}" |
+| transactions / cash_deposits / deposit_requests | free-text descr/description | Genericized |
+| account_credit_lines, credit_line_adjustments, transaction_reversals, credit_line_delay_notifications | free-text / recipient_email | Genericized (guarded) |
+| change_log / sessions / password_resets / personal_access_tokens | * | Deleted |
+| login_activities / operation_logs / matching_reminder_logs | * | Deleted (guarded) |
 
-**Preserved accounts:**
-- `admin@dev.familyfund.local` - Admin (original password restored)
-- `claude@test.local` - Test user (unchanged)
+Sections marked *(guarded)* run only if the (newer, post-2026-01) table/column exists, so an
+older prod dump is skipped rather than aborting the script.
+
+**Login after running** (no real personal email survives, not even the admin's):
+- `admin@dev.familyfund.local` / `devpassword123` — admin (was `admin@dev.familyfund.local`; the
+  `system-admin` role is `user_id`-linked so it is retained). The `/dev-login` `admin` alias
+  resolves here, falling back to `admin@dev.familyfund.local` on an un-scrubbed prod dump / test baseline.
+- `claude@test.local` / `claude-test-2024` — CLI test user (kept).
+- every other user / `devpassword123`.
 
 ### Restore Dev from Backup
 

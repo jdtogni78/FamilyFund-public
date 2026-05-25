@@ -139,6 +139,7 @@ Trait FundTrait
         if ($user != null) {
             return in_array($user->email, [
                 "admin@dev.familyfund.local",
+                "admin@dev.familyfund.local", // anonymized dev admin (prod_to_dev.sql)
                 "claude@test.local",
             ]);
         }

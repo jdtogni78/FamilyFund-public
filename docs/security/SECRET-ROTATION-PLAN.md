@@ -132,21 +132,41 @@ dumps. Before going public:
 
 ---
 
-## 5. Prevent future bad commits (suggestions)
-1. **Pre-commit secret scanner** — `gitleaks protect --staged` (or `git-secrets`) as a
-   `.git/hooks/pre-commit`, ideally via the `pre-commit` framework so it's shared.
-2. **Pre-push full-diff scan** — `gitleaks detect` over the push range as a `pre-push` hook.
-3. **Harden `.gitignore`** (root + app):
-   `.env*` (with `!.env.example`), `*.sql`, `*.sql.gz`, `*.ibd`, `*.frm`,
-   `database/**/*data*.sql`, `**/*.log`, `**/*.log.*`, `**/datadir*/`.
-4. **Never commit data/datadir** — replace dumps with a synthetic seeder; keep real
-   data out of git entirely.
-5. **CI scanning** — gitleaks-action (or GitHub secret scanning + push protection) on
-   every PR/push; fail the build on a hit.
-6. **One tracked env only** — `.env.example` with placeholders; all real secrets in
-   git-ignored files or a secrets manager.
-7. **Parameterize PII** — admin/recipient emails via config/env, not literals.
-8. Periodic full-history scan in CI to catch regressions.
+## 5. Prevent future bad commits
+
+> **Status 2026-05-24:** the scanning + gitignore layers are DONE. See the
+> per-item markers below. The only large open piece is the synthetic
+> **test-baseline** seeder (filed as a follow-up — it is load-bearing for the
+> whole test suite and can't be swapped in casually).
+
+1. ✅ **Pre-commit secret scanner** — `.githooks/pre-commit` extracts staged
+   content and runs gitleaks (local binary, else Docker). Install per-clone with
+   `bin/install-git-hooks.sh` (sets `core.hooksPath`). Bypass: `SKIP_GITLEAKS=1`.
+   *(Chose native hooks over the Python `pre-commit` framework — no extra runtime
+   dep, and the Docker fallback fits the container-first dev setup.)*
+2. ✅ **Pre-push full-diff scan** — `.githooks/pre-push` scans the outgoing
+   commit range so a secret already removed from HEAD but live in history is still
+   caught before it leaves the machine.
+3. ✅ **Harden `.gitignore`** (root + app) — `.env*` (with `!.env.example`),
+   `*.sql.gz`, `*.ibd`, `*.frm`, `*.sqlite`, `database/dev/*.sql`,
+   `database/**/*data*.sql`, `database/prod_to_dev.sql`, `**/*.log`, `**/*.log.*`,
+   `database/csv/*password*`, `**/datadir*/`. *Deliberately NOT a blanket `*.sql`*
+   — the repo keeps functional ops/DDL scripts (`drop_all.sql`, `truncate_all.sql`,
+   `restore_dev_funds.sql`, `familyfund_ddl*.sql`); only data dumps are ignored.
+4. ✅/⏳ **Never commit data/datadir** — the dead `database/dev/familyfund_dev_data.sql`
+   (real PII, nothing loaded it) is now **untracked** (`git rm --cached`; still in
+   git *history* — that's the separate history-purge item in `SECURITY-EXPOSURE.md`
+   §5). **Open:** `app1/family-fund-app/database/test/test-baseline.sql.gz` is
+   load-bearing (CI `tests.yml` + `testpool.sh` restore from it) → replacing it with
+   a synthetic seeder is a dedicated follow-up ticket, not done here.
+5. ✅ **CI scanning** — `.github/workflows/security-scan.yml` runs a gitleaks
+   "Secret Scan" job on push/PR with `.gitleaks.toml`; fails the build on a hit.
+6. ✅ **One tracked env only** — `.env.example` is the only tracked env; `.env*`
+   are git-ignored (done in the dev rotation).
+7. ⏳ **Parameterize PII** — admin/recipient emails via config/env (§4) — separate
+   open item on issue #16.
+8. ⏳ Periodic full-history scan in CI — future enhancement (the working-tree scan
+   runs today; history scan pairs with the pre-publish purge).
 
 ---
 

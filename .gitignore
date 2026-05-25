@@ -28,11 +28,6 @@ app1/docker-compose.pool*.local.yml
 app1/family-fund-app/.env.test*
 app1/family-fund-app/.env.pool*
 
-# --- Secrets & data hygiene (post .env.dev leak; mirrors origin/main) ---
-**/.env
-**/.env.*
-!**/.env.example
-
 # Coverage reports (regenerated on demand)
 app1/family-fund-app/coverage-html/
 app1/family-fund-app/coverage-summary.txt

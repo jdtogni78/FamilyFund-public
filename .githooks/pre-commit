@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Pre-commit secret scan — blocks a commit whose STAGED content trips gitleaks.
+# Install with: bin/install-git-hooks.sh   (sets core.hooksPath -> .githooks)
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=.githooks/_gitleaks.sh
+. "$HOOK_DIR/_gitleaks.sh"
+
+if [ "${SKIP_GITLEAKS:-}" = "1" ]; then
+  gl_warn "⏭  SKIP_GITLEAKS=1 — skipping pre-commit secret scan."
+  exit 0
+fi
+
+# Build a temp tree of the STAGED (index) content for added/copied/modified
+# files, preserving repo-relative paths so .gitleaks.toml path allowlists match.
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/ff-gitleaks.XXXXXX")"
+trap 'rm -rf "$tmp"' EXIT
+
+found=0
+while IFS= read -r -d '' f; do
+  found=1
+  mkdir -p "$tmp/$(dirname "$f")"
+  git show ":$f" > "$tmp/$f" 2>/dev/null || true
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
+
+[ "$found" -eq 0 ] && exit 0
+
+if ! gl_scan_dir "$tmp"; then
+  gl_warn ""
+  gl_warn "❌ gitleaks found a potential secret in your STAGED changes (above)."
+  gl_warn "   • Remove it, move the value into a git-ignored .env, then re-stage."
+  gl_warn "   • False positive? Add an allowlist entry to .gitleaks.toml."
+  gl_warn "   • Emergency bypass (discouraged):  SKIP_GITLEAKS=1 git commit ..."
+  exit 1
+fi
+exit 0

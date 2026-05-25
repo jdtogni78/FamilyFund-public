@@ -35,6 +35,9 @@ exposed content may already be cloned, cached, or indexed.**
   INSERTs into `users, accounts, account_balances, funds, transactions,
   portfolios, portfolio_assets, asset_prices, matching_rules, …`.
   **9 emails + 9 bcrypt password hashes.**
+  → **Untracked from HEAD 2026-05-24** (`git rm --cached`; nothing loaded it —
+  the dev-load flow is `prod-to-dev.sh`). Still present in git **history** until
+  the §5 history purge runs.
 - **`app1/family-fund-app/database/test/test-baseline.sql.gz`** — full baseline:
   `persons, users, login_activities, credit_line_*, goals, fund_reports, …` —
   **62 emails.**

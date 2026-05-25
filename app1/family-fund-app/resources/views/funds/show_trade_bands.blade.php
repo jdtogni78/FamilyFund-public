@@ -28,7 +28,7 @@
                         <div class="card-header card-header-dark py-2 d-flex justify-content-between align-items-center flex-wrap" style="gap: 8px;">
                             <div class="d-flex align-items-center">
                                 <h5 class="mb-0" style="font-weight: 700;">
-                                    <i class="fa fa-chart-bar mr-2"></i>{{ $api['name'] }} - Trading Bands
+                                    <i class="fa fa-chart-bar me-2"></i>{{ $api['name'] }} - Trading Bands
                                 </h5>
                             </div>
                             <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
@@ -93,9 +93,9 @@
             <div class="row mb-4" id="section-comparison">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
-                            <strong><i class="fa fa-columns mr-2"></i>Trade Portfolios Comparison</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseComparison"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
+                            <strong><i class="fa fa-columns me-2"></i>Trade Portfolios Comparison</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseComparison"
                                role="button" aria-expanded="true" aria-controls="collapseComparison">
                                 <i class="fa fa-chevron-down"></i>
                             </a>

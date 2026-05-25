@@ -156,21 +156,21 @@
                         </div>
 
                         {{-- Stats Row --}}
-                        <div class="card-body py-3" style="background: #f0fdfa;">
+                        <div class="card-body py-3 bg-teal-50">
                             <div class="row text-center">
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
+                                <div class="col mb-3 mb-md-0 border-e border-teal-200 dark:border-slate-600">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">{{ $totalValue }}</div>
                                     <div class="text-muted text-uppercase small">Total Value</div>
                                 </div>
                                 @if($showSharePrice)
-                                <div class="col mb-3 mb-md-0" style="border-right: 1px solid #99f6e4;">
+                                <div class="col mb-3 mb-md-0 border-e border-teal-200 dark:border-slate-600">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #0d9488;">${{ number_format($sharePrice, 2) }}</div>
                                     <div class="text-muted text-uppercase small">Share Price</div>
                                 </div>
                                 @endif
                                 @include('partials.highlights_growth', ['yearlyPerf' => $api['yearly_performance'] ?? [], 'allTimeOverride' => $allTimeReturn, 'showBorder' => isset($api['admin']) && $accountsCount > 0])
                                 @if(isset($api['admin']) && $accountsCount > 0)
-                                <div class="col" style="background: #fffbeb; border-radius: 6px; padding: 8px; margin: -8px 0;">
+                                <div class="col bg-amber-50 dark:bg-amber-900/40 rounded" style="padding: 8px; margin: -8px 0;">
                                     <div style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ $accountsCount }}</div>
                                     <div class="text-uppercase small" style="color: #d97706;">
                                         Accounts <span class="badge badge-warning">ADMIN</span>
@@ -193,7 +193,7 @@
                             $borrowedValueCalc = $api['summary']['borrowed_value'] ?? ($borrowedShares * ($api['summary']['share_value'] ?? 0));
                             $unallocatedValueCalc = $api['summary']['available_unallocated_value'] ?? ($unallocatedShares * ($api['summary']['share_value'] ?? 0));
                         @endphp
-                        <div class="card-body py-3" style="background: #fffbeb; border-top: 1px solid #99f6e4;">
+                        <div class="card-body py-3 bg-amber-50 dark:bg-amber-900/40 border-t border-teal-200 dark:border-slate-600">
                             <div class="d-flex align-items-center mb-2">
                                 <span class="badge badge-warning">ADMIN</span>
                                 <strong class="text-muted small ms-2">Share Allocation</strong>
@@ -263,7 +263,7 @@
                         @endif
 
                         {{-- Fund Details --}}
-                        <div class="card-body pt-0 pb-3" style="background: #ffffff; border-top: 1px solid #99f6e4;">
+                        <div class="card-body pt-0 pb-3 border-t border-teal-200 dark:border-slate-600">
                             <div class="row mt-2">
                                 <div class="col-md-6">
                                     <p class="mb-1"><strong>As of:</strong> {{ $asOf }}</p>
@@ -353,7 +353,7 @@
             <div class="row mb-4" id="section-category-summary">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <strong><i class="fa fa-layer-group me-2"></i>Category Summary</strong>
                             <div class="btn-group btn-group-sm">
                                 <button type="button" class="btn btn-outline-light btn-sm expand-all-btn" data-section="category">
@@ -444,7 +444,7 @@
                                 @endforeach
                             </div>
                             @if(isset($categoryTotals['liability']))
-                            <div class="mt-3 pt-3" style="border-top: 1px solid #e5e7eb;">
+                            <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
                                 @php
                                     $netWorth = $grandTotal;
                                     // Note: liability values should already be negative in the API
@@ -468,7 +468,7 @@
             <div class="row mb-4" id="section-type-summary">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <strong><i class="fa fa-briefcase me-2"></i>Portfolio Type Summary</strong>
                             <div class="btn-group btn-group-sm">
                                 <button type="button" class="btn btn-outline-light btn-sm expand-all-btn" data-section="type">
@@ -652,7 +652,7 @@
             <div class="row mb-4" id="section-group-summary">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <strong><i class="fa fa-chart-pie me-2"></i>Group Summary (by Asset Type)</strong>
                             <div>
                                 <button type="button" class="btn btn-outline-light btn-sm expand-all-btn me-1" data-section="group">
@@ -664,7 +664,7 @@
                                 <a href="{{ route('assets.index') }}" class="btn btn-sm btn-outline-light me-1" title="Manage Asset Groups">
                                     <i class="fa fa-cog"></i>
                                 </a>
-                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroupSummary"
+                                <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseGroupSummary"
                                    role="button" aria-expanded="true" aria-controls="collapseGroupSummary">
                                     <i class="fa fa-chevron-down"></i>
                                 </a>
@@ -775,9 +775,9 @@
             <div class="row mb-4" id="section-brokerage-portfolios">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-folder-open mr-2"></i>Portfolios <span class="badge bg-light text-dark ms-2">{{ count($api['portfolios']) }}</span></strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapsePortfoliosList"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-folder-open me-2"></i>Portfolios <span class="badge bg-light text-dark ms-2">{{ count($api['portfolios']) }}</span></strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapsePortfoliosList"
                                role="button" aria-expanded="true" aria-controls="collapsePortfoliosList">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -801,9 +801,9 @@
             <div class="row mb-4" id="section-charts">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-chart-line mr-2"></i>Monthly Value</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyValue"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-chart-line me-2"></i>Monthly Value</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseMonthlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyValue">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -819,9 +819,9 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-chart-bar mr-2"></i>Yearly Value</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyValue"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-chart-bar me-2"></i>Yearly Value</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseYearlyValue"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyValue">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -840,9 +840,9 @@
             <div class="row mb-4" id="section-regression">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-chart-area mr-2"></i>Forecast (Linear Regression)</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseForecast"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-chart-area me-2"></i>Forecast (Linear Regression)</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseForecast"
                                role="button" aria-expanded="true" aria-controls="collapseForecast">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -856,9 +856,9 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-table mr-2"></i>Projection Table</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseProjection"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-table me-2"></i>Projection Table</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseProjection"
                                role="button" aria-expanded="true" aria-controls="collapseProjection">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -878,9 +878,9 @@
                 <div class="row mb-4" id="section-group-{{ Str::slug($group) }}">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                                <strong><i class="fa fa-layer-group mr-2"></i>Group {{ $group }} Performance</strong>
-                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseGroup{{$group}}"
+                            <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                                <strong><i class="fa fa-layer-group me-2"></i>Group {{ $group }} Performance</strong>
+                                <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseGroup{{$group}}"
                                    role="button" aria-expanded="true" aria-controls="collapseGroup{{$group}}">
                                     <i class="fa fa-chevron-down"></i>
                                 </a>
@@ -912,9 +912,9 @@
             <div class="row mb-4" id="section-allocation">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                            <strong><i class="fa fa-users mr-2"></i>Accounts Allocation <span class="badge badge-warning">ADMIN</span></strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAcctAlloc"
+                        <div class="card-header card-header-admin d-flex justify-content-between align-items-center">
+                            <strong><i class="fa fa-users me-2"></i>Accounts Allocation <span class="badge badge-warning">ADMIN</span></strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseAcctAlloc"
                                role="button" aria-expanded="true" aria-controls="collapseAcctAlloc">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -933,9 +933,9 @@
             <div class="row mb-4" id="section-performance">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-table mr-2"></i>Yearly Performance</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseYearlyPerf"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-table me-2"></i>Yearly Performance</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseYearlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseYearlyPerf">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -950,9 +950,9 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-table mr-2"></i>Monthly Performance</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseMonthlyPerf"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-table me-2"></i>Monthly Performance</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseMonthlyPerf"
                                role="button" aria-expanded="true" aria-controls="collapseMonthlyPerf">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -972,9 +972,9 @@
             <div class="row mb-4" id="section-portfolios-alt">
             <div class="col">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                    <strong><i class="fa fa-columns mr-2"></i>Trade Portfolios Comparison</strong>
-                    <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfoliosAlt"
+                <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                    <strong><i class="fa fa-columns me-2"></i>Trade Portfolios Comparison</strong>
+                    <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseTradePortfoliosAlt"
                        role="button" aria-expanded="true" aria-controls="collapseTradePortfoliosAlt">
                         <i class="fa fa-chevron-down"></i>
                     </a>
@@ -992,9 +992,9 @@
             <div class="row mb-4" id="section-trade-portfolios">
             <div class="col">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                    <strong><i class="fa fa-briefcase mr-2"></i>Trade Portfolios</strong>
-                    <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTradePortfolios"
+                <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                    <strong><i class="fa fa-briefcase me-2"></i>Trade Portfolios</strong>
+                    <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseTradePortfolios"
                        role="button" aria-expanded="true" aria-controls="collapseTradePortfolios">
                         <i class="fa fa-chevron-down"></i>
                     </a>
@@ -1017,9 +1017,9 @@
             <div class="row mb-4" id="section-assets-table">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-coins mr-2"></i>Assets</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAssets"
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-coins me-2"></i>Assets</strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseAssets"
                                role="button" aria-expanded="true" aria-controls="collapseAssets">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -1038,9 +1038,9 @@
             <div class="row mb-4" id="section-transactions">
                 <div class="col">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #b45309; color: white; position: relative; z-index: 10;">
-                            <strong><i class="fa fa-exchange-alt mr-2"></i>Transaction History <span class="badge badge-warning ml-2">ADMIN</span></strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseTransactions"
+                        <div class="card-header card-header-admin d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                            <strong><i class="fa fa-exchange-alt me-2"></i>Transaction History <span class="badge badge-warning ms-2">ADMIN</span></strong>
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseTransactions"
                                role="button" aria-expanded="true" aria-controls="collapseTransactions">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -1060,9 +1060,9 @@
                 <div class="row mb-4" id="section-accounts">
                     <div class="col">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #ffffff; border-bottom: 3px solid #b45309;">
-                                <strong><i class="fa fa-user-friends mr-2"></i>Accounts <span class="badge badge-warning">ADMIN</span></strong>
-                                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseAccounts"
+                            <div class="card-header card-header-admin d-flex justify-content-between align-items-center">
+                                <strong><i class="fa fa-user-friends me-2"></i>Accounts <span class="badge badge-warning">ADMIN</span></strong>
+                                <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseAccounts"
                                    role="button" aria-expanded="true" aria-controls="collapseAccounts">
                                     <i class="fa fa-chevron-down"></i>
                                 </a>
@@ -1137,7 +1137,7 @@ $(document).ready(function() {
 <style>
 .expand-toggle { cursor: pointer; font-weight: 500; }
 .expand-toggle:hover { text-decoration: underline !important; }
-.collapse.show { display: inline !important; }
+/* "+N more" expanders only; section card-bodies keep Bootstrap's default block collapse. */
 tbody.collapse { display: none; }
 tbody.collapse.show { display: table-row-group !important; }
 .summary-table { width: 100%; margin-top: 0.5rem; }

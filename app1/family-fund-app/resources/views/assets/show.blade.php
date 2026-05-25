@@ -58,7 +58,7 @@
                         <div class="card-header">
                             <i class="fa fa-link me-2"></i>
                             <strong>Related Assets</strong>
-                            <span class="badge bg-secondary ms-2">{{ $relatedAssets->count() }}</span>
+                            <span class="badge bg-primary ms-2">{{ $relatedAssets->count() }}</span>
                         </div>
                         <div class="card-body">
                             <p class="text-body-secondary small mb-3">

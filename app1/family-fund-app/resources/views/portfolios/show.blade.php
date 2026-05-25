@@ -66,9 +66,9 @@
             <div class="row mb-4">
                 <div class="col-lg-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <strong><i class="fa fa-chart-line me-2"></i>Balance History</strong>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseBalanceChart"
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseBalanceChart"
                                role="button" aria-expanded="true" aria-controls="collapseBalanceChart">
                                 <i class="fa fa-chevron-down"></i>
                             </a>
@@ -94,7 +94,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card {{ $validation['is_valid'] ? '' : 'border-warning' }}">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: {{ $validation['is_valid'] ? '#f0fdfa' : '#fef3c7' }};">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fa fa-balance-scale me-2"></i>
                                 <strong>Balance Validation</strong>
@@ -234,13 +234,13 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: white;">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fa fa-history me-2"></i>
                                 <strong>Balance Records</strong>
                                 <span class="badge bg-light text-dark ms-2">{{ $totalBalanceCount }}</span>
                             </div>
-                            <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseBalanceTable"
+                            <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseBalanceTable"
                                role="button" aria-expanded="false" aria-controls="collapseBalanceTable">
                                 <i class="fa fa-chevron-down"></i>
                             </a>

@@ -69,7 +69,7 @@
 
                     <!-- Matching Rule Details Card -->
                     <div class="card mb-4" style="border-left: 4px solid #9333ea;">
-                        <div class="card-header" style="background-color: #9333ea; color: white;">
+                        <div class="card-header card-header-dark">
                             <strong><i class="fa fa-percentage me-2"></i> Matching Rule: {{ $api['mr']->name }}</strong>
                         </div>
                         <div class="card-body">
@@ -143,7 +143,7 @@
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger w-100"
                                             onclick="return confirm('Are you sure you want to delete this matching rule assignment?')">
-                                        <i class="fa fa-trash mr-2"></i> Delete
+                                        <i class="fa fa-trash me-2"></i> Delete
                                     </button>
                                 </form>
                             </div>

@@ -21,14 +21,14 @@
             <div class="row mb-4">
                 <div class="col-lg-12">
                     <div class="card border-primary">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">
-                                <i class="fa fa-chart-line mr-2"></i>
+                                <i class="fa fa-chart-line me-2"></i>
                                 Portfolio Rebalance Analysis (Multi-Period)
                             </h4>
                             <a href="{{ route('portfolios.showRebalancePDF', [$api['portfolio']->id, $api['asOf']->format('Y-m-d'), $api['endDate']->format('Y-m-d')]) }}"
                                class="btn btn-light btn-sm" target="_blank" title="Download PDF">
-                                <i class="fa fa-file-pdf mr-1"></i> PDF
+                                <i class="fa fa-file-pdf me-1"></i> PDF
                             </a>
                         </div>
                         <div class="card-body">
@@ -60,7 +60,7 @@
 
             @if($api['tradePortfolios']->isEmpty())
                 <div class="alert alert-warning">
-                    <i class="fa fa-exclamation-triangle mr-2"></i>
+                    <i class="fa fa-exclamation-triangle me-2"></i>
                     No trade portfolios found for the specified date range.
                 </div>
             @else
@@ -69,13 +69,13 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <i class="fa fa-history mr-2"></i>
+                                <i class="fa fa-history me-2"></i>
                                 <strong>Trade Portfolio Timeline</strong>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
-                                        <thead class="thead-light">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Period</th>
@@ -122,22 +122,22 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <i class="fa fa-table mr-2"></i>
+                                <i class="fa fa-table me-2"></i>
                                 <strong>Current Allocation Status</strong>
-                                <span class="text-muted ml-2">(as of {{ array_key_last($api['rebalance']) ?? 'N/A' }})</span>
+                                <span class="text-muted ms-2">(as of {{ array_key_last($api['rebalance']) ?? 'N/A' }})</span>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-sm">
-                                        <thead class="thead-light">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>Symbol</th>
                                                 <th>Type</th>
-                                                <th class="text-right">Target %</th>
-                                                <th class="text-right">Deviation</th>
-                                                <th class="text-right">Min %</th>
-                                                <th class="text-right">Max %</th>
-                                                <th class="text-right">Current %</th>
+                                                <th class="text-end">Target %</th>
+                                                <th class="text-end">Deviation</th>
+                                                <th class="text-end">Min %</th>
+                                                <th class="text-end">Max %</th>
+                                                <th class="text-end">Current %</th>
                                                 <th class="text-center">Status</th>
                                             </tr>
                                         </thead>
@@ -162,11 +162,11 @@
                                                 <tr>
                                                     <td><strong>{{ $symbol }}</strong></td>
                                                     <td>{{ $symbolInfo['type'] }}</td>
-                                                    <td class="text-right">{{ number_format($targetPerc, 1) }}%</td>
-                                                    <td class="text-right">± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
-                                                    <td class="text-right text-muted">{{ number_format($minPerc, 1) }}%</td>
-                                                    <td class="text-right text-muted">{{ number_format($maxPerc, 1) }}%</td>
-                                                    <td class="text-right {{ $isWithinBounds ? 'text-success' : 'text-danger font-weight-bold' }}">
+                                                    <td class="text-end">{{ number_format($targetPerc, 1) }}%</td>
+                                                    <td class="text-end">± {{ number_format(($currentData['max'] - $currentData['target']) * 100, 1) }}%</td>
+                                                    <td class="text-end text-muted">{{ number_format($minPerc, 1) }}%</td>
+                                                    <td class="text-end text-muted">{{ number_format($maxPerc, 1) }}%</td>
+                                                    <td class="text-end {{ $isWithinBounds ? 'text-success' : 'text-danger fw-bold' }}">
                                                         {{ number_format($currentPerc, 2) }}%
                                                     </td>
                                                     <td class="text-center">
@@ -194,16 +194,16 @@
                 <div id="stockNav" class="card shadow-sm mb-3" style="position: sticky; top: 56px; z-index: 1020; border-radius: 4px; display: none;">
                     <div class="card-body py-2">
                         <div class="d-flex flex-wrap align-items-center">
-                            <span class="mr-3 text-muted small">Jump to:</span>
+                            <span class="me-3 text-muted small">Jump to:</span>
                             @foreach($api['symbols'] as $idx => $symbolInfo)
                                 <a href="#chart-{{ Str::slug($symbolInfo['symbol']) }}"
-                                   class="btn btn-sm btn-outline-primary mr-2 mb-1 stock-nav-btn"
+                                   class="btn btn-sm btn-outline-primary me-2 mb-1 stock-nav-btn"
                                    data-symbol="{{ Str::slug($symbolInfo['symbol']) }}">
                                     {{ $symbolInfo['symbol'] }}
                                 </a>
                             @endforeach
-                            <span class="ml-auto">
-                                <button type="button" class="btn btn-outline-secondary btn-sm mr-1" id="expandAllCharts" title="Expand All">
+                            <span class="ms-auto">
+                                <button type="button" class="btn btn-outline-secondary btn-sm me-1" id="expandAllCharts" title="Expand All">
                                     <i class="fa fa-expand"></i>
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllCharts" title="Collapse All">
@@ -222,15 +222,15 @@
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center"
                                      style="cursor: pointer;"
-                                     data-toggle="collapse"
-                                     data-target="#chartCollapse{{ Str::slug($symbol) }}"
+                                     data-bs-toggle="collapse"
+                                     data-bs-target="#chartCollapse{{ Str::slug($symbol) }}"
                                      aria-expanded="true"
                                      aria-controls="chartCollapse{{ Str::slug($symbol) }}">
                                     <div>
-                                        <i class="fa fa-chevron-down mr-2 collapse-icon"></i>
-                                        <i class="fa fa-chart-area mr-2"></i>
+                                        <i class="fa fa-chevron-down me-2 collapse-icon"></i>
+                                        <i class="fa fa-chart-area me-2"></i>
                                         <strong>{{ $symbol }}</strong>
-                                        <span class="text-muted ml-2">(targets vary by trade portfolio period)</span>
+                                        <span class="text-muted ms-2">(targets vary by trade portfolio period)</span>
                                     </div>
                                     <span class="badge badge-info">{{ $symbolInfo['type'] }}</span>
                                 </div>
@@ -249,9 +249,9 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <a class="btn btn-link text-muted" data-toggle="collapse" href="#collapseAssets"
+                                <a class="btn btn-link text-muted" data-bs-toggle="collapse" href="#collapseAssets"
                                    role="button" aria-expanded="false" aria-controls="collapseAssets">
-                                    <i class="fa fa-chevron-down mr-2"></i>
+                                    <i class="fa fa-chevron-down me-2"></i>
                                     Portfolio Asset History
                                 </a>
                             </div>

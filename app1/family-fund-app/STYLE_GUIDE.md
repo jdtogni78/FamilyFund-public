@@ -15,6 +15,7 @@
 - [x] Form fields (30 fields.blade.php files) - standardized two-column layout with icons, helper text
 - [x] Trade Portfolios detail views (#26) - dark-mode + BS5 migration (see note below)
 - [x] Accounts detail views (#27) - dark-mode + BS5 migration (see note below)
+- [x] Funds & Portfolios detail views (#28) - dark-mode + BS5 migration (see note below)
 
 **Form Fields Standardized (30 forms):**
 All create/edit forms now follow consistent pattern:
@@ -97,8 +98,47 @@ partials to the dark-mode + Bootstrap 5 conventions:
 - Covered by `tests/Browser/AccountDetailUITest.php` (light + dark, incl. the
   collapse-toggle fix and the `card-header-dark` assertion).
 
+**Funds & Portfolios detail views (#28, done):**
+Standardized the remaining live detail/show views to the dark-mode + Bootstrap 5
+conventions (the flagship `funds/show_ext.blade.php` plus `funds/show_trade_bands`,
+`portfolios/show`, `portfolios/show_rebalance`, `emails/show`, and
+`account_matching_rules/show`):
+- All section headers migrated from inline `style="background: #134e4a; color: white;"`
+  to `card-header card-header-dark` — navigation.css's `.card-header` `!important`
+  light-teal gradient was silently overriding the inline dark hex (white text on a
+  near-white header in light mode), the same bug fixed in #26/#27.
+- **New `card-header-admin` class** (navigation.css) for admin-only section headers
+  (amber gradient, white text, dark-adapting). The funds admin sections previously
+  used inline amber gradients that were *also* overridden by the base `.card-header`
+  rule, losing the admin colour cue. Placed after `html.dark .card-header` so it wins
+  on source order in dark mode. See "Card Headers → Admin Section Headers" below.
+- Dead BS4 `data-toggle="collapse"` / `data-target` collapse attributes migrated to
+  BS5 `data-bs-toggle` / `data-bs-target` (the chevrons/section toggles were inert
+  under Bootstrap 5). Removed an over-broad `.collapse.show { display: inline }`
+  rule in `funds/show_ext` that would have broken the now-working section collapses
+  (the `+N more` tbody expanders keep their own `tbody.collapse` rules).
+- Inline light-hex panels/dividers converted to dark-adapting utilities:
+  `#f0fdfa`→`bg-teal-50`, `#fffbeb` admin panels→`bg-amber-50 dark:bg-amber-900/40`,
+  `border-right/top: 1px solid #99f6e4`→`border-e/-t border-teal-200 dark:border-slate-600`,
+  `#e5e7eb`/`#e2e8f0` dividers→`border-slate-200 dark:border-slate-600`. Saturated
+  semantic/data-viz colours (allocation bars, category/type/group tints, liability
+  red) are intentional and left as-is; the email-preview iframe stays white (email
+  HTML expects a light canvas) with only its border adapted.
+- BS4 leftovers migrated to BS5: `mr-*/ml-*`→`me-*/ms-*`, `ml-auto`→`ms-auto`,
+  `text-right`→`text-end`, `font-weight-bold`→`fw-bold`, `thead-light`→`table-light`.
+- Count badges using `bg-secondary` switched to `bg-primary` (style guide); neutral
+  *state* badges (Inactive/Expired/Disabled/N/A/type) kept grey.
+- Deleted 3 dead views rendered by nothing (`funds/show.blade.php`,
+  `funds/show_fields.blade.php`, `funds/show_fields_ext.blade.php`) — the
+  `funds.show` route resolves to the controller which renders `show_ext`.
+- `*_pdf.blade.php` views intentionally left light (wkhtmltopdf has no dark mode).
+- The InfyOm scaffold show pages (assets, goals, transactions, …) already conform
+  (BS5 + dark-adapting plain `card-header`); left unchanged.
+- Covered by `tests/Browser/FundDetailUITest.php` (light + dark, incl. the
+  collapse-toggle fix and the `card-header-dark`/`card-header-admin` assertions).
+
 **Pending:**
-- [ ] Review other detail/show pages (#28)
+- [x] Review other detail/show pages (#28) — done (see note above)
 
 ---
 
@@ -208,6 +248,24 @@ partials to the dark-mode + Bootstrap 5 conventions:
     </div>
 </div>
 ```
+
+### Admin Section Headers (Amber Background)
+Use `card-header-admin` for headers of admin-only sections so they read as distinct
+from the standard teal headers. Like `card-header-dark`, it overrides the base
+`.card-header` `!important` gradient and adapts to dark mode (defined in
+`public/css/navigation.css`). Do **not** use an inline `style="background: ..."` —
+the base `.card-header` rule will silently override it.
+```html
+<div class="card-header card-header-admin d-flex justify-content-between align-items-center">
+    <strong><i class="fa fa-users me-2"></i>Accounts <span class="badge badge-warning">ADMIN</span></strong>
+    <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseAccounts">
+        <i class="fa fa-chevron-down"></i>
+    </a>
+</div>
+```
+
+> Collapse toggles use BS5 `data-bs-toggle="collapse"` (+ `data-bs-target`/`href`).
+> The BS4 `data-toggle`/`data-target` attributes are inert under Bootstrap 5.
 
 ---
 

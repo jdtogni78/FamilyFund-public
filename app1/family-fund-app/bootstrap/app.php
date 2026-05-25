@@ -12,6 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Dev-only: route a stray ?as= through /dev-login so impersonation always
+        // takes effect (prepended so it runs before auth — works even when logged
+        // out). No-op in production. See RedirectStrayImpersonation.
+        $middleware->web(prepend: [
+            \App\Http\Middleware\RedirectStrayImpersonation::class,
+        ]);
+
         // Append to web middleware group
         $middleware->web(append: [
             \App\Http\Middleware\SetFundPermissions::class,

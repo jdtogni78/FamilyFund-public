@@ -35,6 +35,7 @@ with a date and a source you can verify (commit, PR/issue, or doc).
 | [ED-0014](#ed-0014--test-baseline-is-a-synthetic-seeder-not-a-committed-data-dump) | 2026-05 | Accepted | Test baseline is a synthetic seeder (`TestBaselineSeeder`), not a committed real-data dump |
 | [ED-0015](#ed-0015--management-index-pages-get-controller-level-scoping-behind-fundfull) | 2026-05 | Accepted | Management index pages get a second, in-controller scoping layer behind `fund.full` |
 | [ED-0016](#ed-0016--reference-data-api-writes-are-system-admin-only) | 2026-05-25 | Accepted | Global reference-data API writes are system-admin-only (flag-gated); dstrader uses a system-admin service token |
+| [ED-0017](#ed-0017--encrypted-secrets-move-to-a-separate-private-repo) | 2026-05-25 | Accepted | Encrypted env secrets move OUT of the (soon-public) app repo into a private `familyfund-secrets` repo |
 
 ---
 
@@ -60,7 +61,7 @@ with a date and a source you can verify (commit, PR/issue, or doc).
 
 ## ED-0002 — SOPS + age for in-repo encrypted env secrets
 
-- **Date:** 2026-05-24 · **Status:** Accepted · **Builds on:** ED-0001
+- **Date:** 2026-05-24 · **Status:** Accepted (location amended by ED-0017) · **Builds on:** ED-0001
 - **Context:** ED-0001 kept secrets out of git, but distribution still relied on a
   shared-passphrase GPG tarball on melnick (`familyfund_secrets.tar.gz.gpg`):
   not versioned, all-or-nothing, and a single shared passphrase. We wanted
@@ -79,8 +80,11 @@ with a date and a source you can verify (commit, PR/issue, or doc).
   `.gitignore` re-includes `*.sops` after the broad `**/.env.*` ignore. Adding a
   teammate/machine = append their `age1…` key to `.sops.yaml` + `bin/secrets.sh rekey`.
   Committing encrypted secrets is safe because secrets were rotated post-leak
-  (ED-0001) and only age-key holders can decrypt — so this is safe even when the
-  repo goes public (board #1).
+  (ED-0001) and only age-key holders can decrypt. **Amended by ED-0017:** even
+  though encrypted-in-public is *cryptographically* safe, the encrypted twins and
+  `.sops.yaml` now live in a private sibling repo rather than in the public app
+  repo (defense-in-depth: no secret material — not even ciphertext — ships
+  publicly).
 - **Source:** `.sops.yaml`, `app1/family-fund-app/bin/secrets.sh`, `SETUP.md` §2.
 
 ## ED-0003 — Deny-by-default authorization
@@ -400,3 +404,36 @@ with a date and a source you can verify (commit, PR/issue, or doc).
     dstrader-docker (`familyfund_bashlib.sh`) must send
     `Authorization: Bearer <token>` and deploy together with this change.
 - **Source:** #82 (split from #51); `routes/api.php`; `AuthorizesApiAccess`.
+
+## ED-0017 — Encrypted secrets move to a separate private repo
+
+- **Date:** 2026-05-25 · **Status:** Accepted · **Builds on / amends:** ED-0002
+- **Context:** ED-0002 committed the SOPS+age-**encrypted** env twins (`*.sops`)
+  and the SOPS recipe (`.sops.yaml`) directly into this repo, on the reasoning
+  that ciphertext is safe to publish (only age-key holders can decrypt). As the
+  repo is prepared to go **public** (#16), we want a stricter posture:
+  **no secret material at all in the public repo — not even encrypted blobs.**
+  Encrypted-in-public is cryptographically fine but is an unnecessary attack
+  surface (offline brute-force of a future-broken cipher, recipient-set
+  disclosure, "why are there secrets in a public repo" optics) and the encrypted
+  blobs already in git history are a separate cleanup (#36).
+- **Decision:** Move the encrypted twins + `.sops.yaml` OUT into a **new PRIVATE
+  repo `jdtogni78/familyfund-secrets`**, cloned next to this one. The tooling
+  stays here but is repointed: `bin/secrets.sh` resolves the secrets dir as
+  `${FF_SECRETS_DIR:-~/dev/familyfund-secrets}` and reads/writes the `.sops`
+  twins + `.sops.yaml` there, mirroring this repo's relative paths
+  (`app1/.env.sops`, `app1/family-fund-app/.env.{dev,stage}.sops`). If the secrets
+  clone is absent it **falls back to any in-repo `.sops` files** so transitional
+  checkouts and CI keep working. Plaintext envs are still git-ignored and still
+  materialized into their canonical in-app paths (the app reads them there). The
+  age **private** key remains off-repo and is committed to **neither** repo.
+- **Consequences:**
+  - New-machine setup needs **two** out-of-band artifacts now: a clone of
+    `familyfund-secrets` *and* the age private key (SETUP.md §2).
+  - After rotating/editing a secret, re-encrypt with `bin/secrets.sh encrypt`
+    then commit in the **secrets repo**, not here (`rotate-dev-secrets.sh` notes
+    this).
+  - This does **not** rewrite git history; the already-committed encrypted blobs
+    are handled separately by the history-purge work (#36).
+- **Source:** #16 (secrets-move publish-blocker); `app1/family-fund-app/bin/secrets.sh`,
+  `SETUP.md` §2; repo `jdtogni78/familyfund-secrets` (private).

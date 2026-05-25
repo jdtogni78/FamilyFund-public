@@ -37,10 +37,11 @@ app1/family-fund-app/coverage-summary.txt
 **/.env
 **/.env.*
 !**/.env.example
-# SOPS+age-encrypted env twins ARE safe to commit (only the age-key holder can
-# decrypt). Re-include them after the broad **/.env.* ignore above. Manage with
-# app1/family-fund-app/bin/secrets.sh; recipients in .sops.yaml.
-!**/*.sops
+# SOPS+age-encrypted secrets now live in the PRIVATE `familyfund-secrets` repo
+# (see SETUP.md / ED-0017), NOT here — even encrypted secrets must not ship in
+# this (public-bound) repo. Ignore all SOPS artifacts so they can't be re-added.
+**/*.sops
+.sops.yaml
 # data dumps / raw DB files / logs (the leak class)
 database/dev/*.sql
 database/**/*data*.sql

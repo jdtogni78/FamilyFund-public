@@ -8,6 +8,13 @@
 # and is not yet automated). It aborts if any 'encrypted' DB data exists, because
 # rotating APP_KEY would orphan it (handle per the runbook before rotating).
 #
+# This script rotates the value in the running container's git-ignored .env only;
+# it does NOT touch any encrypted twin. Since the .sops twins now live in the
+# private familyfund-secrets repo (resolved via $FF_SECRETS_DIR — see secrets.sh),
+# after rotating re-encrypt + commit there:
+#     bin/secrets.sh encrypt dev   # writes <FF_SECRETS_DIR>/.../.env.dev.sops
+#     ( cd "${FF_SECRETS_DIR:-~/dev/familyfund-secrets}" && git add -A && git commit )
+#
 # Usage:
 #   bin/rotate-dev-secrets.sh [-y]
 #     -y / --yes / FF_ROTATE_YES=1   skip the confirmation prompt

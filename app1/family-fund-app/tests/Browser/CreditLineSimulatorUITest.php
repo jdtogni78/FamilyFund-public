@@ -167,9 +167,7 @@ class CreditLineSimulatorUITest extends DuskTestCase
             $browser->visit('/credit-lines/' . $lineId . '/simulator')
                 ->waitForText('Payment simulator')
                 ->assertSee('Growth-rate assumptions')
-                // Expand the optional rate section (it's a collapsed <details>).
-                ->click('details summary')
-                ->pause(200)
+                // The rate inputs are always visible (no longer collapsed).
                 ->type('input[name="monthly_payment_usd"]', '50')
                 ->type('input[name="rate_expected"]', '12')
                 ->press('Simulate')

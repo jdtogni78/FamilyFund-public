@@ -20,9 +20,6 @@
                          </div>
                          <div class="card-body">
                              @include('accounts.table')
-                              <div class="pull-right mr-3">
-                                     
-                              </div>
                          </div>
                      </div>
                   </div>

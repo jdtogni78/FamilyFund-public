@@ -60,7 +60,7 @@
                     $textClass = 'text-body-secondary';
                 } else {
                     $status = 'Expired';
-                    $badgeClass = 'bg-secondary';
+                    $badgeClass = 'bg-secondary text-white';
                     $rowClass = '';
                     $textClass = 'text-body-secondary';
                 }

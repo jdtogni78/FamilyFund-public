@@ -7,11 +7,11 @@
 </div>
 <div class="mt-3" id="perfGraphMonthlyLegend">
     <small class="text-muted">
-        <span class="mr-3"><i class="fa fa-circle mr-1" style="color: #2563eb;"></i>Account Value</span>
+        <span class="me-3"><i class="fa fa-circle me-1" style="color: #2563eb;"></i>Account Value</span>
         @if($addSP500)
-        <span class="mr-3"><i class="fa fa-circle mr-1" style="color: #dc2626;"></i>S&P 500 (if invested same amounts)</span>
+        <span class="me-3"><i class="fa fa-circle me-1" style="color: #dc2626;"></i>S&P 500 (if invested same amounts)</span>
         @endif
-        <span><i class="fa fa-circle mr-1" style="color: #16a34a;"></i>Cash (no growth)</span>
+        <span><i class="fa fa-circle me-1" style="color: #16a34a;"></i>Cash (no growth)</span>
     </small>
 </div>
 

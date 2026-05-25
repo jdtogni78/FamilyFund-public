@@ -37,9 +37,9 @@ class OperationsControllerAdditionalTest extends TestCase
         $this->df->createUser();
         $this->regularUser = $this->df->user;
 
-        // Admin is user ID 1 or an address in ADMIN_EMAILS (default admin@dev.familyfund.local).
+        // Admin is user ID 1 or an address in ADMIN_EMAILS.
         $userOne = User::find(1);
-        $this->adminUser = $userOne ?: User::factory()->create(['email' => 'admin@dev.familyfund.local']);
+        $this->adminUser = $userOne ?: User::factory()->create(['email' => config('familyfund.admin_emails')[0]]);
         // OperationsController::isAdmin() now keys off the system-admin role
         // (not user id 1), so the acting admin must actually hold it.
         \Tests\Fixtures\TestFixtures::makeSystemAdmin($this->adminUser);

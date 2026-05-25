@@ -15,8 +15,9 @@ trait ApiTestTrait
     protected $message;
     protected $data;
 
-    public function loginWithFakeUser($email='admin@dev.familyfund.local')
+    public function loginWithFakeUser($email = null)
     {
+        $email ??= config('familyfund.admin_emails')[0] ?? 'admin@example.com';
         $user = new User([
             'id' => 1,
             'name' => 'yish',

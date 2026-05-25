@@ -59,9 +59,10 @@ class FundTraitTest extends TestCase
 
     public function test_is_admin_returns_true_for_admin_email()
     {
-        // Use existing user or create with unique email
-        $user = User::where('email', 'admin@dev.familyfund.local')->first()
-            ?? User::factory()->create(['email' => 'admin@dev.familyfund.local']);
+        $adminEmail = config('familyfund.admin_emails')[0];
+        // Use existing user or create with the configured admin email
+        $user = User::where('email', $adminEmail)->first()
+            ?? User::factory()->create(['email' => $adminEmail]);
         Auth::login($user);
         $this->assertTrue($this->traitObject->isAdmin());
     }
@@ -83,8 +84,9 @@ class FundTraitTest extends TestCase
 
     public function test_is_admin_respects_admin_zero_query_param()
     {
-        $user = User::where('email', 'admin@dev.familyfund.local')->first()
-            ?? User::factory()->create(['email' => 'admin@dev.familyfund.local']);
+        $adminEmail = config('familyfund.admin_emails')[0];
+        $user = User::where('email', $adminEmail)->first()
+            ?? User::factory()->create(['email' => $adminEmail]);
         Auth::login($user);
 
         // Without param, should be admin

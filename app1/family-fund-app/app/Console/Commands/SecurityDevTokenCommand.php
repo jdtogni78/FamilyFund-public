@@ -19,16 +19,25 @@ class SecurityDevTokenCommand extends Command
 
     protected $description = 'Dev-only: mint a Sanctum API token for a QA user (for authenticated DAST/ZAP scans)';
 
-    // Each alias maps to an ordered list of candidate emails; the first that
-    // resolves to a real user wins. The admin is renamed to a non-PII dev
-    // address by prod_to_dev.sql, so fall back to the pre-anonymization address.
-    private const ALIASES = [
-        'admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
-        'system-admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
-        'fund-admin' => ['qa-fund-admin@test.local'],
-        'financial-manager' => ['qa-financial-manager@test.local'],
-        'beneficiary' => ['qa-beneficiary@test.local'],
-    ];
+    /**
+     * Role alias → ordered list of candidate emails (first that resolves wins).
+     * The admin aliases resolve to the configured ADMIN_EMAILS
+     * (config/familyfund.php; default is the non-PII dev admin that
+     * prod_to_dev.sql renames the admin to). Set ADMIN_EMAILS in .env to add the
+     * real address as a fallback for an un-scrubbed prod dump / test baseline.
+     */
+    private function aliases(): array
+    {
+        $admin = config('familyfund.admin_emails');
+
+        return [
+            'admin' => $admin,
+            'system-admin' => $admin,
+            'fund-admin' => ['qa-fund-admin@test.local'],
+            'financial-manager' => ['qa-financial-manager@test.local'],
+            'beneficiary' => ['qa-beneficiary@test.local'],
+        ];
+    }
 
     public function handle(): int
     {
@@ -39,7 +48,7 @@ class SecurityDevTokenCommand extends Command
         }
 
         $as = (string) $this->option('as');
-        $candidates = self::ALIASES[$as] ?? [$as];
+        $candidates = $this->aliases()[$as] ?? [$as];
 
         $user = User::whereIn('email', $candidates)->first();
         if (! $user) {

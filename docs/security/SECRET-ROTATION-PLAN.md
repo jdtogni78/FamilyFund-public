@@ -124,13 +124,38 @@ Mostly seed/fake, **but real PII present**:
 
 ---
 
-## 4. Real emails embedded in code (pre-publish cleanup)
-gmail.com appears in source traits, controllers, **migrations**
+## 4. Real emails embedded in code (pre-publish cleanup) — DONE 2026-05-25 (#81, ex-#16 §4)
+gmail.com appeared in source traits, controllers, **migrations**
 (`assign_system_admin_role`, `add_is_admin_to_users`), seeders, tests, docs, and the
-dumps. Before going public:
-- Parameterize the admin email into `config`/env (e.g. `ADMIN_EMAIL`), not hardcoded.
-- Scrub/synthesize the dumps (or remove them from the repo entirely — see §5).
-- Your own email is already in commit metadata; lower concern, but others' aren't.
+dumps. Carved out of #16 into **#81** (source/config parameterization), after the
+dump-scrub halves landed as siblings **#79** (prod_to_dev ALL-PII scrub, merged) and
+**#78** (synthetic test-baseline seeder, merged — replaced the committed
+`test-baseline.sql.gz` outright). One synthetic admin identity is used everywhere:
+`admin@dev.familyfund.local` (the non-PII dev admin that #79's `prod_to_dev.sql`
+renames the real admin to). Done:
+- [x] **Parameterized the admin email into config/env (#81).** New
+  `config/familyfund.php` (`admin_emails` ← `ADMIN_EMAILS`, default
+  `admin@dev.familyfund.local`; `alert_email` ← `MAIL_ADMIN_ADDRESS`). All
+  consumers now read config: `OperationsController`/`FundTrait` `isAdmin()`, the
+  admin-only Blade toggles, `routes/web.php` dev-login + `SecurityDevTokenCommand`
+  aliases, `ScheduledJobEmailAlertTrait` (alert recipient),
+  `InitialRolesAssignmentSeeder`, and both bootstrap migrations. Tests read
+  `config('familyfund.admin_emails')[0]`. This **supersedes #79's hardcoded
+  `[admin@dev.familyfund.local, admin@dev.familyfund.local]` lists** — `admin@dev.familyfund.local`
+  is no longer in source; the real address goes only in the git-ignored `.env`
+  (`ADMIN_EMAILS=`), which also covers the raw-prod-dump window #79's fallback
+  handled.
+- [x] **Committed data dumps** — owned by the siblings, both merged, so #81 carries
+  no dump changes:
+  - **#78** deleted `database/test/test-baseline.sql.gz` entirely and replaced it
+    with the synthetic `Database\Seeders\TestBaselineSeeder` (CI + testpool now
+    `migrate:fresh --seed`). No real-data dump ships in the repo at all.
+  - **#79** scrubbed ALL PII in `prod_to_dev.sql` + `restore_dev_funds.sql` and
+    renamed the admin to `admin@dev.familyfund.local`.
+  (An interim email-only scrub of the old `.sql.gz` was made on this branch but
+  dropped at merge — #78's removal supersedes it.)
+- **Residual (accepted):** the owner email remains in git **history** (separate
+  history-purge item below).
 
 ---
 
@@ -171,8 +196,8 @@ dumps. Before going public:
    "Secret Scan" job on push/PR with `.gitleaks.toml`; fails the build on a hit.
 6. ✅ **One tracked env only** — `.env.example` is the only tracked env; `.env*`
    are git-ignored (done in the dev rotation).
-7. ⏳ **Parameterize PII** — admin/recipient emails via config/env (§4) — separate
-   open item on issue #16.
+7. ✅ **Parameterize PII** — admin/recipient emails via config/env + scrubbed the
+   committed baseline dump (§4, done 2026-05-25, #81; dumps via #79/#78).
 8. ⏳ Periodic full-history scan in CI — future enhancement (the working-tree scan
    runs today; history scan pairs with the pre-publish purge).
 

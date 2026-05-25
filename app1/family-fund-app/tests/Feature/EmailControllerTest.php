@@ -35,7 +35,7 @@ class EmailControllerTest extends TestCase
         if ($userOne) {
             $this->adminUser = $userOne;
         } else {
-            $existingAdmin = User::where('email', 'admin@dev.familyfund.local')->first();
+            $existingAdmin = User::where('email', config('familyfund.admin_emails')[0])->first();
             if ($existingAdmin) {
                 $this->adminUser = $existingAdmin;
             } else {

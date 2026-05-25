@@ -178,7 +178,7 @@ Alternatively: `~/dev/dstrader-aws/local/deploy_ff.sh`.
 - [ ] `.env.prod` (on spirit only; never copy from prod to local)
 - [ ] Dev DB password: `famfun_dev` / `1234`
 - [ ] Prod DB root password: `root` / `123456` (per README; rotate on first install)
-- [ ] Admin login: `admin@dev.familyfund.local` (set your own password via `php artisan tinker`)
+- [ ] Admin login: the address in `ADMIN_EMAILS` (set your own password via `php artisan tinker`)
 - [ ] Test user: `claude@test.local` / `claude-test-2024`
 
 > **No secrets in this repo.** `.env*` files are gitignored. Generate fresh passwords on first install rather than reusing README defaults in production.

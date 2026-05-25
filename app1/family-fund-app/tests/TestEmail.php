@@ -1,6 +1,6 @@
 <?php
 //phpinfo();
-$to = "admin@dev.familyfund.local";
+$to = "admin@example.com";
 $subject = "Hey, I’m Justin!";
 $body = "Hello, MailHog!";
 $headers = "From: justin@atatus.com" . "\r\n";

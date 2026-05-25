@@ -58,7 +58,7 @@ trait ScheduledJobEmailAlertTrait
                 $recommendedActions
             );
 
-            Mail::to('admin@dev.familyfund.local')->send($mail); // TODO: Make this configurable
+            Mail::to(config('familyfund.alert_email'))->send($mail);
 
             Log::info("Sent scheduled job failure alert for job {$job->id}");
 

@@ -193,10 +193,11 @@ class FundApiGoldenDataTest extends TestCase
     public function test_fund_balances_as_of()
     {
         // Fund balance detail is admin-only. Authenticate as a real system admin
-        // whose email is also in the legacy isAdmin() allowlist, so both the
-        // object-level access guard (#13/#49) and the admin-detail flag pass.
-        $admin = \App\Models\User::firstWhere('email', 'admin@dev.familyfund.local')
-            ?? \App\Models\User::factory()->create(['email' => 'admin@dev.familyfund.local']);
+        // whose email is also in the isAdmin() allowlist (ADMIN_EMAILS), so both
+        // the object-level access guard (#13/#49) and the admin-detail flag pass.
+        $adminEmail = config('familyfund.admin_emails')[0];
+        $admin = \App\Models\User::firstWhere('email', $adminEmail)
+            ?? \App\Models\User::factory()->create(['email' => $adminEmail]);
         \Tests\Fixtures\TestFixtures::makeSystemAdmin($admin);
         $this->actingAs($admin);
 

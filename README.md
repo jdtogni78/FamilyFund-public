@@ -6,7 +6,7 @@ See [V1 Specs](specs/V1.spec.md)
 See [Remaining Specs](specs/V99.spec.md)
 
 **Setting up on a new machine?** See [SETUP.md](SETUP.md) — covers env files,
-DB dump, and shared files on melnick.
+DB dump, and shared files on the NAS.
 
 ## Docker
 
@@ -249,20 +249,22 @@ php artisan tinker
 
 ### Jumpbox Setup
 
-Dont recall initial install, but here are some notes:
+A jump host (bastion) fronts remote access to the private server.
+
+General reference:
 https://davewpark.medium.com/securing-remote-access-with-a-jumpserver-in-10-steps-ce2d9cd328f6
 
-### Jumpbox
+Connect / tunnel to the app server via the jump host (substitute your own
+hosts/ports for the placeholders):
 
-JUMPBOXDNS=REDACTED.example.invalid
-JUMPBOX=REDACTED_JUMP_HOST
-FFSERVER=REDACTED_LAN_HOST
+```bash
+JUMP_HOST=<JUMP_HOST>       # bastion hostname/IP
+JUMP_PORT=<JUMP_PORT>       # bastion SSH port
+FFSERVER=<PROD_HOST>        # app server LAN IP/hostname
 
-ssh -J dstrader@${JUMPBOXDNS}:60004 jdtogni@${FFSERVER} -p 22
-ssh -J dstrader@${JUMPBOXDNS}:60004 -N jdtogni@${FFSERVER} -L 3001:${FFSERVER}:3001
-
-ssh -J dstrader@${JUMPBOX}:22332 jdtogni@${FFSERVER} -p 22
-ssh -J dstrader@${JUMPBOX}:22332 -N jdtogni@${FFSERVER} -L 3000:${FFSERVER}:3000
+ssh -J <user>@${JUMP_HOST}:${JUMP_PORT} <user>@${FFSERVER} -p 22
+ssh -J <user>@${JUMP_HOST}:${JUMP_PORT} -N <user>@${FFSERVER} -L 3000:${FFSERVER}:3000
+```
 
 ### Wake on LAN
 <router-model-redacted> setup: <wol-router-faq-redacted>
@@ -303,66 +305,66 @@ sudo apt install mariadb-client
 
 ### Adding a docker user
 
-Create group and user for docker:
+Create group and user for docker (substitute your deploy user for `<user>`):
 ```bash
 groupadd -g 100999 dockeruser
 useradd -u 100999 -G dockeruser dockeruser
-usermod -aG dockeruser jdtogni
+usermod -aG dockeruser <user>
 ```
 
 You should see:
 * on /etc/passwd: ```dockeruser:x:100999:100999::/home/dockeruser:/bin/sh```
-* on /etc/group: ```dockeruser:x:100999:jdtogni```
+* on /etc/group: ```dockeruser:x:100999:<user>```
 
 Follow the instructions for rootless docker:
 * https://docs.docker.com/engine/security/rootless/
 
 ### Optional: Passwordless sudo for deployments
 
-To allow jdtogni to run deployment commands without password prompts, create a sudoers file:
+To allow the deploy user to run deployment commands without password prompts, create a sudoers file:
 
 ```bash
-sudo visudo -f /etc/sudoers.d/jdtogni-deploy
+sudo visudo -f /etc/sudoers.d/<user>-deploy
 ```
 
-Add these lines (adjust paths if needed):
+Add these lines (substitute your deploy user for `<user>` and adjust paths if needed):
 ```
 # Deployment chown commands for FamilyFund
-jdtogni ALL=(ALL) NOPASSWD: /bin/chown jdtogni\:jdtogni /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
-jdtogni ALL=(ALL) NOPASSWD: /bin/chown dockeruser\:dockeruser /home/jdtogni/dev/FamilyFund/app1/family-fund-app/ -R
+<user> ALL=(ALL) NOPASSWD: /bin/chown <user>\:<user> /home/<user>/dev/FamilyFund/app1/family-fund-app/ -R
+<user> ALL=(ALL) NOPASSWD: /bin/chown dockeruser\:dockeruser /home/<user>/dev/FamilyFund/app1/family-fund-app/ -R
 
 # Admin utilities
-jdtogni ALL=(ALL) NOPASSWD: /usr/bin/crontab
-jdtogni ALL=(ALL) NOPASSWD: /usr/bin/systemctl
-jdtogni ALL=(ALL) NOPASSWD: /usr/bin/journalctl
+<user> ALL=(ALL) NOPASSWD: /usr/bin/crontab
+<user> ALL=(ALL) NOPASSWD: /usr/bin/systemctl
+<user> ALL=(ALL) NOPASSWD: /usr/bin/journalctl
 ```
 
 Set correct permissions:
 ```bash
-sudo chmod 440 /etc/sudoers.d/jdtogni-deploy
+sudo chmod 440 /etc/sudoers.d/<user>-deploy
 ```
 
 ### Deploying DSTrader to prod
 
-FFSERVER=REDACTED_LAN_HOST
+FFSERVER=<PROD_HOST>   # app server LAN IP/hostname
 
 * Copy DSTrader.jar from stage to prod
 * Review properties in stage and prod
 * Verify changes:
-  * rsync -avnc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ jdtogni@${FFSERVER}:~/dev/dstrader-docker/
+  * rsync -avnc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ <user>@${FFSERVER}:~/dev/dstrader-docker/
 * Copy files:
-  * rsync -avc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ jdtogni@${FFSERVER}:~/dev/dstrader-docker/
+  * rsync -avc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ <user>@${FFSERVER}:~/dev/dstrader-docker/
 
 ### Deploying FamilyFund to prod
 
-FFSERVER=REDACTED_LAN_HOST
+FFSERVER=<PROD_HOST>   # app server LAN IP/hostname
 
 * Verify changes
-  * rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ jdtogni@${FFSERVER}:~/dev/FamilyFund/app1/
+  * rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ <user>@${FFSERVER}:~/dev/FamilyFund/app1/
 * Change ownership on server
-  * sudo chown jdtogni:jdtogni app1/family-fund-app/ -R
+  * sudo chown <user>:<user> app1/family-fund-app/ -R
 * Transfer content of app1
-  * rsync -avc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ jdtogni@${FFSERVER}:~/dev/FamilyFund/app1/
+  * rsync -avc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ <user>@${FFSERVER}:~/dev/FamilyFund/app1/
 * Restore ownership on server
   * sudo chown dockeruser:dockeruser app1/family-fund-app/ -R
   
@@ -371,23 +373,23 @@ FFSERVER=REDACTED_LAN_HOST
 * enable NAS: https://kb.synology.com/en-my/DSM/tutorial/How_to_back_up_Linux_computer_to_Synology_NAS
 * setup NFS: https://kb.synology.com/en-br/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS
 * mount NAS:
-  * ```sudo mount -v -t nfs -o vers=3 REDACTED_NAS_HOST:/volume1/NetBackup /mnt/backup```
+  * ```sudo mount -v -t nfs -o vers=3 <NAS_IP>:/volume1/NetBackup /mnt/backup```
   * add to /etc/fstab (use `_netdev` for network mount dependency):
-    * ```REDACTED_NAS_HOST:/volume1/NetBackup    /mnt/backup   nfs    defaults,_netdev 0 0```
+    * ```<NAS_IP>:/volume1/NetBackup    /mnt/backup   nfs    defaults,_netdev 0 0```
 * create user with exact same properties of NAS, ex
   * sudo useradd -u 1028 -g 100 backup2
 * choose folders to backup:
   * /var/log
-  * /home/jdtogni
+  * /home/<user>
   * /etc
 
-### Backup Schedule (on spirit)
+### Backup Schedule (on the prod server)
 
 The backup script `dstrader/opt/backup.sh` runs via root crontab 3x daily:
 - 3:10 AM, 12:50 PM, 11:10 PM
 
-**What gets backed up (synced to melnick NAS via NFS):**
-1. Rsyncs `/home/jdtogni`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on melnick
+**What gets backed up (synced to NAS via NFS):**
+1. Rsyncs `/home/<user>`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on the NAS
 2. Monthly docker image snapshots (`dev-dstrader`, `dev-familyfund`)
 3. **Database backup** - dumps `familyfund_prod`, encrypts with GPG, gzips
 
@@ -396,7 +398,7 @@ The backup script `dstrader/opt/backup.sh` runs via root crontab 3x daily:
 - Uses `docker exec db mariadb-dump`
 - Encrypts with GPG key `docker@example.local`
 - Output: `dstrader/prod/backups/db-backup-prod-YYYY-MM-DD.sql.encr.gz`
-- Synced to melnick via rsync of `/home/jdtogni/`
+- Synced to the NAS via rsync of `/home/<user>/`
 
 Log file: `/var/log/dstrader/backup.log`
 
@@ -406,27 +408,27 @@ If backups to NAS fail, check:
 
 1. **Is NFS mounted?**
    ```bash
-   ssh jdtogni@REDACTED_PROD_HOST "mount | grep backup"
-   # Should show: REDACTED_NAS_HOST:/volume1/NetBackup on /mnt/backup type nfs
+   ssh <user>@<PROD_HOST> "mount | grep backup"
+   # Should show: <NAS_IP>:/volume1/NetBackup on /mnt/backup type nfs
    ```
 
 2. **Mount manually if needed:**
    ```bash
-   ssh jdtogni@REDACTED_PROD_HOST "sudo mount /mnt/backup"
+   ssh <user>@<PROD_HOST> "sudo mount /mnt/backup"
    ```
 
-3. **Is melnick reachable?**
+3. **Is the NAS reachable?**
    ```bash
-   ssh jdtogni@REDACTED_PROD_HOST "ping -c 2 REDACTED_NAS_HOST"
+   ssh <user>@<PROD_HOST> "ping -c 2 <NAS_IP>"
    ```
 
 4. **Check backup log for errors:**
    ```bash
-   ssh jdtogni@REDACTED_PROD_HOST "tail -50 /var/log/dstrader/backup.log"
+   ssh <user>@<PROD_HOST> "tail -50 /var/log/dstrader/backup.log"
    ```
 
 5. **Common error:** `mkdir "/mnt/backup/..." failed: No such file or directory`
-   - Means NFS is not mounted. Run `sudo mount /mnt/backup` on spirit.
+   - Means NFS is not mounted. Run `sudo mount /mnt/backup` on the prod server.
 
 6. **Fix fstab if missing `_netdev`:**
    ```bash
@@ -442,14 +444,14 @@ The FamilyFund container uses `bitnami/laravel` base image. Bitnami periodically
 
 **If docker build fails with "image not found":**
 
-1. Check for saved image backup on melnick:
+1. Check for saved image backup on the NAS:
    ```bash
-   ls -lh /mnt/backup/dstrader_server/home/jdtogni/dev/backups/docker-dev-familyfund_*.tgz
+   ls -lh /mnt/backup/dstrader_server/home/<user>/dev/backups/docker-dev-familyfund_*.tgz
    ```
 
 2. Copy and load the image:
    ```bash
-   cp /mnt/backup/dstrader_server/home/jdtogni/dev/backups/docker-dev-familyfund_*.tgz ~/dev/backups/
+   cp /mnt/backup/dstrader_server/home/<user>/dev/backups/docker-dev-familyfund_*.tgz ~/dev/backups/
    gunzip -c ~/dev/backups/docker-dev-familyfund_*.tgz | docker load
    ```
 
@@ -479,7 +481,7 @@ Database backups are encrypted using GPG before being stored. The encryption run
 - Host's `~/.gnupg` must be mounted in container (already configured in docker-compose.yml):
   ```yaml
   volumes:
-    - /home/jdtogni/.gnupg:/root/.gnupg
+    - /home/<user>/.gnupg:/root/.gnupg
   ```
 
 **If encryption fails with "Unusable public key":**
@@ -503,7 +505,7 @@ docker exec dstrader bash -c "echo test | gpg --batch --yes --trust-model always
 
 ### Server Disk Space Management
 
-The root partition on spirit (`/dev/nvme0n1p6`, 48GB) can fill up and cause DSTrader to fail (mariadb won't start).
+The root partition on the prod server (`/dev/nvme0n1p6`, 48GB) can fill up and cause DSTrader to fail (mariadb won't start).
 
 **Check disk usage:**
 ```bash
@@ -541,17 +543,17 @@ User/password
 # Install wakeonlan (if not installed)
 brew install wakeonlan
 
-# Wake melnick (NAS/backup server)
-wakeonlan REDACTED_MAC
+# Wake the NAS/backup server
+wakeonlan <NAS_MAC>
 
-# Wake spirit (dstrader server)
-wakeonlan E8:FF:1E:D6:6A:70
+# Wake the dstrader server
+wakeonlan <PROD_MAC>
 ```
 
 | Server | MAC Address | IP Address | Purpose |
 |--------|-------------|------------|---------|
-| melnick | REDACTED_MAC | REDACTED_NAS_HOST | NAS/Backup |
-| spirit | E8:FF:1E:D6:6A:70 | REDACTED_PROD_HOST | dstrader |
+| NAS server  | `<NAS_MAC>`  | `<NAS_IP>`   | NAS/Backup |
+| prod server | `<PROD_MAC>` | `<PROD_HOST>`| dstrader |
 
 ### Server WOL Setup
 

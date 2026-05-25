@@ -34,13 +34,13 @@ All commands run from `app1/` (NOT `app1/family-fund-app/`):
 
 ```bash
 # Deployment
-/Users/dtogni/dev/dstrader-docker/local/deploy_ff.sh  # Deploy FamilyFund to prod (REDACTED_PROD_HOST)
+<LOCAL_REPO>/dstrader-docker/local/deploy_ff.sh  # Deploy FamilyFund to prod (<PROD_HOST>)
 
-# Production Container Management (on dstrader server REDACTED_PROD_HOST)
+# Production Container Management (on dstrader server <PROD_HOST>)
 # IMPORTANT: Always use these scripts, never run docker compose directly!
 # FamilyFund:
 ssh dstrader "cd ~/dev/dstrader-docker && ./server/dev/run_familyfund.sh prod"
-# Wake prod server (if sleeping): /Users/dtogni/dev/dstrader-docker/local/wake_spirit.sh
+# Wake prod server (if sleeping): <LOCAL_REPO>/dstrader-docker/local/wake_spirit.sh
 # DStrader (auto-runs weekdays 12:33 PM via cron, or manually):
 ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && ./start_dstrader.sh restart prod -d"
 # Env vars: DSTRADER_DONT_EXECUTE_ORDERS=1, DSTRADER_DONT_RUN_STRATEGY=1, DSTRADER_DONT_VALIDATE_TRADING_HOURS=1, DSTRADER_KEEP_RUNNING=1
@@ -228,7 +228,7 @@ The generators create: Model, Repository, Controller, Request classes, Views (in
 
 ## Development Notes
 
-- **NEVER edit code directly on the production server (REDACTED_PROD_HOST)** - always edit locally and deploy
+- **NEVER edit code directly on the production server (`<PROD_HOST>`)** - always edit locally and deploy
 - Use http://localhost:3000 for testing, not the production URL
 - Share prices calculated from previous day's NAV
 - Quarterly reports generated via queue jobs

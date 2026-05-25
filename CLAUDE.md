@@ -141,7 +141,7 @@ come from that seeder.
 
 ```bash
 # From this worktree's app1/
-~/.familyfund-pool/testpool.sh list                                # 5 slots: test0..test4
+~/.familyfund-pool/testpool.sh list                                # 10 slots: test0..test9
 ~/.familyfund-pool/testpool.sh claim "<label>"                     # lease + seed DB + bring up stack
 ~/.familyfund-pool/testpool.sh run        -- --filter=Foo          # `php artisan test` in this worktree's slot
 ~/.familyfund-pool/testpool.sh tour       -- --filter=FooDuskTest  # Dusk w/ Selenium sidecar
@@ -153,7 +153,7 @@ Coverage in a slot (pcov is in `app1/Dockerfile`):
 
 ```bash
 docker exec familyfund-<slot> sh -c "cd /app && \
-  ./vendor/bin/phpunit --coverage-text --exclude-group=incomplete,needs-data-refactor" \
+  ./vendor/bin/phpunit --coverage-text" \
   2>&1 | grep -E '^  (Lines|Methods|Classes):'
 ```
 

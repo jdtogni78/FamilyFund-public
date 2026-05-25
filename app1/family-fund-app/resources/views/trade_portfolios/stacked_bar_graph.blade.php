@@ -28,9 +28,9 @@
 
 @if($portfolioCollection->count() >= 1 && $hasItems)
 <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center flex-nowrap" style="background: #134e4a; color: #ffffff;">
-        <strong class="text-truncate" style="min-width: 0;"><i class="fa fa-chart-bar mr-2"></i>Portfolio Allocations by Symbol</strong>
-        <a class="btn btn-sm btn-outline-light flex-shrink-0 ml-2" data-toggle="collapse" href="#collapsePortfolioAllocations"
+    <div class="card-header card-header-dark d-flex justify-content-between align-items-center flex-nowrap">
+        <strong class="text-truncate" style="min-width: 0;"><i class="fa fa-chart-bar me-2"></i>Portfolio Allocations by Symbol</strong>
+        <a class="btn btn-sm btn-outline-light flex-shrink-0 ms-2" data-bs-toggle="collapse" href="#collapsePortfolioAllocations"
            role="button" aria-expanded="true" aria-controls="collapsePortfolioAllocations">
             <i class="fa fa-chevron-down"></i>
         </a>

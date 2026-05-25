@@ -504,7 +504,7 @@ The Dusk tour (`CreditLineUITourTest`) mutates data (opens/repays/reverses/cance
 ```
 
 `testpool tour` (sibling of `testpool run`, which is `php artisan test`):
-- ensures a leased slot (each slot = its own DB, dropped+restored fresh from the committed `database/test/test-baseline.sql.gz` on claim — account 7 / fund 1 come from that baseline);
+- ensures a leased slot (each slot = its own DB, rebuilt fresh on claim via `migrate:fresh` + the synthetic `Database\Seeders\TestBaselineSeeder` — no real-data dump in the repo, see #78; account 7 / `user1@dev.familyfund.local` / the first fund come from that seeder);
 - the familyfund image ships **no browser**, so it stands up a `seleniarm/standalone-chromium` sidecar on the slot's compose network and runs in-container `php artisan dusk` against it via `DUSK_DRIVER_URL` (with `LARAVEL_SAIL=1` so `DuskTestCase` skips its local chromedriver, and `APP_URL=http://familyfund-<slot>:8000` so the sidecar browser can reach the app);
 - screenshots land in `<worktree>/family-fund-app/tests/Browser/screenshots/tour/*.png`.
 

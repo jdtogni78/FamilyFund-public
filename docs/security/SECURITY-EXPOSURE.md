@@ -40,7 +40,9 @@ exposed content may already be cloned, cached, or indexed.**
   the §5 history purge runs.
 - **`app1/family-fund-app/database/test/test-baseline.sql.gz`** — full baseline:
   `persons, users, login_activities, credit_line_*, goals, fund_reports, …` —
-  **62 emails.**
+  **62 emails.** → **Removed from HEAD 2026-05-25 (#78)**; CI + `testpool.sh` now
+  build the test DB from the synthetic `Database\Seeders\TestBaselineSeeder`. Still
+  in git **history** until the §5 history purge runs.
 - `database/prod_to_dev.sql` — anonymization script (7 anon/mask refs). Logic, not
   bulk data — lower risk; review then decide whether to purge.
 - `app1/family-fund-app/database/migrations/data/restore_dev_funds.sql`,

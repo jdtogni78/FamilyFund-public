@@ -218,12 +218,33 @@ class AccountApiGoldenDataTest extends TestCase
     #[Test]
     public function test_account_transactions_as_of()
     {
-        // Transaction IDs for account 7
-        // Test with different as_of dates to verify correct transactions are returned
-        $this->_test_account_transactions_as_of(7, '2021-01-01', [46]);
-        $this->_test_account_transactions_as_of(7, '2021-07-01', [46, 42, 44]);
-        $this->_test_account_transactions_as_of(7, '2022-01-01', [46, 42, 44]);
-        $this->_test_account_transactions_as_of(7, '2022-01-15', [46, 42, 44, 20, 21, 22, 23]);
+        // Verify /transactions_as_of/{date} returns exactly account 7's
+        // transactions dated strictly before {date} (the endpoint's filter — see
+        // AccountTrait::createTransactionsResponse). The expectation is derived
+        // from account 7's actual (synthetic) history instead of hard-coded ids
+        // from the removed real-data dump (#78); we assert the returned id set
+        // per as_of date and that the window grows over time.
+        $account = AccountExt::find(7);
+
+        foreach (['2021-02-01', '2021-07-01', '2022-01-15', '2022-03-01'] as $asOf) {
+            $expected = $account->transactions()
+                ->whereDate('timestamp', '<', $asOf)
+                ->pluck('id')->sort()->values()->all();
+
+            $response = $this->json('GET', '/api/accounts/' . $account->id . '/transactions_as_of/' . $asOf);
+            $response->assertStatus(200);
+            $returned = collect($response->json('data.transactions'))
+                ->pluck('id')->sort()->values()->all();
+
+            $this->assertEquals($expected, $returned, "transactions before {$asOf}");
+        }
+
+        // The filter must actually narrow the window for an earlier date.
+        $early = $this->json('GET', '/api/accounts/' . $account->id . '/transactions_as_of/2021-02-01')
+            ->json('data.transactions');
+        $late = $this->json('GET', '/api/accounts/' . $account->id . '/transactions_as_of/2022-03-01')
+            ->json('data.transactions');
+        $this->assertLessThan(count($late), count($early), 'earlier as_of should return fewer transactions');
     }
 
     // TODO test account performance

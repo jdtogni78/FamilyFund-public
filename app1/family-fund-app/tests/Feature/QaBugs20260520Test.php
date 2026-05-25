@@ -12,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DataFactory;
 use Tests\TestCase;
 
@@ -29,9 +30,8 @@ use Tests\TestCase;
  *   bin/test.sh --filter=QaBugs20260520
  * Or in the testpool:
  *   ~/.familyfund-pool/testpool.sh run test0 -- --filter=QaBugs20260520
- *
- * @group qa-bugs-20260520
  */
+#[Group('qa-bugs-20260520')]
 class QaBugs20260520Test extends TestCase
 {
     use DatabaseTransactions;

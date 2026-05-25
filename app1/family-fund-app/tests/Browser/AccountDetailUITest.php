@@ -23,11 +23,10 @@ use Tests\DuskTestCase;
  * Screenshots (light + dark) land in tests/Browser/screenshots/acct27/ for a
  * visual dark-mode review.
  *
- * Uses account 7 (fund 1) from the synthetic test baseline (TestBaselineSeeder),
- * logged in as the fund-admin QA user via the dev-login route. (The `as=admin`
- * alias resolves to ADMIN_EMAILS[0] = admin@dev.familyfund.local, which the
- * synthetic baseline does not seed — fund-admin administers fund 1, where
- * account 7 lives.)
+ * Uses account 7 from the synthetic test baseline (TestBaselineSeeder), logged
+ * in as the system-admin via the dev-login `?as=admin` route. The admin user
+ * (config('familyfund.admin_emails')[0] = admin@dev.familyfund.local) is seeded
+ * by QaTestUsersSeeder.
  */
 class AccountDetailUITest extends DuskTestCase
 {
@@ -60,7 +59,7 @@ class AccountDetailUITest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             // Log in as admin and land on the account detail page (show_ext).
-            $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '?as=fund-admin')
+            $browser->visit('/dev-login/accounts/' . self::ACCOUNT_ID . '?as=admin')
                 ->waitForText('Transaction History', 15);
             $this->ensureLightMode($browser);
             $browser->assertSee('Shares Holdings Over Time')

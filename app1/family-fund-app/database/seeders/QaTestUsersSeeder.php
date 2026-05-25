@@ -63,6 +63,39 @@ class QaTestUsersSeeder extends Seeder
             $this->command->info("QA user: {$email} -> {$roleName} on fund {$fund->id}");
         }
 
+        // System administrator (global role, fund_id=0). Backs the dev-login
+        // ?as=admin / ?as=system-admin aliases, which resolve to
+        // config('familyfund.admin_emails')[0]. Without this, browser/Dusk
+        // tests that log in as admin (TradePortfolioDetailUITest #26,
+        // AccountDetailUITest #27, S7FundSummarySmokeTest) 404 on the synthetic
+        // test baseline, which seeds no admin user. Idempotent: on dev the admin
+        // already exists (prod_to_dev.sql) and firstOrCreate won't clobber it.
+        $adminEmail = config('familyfund.admin_emails')[0] ?? 'admin@dev.familyfund.local';
+        $admin = User::firstOrCreate(
+            ['email' => $adminEmail],
+            [
+                'name' => 'Dev Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $systemAdminRole = Role::where('name', 'system-admin')->where('fund_id', 0)->first();
+        if ($systemAdminRole) {
+            // system-admin is global; assign under team (fund) id 0 so the
+            // model_has_roles row carries fund_id=0, which is what
+            // User::isSystemAdmin() looks for.
+            $originalTeam = getPermissionsTeamId();
+            setPermissionsTeamId(0);
+            if (! $admin->hasRole($systemAdminRole)) {
+                $admin->assignRole($systemAdminRole);
+            }
+            setPermissionsTeamId($originalTeam);
+            $this->command->info("Admin user: {$adminEmail} -> system-admin (global)");
+        } else {
+            $this->command->warn('QaTestUsersSeeder: system-admin role missing; run RolesAndPermissionsSeeder first.');
+        }
+
         // The beneficiary needs an account on this fund so per-user scoping
         // (e.g. "view own") has something to read.
         $beneficiary = User::where('email', 'qa-beneficiary@test.local')->first();

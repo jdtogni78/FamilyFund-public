@@ -27,6 +27,14 @@ class SecurityAccessRegressionTest extends TestCase
     {
         parent::setUp();
 
+        // The denied HTML pages render the full app layout (errors/layout ->
+        // x-app-layout), which calls @vite(). The Security Scan CI job runs
+        // without `npm run build`, so without a manifest @vite() throws and a
+        // clean abort(403) surfaces as a 500 — masking the access boundary this
+        // test asserts. We only care about the auth status code, not bundled
+        // assets, so stub Vite (prod always has a built manifest).
+        $this->withoutVite();
+
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $fund = Fund::factory()->create();

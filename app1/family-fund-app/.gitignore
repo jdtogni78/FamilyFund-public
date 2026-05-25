@@ -21,6 +21,8 @@ storage/coverage/
 .env
 .env.*
 !.env.example
+# SOPS+age-encrypted twins are committed (see repo-root .sops.yaml + bin/secrets.sh).
+!*.sops
 *.sql.gz
 *.sqlite
 *.ibd

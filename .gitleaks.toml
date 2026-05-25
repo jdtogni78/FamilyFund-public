@@ -11,6 +11,12 @@ paths = [
 ]
 
 [[allowlists]]
+description = "SOPS+age-encrypted env twins (.sops). The values are AES256-GCM ciphertext (ENC[...]) and an age-wrapped data key — high-entropy by design and safe to commit, so any 'finding' here is a false positive. Plaintext is git-ignored (see .sops.yaml + bin/secrets.sh)."
+paths = [
+  '''\.sops$''',
+]
+
+[[allowlists]]
 description = "Known local-only FamilyFund development credentials"
 condition = "AND"
 paths = [

@@ -6,9 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Family Fund is a Laravel 11 financial fund management system for tracking fund shares, portfolios, beneficiary accounts, and transactions. Uses repository pattern with extensive test coverage.
 
+## Engineering decisions
+
+Significant, non-obvious decisions are logged in
+[docs/ENGINEERING_DECISIONS.md](docs/ENGINEERING_DECISIONS.md) (lightweight ADRs).
+Read it before re-litigating an architectural/security choice; add an `ED-NNNN`
+entry when you make a new one.
+
 ## New-machine setup
 
-See [SETUP.md](SETUP.md). Shared files (env bundle + DB dumps) live on melnick at `~/familyfund_db_backups/` — pull with `scp -O` (Synology drops SFTP).
+See [SETUP.md](SETUP.md). Env secrets are committed **encrypted** (SOPS+age,
+`*.sops`); decrypt with `app1/family-fund-app/bin/secrets.sh decrypt` once the age
+key is in place (see ED-0002). DB dumps + the legacy GPG bundle still live on
+melnick at `~/familyfund_db_backups/` — pull with `scp -O` (Synology drops SFTP).
 
 ## Tech Stack
 

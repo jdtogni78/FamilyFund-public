@@ -40,14 +40,14 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
+                            <a href="{{ route('funds.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="fa fa-money text-teal-600 me-3" style="width: 20px;"></i>My Fund
+                            </a>
                             <a href="{{ route('accounts.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fa fa-bank text-teal-600 me-3" style="width: 20px;"></i>My Accounts
                             </a>
                             <a href="{{ route('transactions.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fa fa-exchange-alt text-teal-600 me-3" style="width: 20px;"></i>My Transactions
-                            </a>
-                            <a href="{{ route('funds.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="fa fa-money text-teal-600 me-3" style="width: 20px;"></i>My Fund
                             </a>
                         </div>
                     </div>

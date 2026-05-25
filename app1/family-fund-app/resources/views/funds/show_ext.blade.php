@@ -120,13 +120,17 @@
                                 $activeTradePortfolio = $api['tradePortfolios']->first(function($tp) {
                                     return \Carbon\Carbon::parse($tp->end_dt)->isAfter(\Carbon\Carbon::today());
                                 });
+                                // Full access (fund-admin / financial-manager / system-admin) to THIS fund.
+                                // Mirrors the `fund.full` middleware guarding the rebalance route so the
+                                // Edit Allocations button only renders for users who won't 403 on click.
+                                $hasFullAccess = in_array($api['id'], auth()->user()?->getAccessibleFundIds()['full'] ?? []);
                             @endphp
                             <div class="d-flex flex-wrap" style="gap: 4px;">
                                 <a href="{{ route('funds.index') }}" class="btn btn-sm btn-primary">Back</a>
                                 <a href="{{ route('funds.overview', $api['id']) }}" class="btn btn-sm btn-primary" title="Overview">
                                     <i class="fa fa-chart-area"></i>
                                 </a>
-                                @if($activeTradePortfolio)
+                                @if($hasFullAccess && $activeTradePortfolio)
                                 <a href="{{ route('tradePortfolios.rebalance', [$activeTradePortfolio->id]) }}" class="btn btn-sm btn-warning" title="Edit Allocations">
                                     <i class="fa fa-balance-scale"></i>
                                 </a>

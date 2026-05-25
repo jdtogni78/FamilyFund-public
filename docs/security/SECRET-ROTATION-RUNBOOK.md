@@ -90,8 +90,23 @@ git switch -c secret-rotation-$(date +%Y%m%d)
 `ALTER` root on `db-testpool` to the new value AND update `~/.familyfund-pool/testpool.sh`
 `DB_PASS=` together. Skipping the lease check breaks any active test slot.
 
-### D. Land it
-`git commit` (pre-commit guard blocks env files / `APP_KEY=base64:` / dumps), then
+### D. Re-encrypt the committed SOPS twins
+The plaintext env files are git-ignored; their **committed** encrypted twins
+(`*.sops`) are the versioned source of truth (see `docs/ENGINEERING_DECISIONS.md`
+ED-0002). After A/B changed any plaintext, refresh + stage the twins so they don't
+go stale:
+```sh
+app1/family-fund-app/bin/secrets.sh encrypt all   # re-encrypts dev/stage/compose
+app1/family-fund-app/bin/secrets.sh status        # confirm (never prints values)
+git add app1/family-fund-app/.env.dev.sops app1/family-fund-app/.env.stage.sops app1/.env.sops
+```
+> Only the rotated VALUES change inside the `.sops`; the age recipients/private key
+> are untouched. To rotate the SOPS data key itself (independent of APP_KEY/DB),
+> use `bin/secrets.sh rekey`.
+
+### E. Land it
+`git commit` (pre-commit guard blocks env files / `APP_KEY=base64:` / dumps; the
+`.sops` twins ARE allowed — they're ciphertext), then
 `git switch main && git merge --ff-only secret-rotation-<date> && git push origin main`.
 Update the off-repo backup with the NEW values. Tick this run in a dated log.
 

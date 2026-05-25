@@ -69,7 +69,11 @@ class TradePortfolioItemControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $tradePortfolioItems = $this->tradePortfolioItemRepository->all();
+        // Defense-in-depth: scope to items whose trade portfolio's portfolio is
+        // in a fund the user can access, in addition to fund.full middleware. (#85)
+        $tradePortfolioItems = $this->authz()
+            ->scopeByPortfolioRelation(TradePortfolioItemExt::query(), 'tradePortfolio.portfolio')
+            ->get();
 
         return view('trade_portfolio_items.index')
             ->with('tradePortfolioItems', $tradePortfolioItems);

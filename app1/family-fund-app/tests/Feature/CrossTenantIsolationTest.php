@@ -282,6 +282,65 @@ class CrossTenantIsolationTest extends TestCase
         $this->assertStringNotContainsString($this->fundY->name, $body);
     }
 
+    // ====== Fund-admin management index scoping (#85) ======
+    //
+    // These fund.full-gated management pages used to list every fund's rows to
+    // any full-access fund-admin. With per-controller query scoping a fund-admin
+    // of fund X now sees only fund X's rows — defense-in-depth behind the route
+    // middleware. (Beneficiaries are still 403'd by the middleware, asserted
+    // above.)
+
+    public function test_fund_admin_fund_reports_index_excludes_other_fund(): void
+    {
+        \Database\Factories\FundReportFactory::new()->create(['fund_id' => $this->fundX->id]);
+        \Database\Factories\FundReportFactory::new()->create(['fund_id' => $this->fundY->id]);
+
+        $r = $this->actingAs($this->fundAdminX)->get('/fundReports');
+        $r->assertOk();
+        // fund_reports.index renders $fundReport->fund->name.
+        $r->assertSee($this->fundX->name, false);
+        $r->assertDontSee($this->fundY->name, false);
+    }
+
+    public function test_fund_admin_account_balances_index_excludes_other_fund(): void
+    {
+        $userX = User::factory()->create();
+        $userY = User::factory()->create();
+        $acctX = AccountExt::create([
+            'fund_id'  => $this->fundX->id,
+            'user_id'  => $userX->id,
+            'code'     => 'BX-' . $userX->id,
+            'nickname' => 'BalanceAcctX-Isolation',
+            'type'     => 'individual',
+        ]);
+        $acctY = AccountExt::create([
+            'fund_id'  => $this->fundY->id,
+            'user_id'  => $userY->id,
+            'code'     => 'BY-' . $userY->id,
+            'nickname' => 'BalanceAcctY-Isolation',
+            'type'     => 'individual',
+        ]);
+        \Database\Factories\AccountBalanceFactory::new()->create(['account_id' => $acctX->id]);
+        \Database\Factories\AccountBalanceFactory::new()->create(['account_id' => $acctY->id]);
+
+        $r = $this->actingAs($this->fundAdminX)->get('/accountBalances');
+        $r->assertOk();
+        // account_balances.index renders $accountBalance->account->nickname.
+        $r->assertSee('BalanceAcctX-Isolation', false);
+        $r->assertDontSee('BalanceAcctY-Isolation', false);
+    }
+
+    public function test_fund_admin_can_reach_global_management_index_pages(): void
+    {
+        // The global/template management pages (no fund column to scope on) carry
+        // a redundant capability guard. A full-access fund-admin must still pass
+        // it — the guard denies only non-privileged users.
+        foreach (['/assets', '/goals', '/matchingRules', '/scheduledJobs'] as $uri) {
+            $r = $this->actingAs($this->fundAdminX)->get($uri);
+            $this->assertSame(200, $r->status(), "fundAdminX -> $uri should be 200, got " . $r->status());
+        }
+    }
+
     // ==================== Dashboard tiering ====================
 
     public function test_beneficiary_dashboard_hides_management_links(): void

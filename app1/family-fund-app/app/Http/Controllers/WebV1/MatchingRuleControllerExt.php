@@ -213,6 +213,10 @@ class MatchingRuleControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
+        // Matching rules are shared templates (no fund/account column to scope
+        // on); re-assert the fund.full capability as defense-in-depth. (#85)
+        $this->requireFullFundAccessSurface();
+
         $matchingRules = $this->matchingRuleRepository->all();
 
         return view('matching_rules.index')

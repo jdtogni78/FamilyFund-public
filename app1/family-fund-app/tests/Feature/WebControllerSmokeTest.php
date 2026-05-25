@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
 /**
@@ -23,6 +25,19 @@ class WebControllerSmokeTest extends TestCase
     use WithoutMiddleware, DatabaseTransactions;
 
     private const MISSING_ID = 99_999_999;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // These scaffolded resources are admin/management surfaces. Authenticate
+        // as a system-admin so in-controller capability guards (e.g. the #85
+        // fund.full defense-in-depth on /assets) are satisfied. The test still
+        // runs WithoutMiddleware to exercise the controller branches directly.
+        $admin = User::factory()->create();
+        TestFixtures::makeSystemAdmin($admin);
+        $this->actingAs($admin);
+    }
 
     /** @return array<string,array{string}> */
     public static function resources(): array

@@ -37,16 +37,21 @@ class AccountReportControllerExt extends AppBaseController
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Get filter options first (fresh queries)
-        $funds = Fund::query()->orderBy('name')->pluck('name', 'id');
-        $accounts = Account::query()
+        // Get filter options first (fresh queries). Scope the selector
+        // dropdowns to the caller's funds/accounts so they can't leak other
+        // tenants' fund names or account labels (PII). (#85)
+        $funds = $this->authz()->scopeFundsQuery(Fund::query())
+            ->orderBy('name')->pluck('name', 'id');
+        $accounts = $this->authz()->scopeAccountsQuery(Account::query())
             ->with('fund')
             ->orderBy('nickname')
             ->get()
             ->mapWithKeys(fn($a) => [$a->id => $a->nickname . ' (' . ($a->fund->name ?? 'No Fund') . ')']);
 
-        // Build account reports query with filters
-        $query = AccountReportExt::query()->with(['account.fund', 'account.user']);
+        // Build account reports query with filters. Defense-in-depth: scope to
+        // the caller's accessible accounts in addition to fund.full. (#85)
+        $query = $this->authz()
+            ->scopeByAccountRelation(AccountReportExt::query()->with(['account.fund', 'account.user']));
 
         if ($fundId) {
             $query->whereHas('account', fn($q) => $q->where('fund_id', $fundId));

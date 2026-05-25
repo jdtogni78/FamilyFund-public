@@ -29,6 +29,10 @@ class AssetController extends AppBaseController
      */
     public function index(Request $request)
     {
+        // Assets are shared reference data across funds (no fund/account column
+        // to scope on); re-assert the fund.full capability as defense-in-depth. (#85)
+        $this->requireFullFundAccessSurface();
+
         $assets = $this->assetRepository->all();
 
         return view('assets.index')

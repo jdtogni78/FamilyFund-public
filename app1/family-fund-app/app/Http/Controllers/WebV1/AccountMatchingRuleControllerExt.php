@@ -40,6 +40,10 @@ class AccountMatchingRuleControllerExt extends AppBaseController
     {
         $query = \App\Models\AccountMatchingRule::with(['account.fund', 'matchingRule']);
 
+        // Defense-in-depth: scope to the caller's accessible accounts in
+        // addition to the fund.full route middleware. (#85)
+        $query = $this->authz()->scopeByAccountRelation($query);
+
         // Apply filters
         $filters = [];
 

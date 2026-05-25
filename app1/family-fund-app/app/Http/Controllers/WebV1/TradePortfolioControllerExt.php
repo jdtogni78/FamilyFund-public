@@ -47,7 +47,13 @@ class TradePortfolioControllerExt extends AppBaseController
 
     public function index(\Illuminate\Http\Request $request)
     {
-        $tradePortfolios = $this->tradePortfolioRepository->all()
+        // Defense-in-depth: scope to trade portfolios whose portfolio is in a
+        // fund the user can access, in addition to the fund.full middleware.
+        // Column-based (not whereHas) because TradePortfolioExt::portfolio() is
+        // an overridden accessor that throws inside whereHas. (#85)
+        $tradePortfolios = $this->authz()
+            ->scopeByPortfolioColumn(TradePortfolioExt::query())
+            ->get()
             ->sortByDesc('end_dt');
 
         return view('trade_portfolios.index')

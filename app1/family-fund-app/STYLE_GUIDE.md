@@ -13,6 +13,7 @@
 - [x] Badge contrast (bg-primary instead of bg-secondary)
 - [x] Index page headers (26 pages) - standardized layout with icons, badges, buttons
 - [x] Form fields (30 fields.blade.php files) - standardized two-column layout with icons, helper text
+- [x] Trade Portfolios detail views (#26) - dark-mode + BS5 migration (see note below)
 
 **Form Fields Standardized (30 forms):**
 All create/edit forms now follow consistent pattern:
@@ -58,8 +59,19 @@ All create/edit forms now follow consistent pattern:
 | Transactions | `fa-exchange-alt` | `$transactions` |
 | Users | `fa-user-cog` | `$users` |
 
+**Trade Portfolios detail views (#26, done):**
+Standardized the live detail/show views to the dark-mode + Bootstrap 5 conventions:
+- Detail headers use `card-header card-header-dark` (themed teal, adapts to dark) instead of inline `style="background:#0d9488"`.
+- Cash highlight rows use the dark-adapting `.table-info` contextual class instead of a hard-coded light `#f0fdfa` (which vanished in dark mode).
+- Light panels/footers converted to Tailwind `dark:` utilities (`bg-slate-100 dark:bg-slate-700`, `bg-emerald-100 dark:bg-emerald-900/40`, `border-x border-b border-slate-200 dark:border-slate-600`).
+- Bootstrap-4 leftovers migrated to BS5: `mr-*/ml-*`→`me-*/ms-*`, `text-right`→`text-end`, `font-weight-bold`→`fw-bold`, `border-right`→`border-end`, `thead-light`→`table-light`, and the dead `data-toggle="collapse"`→`data-bs-toggle` (collapse toggles were broken under BS5).
+- Deleted 6 unreferenced/dead views (`inner_show_tables`, `show_fields`, `show_fields_pdf`, `split_fields`, `group_table`, `show_dates`).
+- PDF views (`*_pdf.blade.php`) intentionally left light (wkhtmltopdf has no dark mode).
+- Covered by `tests/Browser/TradePortfolioDetailUITest.php` (light + dark, incl. the collapse-toggle fix).
+
+> Reminder: BS dark mode here is driven by Tailwind's `.dark` class on `<html>` (not `data-bs-theme`). Prefer Tailwind `dark:` utilities or the contextual table classes (`.table-info` etc., which `public/css/navigation.css` dark-adapts) over inline hex backgrounds, which can't respond to dark mode.
+
 **Pending:**
-- [ ] Review trade_portfolios detail views (27 files)
 - [ ] Review accounts detail views (23 files)
 - [ ] Review other detail/show pages
 

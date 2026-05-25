@@ -14,6 +14,7 @@ use App\Services\CreditLine\Support\AmortizationScheduleBuilder;
 use App\Services\CreditLine\Support\OutstandingCalculator;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DataFactory;
 use Tests\TestCase;
 
@@ -147,8 +148,6 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
     }
 
     /**
-     * @group needs-fix-credit-line
-     *
      * EXPECTED (per docs/credit_lines/fund_cashflow.md §"Recording cash movement"):
      *   `value` should equal principal_shares × share_price_on_draw_date
      *   (50 × $1.00 = $50.00).
@@ -164,6 +163,7 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
      * BOR/REP rows or hide that column for them. Either way the BOR row should
      * communicate the dollar size of the draw.
      */
+    #[Group('needs-fix-credit-line')]
     public function test_bor_transaction_value_reflects_dollar_size_of_draw(): void
     {
         $account = $this->factory->userAccount;
@@ -184,8 +184,6 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
     }
 
     /**
-     * @group needs-fix-credit-line
-     *
      * EXPECTED: Share Price column shows the share value as of the draw date
      *   — that is the price at which the borrower received the shares.
      *
@@ -196,6 +194,7 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
      * Fix direction: for BOR/REP rows, share_price should fall back to
      *   `shareValueAsOf($transaction->timestamp)` when value=0.
      */
+    #[Group('needs-fix-credit-line')]
     public function test_bor_transaction_share_price_reflects_price_at_draw_date(): void
     {
         $account = $this->factory->userAccount;
@@ -215,8 +214,6 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
     }
 
     /**
-     * @group needs-fix-credit-line
-     *
      * EXPECTED: Current Value column should communicate the *liability* — for
      *   a BOR, "the dollar amount this loan currently costs the borrower" —
      *   i.e. outstanding × shareValueAsOf(today). It should be visually
@@ -231,6 +228,7 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
      * though it is debt. Fix needs a sign flip or distinct display path for
      * BOR/REP rows in createTransactionsResponse() + transactions_table.blade.
      */
+    #[Group('needs-fix-credit-line')]
     public function test_bor_transaction_current_value_is_signed_or_labelled_as_liability(): void
     {
         $account = $this->factory->userAccount;
@@ -257,14 +255,13 @@ class CreditLineTransactionDisplayValuesTest extends TestCase
     }
 
     /**
-     * @group needs-fix-credit-line
-     *
      * EXPECTED: For a REP transaction, value/share_price/current_value should
      *   reflect that the borrower paid down their loan — the dollar amount
      *   the borrower handed over.
      *
      * ACTUAL: Same value=0 problem; column shows $0.00.
      */
+    #[Group('needs-fix-credit-line')]
     public function test_rep_transaction_value_reflects_amount_paid(): void
     {
         $account = $this->factory->userAccount;

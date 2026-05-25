@@ -82,9 +82,9 @@
         <div class="col-md-{{ 12 / count($tradePortfolios) }} mb-3">
             <div class="card h-100">
                 {{-- Portfolio Header --}}
-                <div class="card-header py-2" style="background: #f0fdfa; border-left: 4px solid #14b8a6; border-bottom: 1px solid #99f6e4;">
+                <div class="card-header py-2" style="border-left: 4px solid #14b8a6;">
                     <div class="d-flex justify-content-between align-items-center">
-                        <strong style="color: #0f766e;"><i class="fa fa-columns mr-1" style="color: #14b8a6;"></i> Portfolio {{ $tp->id }}</strong>
+                        <strong style="color: #0f766e;"><i class="fa fa-columns me-1" style="color: #14b8a6;"></i> Portfolio {{ $tp->id }}</strong>
                         @if($editable)
                             <a href="{{ route('tradePortfolios.edit', [$tp->id]) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="fa fa-edit"></i></a>
                         @endif
@@ -92,7 +92,7 @@
                 </div>
 
                 {{-- Period & Settings --}}
-                <div class="card-body py-2 bg-slate-50 dark:bg-slate-700" style="border-bottom: 1px solid #e2e8f0;">
+                <div class="card-body py-2 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                     <div class="small text-center">
                         <div class="text-muted">{{ \Carbon\Carbon::parse($tp->start_dt)->format('M j, Y') }} - {{ \Carbon\Carbon::parse($tp->end_dt)->format('M j, Y') }}</div>
                         <div class="mt-1 d-flex flex-wrap justify-content-center" style="gap: 4px;">
@@ -148,14 +148,14 @@
                                     </tr>
                                 @endif
 
-                                <tr @if($isCash) style="background: #f0fdfa;" @endif>
+                                <tr @class(['table-info' => $isCash])>
                                     <td class="py-1">
                                         @if($isCash)
-                                            <i class="fa fa-coins mr-1" style="color: #0d9488;"></i>
+                                            <i class="fa fa-coins me-1" style="color: #0d9488;"></i>
                                         @endif
                                         {{ $symbol }}
                                     </td>
-                                    <td class="text-right py-1">
+                                    <td class="text-end py-1">
                                         @if($portfolioData)
                                             <strong>{{ $portfolioData['target'] }}%</strong>
                                             @if($portfolioData['deviation'])
@@ -179,7 +179,7 @@
                         $totalShares = 0;
                     }
                 @endphp
-                <div class="card-footer py-2 text-center" style="background: {{ $totalShares == 100 ? '#dcfce7' : '#fee2e2' }};">
+                <div class="card-footer py-2 text-center {{ $totalShares == 100 ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-red-100 dark:bg-red-900/40' }}">
                     @if($totalShares == 100)
                         <i class="fa fa-check-circle" style="color: #16a34a;"></i>
                         <span style="color: #16a34a;">Total: {{ $totalShares }}%</span>

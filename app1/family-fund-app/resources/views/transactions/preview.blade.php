@@ -184,7 +184,7 @@
             @endif
 
             <!-- Fund Shares Source + Projected Account Value (side by side) -->
-            @php($hasFundShares = isset($api1['fundShares']) && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'claude@test.local']))
+            @php($hasFundShares = isset($api1['fundShares']) && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'admin@dev.familyfund.local', 'claude@test.local']))
             @php($hasProjectedValue = isset($api1['shares_today']))
             @if($hasFundShares || $hasProjectedValue)
             @php($fundShares = $api1['fundShares'] ?? null)

@@ -8,6 +8,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Fixtures\TestFixtures;
 use Tests\TestCase;
 
@@ -43,8 +44,8 @@ use Tests\TestCase;
  *   - test_acl_matrix_critical_routes_match_golden() runs on every test run
  *     over a curated allowlist of the highest-risk routes (~6s).
  *   - test_acl_matrix_matches_golden() is the exhaustive 151-route × 6-role
- *     sweep (~7 min); it is tagged @group nightly and excluded from the
- *     default run (see phpunit.xml / bin/test-nightly.sh).
+ *     sweep (~7 min); it carries the nightly group attribute and is excluded
+ *     from the default run (see phpunit.xml / bin/test-nightly.sh).
  * Both compare against the same golden file, so there is one source of truth.
  */
 class AclMatrixTest extends TestCase
@@ -216,9 +217,8 @@ class AclMatrixTest extends TestCase
      * the suite (~7 min), so it is excluded from the default run and exercised
      * by the nightly job instead. The fast critical-routes subset below keeps
      * everyday coverage of the highest-risk routes.
-     *
-     * @group nightly
      */
+    #[Group('nightly')]
     public function test_acl_matrix_matches_golden(): void
     {
         $actual = $this->buildMatrix(null);

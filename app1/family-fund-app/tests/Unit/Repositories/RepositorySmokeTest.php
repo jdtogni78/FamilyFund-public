@@ -3,6 +3,7 @@
 namespace Tests\Unit\Repositories;
 
 use App\Repositories\BaseRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -35,9 +36,7 @@ class RepositorySmokeTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider repositoryClasses
-     */
+    #[DataProvider('repositoryClasses')]
     public function test_repository_constructs_and_exposes_contract(string $fqcn): void
     {
         $repo = app($fqcn);

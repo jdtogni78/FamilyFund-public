@@ -20,12 +20,16 @@ use Illuminate\Support\Facades\Auth;
 // Role aliases map to canonical qa-* users seeded by QaTestUsersSeeder.
 if (app()->environment('local', 'dev', 'testing')) {
     Route::get('/dev-login/{redirect?}', function (\Illuminate\Http\Request $request, $redirect = '') {
+        // Each alias maps to an ordered list of candidate emails; the first that
+        // resolves to a real user wins. The admin is renamed to a non-PII dev
+        // address by prod_to_dev.sql, so we fall back to the pre-anonymization
+        // admin@dev.familyfund.local (still present on a fresh prod dump / test baseline).
         $aliases = [
-            'admin' => 'admin@dev.familyfund.local',
-            'system-admin' => 'admin@dev.familyfund.local',
-            'fund-admin' => 'qa-fund-admin@test.local',
-            'financial-manager' => 'qa-financial-manager@test.local',
-            'beneficiary' => 'qa-beneficiary@test.local',
+            'admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
+            'system-admin' => ['admin@dev.familyfund.local', 'admin@dev.familyfund.local'],
+            'fund-admin' => ['qa-fund-admin@test.local'],
+            'financial-manager' => ['qa-financial-manager@test.local'],
+            'beneficiary' => ['qa-beneficiary@test.local'],
         ];
         // An explicit ?as= wins over the ?account_id= / ?user_id= helpers, so the
         // RedirectStrayImpersonation middleware can forward a stray ?as= even onto
@@ -42,9 +46,10 @@ if (app()->environment('local', 'dev', 'testing')) {
                 abort_unless($account->user, 404, "dev-login: account {$account->id} has no user");
                 $user = $account->user;
             } else {
-                $email = $aliases[$as] ?? $as;
-                $user = \App\Models\User::where('email', $email)->first();
-                abort_unless($user, 404, "dev-login: no user with email '{$email}'");
+                // Aliases map to an ordered candidate list (#79); first match wins.
+                $candidates = $aliases[$as] ?? [$as];
+                $user = \App\Models\User::whereIn('email', $candidates)->first();
+                abort_unless($user, 404, "dev-login: no user for '{$as}' (tried: " . implode(', ', $candidates) . ')');
             }
         } elseif ($request->filled('account_id')) {
             $account = \App\Models\AccountExt::with('user')->find($request->integer('account_id'));
@@ -55,6 +60,7 @@ if (app()->environment('local', 'dev', 'testing')) {
             $user = \App\Models\User::find($request->integer('user_id'));
             abort_unless($user, 404, "dev-login: no user with id '{$request->query('user_id')}'");
         } else {
+            // No ?as= / account_id / user_id → documented default dev user.
             $user = \App\Models\User::where('email', 'claude@test.local')->first();
             abort_unless($user, 404, "dev-login: no user with email 'claude@test.local'");
         }

@@ -1,0 +1,25 @@
+# pre-commit-framework config (https://pre-commit.com) — the standard,
+# version-pinned secret-scanning install path for this repo. It runs the
+# OFFICIAL gitleaks hook on staged changes so an .env, DB dump, key, or PII
+# can't be committed by accident.
+#
+# Install once per clone:
+#     pip install pre-commit   # or: brew install pre-commit
+#     pre-commit install       # wires .git/hooks/pre-commit
+# Run on demand against everything already tracked:
+#     pre-commit run --all-files
+#
+# This is an ALTERNATIVE to the zero-dependency bin/install-git-hooks.sh
+# (which points core.hooksPath -> .githooks and needs no Python). Use ONE of
+# the two — both scan with the SAME root .gitleaks.toml (gitleaks auto-discovers
+# it), so the allowlists stay in one place. CI's "Secret Scan" job
+# (.github/workflows/security-scan.yml) is the hard gate regardless.
+#
+# Bump the rev with:  pre-commit autoupdate
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        # Hook entry is `gitleaks git --pre-commit --redact --staged --verbose`;
+        # gitleaks auto-loads the repo-root .gitleaks.toml for allowlists.

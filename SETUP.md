@@ -123,16 +123,37 @@ cd FamilyFund
 
 ### Install the git secret-scanning hooks (do this once per clone)
 
+Pick **one** of these two install paths — both run **gitleaks** against the same
+repo-root `.gitleaks.toml`, so an `.env`, dump, key, or PII can't be committed by
+accident (the leak that started all of this). CI's "Secret Scan" job
+(`.github/workflows/security-scan.yml`) is the hard gate regardless.
+
+**Option A — pre-commit framework (recommended; version-pinned, standard):**
+
+```bash
+pip install pre-commit   # or: brew install pre-commit
+pre-commit install       # wires .git/hooks/pre-commit -> the official gitleaks hook
+pre-commit run --all-files   # optional: scan everything already tracked
+```
+
+The pinned config lives in [`.pre-commit-config.yaml`](.pre-commit-config.yaml)
+(official `gitleaks` hook, fixed `rev`). The framework auto-installs the gitleaks
+binary; bump the pin with `pre-commit autoupdate`.
+
+**Option B — zero-dependency repo hooks (no Python needed):**
+
 ```bash
 bin/install-git-hooks.sh   # points core.hooksPath -> .githooks
 ```
 
 This wires `pre-commit` (scans staged changes) and `pre-push` (scans outgoing
-commits) through **gitleaks** so an `.env`, dump, or key can't be committed by
-accident — the leak that started all of this. The hooks use a local `gitleaks`
-binary if present (`brew install gitleaks`), otherwise fall back to Docker; if
-neither is available they warn and pass (CI's "Secret Scan" job is the hard
-gate). One-off bypass: `SKIP_GITLEAKS=1 git commit …` / `… git push …`.
+commits) through gitleaks. The hooks use a local `gitleaks` binary if present
+(`brew install gitleaks`), otherwise fall back to Docker; if neither is available
+they warn and pass. One-off bypass: `SKIP_GITLEAKS=1 git commit …` / `… git push …`.
+
+> Use **one** path, not both — `pre-commit install` and `core.hooksPath` both
+> claim the `pre-commit` hook, and running both would scan twice. Option B also
+> adds a `pre-push` history scan that Option A does not.
 
 ## 2. Decrypt the env secrets (SOPS + age — recommended)
 

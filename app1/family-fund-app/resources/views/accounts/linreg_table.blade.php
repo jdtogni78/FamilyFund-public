@@ -3,18 +3,18 @@
         <thead>
             <tr>
                 <th>Year</th>
-                <th class="text-right">Conservative</th>
-                <th class="text-right">Predicted</th>
-                <th class="text-right">Aggressive</th>
+                <th class="text-end">Conservative</th>
+                <th class="text-end">Predicted</th>
+                <th class="text-end">Aggressive</th>
             </tr>
         </thead>
         <tbody>
         @foreach($api['linear_regression']['predictions'] as $year => $value)
             <tr>
                 <td>{{ substr($year, 0, 4) }}</td>
-                <td class="text-right">${{ number_format($value * 0.8, 0) }}</td>
-                <td class="text-right"><strong>${{ number_format($value, 0) }}</strong></td>
-                <td class="text-right">${{ number_format($value * 1.2, 0) }}</td>
+                <td class="text-end">${{ number_format($value * 0.8, 0) }}</td>
+                <td class="text-end"><strong>${{ number_format($value, 0) }}</strong></td>
+                <td class="text-end">${{ number_format($value * 1.2, 0) }}</td>
             </tr>
         @endforeach
         </tbody>

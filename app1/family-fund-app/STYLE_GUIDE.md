@@ -14,6 +14,7 @@
 - [x] Index page headers (26 pages) - standardized layout with icons, badges, buttons
 - [x] Form fields (30 fields.blade.php files) - standardized two-column layout with icons, helper text
 - [x] Trade Portfolios detail views (#26) - dark-mode + BS5 migration (see note below)
+- [x] Accounts detail views (#27) - dark-mode + BS5 migration (see note below)
 
 **Form Fields Standardized (30 forms):**
 All create/edit forms now follow consistent pattern:
@@ -71,9 +72,33 @@ Standardized the live detail/show views to the dark-mode + Bootstrap 5 conventio
 
 > Reminder: BS dark mode here is driven by Tailwind's `.dark` class on `<html>` (not `data-bs-theme`). Prefer Tailwind `dark:` utilities or the contextual table classes (`.table-info` etc., which `public/css/navigation.css` dark-adapts) over inline hex backgrounds, which can't respond to dark mode.
 
+**Accounts detail views (#27, done):**
+Standardized the live account detail view (`accounts/show_ext.blade.php`) and its
+partials to the dark-mode + Bootstrap 5 conventions:
+- All section headers (Goals, Charts, Forecast, Shares, Performance, Transaction
+  History, Scheduled, Matching, Disbursement) use `card-header card-header-dark`
+  instead of inline `style="background:#134e4a"`. navigation.css's `.card-header`
+  `!important` light-teal gradient was silently overriding that inline hex, which
+  left the white `btn-outline-light` collapse buttons nearly invisible in light
+  mode — `card-header-dark` restores the intended solid teal in both modes.
+- Collapse toggles migrated from the dead BS4 `data-toggle` to BS5
+  `data-bs-toggle` (the BS4 attribute did nothing under Bootstrap 5, so the
+  section chevrons were inert).
+- Inline light hex panels/dividers converted to exact Tailwind equivalents that
+  dark-adapt: `#f0fdfa`→`bg-teal-50`, `#99f6e4`→`border-teal-200 dark:border-slate-600`,
+  `#e2e8f0`→`border-slate-200 dark:border-slate-600` (with `border-e`/`border-t`).
+- BS4 leftovers migrated to BS5: `text-right`→`text-end`, `mr-*`→`me-*`, and the
+  dead BS3 `pull-right` removed. The Expired matching-rule badge got an explicit
+  `text-white` (its siblings all set a text color; bare `bg-secondary` risked low
+  contrast).
+- Deleted the unreferenced `show_fields_ext.blade.php` (a superseded early
+  iteration of the market-value card).
+- `*_pdf.blade.php` views intentionally left light (wkhtmltopdf has no dark mode).
+- Covered by `tests/Browser/AccountDetailUITest.php` (light + dark, incl. the
+  collapse-toggle fix and the `card-header-dark` assertion).
+
 **Pending:**
-- [ ] Review accounts detail views (23 files)
-- [ ] Review other detail/show pages
+- [ ] Review other detail/show pages (#28)
 
 ---
 

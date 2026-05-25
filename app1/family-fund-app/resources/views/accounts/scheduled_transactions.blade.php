@@ -3,9 +3,9 @@
 <div class="row mb-4" id="section-scheduled">
     <div class="col">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center" style="background: #134e4a; color: #ffffff;">
-                <strong><i class="fa fa-calendar-alt" style="margin-right: 8px;"></i>Scheduled Transactions</strong>
-                <a class="btn btn-sm btn-outline-light" data-toggle="collapse" href="#collapseScheduled"
+            <div class="card-header card-header-dark d-flex justify-content-between align-items-center">
+                <strong><i class="fa fa-calendar-alt me-2"></i>Scheduled Transactions</strong>
+                <a class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" href="#collapseScheduled"
                    role="button" aria-expanded="true" aria-controls="collapseScheduled">
                     <i class="fa fa-chevron-down"></i>
                 </a>

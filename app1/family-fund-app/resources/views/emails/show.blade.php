@@ -72,7 +72,7 @@
                                                     ({{ number_format($attachment['size'] / 1024, 1) }} KB)
                                                 </a>
                                             @else
-                                                <span class="badge bg-secondary me-1" title="Attachment not stored">
+                                                <span class="badge bg-warning text-dark me-1" title="Attachment not stored">
                                                     <i class="fa fa-paperclip me-1"></i>
                                                     {{ $attachment['filename'] }}
                                                     <small>({{ number_format($attachment['size'] / 1024, 1) }} KB)</small>
@@ -88,7 +88,7 @@
                             <hr>
                             <div class="mt-3">
                                 @if(!empty($email['html_body']))
-                                    <div class="email-preview" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0;">
+                                    <div class="email-preview border border-slate-200 dark:border-slate-600" style="background: #fff; border-radius: 4px; padding: 0;">
                                         <iframe id="email-frame" srcdoc="{{ $email['html_body'] }}"
                                                 style="width: 100%; min-height: 500px; border: none;"
                                                 sandbox="allow-same-origin"

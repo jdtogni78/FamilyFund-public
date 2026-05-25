@@ -240,6 +240,22 @@ a:focus-visible {
     color: #ffffff !important;
 }
 
+/* Amber/admin card headers - admin-only sections (overrides the base teal !important) */
+.card-header-admin {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+    border-bottom: 3px solid #b45309 !important;
+}
+
+.card-header-admin h4,
+.card-header-admin h5,
+.card-header-admin strong {
+    color: #ffffff !important;
+}
+
+.card-header-admin i {
+    color: #ffffff !important;
+}
+
 /* Cards */
 .card {
     border: none !important;
@@ -508,6 +524,16 @@ html.dark .card-header {
 
 html.dark .card-header strong {
     color: #5eead4 !important;
+}
+
+/* Keep admin headers amber in dark mode (placed after .card-header to win on source order) */
+html.dark .card-header-admin {
+    background: linear-gradient(135deg, #b45309 0%, #92400e 100%) !important;
+    border-bottom-color: #78350f !important;
+}
+
+html.dark .card-header-admin strong {
+    color: #fde68a !important;
 }
 
 html.dark .card-body {

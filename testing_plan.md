@@ -90,7 +90,8 @@ docker exec familyfund php artisan test --testsuite=Unit
 # Just the new subsystems
 docker exec familyfund php artisan test tests/Unit/CreditLines tests/Feature/CreditLines
 
-# Excluding the existing-suite known-incomplete groups (mirrors CLAUDE.md)
+# NOTE: incomplete/needs-data-refactor now have no members, so this is a no-op;
+# the default run already excludes the slow @group nightly tests via phpunit.xml.
 docker exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor
 
 # Browser (nightly CI; on-demand local with --group=browser)
@@ -126,7 +127,7 @@ The repo already has **164 test files across 5 suites**. The new work must exten
 | `Models` | 1 | (small) |
 | **Total active** | **164** | |
 
-Default exclusions (already in `phpunit.xml`): `@group incomplete`, plus the convention from `CLAUDE.md` of `--exclude-group=incomplete,needs-data-refactor` in development.
+Default exclusions (in `phpunit.xml`): the slow `@group nightly` tests. The `incomplete`/`needs-data-refactor` groups referenced in older runbooks now have no members, so `--exclude-group=incomplete,needs-data-refactor` is a no-op.
 
 The CLAUDE.md Testing section tracks the broader-codebase test status (1791 passing as of 2026-05-14). This document does not duplicate or replace it — **the CLAUDE.md Testing section is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
 

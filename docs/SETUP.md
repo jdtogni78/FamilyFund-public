@@ -117,7 +117,6 @@ open http://localhost:3000
 
 ```bash
 docker compose exec familyfund php artisan test
-docker compose exec familyfund php artisan test --exclude-group=incomplete,needs-data-refactor
 docker compose exec familyfund php artisan test --filter=TransactionTest
 ```
 

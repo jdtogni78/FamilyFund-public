@@ -275,8 +275,10 @@ echo \$u->id.' '.\$u->getRoleNames()->implode(',');
 ## 9. Verify
 
 ```bash
-# Run the test suite (should be 1791 passing):
-docker exec <familyfund-container> php artisan test --exclude-group=incomplete,needs-data-refactor
+# Run the test suite (should be 1791 passing). The default run already excludes
+# the slow @group nightly tests via phpunit.xml (ED-0006); the incomplete/
+# needs-data-refactor groups have no members, so don't bother excluding them.
+docker exec <familyfund-container> php artisan test
 
 # Or use the wrapper that handles vite-rebuild + container autodetect:
 ./family-fund-app/bin/test.sh

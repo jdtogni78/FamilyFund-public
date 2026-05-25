@@ -30,7 +30,7 @@ use Tests\TestCase;
  *    scheduled_jobs.
  *  - Shared/reference (non-tenant, no IDOR dimension): assets, asset_prices,
  *    matching_rules, schedules, change_logs, asset_change_logs — auth-locked
- *    only; write-authz hardening tracked in #50 / #51.
+ *    only; write-authz hardening tracked in #82.
  *
  * This suite asserts both the auth boundary (unauthenticated → 401) and the
  * per-role / cross-tenant object-level boundaries for the scoped resources.

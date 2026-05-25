@@ -36,7 +36,14 @@
 
 1. Add policy checks and scoped queries to the remaining generated API controllers, starting with funds, users, people, reports, and transactions.
 2. DONE (#50): side-effect `GET` routes (resend/send-all/announce) replaced with POST + CSRF routes.
-3. Decide which exchange holiday and market-data endpoints, if any, are intentionally public.
+3. DONE (#51, item C — see ED-0012): classified every `api/`-prefixed endpoint.
+   **No API endpoint is intentionally public.** The audited candidates —
+   `api/funds/{id}/overview-data` (web `auth` + `authorize('view', $fund)`) and
+   the `api/exchange_holidays/*` routes (`auth:sanctum`) — are auth-locked; there
+   is no public market-data endpoint; only `api/clear` is unauthenticated and it
+   is env-gated to local/dev. The route guardrail allowlists stay empty
+   (deny-by-default) and the audited routes are pinned authenticated by name in
+   `SecurityRouteAutomationTest::test_audited_api_endpoints_are_authenticated_not_public`.
 4. Expand API ACL matrix coverage to response-body checks for cross-tenant identifiers.
 
 ## Validation Commands

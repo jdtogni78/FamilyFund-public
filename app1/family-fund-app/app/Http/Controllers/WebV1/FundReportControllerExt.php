@@ -33,8 +33,10 @@ class FundReportControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $fundReports = FundReportExt::with('fund')
-            ->orderBy('as_of', 'desc')
+        // Defense-in-depth: scope to funds the user can access (fund_id column)
+        // in addition to the fund.full route middleware. (#85)
+        $fundReports = $this->authz()
+            ->scopeByFundColumn(FundReportExt::with('fund')->orderBy('as_of', 'desc'))
             ->get();
 
         return view('fund_reports.index')

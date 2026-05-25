@@ -58,7 +58,11 @@ class AccountGoalControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
-        $accountGoals = $this->accountGoalRepository->all();
+        // Defense-in-depth: scope to accounts in funds the user can access
+        // (or own), in addition to the fund.full route middleware. (#85)
+        $accountGoals = $this->authz()
+            ->scopeByAccountRelation(AccountGoal::query())
+            ->get();
 
         return view('account_goals.index')
             ->with('accountGoals', $accountGoals);

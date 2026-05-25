@@ -241,6 +241,165 @@ class AuthorizationService
     }
 
     /**
+     * Scope a portfolios query to those in funds the user can access (full or
+     * readonly), considering BOTH the legacy `fund_id` column AND the
+     * `fund_portfolio` pivot. Denies by default.
+     *
+     * Mirrors AuthorizesApiAccess::scopePortfolioQuery so the web management
+     * index pages and the API agree on what a portfolio "belongs to". (#85)
+     */
+    public function scopePortfoliosQuery(Builder $query): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $allAccessibleFundIds = $this->allAccessibleFundIds();
+        if (empty($allAccessibleFundIds)) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        return $this->applyPortfolioFundConstraint($query, $allAccessibleFundIds);
+    }
+
+    /**
+     * Scope a query whose model reaches a portfolio via $relation, returning
+     * only rows whose portfolio is in a fund the user can access. Handles the
+     * portfolio subtree (portfolio_assets, trade_portfolios, ...) including the
+     * `fund_portfolio` pivot. Denies by default.
+     *
+     * $relation may be dotted for multi-hop children, e.g.
+     * trade_portfolio_items -> 'tradePortfolio.portfolio'. (#85)
+     *
+     * @param string $relation belongsTo-portfolio relation path on the model
+     */
+    public function scopeByPortfolioRelation(Builder $query, string $relation): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $allAccessibleFundIds = $this->allAccessibleFundIds();
+        if (empty($allAccessibleFundIds)) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        return $query->whereHas($relation, function ($portfolioQuery) use ($allAccessibleFundIds) {
+            $this->applyPortfolioFundConstraint($portfolioQuery, $allAccessibleFundIds);
+        });
+    }
+
+    /**
+     * Scope a query that has a direct portfolio foreign-key column
+     * (portfolio_assets, trade_portfolios) to portfolios in funds the user can
+     * access. Unlike scopeByPortfolioRelation this does NOT traverse the model's
+     * `portfolio` relation accessor — TradePortfolioExt::portfolio() is an
+     * overridden, validating accessor that throws inside whereHas — so it
+     * pre-resolves the accessible portfolio ids and filters by the FK. Denies
+     * by default. (#85)
+     *
+     * @param string $portfolioFk foreign-key column on the model (e.g. portfolio_id)
+     */
+    public function scopeByPortfolioColumn(Builder $query, string $portfolioFk = 'portfolio_id'): Builder
+    {
+        if (!$this->user) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        if ($this->user->isSystemAdmin()) {
+            return $query; // Full access
+        }
+
+        $portfolioIds = $this->accessiblePortfolioIds();
+        if (empty($portfolioIds)) {
+            return $query->whereRaw('1 = 0'); // No access
+        }
+
+        return $query->whereIn($portfolioFk, $portfolioIds);
+    }
+
+    /**
+     * Constrain a portfolios builder to the given fund ids, matching either the
+     * legacy `fund_id` column or the `fund_portfolio` pivot. Shared by
+     * scopePortfoliosQuery (direct) and scopeByPortfolioRelation (via whereHas).
+     *
+     * @param array<int> $fundIds
+     */
+    private function applyPortfolioFundConstraint(Builder $query, array $fundIds): Builder
+    {
+        return $query->where(function ($q) use ($fundIds) {
+            $q->whereIn('fund_id', $fundIds)
+                ->orWhereHas('funds', function ($fundQuery) use ($fundIds) {
+                    $fundQuery->whereIn('funds.id', $fundIds);
+                });
+        });
+    }
+
+    /**
+     * Full + readonly fund ids the user can access, flattened. Empty array
+     * means no fund access at all.
+     *
+     * @return array<int>
+     */
+    private function allAccessibleFundIds(): array
+    {
+        if (!$this->user) {
+            return [];
+        }
+
+        $accessibleFunds = $this->user->getAccessibleFundIds();
+
+        return array_merge($accessibleFunds['full'], $accessibleFunds['readonly']);
+    }
+
+    /**
+     * Portfolio ids in funds the user can access (full + readonly; matching the
+     * legacy fund_id column OR the fund_portfolio pivot). Used to scope
+     * portfolio-child resources by their portfolio FK without traversing a
+     * possibly-overridden `portfolio` relation accessor. Callers short-circuit
+     * system admins before calling this.
+     *
+     * @return array<int>
+     */
+    private function accessiblePortfolioIds(): array
+    {
+        $allAccessibleFundIds = $this->allAccessibleFundIds();
+        if (empty($allAccessibleFundIds)) {
+            return [];
+        }
+
+        return $this->applyPortfolioFundConstraint(\App\Models\Portfolio::query(), $allAccessibleFundIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Whether the user may reach the fund.full-gated management surface at all:
+     * a system admin, or holds a full-access role in at least one fund. Mirrors
+     * the RequireFullFundAccess middleware so controllers can re-assert it as
+     * defense-in-depth for management pages whose model has no fund/account
+     * column to scope on (goals, matching rules, assets, scheduled jobs). (#85)
+     */
+    public function canAccessManagementSurface(): bool
+    {
+        if (!$this->user) {
+            return false;
+        }
+
+        return $this->user->isSystemAdmin()
+            || !empty($this->user->getAccessibleFundIds()['full']);
+    }
+
+    /**
      * Get all fund IDs the user has access to.
      *
      * @return array{full: array<int>, readonly: array<int>}

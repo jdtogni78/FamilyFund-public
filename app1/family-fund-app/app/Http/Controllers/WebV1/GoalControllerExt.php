@@ -39,6 +39,10 @@ class GoalControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
+        // Goals are shared templates (no fund/account column to scope on);
+        // re-assert the fund.full management capability as defense-in-depth. (#85)
+        $this->requireFullFundAccessSurface();
+
         $api = $this->getApi();
         $goals = $this->goalRepository->all();
 

@@ -6,6 +6,10 @@ use App\Models\Account;
 use App\Models\AccountExt;
 use App\Models\Fund;
 use App\Models\FundExt;
+use App\Models\PortfolioAsset;
+use App\Models\PortfolioExt;
+use App\Models\TradePortfolioExt;
+use App\Models\TradePortfolioItemExt;
 use App\Models\TransactionExt;
 use App\Models\User;
 use App\Policies\AccountPolicy;
@@ -650,6 +654,98 @@ class AuthorizationTest extends TestCase
         return \Database\Factories\AccountCreditLineFactory::new()->create([
             'account_id' => $this->account->id,
         ]);
+    }
+
+    // ============ #85: portfolio subtree + management-surface scoping ============
+
+    public function test_scope_portfolios_query_includes_pivot_and_excludes_other_fund(): void
+    {
+        $otherFund = Fund::factory()->create();
+
+        $mine  = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => $this->fund->id]);
+        $other = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => $otherFund->id]);
+
+        // A portfolio linked to my fund ONLY through the fund_portfolio pivot
+        // (legacy fund_id null) must still be visible — this is why plain
+        // scopeByFundColumn is insufficient for portfolios.
+        $pivot = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => null]);
+        $pivot->funds()->attach($this->fund->id);
+
+        $ids = (new AuthorizationService($this->fundAdmin))
+            ->scopePortfoliosQuery(PortfolioExt::query())->pluck('id');
+
+        $this->assertTrue($ids->contains($mine->id), 'own-fund portfolio visible');
+        $this->assertTrue($ids->contains($pivot->id), 'pivot-linked portfolio visible');
+        $this->assertFalse($ids->contains($other->id), 'other-fund portfolio hidden');
+
+        // System admin sees every portfolio.
+        $adminIds = (new AuthorizationService($this->systemAdmin))
+            ->scopePortfoliosQuery(PortfolioExt::query())->pluck('id');
+        $this->assertTrue($adminIds->contains($other->id), 'system admin sees all funds');
+    }
+
+    public function test_scope_by_portfolio_relation_scopes_children(): void
+    {
+        $otherFund = Fund::factory()->create();
+        $myPortfolio    = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => $this->fund->id]);
+        $otherPortfolio = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => $otherFund->id]);
+
+        $myPA    = \Database\Factories\PortfolioAssetFactory::new()->create(['portfolio_id' => $myPortfolio->id]);
+        $otherPA = \Database\Factories\PortfolioAssetFactory::new()->create(['portfolio_id' => $otherPortfolio->id]);
+
+        $myTP    = \Database\Factories\TradePortfolioFactory::new()->create(['portfolio_id' => $myPortfolio->id]);
+        $otherTP = \Database\Factories\TradePortfolioFactory::new()->create(['portfolio_id' => $otherPortfolio->id]);
+
+        $myItem    = \Database\Factories\TradePortfolioItemFactory::new()->create(['trade_portfolio_id' => $myTP->id]);
+        $otherItem = \Database\Factories\TradePortfolioItemFactory::new()->create(['trade_portfolio_id' => $otherTP->id]);
+
+        $service = new AuthorizationService($this->fundAdmin);
+
+        // Direct portfolio_id children use the column-based scope (avoids the
+        // overridden TradePortfolioExt::portfolio() accessor).
+        $paIds = $service->scopeByPortfolioColumn(PortfolioAsset::query())->pluck('id');
+        $this->assertTrue($paIds->contains($myPA->id), 'own portfolio asset visible');
+        $this->assertFalse($paIds->contains($otherPA->id), 'other-fund portfolio asset hidden');
+
+        $tpIds = $service->scopeByPortfolioColumn(TradePortfolioExt::query())->pluck('id');
+        $this->assertTrue($tpIds->contains($myTP->id), 'own trade portfolio visible');
+        $this->assertFalse($tpIds->contains($otherTP->id), 'other-fund trade portfolio hidden');
+
+        // Two-hop child: trade_portfolio_items -> tradePortfolio -> portfolio -> fund
+        // (clean relations, so the relation-based scope is safe here).
+        $itemIds = $service->scopeByPortfolioRelation(TradePortfolioItemExt::query(), 'tradePortfolio.portfolio')->pluck('id');
+        $this->assertTrue($itemIds->contains($myItem->id), 'own trade portfolio item visible');
+        $this->assertFalse($itemIds->contains($otherItem->id), 'other-fund trade portfolio item hidden');
+    }
+
+    public function test_portfolio_scopes_deny_user_without_fund_access(): void
+    {
+        $fund = Fund::factory()->create();
+        $portfolio = \Database\Factories\PortfolioFactory::new()->create(['fund_id' => $fund->id]);
+        \Database\Factories\PortfolioAssetFactory::new()->create(['portfolio_id' => $portfolio->id]);
+
+        $unassigned = new AuthorizationService($this->unassignedUser);
+
+        $this->assertSame(0, $unassigned->scopePortfoliosQuery(PortfolioExt::query())->count(),
+            'unassigned user must see no portfolios');
+        $this->assertSame(0, $unassigned->scopeByPortfolioColumn(PortfolioAsset::query())->count(),
+            'unassigned user must see no portfolio assets');
+    }
+
+    public function test_can_access_management_surface(): void
+    {
+        $this->assertTrue((new AuthorizationService($this->systemAdmin))->canAccessManagementSurface(),
+            'system admin can reach management surface');
+        $this->assertTrue((new AuthorizationService($this->fundAdmin))->canAccessManagementSurface(),
+            'fund-admin (full access) can reach management surface');
+        $this->assertTrue((new AuthorizationService($this->financialManager))->canAccessManagementSurface(),
+            'financial-manager (full access) can reach management surface');
+        $this->assertFalse((new AuthorizationService($this->beneficiary))->canAccessManagementSurface(),
+            'beneficiary (readonly only) cannot reach management surface');
+        $this->assertFalse((new AuthorizationService($this->unassignedUser))->canAccessManagementSurface(),
+            'unassigned user cannot reach management surface');
+        $this->assertFalse((new AuthorizationService(null))->canAccessManagementSurface(),
+            'guest cannot reach management surface');
     }
 
     private function createTestTransaction(): TransactionExt

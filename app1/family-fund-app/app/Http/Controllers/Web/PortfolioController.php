@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Flash;
 use Response;
 use App\Models\FundExt;
+use App\Models\PortfolioExt;
 class PortfolioController extends AppBaseController
 {
     /** @var PortfolioRepository $portfolioRepository*/
@@ -29,7 +30,12 @@ class PortfolioController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $portfolios = $this->portfolioRepository->all();
+        // Defense-in-depth: scope to portfolios in funds the user can access,
+        // matching both the legacy fund_id column and the fund_portfolio pivot,
+        // in addition to the fund.full route middleware. (#85)
+        $portfolios = $this->authz()
+            ->scopePortfoliosQuery(PortfolioExt::query())
+            ->get();
 
         return view('portfolios.index')
             ->with('portfolios', $portfolios);

@@ -33,6 +33,10 @@ class PortfolioAssetControllerExt extends AppBaseController
     {
         $query = PortfolioAsset::with(['asset', 'portfolio.fund']);
 
+        // Defense-in-depth: scope to portfolio assets whose portfolio is in a
+        // fund the user can access, in addition to the fund.full middleware. (#85)
+        $query = $this->authz()->scopeByPortfolioColumn($query);
+
         $fundId = $request->input('fund_id');
         $assetIds = $request->input('asset_id', []);
 

@@ -35,6 +35,11 @@ class ScheduledJobControllerExt extends AppBaseController
 
     public function index(Request $request)
     {
+        // Scheduled jobs are system-level automation spanning funds (no single
+        // fund/account column to scope on); re-assert the fund.full capability
+        // as defense-in-depth. (#85)
+        $this->requireFullFundAccessSurface();
+
         $scheduledJobs = ScheduledJobExt::with(['schedule', 'fundReportTemplate.fund', 'tradeBandReportTemplate.fund', 'transactionTemplate.account'])
             ->orderBy('start_dt', 'desc')
             ->get();

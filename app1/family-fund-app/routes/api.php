@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
      |    authenticated caller: assets, asset_prices, matching_rules, schedules,
      |    change_logs, asset_change_logs, exchange_holidays. Write-authz hardening
      |    for these (admin-only create/update/delete of global reference data) is
-     |    tracked in #50 / #51 — their generated CRUD tests use WithoutMiddleware
+     |    tracked in #82 — their generated CRUD tests use WithoutMiddleware
      |    without auth and must be updated alongside.
      */
     Route::post('funds/setup', 'App\Http\Controllers\APIv1\FundAPIControllerExt@storeWithSetup')->name('api.funds.setup');

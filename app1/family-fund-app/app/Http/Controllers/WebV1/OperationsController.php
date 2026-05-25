@@ -27,7 +27,7 @@ class OperationsController extends AppBaseController
     }
 
     /**
-     * Check if current user is admin (user ID 1 or in ADMIN_EMAILS env)
+     * Check if current user is admin (System Admin role or in ADMIN_EMAILS)
      */
     public static function isAdmin(): bool
     {
@@ -36,10 +36,8 @@ class OperationsController extends AppBaseController
 
         if ($user->isSystemAdmin()) return true;
 
-        // Check env for additional admin emails (default includes app owner)
-        $defaultAdmins = 'admin@dev.familyfund.local';
-        $adminEmails = explode(',', env('ADMIN_EMAILS', $defaultAdmins));
-        return in_array($user->email, array_map('trim', $adminEmails));
+        // Additional admin emails configured via ADMIN_EMAILS (config/familyfund.php).
+        return in_array($user->email, config('familyfund.admin_emails'));
     }
 
     /**

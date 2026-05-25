@@ -17,14 +17,19 @@ class InitialRolesAssignmentSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Make admin@dev.familyfund.local a System Admin
-        $adminEmail = 'admin@dev.familyfund.local';
-        $adminUser = User::where('email', $adminEmail)->first();
+        // 1. Make the configured admin(s) System Admins (ADMIN_EMAILS, config/familyfund.php)
+        $adminEmails = config('familyfund.admin_emails');
+        $systemAdminRole = Role::where('name', 'system-admin')
+            ->whereNull('fund_id')
+            ->first();
 
-        if ($adminUser) {
-            $systemAdminRole = Role::where('name', 'system-admin')
-                ->whereNull('fund_id')
-                ->first();
+        foreach ($adminEmails as $adminEmail) {
+            $adminUser = User::where('email', $adminEmail)->first();
+
+            if (!$adminUser) {
+                $this->command->warn("User {$adminEmail} not found - skipping system admin assignment");
+                continue;
+            }
 
             if ($systemAdminRole) {
                 // For system-admin (global role), we need to directly insert with fund_id=0
@@ -39,16 +44,14 @@ class InitialRolesAssignmentSeeder extends Seeder
 
                 $this->command->info("Assigned system-admin role to {$adminEmail}");
             }
-        } else {
-            $this->command->warn("User {$adminEmail} not found - skipping system admin assignment");
         }
 
         // 2. For all users with accounts: assign beneficiary role for their fund(s)
         $usersWithAccounts = User::whereHas('accounts')->get();
 
         foreach ($usersWithAccounts as $user) {
-            // Skip the admin user, they already have full access
-            if ($user->email === $adminEmail) {
+            // Skip admin users, they already have full access
+            if (in_array($user->email, $adminEmails)) {
                 continue;
             }
 

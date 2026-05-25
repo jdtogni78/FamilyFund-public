@@ -139,7 +139,7 @@
                                         <i class="fa fa-user"></i>
                                     </a>
                                 @else
-                                    @if(in_array(Auth::user()->email ?? '', ['admin@dev.familyfund.local', 'claude@test.local']))
+                                    @if(in_array(Auth::user()->email ?? '', array_merge(config('familyfund.admin_emails'), ['claude@test.local'])))
                                         <a href="/funds/{{ $api['id'] }}/as_of/{{ $asOf }}" class="btn btn-sm btn-warning" title="Switch to Admin View">
                                             <i class="fa fa-user-shield"></i>
                                         </a>

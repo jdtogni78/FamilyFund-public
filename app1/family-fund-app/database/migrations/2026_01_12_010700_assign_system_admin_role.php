@@ -26,13 +26,12 @@ return new class extends Migration
             ]);
         }
 
-        // Get user id for admin@dev.familyfund.local
-        $userId = DB::table('users')
-            ->where('email', 'admin@dev.familyfund.local')
-            ->value('id');
+        // Assign system-admin (fund_id=0, global access) to the configured admin(s).
+        $userIds = DB::table('users')
+            ->whereIn('email', config('familyfund.admin_emails'))
+            ->pluck('id');
 
-        if ($userId) {
-            // Assign system-admin role with fund_id=0 (global access)
+        foreach ($userIds as $userId) {
             DB::table('model_has_roles')->insertOrIgnore([
                 'role_id' => $roleId,
                 'model_type' => 'App\\Models\\User',
@@ -47,11 +46,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $userId = DB::table('users')
-            ->where('email', 'admin@dev.familyfund.local')
-            ->value('id');
+        $userIds = DB::table('users')
+            ->whereIn('email', config('familyfund.admin_emails'))
+            ->pluck('id');
 
-        if ($userId) {
+        foreach ($userIds as $userId) {
             DB::table('model_has_roles')
                 ->where('model_id', $userId)
                 ->where('model_type', 'App\\Models\\User')

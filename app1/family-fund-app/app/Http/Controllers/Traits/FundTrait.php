@@ -137,10 +137,11 @@ Trait FundTrait
         /** @var User $user */
         $user = Auth::user();
         if ($user != null) {
-            return in_array($user->email, [
-                "admin@dev.familyfund.local",
-                "claude@test.local",
-            ]);
+            // Configured admins (ADMIN_EMAILS) plus the dev/CLI test account.
+            return in_array($user->email, array_merge(
+                config('familyfund.admin_emails'),
+                ['claude@test.local']
+            ));
         }
         return false;
     }

@@ -68,7 +68,7 @@
         </div>
 
         <!-- Fund Shares Source (Admin Only) -->
-        @if(isset($fundSharesData) && count($fundSharesData) > 0 && in_array(Auth::user()?->email, ['admin@dev.familyfund.local', 'claude@test.local']))
+        @if(isset($fundSharesData) && count($fundSharesData) > 0 && in_array(Auth::user()?->email, array_merge(config('familyfund.admin_emails'), ['claude@test.local'])))
         <div class="row mb-4">
             @foreach($fundSharesData as $fundId => $fundShares)
             @php

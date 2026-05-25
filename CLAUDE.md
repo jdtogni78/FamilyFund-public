@@ -251,7 +251,7 @@ Examples:
 ```
 curl -L "http://localhost:3000/dev-login/accounts/8"                       # claude@test.local
 curl -L "http://localhost:3000/dev-login/dashboard?as=fund-admin"          # qa-fund-admin@test.local
-curl -L "http://localhost:3000/dev-login/funds/2/overview?as=admin"        # admin@dev.familyfund.local
+curl -L "http://localhost:3000/dev-login/funds/2/overview?as=admin"        # resolves to ADMIN_EMAILS[0]
 ```
 
 `fund-admin`/`financial-manager`/`beneficiary` aliases resolve to `qa-*@test.local`

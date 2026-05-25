@@ -16,10 +16,10 @@ return new class extends Migration
             $table->boolean('is_admin')->default(false)->after('email');
         });
 
-        // Set existing admins (user ID 1 and admin@dev.familyfund.local)
+        // Set existing admins (user ID 1 and the configured ADMIN_EMAILS).
         DB::table('users')
             ->where('id', 1)
-            ->orWhere('email', 'admin@dev.familyfund.local')
+            ->orWhereIn('email', config('familyfund.admin_emails'))
             ->update(['is_admin' => true]);
     }
 

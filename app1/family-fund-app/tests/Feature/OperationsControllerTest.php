@@ -36,9 +36,9 @@ class OperationsControllerTest extends TestCase
         $this->df->createFund();
         $this->df->createUser();
 
-        // Create user with email from ADMIN_EMAILS env (default: admin@dev.familyfund.local)
+        // Create user with the configured admin email (ADMIN_EMAILS).
         $this->adminUser = User::firstOrCreate(
-            ['email' => 'admin@dev.familyfund.local'],
+            ['email' => config('familyfund.admin_emails')[0]],
             ['name' => 'Operations Admin', 'password' => bcrypt('password')]
         );
 

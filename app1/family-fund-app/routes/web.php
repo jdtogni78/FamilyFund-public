@@ -20,9 +20,10 @@ use Illuminate\Support\Facades\Auth;
 // Role aliases map to canonical qa-* users seeded by QaTestUsersSeeder.
 if (app()->environment('local', 'dev', 'testing')) {
     Route::get('/dev-login/{redirect?}', function (\Illuminate\Http\Request $request, $redirect = '') {
+        $adminEmail = config('familyfund.admin_emails')[0] ?? 'admin@example.com';
         $aliases = [
-            'admin' => 'admin@dev.familyfund.local',
-            'system-admin' => 'admin@dev.familyfund.local',
+            'admin' => $adminEmail,
+            'system-admin' => $adminEmail,
             'fund-admin' => 'qa-fund-admin@test.local',
             'financial-manager' => 'qa-financial-manager@test.local',
             'beneficiary' => 'qa-beneficiary@test.local',

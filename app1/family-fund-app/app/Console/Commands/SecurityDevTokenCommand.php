@@ -19,13 +19,22 @@ class SecurityDevTokenCommand extends Command
 
     protected $description = 'Dev-only: mint a Sanctum API token for a QA user (for authenticated DAST/ZAP scans)';
 
-    private const ALIASES = [
-        'admin' => 'admin@dev.familyfund.local',
-        'system-admin' => 'admin@dev.familyfund.local',
-        'fund-admin' => 'qa-fund-admin@test.local',
-        'financial-manager' => 'qa-financial-manager@test.local',
-        'beneficiary' => 'qa-beneficiary@test.local',
-    ];
+    /**
+     * Role alias → user email. The admin aliases resolve to the configured
+     * ADMIN_EMAILS (config/familyfund.php); the rest are QA users.
+     */
+    private function aliases(): array
+    {
+        $admin = config('familyfund.admin_emails')[0] ?? 'admin@example.com';
+
+        return [
+            'admin' => $admin,
+            'system-admin' => $admin,
+            'fund-admin' => 'qa-fund-admin@test.local',
+            'financial-manager' => 'qa-financial-manager@test.local',
+            'beneficiary' => 'qa-beneficiary@test.local',
+        ];
+    }
 
     public function handle(): int
     {
@@ -36,7 +45,7 @@ class SecurityDevTokenCommand extends Command
         }
 
         $as = (string) $this->option('as');
-        $email = self::ALIASES[$as] ?? $as;
+        $email = $this->aliases()[$as] ?? $as;
 
         $user = User::where('email', $email)->first();
         if (! $user) {

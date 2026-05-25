@@ -1,14 +1,18 @@
 name: Tests
 
 # Runs the suite the same way it runs locally: inside the project's docker
-# compose stack (familyfund + mariadb + quickchart + mailhog), against the
-# committed baseline DB. The suite is tightly coupled to that environment --
-# it uses DatabaseTransactions (so the DB must be pre-loaded from
-# database/test/test-baseline.sql.gz, not just migrated), it calls the
-# quickchart service at quickchart:3400, and PDF tests need wkhtmltopdf (baked
-# into the familyfund image). Reproducing all that on a bare runner is brittle;
-# booting the real stack mirrors testpool.sh, so "green locally => green in CI".
-# This is the same compose-stack pattern security-scan.yml uses for its ZAP jobs.
+# compose stack (familyfund + mariadb + quickchart + mailhog). The suite is
+# tightly coupled to that environment -- it uses DatabaseTransactions (so the
+# schema + a baseline dataset must be pre-loaded, not just an empty migrate), it
+# calls the quickchart service at quickchart:3400, and PDF tests need
+# wkhtmltopdf (baked into the familyfund image). Reproducing all that on a bare
+# runner is brittle; booting the real stack mirrors testpool.sh, so "green
+# locally => green in CI". This is the same compose-stack pattern
+# security-scan.yml uses for its ZAP jobs.
+#
+# The baseline is built by `migrate:fresh --seed` with the synthetic
+# Database\Seeders\TestBaselineSeeder (#78) -- NOT restored from a committed
+# real-data dump. No real PII lives in the repo or the test DB.
 #
 # Tiering (the @group nightly convention from phpunit.xml):
 #   * PR / push to main        -> fast tier only (--exclude-group=nightly)
@@ -78,10 +82,7 @@ jobs:
         working-directory: app1
         run: $COMPOSE up -d --build familyfund mariadb quickchart mailhog
 
-      - name: Wait for DB and load baseline
-        # DatabaseTransactions needs the schema+data pre-loaded; restore the
-        # committed baseline into the dev DB (same as testpool.sh), then assert
-        # it actually loaded.
+      - name: Wait for DB
         working-directory: app1
         run: |
           for i in $(seq 1 60); do
@@ -90,14 +91,23 @@ jobs:
             fi
             sleep 2
           done
-          gunzip -c family-fund-app/database/test/test-baseline.sql.gz \
-            | $COMPOSE exec -T mariadb mariadb -uroot -p"$FF_DB_ROOT_PASSWORD" familyfund_dev
-          $COMPOSE exec -T mariadb mariadb -uroot -p"$FF_DB_ROOT_PASSWORD" familyfund_dev \
-            -N -e "SELECT CONCAT('baseline users rows: ', COUNT(*)) FROM users;"
 
       - name: Generate app key
         working-directory: app1
         run: $COMPOSE exec -T familyfund php artisan key:generate --force
+
+      - name: Build synthetic test baseline (migrate + seed)
+        # DatabaseTransactions needs the schema + a baseline dataset pre-loaded.
+        # Migrate a fresh DB and run the synthetic TestBaselineSeeder instead of
+        # restoring a committed real-data dump (#78). FF_SYNTHETIC_BASELINE=1
+        # makes the dev-funds fixture migration skip its real-data payload. Then
+        # assert the baseline actually loaded.
+        working-directory: app1
+        run: |
+          $COMPOSE exec -T -e FF_SYNTHETIC_BASELINE=1 familyfund \
+            php artisan migrate:fresh --seed --seeder='Database\Seeders\TestBaselineSeeder' --force
+          $COMPOSE exec -T mariadb mariadb -uroot -p"$FF_DB_ROOT_PASSWORD" familyfund_dev \
+            -N -e "SELECT CONCAT('baseline users rows: ', COUNT(*)) FROM users;"
 
       - name: Run fast suite
         working-directory: app1

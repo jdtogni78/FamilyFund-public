@@ -196,17 +196,17 @@
             "anonymous": 302,
             "unassigned": 302,
             "beneficiary": 302,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
         },
         "accounts\/{id}\/pdf_as_of\/{as_of}": {
             "anonymous": 302,
             "unassigned": 302,
             "beneficiary": 302,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
+            "financialManager": 500,
+            "fundAdmin": 500,
+            "systemAdmin": 500
         },
         "addresses": {
             "anonymous": 302,
@@ -265,6 +265,22 @@
             "systemAdmin": 200
         },
         "assetChangeLogs\/create": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetChangeLogs\/{assetChangeLog}": {
+            "anonymous": 302,
+            "unassigned": 403,
+            "beneficiary": 403,
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
+        },
+        "assetChangeLogs\/{assetChangeLog}\/edit": {
             "anonymous": 302,
             "unassigned": 403,
             "beneficiary": 403,
@@ -868,9 +884,9 @@
             "anonymous": 302,
             "unassigned": 403,
             "beneficiary": 403,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
         },
         "scheduledJobs\/{scheduledJob}": {
             "anonymous": 302,
@@ -1124,17 +1140,17 @@
             "anonymous": 302,
             "unassigned": 302,
             "beneficiary": 302,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
+            "financialManager": 500,
+            "fundAdmin": 500,
+            "systemAdmin": 500
         },
         "transactions\/{id}\/clone": {
             "anonymous": 302,
             "unassigned": 302,
             "beneficiary": 302,
-            "financialManager": 302,
-            "fundAdmin": 302,
-            "systemAdmin": 302
+            "financialManager": 200,
+            "fundAdmin": 200,
+            "systemAdmin": 200
         },
         "transactions\/{transaction}": {
             "anonymous": 302,
@@ -1212,8 +1228,6 @@
     "skipped": {
         "addresses\/{address}": "unresolved-param:address",
         "addresses\/{address}\/edit": "unresolved-param:address",
-        "assetChangeLogs\/{assetChangeLog}": "no-data-for:assetChangeLog",
-        "assetChangeLogs\/{assetChangeLog}\/edit": "no-data-for:assetChangeLog",
         "cashDeposits\/{cashDeposit}": "unresolved-param:cashDeposit",
         "cashDeposits\/{cashDeposit}\/edit": "unresolved-param:cashDeposit",
         "changeLogs\/{changeLog}": "unresolved-param:changeLog",

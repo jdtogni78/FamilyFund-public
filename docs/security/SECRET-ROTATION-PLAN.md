@@ -127,9 +127,10 @@ Mostly seed/fake, **but real PII present**:
 ## 4. Real emails embedded in code (pre-publish cleanup) — DONE 2026-05-25 (#81, ex-#16 §4)
 gmail.com appeared in source traits, controllers, **migrations**
 (`assign_system_admin_role`, `add_is_admin_to_users`), seeders, tests, docs, and the
-dumps. Carved out of #16 into **#81** (source/config parameterization), coordinated
-with siblings **#79** (prod_to_dev ALL-PII scrub, merged) and **#78** (synthetic
-test-baseline seeder, in progress). One synthetic admin identity is used everywhere:
+dumps. Carved out of #16 into **#81** (source/config parameterization), after the
+dump-scrub halves landed as siblings **#79** (prod_to_dev ALL-PII scrub, merged) and
+**#78** (synthetic test-baseline seeder, merged — replaced the committed
+`test-baseline.sql.gz` outright). One synthetic admin identity is used everywhere:
 `admin@dev.familyfund.local` (the non-PII dev admin that #79's `prod_to_dev.sql`
 renames the real admin to). Done:
 - [x] **Parameterized the admin email into config/env (#81).** New
@@ -144,29 +145,27 @@ renames the real admin to). Done:
   is no longer in source; the real address goes only in the git-ignored `.env`
   (`ADMIN_EMAILS=`), which also covers the raw-prod-dump window #79's fallback
   handled.
-- [x] **Scrubbed the committed data dump (#81 interim).**
-  `database/test/test-baseline.sql.gz` had 14 real addresses (13 family
-  Gmail/Hotmail + the owner) — admin → `admin@dev.familyfund.local`, the 13
-  family → `userN@example.test` (the `@example.test` domain avoids colliding with
-  the baseline's existing `userN@dev.familyfund.local` rows). Nothing in code
-  referenced them, so the restore stays load-bearing. Committed with `--no-verify`
-  (gitleaks blocks `*.sql.gz` by filename; this change *reduces* PII). **Interim** —
-  superseded when **#78** replaces the baseline with a synthetic seeder.
-- [x] **prod_to_dev.sql / restore_dev_funds.sql** — owned by **#79** (merged): it
-  scrubs ALL PII and renames the admin to `admin@dev.familyfund.local`. #81 takes
-  #79's versions.
+- [x] **Committed data dumps** — owned by the siblings, both merged, so #81 carries
+  no dump changes:
+  - **#78** deleted `database/test/test-baseline.sql.gz` entirely and replaced it
+    with the synthetic `Database\Seeders\TestBaselineSeeder` (CI + testpool now
+    `migrate:fresh --seed`). No real-data dump ships in the repo at all.
+  - **#79** scrubbed ALL PII in `prod_to_dev.sql` + `restore_dev_funds.sql` and
+    renamed the admin to `admin@dev.familyfund.local`.
+  (An interim email-only scrub of the old `.sql.gz` was made on this branch but
+  dropped at merge — #78's removal supersedes it.)
 - **Residual (accepted):** the owner email remains in git **history** (separate
-  history-purge item below) and real **names** persist in the baseline (pair with
-  the #78 synthetic-seeder, not just emails).
+  history-purge item below).
 
 ---
 
 ## 5. Prevent future bad commits
 
-> **Status 2026-05-24:** the scanning + gitignore layers are DONE. See the
-> per-item markers below. The only large open piece is the synthetic
-> **test-baseline** seeder (filed as a follow-up — it is load-bearing for the
-> whole test suite and can't be swapped in casually).
+> **Status 2026-05-25:** the scanning + gitignore layers are DONE, and the
+> synthetic **test-baseline** seeder (the last large piece, #78) has landed —
+> `test-baseline.sql.gz` is removed from HEAD and CI + `testpool.sh` now build
+> the baseline from `Database\Seeders\TestBaselineSeeder`. See the per-item
+> markers below.
 
 1. ✅ **Pre-commit secret scanner** — `.githooks/pre-commit` extracts staged
    content and runs gitleaks (local binary, else Docker). Install per-clone with
@@ -182,12 +181,17 @@ renames the real admin to). Done:
    `database/csv/*password*`, `**/datadir*/`. *Deliberately NOT a blanket `*.sql`*
    — the repo keeps functional ops/DDL scripts (`drop_all.sql`, `truncate_all.sql`,
    `restore_dev_funds.sql`, `familyfund_ddl*.sql`); only data dumps are ignored.
-4. ✅/⏳ **Never commit data/datadir** — the dead `database/dev/familyfund_dev_data.sql`
-   (real PII, nothing loaded it) is now **untracked** (`git rm --cached`; still in
-   git *history* — that's the separate history-purge item in `SECURITY-EXPOSURE.md`
-   §5). **Open:** `app1/family-fund-app/database/test/test-baseline.sql.gz` is
-   load-bearing (CI `tests.yml` + `testpool.sh` restore from it) → replacing it with
-   a synthetic seeder is a dedicated follow-up ticket, not done here.
+4. ✅ **Never commit data/datadir** — the dead `database/dev/familyfund_dev_data.sql`
+   (real PII, nothing loaded it) is **untracked** (`git rm --cached`; still in git
+   *history* — the separate history-purge item in `SECURITY-EXPOSURE.md` §5). The
+   load-bearing `app1/family-fund-app/database/test/test-baseline.sql.gz` (~62
+   emails) is now **removed from HEAD** (#78): CI `tests.yml` + `testpool.sh` build
+   the baseline from the synthetic `Database\Seeders\TestBaselineSeeder`
+   (`migrate:fresh --seed`) instead of restoring the dump. *(Still in git history
+   → queued for the §5 history purge in `SECURITY-EXPOSURE.md`.)* Note: the
+   dev-only `restore_dev_funds.sql` fixture (real dev data, incl. `admin@dev.familyfund.local`)
+   is skipped during the synthetic build via `FF_SYNTHETIC_BASELINE=1`; scrubbing
+   that file itself is tracked separately (#79/#29).
 5. ✅ **CI scanning** — `.github/workflows/security-scan.yml` runs a gitleaks
    "Secret Scan" job on push/PR with `.gitleaks.toml`; fails the build on a hit.
 6. ✅ **One tracked env only** — `.env.example` is the only tracked env; `.env*`

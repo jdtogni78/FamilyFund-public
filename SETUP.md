@@ -121,6 +121,19 @@ git clone git@github.com:jdtogni78/FamilyFund.git
 cd FamilyFund
 ```
 
+### Install the git secret-scanning hooks (do this once per clone)
+
+```bash
+bin/install-git-hooks.sh   # points core.hooksPath -> .githooks
+```
+
+This wires `pre-commit` (scans staged changes) and `pre-push` (scans outgoing
+commits) through **gitleaks** so an `.env`, dump, or key can't be committed by
+accident — the leak that started all of this. The hooks use a local `gitleaks`
+binary if present (`brew install gitleaks`), otherwise fall back to Docker; if
+neither is available they warn and pass (CI's "Secret Scan" job is the hard
+gate). One-off bypass: `SKIP_GITLEAKS=1 git commit …` / `… git push …`.
+
 ## 2. Decrypt the env secrets (SOPS + age — recommended)
 
 The dev/stage/compose env secrets are committed to this repo **encrypted** with

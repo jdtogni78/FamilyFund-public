@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Pre-push secret scan — blocks a push whose OUTGOING commits trip gitleaks.
+# Catches secrets that are in history but already removed from HEAD (a commit
+# can't be un-leaked by deleting the file in a later commit).
+# Install with: bin/install-git-hooks.sh   (sets core.hooksPath -> .githooks)
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=.githooks/_gitleaks.sh
+. "$HOOK_DIR/_gitleaks.sh"
+
+if [ "${SKIP_GITLEAKS:-}" = "1" ]; then
+  gl_warn "⏭  SKIP_GITLEAKS=1 — skipping pre-push secret scan."
+  exit 0
+fi
+
+ZERO="0000000000000000000000000000000000000000"
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/ff-gitleaks-push.XXXXXX")"
+trap 'rm -rf "$tmp"' EXIT
+found=0
+
+# git feeds the hook one line per ref being pushed:
+#   <local ref> <local sha> <remote ref> <remote sha>
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "$ZERO" ] && continue   # branch deletion — nothing to scan
+
+  if [ "$remote_sha" = "$ZERO" ]; then
+    # New branch on the remote: scan commits not already on any remote ref.
+    range_args="$local_sha --not --remotes"
+  else
+    range_args="$remote_sha..$local_sha"
+  fi
+
+  # Extract the pushed content of every file touched by the outgoing commits.
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    found=1
+    mkdir -p "$tmp/$(dirname "$f")"
+    git show "$local_sha:$f" > "$tmp/$f" 2>/dev/null || true
+  done < <(git log --name-only --pretty=format: $range_args 2>/dev/null | sort -u)
+done
+
+[ "$found" -eq 0 ] && exit 0
+
+if ! gl_scan_dir "$tmp"; then
+  gl_warn ""
+  gl_warn "❌ gitleaks found a potential secret in commits you're about to PUSH (above)."
+  gl_warn "   It is in your history — deleting the file in a later commit is NOT enough."
+  gl_warn "   • Rewrite the offending commit(s) (git rebase -i / commit --amend) to drop it."
+  gl_warn "   • Rotate the secret if it was ever real."
+  gl_warn "   • False positive? Add an allowlist entry to .gitleaks.toml."
+  gl_warn "   • Emergency bypass (discouraged):  SKIP_GITLEAKS=1 git push ..."
+  exit 1
+fi
+exit 0

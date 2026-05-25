@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DataFactory;
 use Tests\TestCase;
 
@@ -17,9 +18,8 @@ use Tests\TestCase;
  *
  * Slow (~54s), so it is excluded from the default run and exercised by the
  * nightly job instead.
- *
- * @group nightly
  */
+#[Group('nightly')]
 class OperationsControllerTest extends TestCase
 {
     use DatabaseTransactions;

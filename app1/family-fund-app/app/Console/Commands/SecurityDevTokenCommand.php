@@ -20,19 +20,22 @@ class SecurityDevTokenCommand extends Command
     protected $description = 'Dev-only: mint a Sanctum API token for a QA user (for authenticated DAST/ZAP scans)';
 
     /**
-     * Role alias → user email. The admin aliases resolve to the configured
-     * ADMIN_EMAILS (config/familyfund.php); the rest are QA users.
+     * Role alias → ordered list of candidate emails (first that resolves wins).
+     * The admin aliases resolve to the configured ADMIN_EMAILS
+     * (config/familyfund.php; default is the non-PII dev admin that
+     * prod_to_dev.sql renames the admin to). Set ADMIN_EMAILS in .env to add the
+     * real address as a fallback for an un-scrubbed prod dump / test baseline.
      */
     private function aliases(): array
     {
-        $admin = config('familyfund.admin_emails')[0] ?? 'admin@example.com';
+        $admin = config('familyfund.admin_emails');
 
         return [
             'admin' => $admin,
             'system-admin' => $admin,
-            'fund-admin' => 'qa-fund-admin@test.local',
-            'financial-manager' => 'qa-financial-manager@test.local',
-            'beneficiary' => 'qa-beneficiary@test.local',
+            'fund-admin' => ['qa-fund-admin@test.local'],
+            'financial-manager' => ['qa-financial-manager@test.local'],
+            'beneficiary' => ['qa-beneficiary@test.local'],
         ];
     }
 
@@ -45,11 +48,11 @@ class SecurityDevTokenCommand extends Command
         }
 
         $as = (string) $this->option('as');
-        $email = $this->aliases()[$as] ?? $as;
+        $candidates = $this->aliases()[$as] ?? [$as];
 
-        $user = User::where('email', $email)->first();
+        $user = User::whereIn('email', $candidates)->first();
         if (! $user) {
-            $this->error("No user with email '{$email}'. Seed QaTestUsersSeeder first.");
+            $this->error('No user for ' . $as . ' (tried: ' . implode(', ', $candidates) . '). Seed QaTestUsersSeeder first.');
 
             return self::FAILURE;
         }

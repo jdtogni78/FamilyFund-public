@@ -49,8 +49,24 @@ class SecurityRouteAutomationTest extends TestCase
      *
      * These routes include known security findings from the 2026-05 pentest (doc removed; see git history; tickets #49/#13).
      * New public API reads must not be added silently.
+     *
+     * Empty by decision: #51 (item C) / ED-0012 classified every `api/` endpoint
+     * — there are no intentionally-public API endpoints, so this list is
+     * deny-by-default. See test_audited_api_endpoints_are_authenticated_not_public.
      */
     private const TEMPORARY_UNAUTHENTICATED_API_READ_ALLOWLIST = [];
+
+    /**
+     * Endpoints the 2026-05 route audit (#14 item C) singled out as the open
+     * "is this intentionally public?" questions. Decision (#51 / ED-0012): none
+     * are public — they are pinned authenticated here by name.
+     */
+    private const AUDITED_API_ENDPOINTS = [
+        'api/funds/{id}/overview-data',
+        'api/exchange_holidays/{exchange}/{year}',
+        'api/exchange_holidays/status',
+        'api/exchange_holidays/sync',
+    ];
 
     /**
      * Legacy GET endpoints whose names imply side effects.
@@ -183,6 +199,36 @@ class SecurityRouteAutomationTest extends TestCase
             $violations,
             "New side-effect-like GET routes must use POST/PUT/PATCH/DELETE instead.\n" . implode("\n", $violations)
         );
+    }
+
+    /**
+     * #51 (item C) / ED-0012: the audited `api/`-prefixed endpoints are
+     * classified as NOT intentionally public, so pin them authenticated by name.
+     *
+     * The generic guards above already reject any unauthenticated `api/` route,
+     * but they go silent if a route is simply removed — so they would not catch a
+     * later delete-and-readd of one of these as a public endpoint. This asserts
+     * the audited endpoints both still exist and still carry auth middleware.
+     */
+    public function test_audited_api_endpoints_are_authenticated_not_public(): void
+    {
+        $routesByUri = [];
+        foreach (Route::getRoutes() as $route) {
+            $routesByUri[$route->uri()] = $route;
+        }
+
+        foreach (self::AUDITED_API_ENDPOINTS as $uri) {
+            $this->assertArrayHasKey(
+                $uri,
+                $routesByUri,
+                "Audited endpoint {$uri} is missing. If it was intentionally removed, update ED-0012; it must never reappear unauthenticated."
+            );
+
+            $this->assertTrue(
+                $this->hasAuthMiddleware($routesByUri[$uri]->gatherMiddleware()),
+                "Audited endpoint {$uri} must stay authenticated (ED-0012: no intentionally-public API endpoints)."
+            );
+        }
     }
 
     public function test_dev_login_route_is_environment_gated_in_source(): void

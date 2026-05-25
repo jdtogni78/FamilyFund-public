@@ -32,7 +32,7 @@ needs_build() {
 if needs_build; then
   echo "[test.sh] Vite assets stale; running npm run build…" >&2
   if [[ ! -d node_modules ]]; then
-    npm install --legacy-peer-deps >&2
+    npm install >&2
   fi
   npm run build >&2
 else

@@ -40,6 +40,7 @@ class CrossTenantIsolationTest extends TestCase
     private User $beneficiaryY;
     private User $unassigned;
     private User $systemAdmin;
+    private User $fundAdminX;
 
     private AccountExt $accountX;       // owned by beneficiaryX, in fundX
     private AccountExt $accountY;       // owned by beneficiaryY, in fundY
@@ -50,8 +51,10 @@ class CrossTenantIsolationTest extends TestCase
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->fundX = Fund::factory()->create();
-        $this->fundY = Fund::factory()->create();
+        // Distinctive names so substring leak-assertions don't false-positive on
+        // short faker words colliding with HTML (e.g. "aut" inside "auth").
+        $this->fundX = Fund::factory()->create(['name' => 'TenantFundX-Isolation']);
+        $this->fundY = Fund::factory()->create(['name' => 'TenantFundY-Isolation']);
 
         $x = TestFixtures::aclUsers($this->fundX);
         $y = TestFixtures::aclUsers($this->fundY);
@@ -60,6 +63,7 @@ class CrossTenantIsolationTest extends TestCase
         $this->accountX     = $x['beneficiaryAccount'];
         $this->systemAdmin  = $x['systemAdmin'];
         $this->unassigned   = $x['unassigned'];
+        $this->fundAdminX   = $x['fundAdmin'];
 
         $this->beneficiaryY = $y['beneficiary'];
         $this->accountY     = $y['beneficiaryAccount'];
@@ -235,6 +239,73 @@ class CrossTenantIsolationTest extends TestCase
             $r = $this->get($uri);
             $this->assertBlocked($r, 'Access denied', 'acct' . $this->accountX->id . ' -> ' . $uri);
         }
+    }
+
+    // ============ Index LISTING scoping (not just detail pages) ============
+
+    public function test_beneficiary_funds_index_lists_only_own_fund(): void
+    {
+        $r = $this->actingAs($this->beneficiaryX)->get('/funds');
+        $r->assertOk();
+        $r->assertSee($this->fundX->name, false);
+        $r->assertDontSee($this->fundY->name, false);
+    }
+
+    public function test_beneficiary_accounts_index_lists_only_own_account(): void
+    {
+        $r = $this->actingAs($this->beneficiaryX)->get('/accounts');
+        $r->assertOk();
+        $r->assertSee($this->accountX->code, false);
+        // No sibling (same fund, different owner) and no cross-fund account.
+        $r->assertDontSee($this->siblingAccountX->code, false);
+        $r->assertDontSee($this->accountY->code, false);
+    }
+
+    /**
+     * The transactions index is reachable by a beneficiary and carries an
+     * account + fund filter dropdown. That selector must be scoped too — it
+     * previously listed every account with its owner's email (PII leak) even
+     * though the table itself was scoped.
+     */
+    public function test_beneficiary_transactions_selector_does_not_leak_foreign_tenants(): void
+    {
+        $r = $this->actingAs($this->beneficiaryX)->get('/transactions');
+        $r->assertOk();
+        $body = $r->getContent();
+
+        // Own account/fund are present in the selector.
+        $this->assertStringContainsString($this->accountX->code, $body);
+        // Foreign tenants must NOT appear (account codes, owner email, fund name).
+        $this->assertStringNotContainsString($this->siblingAccountX->code, $body);
+        $this->assertStringNotContainsString($this->accountY->code, $body);
+        $this->assertStringNotContainsString($this->beneficiaryY->email, $body);
+        $this->assertStringNotContainsString($this->fundY->name, $body);
+    }
+
+    // ==================== Dashboard tiering ====================
+
+    public function test_beneficiary_dashboard_hides_management_links(): void
+    {
+        $r = $this->actingAs($this->beneficiaryX)->get('/dashboard');
+        $r->assertOk();
+        // Beneficiary sees their own scoped section...
+        $r->assertSee('My Account', false);
+        // ...but none of the fund-management links that would 403 on click.
+        $r->assertDontSee(route('matchingRules.index'), false);
+        $r->assertDontSee(route('tradePortfolios.index'), false);
+        $r->assertDontSee(route('assets.index'), false);
+        $r->assertDontSee(route('credit_lines.global_index'), false);
+        $r->assertDontSee(route('portfolios.index'), false);
+        $r->assertDontSee(route('operations.index'), false);
+    }
+
+    public function test_fund_admin_dashboard_shows_management_links(): void
+    {
+        $r = $this->actingAs($this->fundAdminX)->get('/dashboard');
+        $r->assertOk();
+        // Full-access user keeps the management surface.
+        $r->assertSee(route('matchingRules.index'), false);
+        $r->assertSee(route('tradePortfolios.index'), false);
     }
 
     // ==================== Admin-only data ====================

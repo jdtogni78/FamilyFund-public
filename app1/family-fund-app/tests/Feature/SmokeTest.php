@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\DataFactory;
 use Tests\TestCase;
 
@@ -16,9 +17,8 @@ use Tests\TestCase;
  *
  * Slow (~63s — many full-HTTP page renders), so it is excluded from the
  * default run and exercised by the nightly job instead.
- *
- * @group nightly
  */
+#[Group('nightly')]
 class SmokeTest extends TestCase
 {
     use DatabaseTransactions;

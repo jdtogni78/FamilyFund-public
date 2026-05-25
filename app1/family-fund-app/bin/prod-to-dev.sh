@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Restore a fresh dev DB from a prod dump:
-#   1. Anonymize (database/prod_to_dev.sql).
+#   1. Anonymize (database/prod_to_dev.sql): rotate ALL user passwords to a known
+#      dev hash (no real prod hash survives) and scrub ALL PII — names, emails,
+#      birthdays, addresses, phones, government IDs, free-text notes, sessions.
 #   2. Run pending migrations (e.g. credit-line allocation backfill —
 #      QA-2026-05-19 #2).
 #   3. Seed permissions + QA test users (QA-2026-05-19 #5 / #14).

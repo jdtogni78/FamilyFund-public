@@ -29,8 +29,10 @@ use Tests\TestCase;
  *  - PII / system (admin-only): users, people, phones, addresses, id_documents,
  *    scheduled_jobs.
  *  - Shared/reference (non-tenant, no IDOR dimension): assets, asset_prices,
- *    matching_rules, schedules, change_logs, asset_change_logs — auth-locked
- *    only; write-authz hardening tracked in #82.
+ *    matching_rules, schedules, change_logs, asset_change_logs — reads open to
+ *    any authenticated caller; writes are system-admin-only (#82, flag-gated by
+ *    familyfund.enforce_admin_writes), asserted in
+ *    test_reference_data_writes_are_admin_only.
  *
  * This suite asserts both the auth boundary (unauthenticated → 401) and the
  * per-role / cross-tenant object-level boundaries for the scoped resources.
@@ -363,6 +365,87 @@ class SecurityApiAclMatrixTest extends TestCase
                 "{$url} should be reachable by a system admin (got {$response->getStatusCode()})."
             );
         }
+    }
+
+    /**
+     * Global shared/reference data: reads stay open to any authenticated caller,
+     * but writes — create/update/delete on the generated resources, the asset
+     * price bulk feed, and the holiday sync — are system-admin-only (#82).
+     * dstrader pushes prices as a system-admin service user. The reference
+     * resource gates run as controller middleware (before FormRequest
+     * validation), so a forbidden caller gets a clean 403 even with an empty
+     * body; a system admin clears the gate (any non-403 status).
+     */
+    public function test_reference_data_writes_are_admin_only(): void
+    {
+        $writes = [
+            ['postJson', '/api/assets'],
+            ['putJson', '/api/assets/1'],
+            ['deleteJson', '/api/assets/1'],
+            ['postJson', '/api/asset_prices'],
+            ['postJson', '/api/asset_prices_bulk_update'],
+            ['postJson', '/api/matching_rules'],
+            ['postJson', '/api/schedules'],
+            ['postJson', '/api/change_logs'],
+            ['postJson', '/api/asset_change_logs'],
+            ['postJson', '/api/exchange_holidays/sync'],
+        ];
+
+        $nonAdmins = [
+            'beneficiary' => $this->beneficiary,
+            'fundAdmin' => $this->fundAdmin,
+            'financialManager' => $this->financialManager,
+        ];
+
+        foreach ($nonAdmins as $label => $user) {
+            foreach ($writes as [$method, $url]) {
+                $this->resetAuth();
+                Sanctum::actingAs($user);
+
+                $response = $this->{$method}($url, []);
+
+                $this->assertSame(
+                    403,
+                    $response->getStatusCode(),
+                    "{$label} must be forbidden from {$method} {$url} (#82 reference write gate)."
+                );
+            }
+        }
+
+        foreach ($writes as [$method, $url]) {
+            $this->resetAuth();
+            Sanctum::actingAs($this->systemAdmin);
+
+            $response = $this->{$method}($url, []);
+
+            $this->assertNotSame(
+                403,
+                $response->getStatusCode(),
+                "system admin must clear the write gate for {$method} {$url} (got 403)."
+            );
+        }
+    }
+
+    /**
+     * With familyfund.enforce_admin_writes off, the #82 tightening is a no-op:
+     * a non-admin reference write is no longer 403 (auth:sanctum still applies).
+     * This is the deploy-time cutover toggle — prod ships with the flag off until
+     * the dstrader service token is confirmed, then flips it on.
+     */
+    public function test_reference_write_gate_is_disabled_by_flag(): void
+    {
+        config(['familyfund.enforce_admin_writes' => false]);
+
+        $this->resetAuth();
+        Sanctum::actingAs($this->beneficiary);
+
+        $response = $this->postJson('/api/assets', []);
+
+        $this->assertNotSame(
+            403,
+            $response->getStatusCode(),
+            'With enforce_admin_writes off, a non-admin reference write must not be 403.'
+        );
     }
 
     private function resetAuth(): void

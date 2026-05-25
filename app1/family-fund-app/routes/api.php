@@ -74,10 +74,14 @@ Route::middleware('auth:sanctum')->group(function () {
      |  - System/ops (admin-only): scheduled_jobs.
      |  - Shared/reference, NON-tenant (no IDOR dimension), reads open to any
      |    authenticated caller: assets, asset_prices, matching_rules, schedules,
-     |    change_logs, asset_change_logs, exchange_holidays. Write-authz hardening
-     |    for these (admin-only create/update/delete of global reference data) is
-     |    tracked in #82 — their generated CRUD tests use WithoutMiddleware
-     |    without auth and must be updated alongside.
+     |    change_logs, asset_change_logs, exchange_holidays. Writes (create/update/
+     |    delete + asset_prices_bulk_update + exchange_holidays/sync) are
+     |    system-admin-only (#82, ED-0016), gated by the controllers'
+     |    adminWriteMiddleware()/requireAdminWrite() and the
+     |    familyfund.enforce_admin_writes flag; enforced by
+     |    SecurityApiAclMatrixTest::test_reference_data_writes_are_admin_only.
+     |    dstrader authenticates as the system-admin service user (see
+     |    DstraderServiceUserSeeder + `php artisan security:service-token`).
      */
     Route::post('funds/setup', 'App\Http\Controllers\APIv1\FundAPIControllerExt@storeWithSetup')->name('api.funds.setup');
     Route::resource('funds', App\Http\Controllers\API\FundAPIController::class)->names('api.funds');

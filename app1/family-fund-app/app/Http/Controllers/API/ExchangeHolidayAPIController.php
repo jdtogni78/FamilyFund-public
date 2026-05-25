@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Repositories\ExchangeHolidayRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ExchangeHolidayAPIController extends Controller
 {
+    use AuthorizesApiAccess;
+
     public function __construct(
         private ExchangeHolidayRepository $repository
     ) {}
@@ -41,6 +44,9 @@ class ExchangeHolidayAPIController extends Controller
      */
     public function sync(Request $request): JsonResponse
     {
+        // Reference-data write: system-admin-only (#82, flag-gated).
+        $this->requireAdminWrite();
+
         // Trigger sync job (to be implemented)
         return response()->json(['status' => 'sync_initiated']);
     }

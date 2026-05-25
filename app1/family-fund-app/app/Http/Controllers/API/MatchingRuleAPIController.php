@@ -8,6 +8,7 @@ use App\Models\MatchingRule;
 use App\Repositories\MatchingRuleRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Resources\MatchingRuleResource;
 use Response;
 
@@ -18,12 +19,18 @@ use Response;
 
 class MatchingRuleAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  MatchingRuleRepository */
     protected $matchingRuleRepository;
 
     public function __construct(MatchingRuleRepository $matchingRuleRepo)
     {
         $this->matchingRuleRepository = $matchingRuleRepo;
+
+        // Global reference data: reads stay open to any authenticated caller,
+        // but create/update/delete are system-admin-only (#82, flag-gated).
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy']);
     }
 
     /**

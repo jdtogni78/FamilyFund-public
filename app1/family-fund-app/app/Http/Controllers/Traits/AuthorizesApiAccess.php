@@ -48,6 +48,36 @@ trait AuthorizesApiAccess
     }
 
     /**
+     * Gate a *write* to global shared/reference data behind system-admin (#82),
+     * subject to the `familyfund.enforce_admin_writes` flag. When the flag is
+     * off this is a no-op (auth:sanctum still applies). Call from the custom
+     * bulk-write methods (e.g. asset_prices_bulk_update); for generated resource
+     * controllers use adminWriteMiddleware() on store/update/destroy instead.
+     */
+    protected function requireAdminWrite(): void
+    {
+        if (config('familyfund.enforce_admin_writes', true)) {
+            $this->requireSystemAdmin();
+        }
+    }
+
+    /**
+     * Controller middleware (for a ctor `$this->middleware(...)->only([...])`)
+     * that enforces system-admin on reference-data write actions, honoring the
+     * `familyfund.enforce_admin_writes` flag. Reads are never affected.
+     */
+    protected function adminWriteMiddleware(): \Closure
+    {
+        return function ($request, $next) {
+            if (config('familyfund.enforce_admin_writes', true)) {
+                abort_unless((bool) $request->user()?->isSystemAdmin(), 403);
+            }
+
+            return $next($request);
+        };
+    }
+
+    /**
      * Abort 403 unless the caller can view (or, with $modify, modify) the
      * given account. A null account (missing / orphaned) is denied.
      */

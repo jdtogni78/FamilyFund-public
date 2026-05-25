@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Repositories\AssetRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Resources\AssetResource;
 use Response;
 
@@ -18,12 +19,18 @@ use Response;
 
 class AssetAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  AssetRepository */
     protected $assetRepository;
 
     public function __construct(AssetRepository $assetRepo)
     {
         $this->assetRepository = $assetRepo;
+
+        // Global reference data: reads stay open to any authenticated caller,
+        // but create/update/delete are system-admin-only (#82, flag-gated).
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy']);
     }
 
     /**

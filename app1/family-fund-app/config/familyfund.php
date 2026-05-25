@@ -35,4 +35,21 @@ return [
     // back to the first configured admin email.
     'alert_email' => env('MAIL_ADMIN_ADDRESS') ?: ($adminEmails[0] ?? 'admin@dev.familyfund.local'),
 
+    // Enforce system-admin-only writes (create/update/delete) on global
+    // shared/reference API resources and the reference bulk-write endpoints
+    // (#82). When false the write-authz tightening is a no-op — reads and the
+    // auth:sanctum requirement are unaffected. Default ON; deploy a fresh prod
+    // cutover with FF_ENFORCE_ADMIN_WRITES=false first, confirm the dstrader
+    // service token can still push prices, then flip it on (see #82).
+    'enforce_admin_writes' => filter_var(
+        env('FF_ENFORCE_ADMIN_WRITES', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
+
+    // Email identity of the dstrader machine-to-machine service account (#82).
+    // Created with the global system-admin role by DstraderServiceUserSeeder and
+    // used by security:service-token to mint the `app` / `scheduler` API tokens.
+    // Authenticates via Sanctum token, never an interactive password.
+    'service_user_email' => env('DSTRADER_SERVICE_EMAIL', 'dstrader-service@familyfund.local'),
+
 ];

@@ -8,6 +8,7 @@ use App\Models\ChangeLog;
 use App\Repositories\ChangeLogRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Resources\ChangeLogResource;
 use Response;
 
@@ -18,12 +19,18 @@ use Response;
 
 class ChangeLogAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  ChangeLogRepository */
     private $changeLogRepository;
 
     public function __construct(ChangeLogRepository $changeLogRepo)
     {
         $this->changeLogRepository = $changeLogRepo;
+
+        // Global reference data: reads stay open to any authenticated caller,
+        // but create/update/delete are system-admin-only (#82, flag-gated).
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy']);
     }
 
     /**

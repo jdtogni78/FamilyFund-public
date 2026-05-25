@@ -8,6 +8,7 @@ use App\Models\AssetChangeLog;
 use App\Repositories\AssetChangeLogRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Resources\AssetChangeLogResource;
 use Response;
 
@@ -18,12 +19,18 @@ use Response;
 
 class AssetChangeLogAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  AssetChangeLogRepository */
     protected $assetChangeLogRepository;
 
     public function __construct(AssetChangeLogRepository $assetChangeLogRepo)
     {
         $this->assetChangeLogRepository = $assetChangeLogRepo;
+
+        // Global reference data: reads stay open to any authenticated caller,
+        // but create/update/delete are system-admin-only (#82, flag-gated).
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy']);
     }
 
     /**

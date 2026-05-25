@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIv1;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Controllers\Traits\BulkStoreTrait;
 use App\Http\Requests\API\CreateAssetPriceAPIRequest;
 use App\Http\Requests\API\CreatePriceUpdateAPIRequest;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AssetPriceAPIControllerExt extends AppBaseController
 {
+    use AuthorizesApiAccess;
     use BulkStoreTrait;
 
     /** @var  AssetPriceRepository */
@@ -27,6 +29,14 @@ class AssetPriceAPIControllerExt extends AppBaseController
     public function __construct(AssetPriceRepository $assetPricesRepo)
     {
         $this->assetPriceRepository = $assetPricesRepo;
+
+        // Asset prices are global reference data: reads stay open to any
+        // authenticated caller, but every write — the generated resource
+        // store/update/destroy AND the bulk price feed (asset_prices_bulk_update)
+        // — is system-admin-only (#82, flag-gated). dstrader pushes prices as a
+        // system-admin service user. Gating as controller middleware (not
+        // in-method) rejects before FormRequest validation.
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy', 'bulkStore']);
     }
 
     /**
@@ -40,6 +50,10 @@ class AssetPriceAPIControllerExt extends AppBaseController
      */
     public function bulkStore(CreatePriceUpdateAPIRequest $request)
     {
+        // Authz: gated to system-admin by the ctor adminWriteMiddleware()
+        // (#82). Sibling bulk endpoints portfolio_assets_bulk_update /
+        // portfolio_balances_bulk_update guard fund-scoped data via
+        // requireFullAccessToAnyFund(), which system admins also satisfy.
         DB::beginTransaction();
         try {
             // $this->verbose = true;

@@ -8,6 +8,7 @@ use App\Models\Schedule;
 use App\Repositories\ScheduleRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Traits\AuthorizesApiAccess;
 use App\Http\Resources\ScheduleResource;
 use Response;
 
@@ -18,12 +19,18 @@ use Response;
 
 class ScheduleAPIController extends AppBaseController
 {
+    use AuthorizesApiAccess;
+
     /** @var  ScheduleRepository */
     private $scheduleRepository;
 
     public function __construct(ScheduleRepository $scheduleRepo)
     {
         $this->scheduleRepository = $scheduleRepo;
+
+        // Global reference data: reads stay open to any authenticated caller,
+        // but create/update/delete are system-admin-only (#82, flag-gated).
+        $this->middleware($this->adminWriteMiddleware())->only(['store', 'update', 'destroy']);
     }
 
     /**

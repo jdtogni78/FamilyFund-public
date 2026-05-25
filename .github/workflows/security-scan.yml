@@ -39,6 +39,39 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: composer audit --locked --format=plain
 
+  phpstan:
+    name: PHPStan (static analysis)
+    # Non-blocking ON PURPOSE (issue #77): introduced behind a baseline
+    # (phpstan-baseline.neon) and kept OUT of the required PR gate until the
+    # signal/noise is understood. The step still runs and reports, so new
+    # regressions show up as a failed step here. Promote to a required check —
+    # and drop this continue-on-error — once it's trusted.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          # Mirror the runtime image (app1/Dockerfile) so Larastan boots the app
+          # the same way it does in prod.
+          extensions: pdo_mysql, mbstring, bcmath, gd, zip, exif, pcntl
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPStan
+        working-directory: ${{ env.APP_DIR }}
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
   npm-audit:
     name: npm Audit
     runs-on: ubuntu-latest

@@ -32,6 +32,15 @@
    - CI now uploads `php artisan route:list --json` from the security route guardrail job.
    - Compare route count and unauthenticated route count between PRs when practical.
 
+6. Static analysis gate (Larastan/PHPStan).
+   - DONE (#77): `larastan/larastan` + `phpstan/phpstan` added (dev), `phpstan.neon`
+     at level 5 over `app/`, existing findings frozen in `phpstan-baseline.neon`.
+     Wired into `bin/security-scan.sh` and a **non-blocking** CI `phpstan` job
+     (see ED-0013).
+   - TODO: shrink `phpstan-baseline.neon`, then promote the CI job to a required
+     check (drop `continue-on-error`) and consider raising the level / widening
+     `paths`. FamilyFund-specific Semgrep custom rules remain future work.
+
 ## Remaining Security Fixes Before Tightening Automation Further
 
 1. Add policy checks and scoped queries to the remaining generated API controllers, starting with funds, users, people, reports, and transactions.

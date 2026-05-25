@@ -1,0 +1,21 @@
+# Larastan / PHPStan static-analysis gate (issue #77, SECURITY_NEXT_STEPS Phase 4).
+#
+# Starts at level 5 over app/ — the business logic where the security-relevant
+# bugs live (raw SQL around account/transaction/asset/fund IDs, WebV1 authz,
+# report/file paths). Existing findings are captured in phpstan-baseline.neon so
+# the gate is green from day one and only NEW regressions fail it. Raise the
+# level or widen `paths` once the baseline shrinks.
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - app
+
+    # Generated / vendored code we don't hand-author — analyzing it only adds
+    # noise unrelated to our own correctness.
+    excludePaths:
+        - app/Utils/ResponseUtil.php   # InfyOm generator stub (PSR-4 non-compliant)

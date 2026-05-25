@@ -35,6 +35,8 @@ Environment:
   TRIVY_REFRESH_CHECKS=1    Force re-download of the Trivy checks bundle.
   SEMGREP_MAX_ATTEMPTS=3    Retries for transient Semgrep config downloads.
   COMPOSER_IMAGE=composer:2 Image used for composer audit when composer is absent.
+  PHPSTAN_MEMORY_LIMIT=1G   PHP memory_limit for the phpstan run.
+  PHPSTAN_IMAGE=php:8.4-cli Image used for phpstan when no local PHP is present.
 USAGE
 }
 
@@ -108,6 +110,49 @@ run_composer_audit() {
   require_command docker
   echo "[security-scan] No local composer; auditing via ${COMPOSER_IMAGE:-composer:2} image." >&2
   run_step docker run --rm -v "$APP_DIR":/app -w /app "${COMPOSER_IMAGE:-composer:2}" audit --locked
+}
+
+run_phpstan() {
+  # Larastan boots the Laravel app to resolve types, so phpstan needs PHP plus
+  # the installed vendor/. Prefer a local PHP; otherwise run in a stock php
+  # image with the app dir mounted. We deliberately do NOT `docker exec` a
+  # running FamilyFund container: in a multi-worktree setup it can analyze a
+  # different checkout (same rationale as run_composer_audit).
+  if [[ ! -x vendor/bin/phpstan ]]; then
+    echo "[security-scan] phpstan missing — run 'composer install' in $APP_DIR." >&2
+    return 127
+  fi
+
+  local mem="${PHPSTAN_MEMORY_LIMIT:-1G}"
+
+  if command -v php >/dev/null 2>&1; then
+    run_step php -d memory_limit="$mem" vendor/bin/phpstan analyse --no-progress
+    return
+  fi
+
+  require_command docker
+  echo "[security-scan] No local PHP; running phpstan via ${PHPSTAN_IMAGE:-php:8.4-cli}." >&2
+
+  # Force a single process in the container: the stock php image has no pcntl
+  # (parallel workers crash) and small Docker VMs OOM with N workers. CI runs
+  # phpstan under setup-php where parallel is fine. The override is mounted from
+  # a host temp file so we never write into the repo tree.
+  local override; override="$(mktemp)"
+  cat >"$override" <<'NEON'
+includes:
+    - /app/phpstan.neon
+parameters:
+    parallel:
+        maximumNumberOfProcesses: 1
+NEON
+  local rc=0
+  run_step docker run --rm \
+    -v "$APP_DIR":/app -v "$override":/tmp/phpstan-1proc.neon:ro -w /app \
+    "${PHPSTAN_IMAGE:-php:8.4-cli}" \
+    php -d memory_limit="$mem" vendor/bin/phpstan analyse \
+      -c /tmp/phpstan-1proc.neon --no-progress || rc=$?
+  rm -f "$override"
+  return "$rc"
 }
 
 run_semgrep_scan() {
@@ -202,6 +247,7 @@ require_command semgrep
 require_command trivy
 
 run_check "Composer audit" run_composer_audit
+run_check "PHPStan (static analysis)" run_phpstan
 run_check "npm audit" run_npm_audit
 run_check "Gitleaks" run_gitleaks
 run_check "Semgrep" run_semgrep_scan

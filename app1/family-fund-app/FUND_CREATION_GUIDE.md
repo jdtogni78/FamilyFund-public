@@ -433,28 +433,6 @@ POST /api/transactions
 
 ⚠️ **Important**: Transaction API calls `processPending()` automatically (unlike Web UI).
 
-### Python Script
-
-For automated setup via API, see:
-```
-/Users/dtogni/dev/finex/setup_familyfund_via_api.py
-```
-
-Creates fund + account + 16 portfolios + transaction in one script.
-
-**Usage:**
-```bash
-cd /Users/dtogni/dev/finex
-python setup_familyfund_via_api.py
-```
-
-**What it does:**
-1. POST /api/funds - Create fund
-2. POST /api/accounts - Create fund account
-3. POST /api/portfolios (x16) - Create 16 portfolios
-4. POST /api/transactions - Create initial transaction (calls processPending)
-5. Verify setup
-
 ---
 
 ## Understanding Fund Structure
@@ -540,15 +518,7 @@ Fund: "Trading Account"
 1. Use `/funds/create-with-setup`
 2. Create fund with first portfolio
 3. Add 15 more portfolios manually via `/portfolios/create`
-4. Run `sync_monarch_to_familyfund.py`
-
-**Or use Python script:**
-```bash
-cd /Users/dtogni/dev/finex
-python setup_familyfund_via_api.py
-```
-
-Creates everything at once.
+4. Run an external broker→FamilyFund sync (outside the scope of this repo).
 
 ### Scenario 2: Single Brokerage Account
 
@@ -725,8 +695,6 @@ System calculates shares based on fund's current share price (or defaults).
 ## Related Documentation
 
 - **Bulk APIs**: `BULK_UPDATE_APIS.md` (from plan mode)
-- **Python Setup Script**: `/Users/dtogni/dev/finex/setup_familyfund_via_api.py`
-- **Monarch Sync**: `/Users/dtogni/dev/finex/QUICK_START_MONARCH_SYNC.md`
 
 ---
 
@@ -785,12 +753,6 @@ curl -X POST http://localhost:3001/api/portfolios \
 curl -X POST http://localhost:3001/api/transactions \
   -H "Content-Type: application/json" \
   -d '{"fund_id":1,"account_id":1,"type":"INI","amount":0.01,"timestamp":"2025-01-17T10:00:00"}'
-```
-
-### Create Fund - Python Script
-```bash
-cd /Users/dtogni/dev/finex
-python setup_familyfund_via_api.py
 ```
 
 ---

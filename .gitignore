@@ -63,6 +63,7 @@ database/csv/*password*
 
 # IDE config (machine-/user-specific; e.g. .idea/dataSources.xml held internal JDBC hosts)
 .idea/
+.vscode/
 
 # --- Dev artifacts that must never re-creep (#35) ---
 # stray localhost session jar + QA screenshot dumps (contain real account data)

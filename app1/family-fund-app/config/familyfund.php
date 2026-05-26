@@ -5,10 +5,10 @@
 | Family Fund application settings
 |--------------------------------------------------------------------------
 |
-| Parameterized identities pulled out of source per
-| docs/security/SECRET-ROTATION-PLAN.md §4 (pre-publish PII cleanup). The
-| committed defaults are synthetic placeholders; set the real operator
-| address(es) only in the git-ignored .env, never in a tracked file.
+| Parameterized identities pulled out of source per the pre-publish PII
+| cleanup (rotation plan §4; plan lives in the private familyfund-secrets
+| repo). The committed defaults are synthetic placeholders; set the real
+| operator address(es) only in the git-ignored .env, never in a tracked file.
 |
 */
 

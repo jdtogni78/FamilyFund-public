@@ -56,8 +56,9 @@ with a date and a source you can verify (commit, PR/issue, or doc).
   uses `changeme` and the DB fails. Encrypted DB columns (`two_factor_*`) are
   APP_KEY-bound, so APP_KEY rotation has a pre-flight guard. Prod creds remain
   hardcoded/weak in dstrader-aws (analyze-only; out of this repo's scope).
-- **Source:** `docs/security/SECRET-ROTATION-PLAN.md`,
-  `docs/security/SECRET-ROTATION-RUNBOOK.md`, `docs/security/SECURITY-EXPOSURE.md`.
+- **Source:** `docs/security/SECURITY-EXPOSURE.md` (in this repo); rotation
+  plan + runbook live in the private `familyfund-secrets/docs/` repo
+  (`SECRET-ROTATION-PLAN.md`, `SECRET-ROTATION-RUNBOOK.md`).
 
 ## ED-0002 — SOPS + age for in-repo encrypted env secrets
 

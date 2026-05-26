@@ -2,7 +2,8 @@
 #
 # rotate-dev-secrets.sh — Stage 1 of the FamilyFund secret-rotation automation:
 # rotate the dev APP_KEY at runtime (NO DB downtime) + invalidate sessions/tokens,
-# with a pre-flight safety gate. See docs/security/SECRET-ROTATION-RUNBOOK.md.
+# with a pre-flight safety gate. See the SECRET-ROTATION-RUNBOOK.md in the
+# private familyfund-secrets/docs/ repo.
 #
 # Scope: APP_KEY only. It does NOT rotate the DB password (that step has downtime
 # and is not yet automated). It aborts if any 'encrypted' DB data exists, because

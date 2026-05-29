@@ -1,19 +1,40 @@
-# Engineering Decisions
+# Engineering Decisions (ADR index)
 
-> **Moved.** This file used to be the monolithic ADR log; it is now a thin
-> pointer so existing `[ED-NNNN](docs/ENGINEERING_DECISIONS.md)` links keep
-> resolving.
->
-> The canonical index is **[`docs/DECISIONS.md`](DECISIONS.md)**, with one
-> file per decision under **[`docs/decisions/`](decisions/)**.
+The canonical, living log of significant engineering decisions for FamilyFund
+— a lightweight ADR index. One file per decision under
+[`decisions/`](decisions/). Each entry follows
+**Context → Decision → Consequences**, with a date, a status, and a source
+you can verify (commit, PR/issue, or doc).
 
-## Quick links
+> Renamed from `ENGINEERING_DECISIONS.md`. The legacy file is now a thin
+> pointer so existing `[ED-NNNN](docs/ENGINEERING_DECISIONS.md)` links still
+> resolve — update new references to point at the per-ADR file under
+> [`decisions/`](decisions/).
 
-- Index + how-to + status legend: [`DECISIONS.md`](DECISIONS.md)
-- Per-decision files: [`decisions/`](decisions/)
-- Cross-repo decisions (`GD-NNNN`): see ai-harness `DECISIONS.md`
+## How to use this file
 
-## Index (mirror)
+- Add a new `ED-NNNN-<slug>.md` under [`decisions/`](decisions/) when a
+  decision is non-obvious, hard to reverse, or future-you would otherwise
+  re-litigate. Don't duplicate what the code / `AGENTS.md` already makes
+  obvious.
+- Then add the new row to the **Index** table below (and re-sort by ID).
+- Never supersede in place — add a new entry and flip the old one's
+  **Status** to `Superseded by ED-NNNN`. History stays readable.
+- Keep secret VALUES out of these files (decisions only).
+- **Cross-repo** decisions (the worktree workflow, multi-agent ticket
+  coordination, the env/test pools, secrets posture, etc.) live in the
+  ai-harness `DECISIONS.md` (`GD-NNNN`) — this index is FamilyFund-only.
+
+## Status legend
+
+| Status | Meaning |
+|--------|---------|
+| **Proposed** | Captured here so we don't re-derive it from a plan doc; not yet implemented. The plan doc remains authoritative until the ED flips to Accepted. |
+| **Accepted** | In effect in the codebase / runtime. Default for shipped work. |
+| **Superseded** | Replaced by a later ED; the entry stays in the index for history. Link `Superseded by ED-NNNN` in the row and in the file's header. |
+| **Deprecated** | Still factually in the tree but on the way out. New code must not extend it; flip to `Superseded` when a replacement ADR lands. |
+
+## Index
 
 | ID | Date | Status | Decision |
 |----|------|--------|----------|

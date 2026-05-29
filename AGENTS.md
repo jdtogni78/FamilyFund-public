@@ -42,8 +42,10 @@ Onboarding / operations:
 
 Architecture & decisions:
 
-- [docs/ENGINEERING_DECISIONS.md](docs/ENGINEERING_DECISIONS.md) — Lightweight
-  ADRs (`ED-NNNN`). Read before re-litigating a non-obvious choice.
+- [docs/DECISIONS.md](docs/DECISIONS.md) — Lightweight ADR index
+  (`ED-NNNN`), one file per decision under [`docs/decisions/`](docs/decisions/).
+  Read before re-litigating a non-obvious choice. (`docs/ENGINEERING_DECISIONS.md`
+  remains as a thin pointer so old links keep resolving.)
 - [docs/CONTROLLERS_REVIEW.md](docs/CONTROLLERS_REVIEW.md) — Audit of
   `app/Http/Controllers/`; what's auto-generated vs hand-rolled.
 - [docs/ACL_IMPLEMENTATION.md](docs/ACL_IMPLEMENTATION.md) — Roles, permissions,
@@ -179,7 +181,7 @@ Conventions:
 - Historical views via the `as_of` parameter throughout.
 - API versioning: `/api/`, `/api/v1/`.
 
-Deeper rationale: [docs/ENGINEERING_DECISIONS.md](docs/ENGINEERING_DECISIONS.md)
+Deeper rationale: [docs/DECISIONS.md](docs/DECISIONS.md)
 (ED-0008, ED-0009, etc.).
 
 ## Testing

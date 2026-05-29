@@ -1,11 +1,14 @@
 <?php
 
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 
 use function Livewire\Volt\layout;
 use function Livewire\Volt\rules;
@@ -30,6 +33,22 @@ rules([
 $resetPassword = function () {
     $this->validate();
 
+    $throttleKey = 'password-reset|'.request()->ip();
+
+    if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+        event(new Lockout(request()));
+        $seconds = RateLimiter::availableIn($throttleKey);
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    RateLimiter::hit($throttleKey, 60);
+
     // Here we will attempt to reset the user's password. If it is successful we
     // will update the password on an actual user model and persist it to the
     // database. Otherwise we will parse the error and return the response.
@@ -53,6 +72,8 @@ $resetPassword = function () {
 
         return;
     }
+
+    RateLimiter::clear($throttleKey);
 
     Session::flash('status', __($status));
 

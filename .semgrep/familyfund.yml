@@ -1,0 +1,192 @@
+# FamilyFund-specific Semgrep ruleset (issue #17, ED-0019).
+#
+# Generic packs (p/php, p/owasp-top-ten, p/security-audit) already cover the
+# usual PHP/Laravel pitfalls; these rules target FamilyFund's *own* risk
+# surfaces that the generic packs miss. Keep each rule HIGH-PRECISION (zero
+# false positives on the current tree). If a rule starts firing on refactors
+# that are not actual regressions, tighten the pattern rather than muting it
+# broadly.
+#
+# Run locally:
+#   semgrep scan --config .semgrep app1/family-fund-app
+# Verify the seeded positive cases (these are the rules' authoritative spec):
+#   semgrep scan --config .semgrep/familyfund.yml .semgrep/familyfund.test.php
+#
+# CI wiring: see .github/workflows/security-scan.yml (`Semgrep` job) and
+# app1/family-fund-app/bin/security-scan.sh.
+
+rules:
+  # --------------------------------------------------------------------------
+  # 1) Dev-login route must stay behind app()->environment(local|dev|testing).
+  #
+  # The /dev-login web route auto-logs the caller in as a chosen QA user (or
+  # the default claude@test.local). It lives in routes/web.php inside an
+  # `if (app()->environment('local', 'dev', 'testing'))` guard. If a refactor
+  # ever lifts the Route::get out of that guard, dev-login becomes reachable
+  # in production — a critical impersonation primitive in the wild.
+  # --------------------------------------------------------------------------
+  - id: ff-dev-login-route-outside-env-guard
+    severity: ERROR
+    languages: [php]
+    message: >-
+      /dev-login is registered outside an app()->environment(...) guard. This
+      route auto-logs the caller in as a QA user and MUST be restricted to
+      local/dev/testing environments. Wrap the Route::get in
+      `if (app()->environment('local', 'dev', 'testing')) { ... }`.
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+      owasp: "A05:2021 Security Misconfiguration"
+      ff-risk: dev-login-leakage
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: Route::get($PATH, ...)
+              - metavariable-regex:
+                  metavariable: $PATH
+                  regex: "^['\"]/dev-login"
+          - patterns:
+              - pattern: Route::any($PATH, ...)
+              - metavariable-regex:
+                  metavariable: $PATH
+                  regex: "^['\"]/dev-login"
+          - patterns:
+              - pattern: Route::match(..., $PATH, ...)
+              - metavariable-regex:
+                  metavariable: $PATH
+                  regex: "^['\"]/dev-login"
+      - pattern-not-inside: |
+          if (app()->environment(...)) { ... }
+      - pattern-not-inside: |
+          if (App::environment(...)) { ... }
+      - pattern-not-inside: |
+          if (\Illuminate\Support\Facades\App::environment(...)) { ... }
+
+  # --------------------------------------------------------------------------
+  # 2) security:dev-token must only be invoked from CLI / test / CI contexts.
+  #
+  # SecurityDevTokenCommand mints a Sanctum personal-access token for any QA
+  # role (or arbitrary email). It refuses to run when env=production, but
+  # nothing today stops a web controller from shelling out to Artisan::call()
+  # and minting a token mid-request. That'd be a privilege-escalation channel
+  # (request → console command → admin token). Allow it from
+  # app/Console/**, database/seeders/**, tests/**, and bin/** only.
+  # --------------------------------------------------------------------------
+  - id: ff-dev-token-call-outside-allowed-context
+    severity: ERROR
+    languages: [php]
+    message: >-
+      security:dev-token mints an API token for arbitrary QA users and must
+      not be reachable from web/API request flow. Move this call into a
+      Console command, seeder, test, or a bin/ script.
+    metadata:
+      category: security
+      cwe: "CWE-269: Improper Privilege Management"
+      ff-risk: dev-token-leakage
+    paths:
+      exclude:
+        - app1/family-fund-app/app/Console
+        - app1/family-fund-app/database/seeders
+        - app1/family-fund-app/tests
+        - app1/family-fund-app/bin
+    pattern-either:
+      - pattern: Artisan::call("security:dev-token", ...)
+      - pattern: \Illuminate\Support\Facades\Artisan::call("security:dev-token", ...)
+      - pattern: app(Kernel::class)->call("security:dev-token", ...)
+
+  # --------------------------------------------------------------------------
+  # 3) Raw SQL must not interpolate request input as a literal string.
+  #
+  # FamilyFund uses whereRaw/DB::raw/DB::statement legitimately, but always
+  # with the second-argument bindings array. Interpolating $request->...,
+  # $_GET[...], or any request-derived string directly into the SQL literal
+  # is a SQL-injection primitive (and also the IDOR primitive when the
+  # interpolated value is an id).
+  # --------------------------------------------------------------------------
+  - id: ff-raw-sql-interpolates-request-input
+    severity: ERROR
+    languages: [php]
+    message: >-
+      Raw SQL is built by concatenating / interpolating request input. Pass
+      the value via the bindings array instead (e.g.
+      ->whereRaw('... = ?', [$request->input('x')])).
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 Injection"
+      ff-risk: raw-sql-injection
+    pattern-either:
+      - patterns:
+          - pattern-either:
+              - pattern: DB::raw("..." . $REQ->$M(...))
+              - pattern: DB::raw("..." . $REQ->$M(...) . "...")
+              - pattern: DB::statement("..." . $REQ->$M(...))
+              - pattern: DB::statement("..." . $REQ->$M(...) . "...")
+              - pattern: DB::select("..." . $REQ->$M(...))
+              - pattern: DB::select("..." . $REQ->$M(...) . "...")
+              - pattern: $Q->whereRaw("..." . $REQ->$M(...))
+              - pattern: $Q->whereRaw("..." . $REQ->$M(...) . "...")
+              - pattern: $Q->orderByRaw("..." . $REQ->$M(...))
+              - pattern: $Q->orderByRaw("..." . $REQ->$M(...) . "...")
+          - metavariable-regex:
+              metavariable: $REQ
+              regex: "^\\$(request|req|input)$"
+      - pattern-either:
+          - pattern: DB::raw("..." . $_GET[...])
+          - pattern: DB::raw("..." . $_POST[...])
+          - pattern: DB::raw("..." . $_REQUEST[...])
+          - pattern: DB::statement("..." . $_GET[...])
+          - pattern: DB::statement("..." . $_POST[...])
+          - pattern: $Q->whereRaw("..." . $_GET[...])
+          - pattern: $Q->whereRaw("..." . $_POST[...])
+          - pattern: $Q->orderByRaw("..." . $_GET[...])
+
+  # --------------------------------------------------------------------------
+  # 4) File reads must not take a path directly from request input.
+  #
+  # PDF / report generation and attachments code paths read files. None of
+  # them should ingest a user-supplied path verbatim — that'd be path
+  # traversal / arbitrary file read. Force the caller to validate / resolve
+  # against an allow-listed base first.
+  # --------------------------------------------------------------------------
+  - id: ff-unsafe-file-read-from-request
+    severity: ERROR
+    languages: [php]
+    message: >-
+      File read uses a request-derived path directly. Resolve / validate the
+      path against an allow-listed base (Storage disk + sanitized relative
+      key) before reading.
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+      owasp: "A01:2021 Broken Access Control"
+      ff-risk: unsafe-file-path
+    patterns:
+      - pattern-either:
+          - pattern: file_get_contents($REQ->$M(...))
+          - pattern: file_get_contents($REQ->$M(...) . $X)
+          - pattern: file_get_contents($X . $REQ->$M(...))
+          - pattern: fopen($REQ->$M(...), ...)
+          - pattern: readfile($REQ->$M(...))
+          - pattern: new SplFileObject($REQ->$M(...))
+          - pattern: Storage::get($REQ->$M(...))
+          - pattern: Storage::disk(...)->get($REQ->$M(...))
+          - pattern: File::get($REQ->$M(...))
+          - pattern: include $REQ->$M(...)
+          - pattern: require $REQ->$M(...)
+      - metavariable-regex:
+          metavariable: $REQ
+          regex: "^\\$(request|req|input)$"
+
+# ---------------------------------------------------------------------------
+# Deferred — scoped out of this PR (issue #17), see .semgrep/README.md:
+#
+# 5) ff-webv1-by-id-action-without-authorize — flags WebV1 controller
+#    actions (show / edit / update / destroy) that load by id but never call
+#    $this->authorize(...). Drafted, but its current-tree baseline is 53
+#    findings — a mix of real IDOR risk and global-resource actions
+#    (asset prices, scheduled jobs, exchange holidays) where per-object
+#    authz doesn't apply. Needs per-finding triage before it can be a quiet
+#    gate. Tracked as a follow-up; rule body is preserved in this file's
+#    git history for the next iteration.
+# ---------------------------------------------------------------------------

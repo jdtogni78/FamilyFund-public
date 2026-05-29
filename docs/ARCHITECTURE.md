@@ -3,9 +3,9 @@
 > Memory-bank doc — see root `AGENTS.md` for the index.
 > **As of:** 2026-05-28. Counts and `path:line` references drift; verify with
 > `git blame` / `git grep` before quoting in code review. Companion docs:
-> [`../API_VS_WEB_COMPARISON.md`](../API_VS_WEB_COMPARISON.md),
-> [`../API_VS_WEB_LOGIC_ANALYSIS.md`](../API_VS_WEB_LOGIC_ANALYSIS.md),
-> [`../ACL_IMPLEMENTATION.md`](../ACL_IMPLEMENTATION.md),
+> [`API_VS_WEB_COMPARISON.md`](API_VS_WEB_COMPARISON.md),
+> [`API_VS_WEB_LOGIC_ANALYSIS.md`](API_VS_WEB_LOGIC_ANALYSIS.md),
+> [`ACL_IMPLEMENTATION.md`](ACL_IMPLEMENTATION.md),
 > [`./ENGINEERING_DECISIONS.md`](./ENGINEERING_DECISIONS.md).
 
 This doc follows arc42 chapters (1 Introduction, 3 Context, 5 Building Blocks,
@@ -173,7 +173,7 @@ default and the exceptions as known debt.
    `RequireFullFundAccess`); inside the controller a second
    `AuthorizationService` / `AuthorizesApiAccess` pass scopes the query and
    `abort(403)`s on cross-tenant access (ED-0003, ED-0004; see
-   `../ACL_IMPLEMENTATION.md`).
+   `ACL_IMPLEMENTATION.md`).
 
 ## 6. Entry points and layer map (arc42 §5 / Runtime §6)
 
@@ -207,8 +207,8 @@ default and the exceptions as known debt.
   - aliases: `role`, `permission`, `role_or_permission` (Spatie), `fund.full`
     (`RequireFullFundAccess`).
 
-For the per-endpoint differential, see [`../API_VS_WEB_COMPARISON.md`](../API_VS_WEB_COMPARISON.md)
-and [`../API_VS_WEB_LOGIC_ANALYSIS.md`](../API_VS_WEB_LOGIC_ANALYSIS.md).
+For the per-endpoint differential, see [`API_VS_WEB_COMPARISON.md`](API_VS_WEB_COMPARISON.md)
+and [`API_VS_WEB_LOGIC_ANALYSIS.md`](API_VS_WEB_LOGIC_ANALYSIS.md).
 
 ### 6.3 Scheduler (Runtime view)
 
@@ -370,7 +370,7 @@ Multiple logical DBs on the same MariaDB server:
 
 ## 10. Cross-cutting concepts (arc42 §8)
 
-- **Authorization** — see §5 layer rule 4 and `../ACL_IMPLEMENTATION.md`.
+- **Authorization** — see §5 layer rule 4 and `ACL_IMPLEMENTATION.md`.
 - **Historical reads** — every `as_of` endpoint returns the state at a
   given date; backed by `*Ext::sharesAsOf`, `valueAsOf`, `shareValueAsOf`,
   etc. The `as_of` route param is regex-pinned.
@@ -413,11 +413,11 @@ Multiple logical DBs on the same MariaDB server:
 
 - Detailed schema / ERD → planned `docs/DATABASE.md`.
 - Deploy + runbooks → `docs/runbooks/` and `CLAUDE.md` prod section.
-- Security posture → `docs/security/`, `../SECURITY_NEXT_STEPS.md`,
+- Security posture → `docs/security/`, `SECURITY_NEXT_STEPS.md`,
   ED-0001 / ED-0002 / ED-0017.
 - Per-decision history → `./ENGINEERING_DECISIONS.md`.
-- Per-controller diff → `../API_VS_WEB_COMPARISON.md`,
-  `../API_VS_WEB_LOGIC_ANALYSIS.md`.
+- Per-controller diff → `API_VS_WEB_COMPARISON.md`,
+  `API_VS_WEB_LOGIC_ANALYSIS.md`.
 - Credit-line domain narrative → `credit_lines/` subfolder.
 
 TODO(scope-clarify): The ticket's "Done when" list includes "linked from

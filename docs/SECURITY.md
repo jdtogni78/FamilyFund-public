@@ -5,8 +5,8 @@ handling, automation, and an STRIDE-shaped threat model. Source of truth lives
 in code; this doc is a guided map.
 
 > **Companion docs:**
-> [`ACL_IMPLEMENTATION.md`](../ACL_IMPLEMENTATION.md) (the full permission/role
-> matrix), [`SECURITY_NEXT_STEPS.md`](../SECURITY_NEXT_STEPS.md) (open work),
+> [`ACL_IMPLEMENTATION.md`](ACL_IMPLEMENTATION.md) (the full permission/role
+> matrix), [`SECURITY_NEXT_STEPS.md`](SECURITY_NEXT_STEPS.md) (open work),
 > [`docs/security/SECURITY-EXPOSURE.md`](security/SECURITY-EXPOSURE.md) (the
 > 2026-05 leak incident + history-purge record),
 > [`docs/security/HISTORY-AUDIT-66.md`](security/HISTORY-AUDIT-66.md),
@@ -52,7 +52,7 @@ Roles (`database/seeders/RolesAndPermissionsSeeder.php`):
 - `beneficiary` — per-fund: own account + own transactions + own credit lines.
 
 Full permission matrix (per resource, per role, with view-own carve-outs):
-**[`ACL_IMPLEMENTATION.md`](../ACL_IMPLEMENTATION.md)**. The seeder is the
+**[`ACL_IMPLEMENTATION.md`](ACL_IMPLEMENTATION.md)**. The seeder is the
 canonical permission list; the doc mirrors it.
 
 ### 2.2 Defense in depth
@@ -257,6 +257,6 @@ Where the threat lives in code and how each layer mitigates it.
 
 ## 7. Open security work
 
-Tracked in [`SECURITY_NEXT_STEPS.md`](../SECURITY_NEXT_STEPS.md) — see that
+Tracked in [`SECURITY_NEXT_STEPS.md`](SECURITY_NEXT_STEPS.md) — see that
 file for the live list and validation commands; not duplicated here to avoid
 drift.

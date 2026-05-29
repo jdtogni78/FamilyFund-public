@@ -1,7 +1,7 @@
 # Runbook — dstrader ⇄ FamilyFund service-token rotation
 
 > Scope: the Sanctum API tokens dstrader uses to call FamilyFund's `/api/*`
-> surface. Background: [ED-0016](../ENGINEERING_DECISIONS.md), issue #82.
+> surface. Background: [ED-0016](ENGINEERING_DECISIONS.md), issue #82.
 
 ## Overview
 

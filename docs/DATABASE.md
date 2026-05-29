@@ -1,7 +1,7 @@
 # DATABASE
 
 Schema reference for FamilyFund. Companion to [`AGENTS.md`](../AGENTS.md) ("Tech Stack"
-+ "Database Backup") and [`../Transactions.md`](../Transactions.md) (transaction-flow
++ "Database Backup") and [`Transactions.md`](Transactions.md) (transaction-flow
 semantics). For "why a column exists" and migration backstory see
 [`ENGINEERING_DECISIONS.md`](ENGINEERING_DECISIONS.md).
 
@@ -173,7 +173,7 @@ see `credit_lines/matching_on_repayment.md` for the design note.
 
 A separate money-flow subsystem (Wise/PIX inbound, USD-bank/broker outbound,
 attribution to credit lines) is **planned but not yet schema-resident** — see
-`../money_flow_plan.md` and `../money_flow_runbook.md`. Until v1 lands the
+`money_flow_plan.md` and `runbooks/money_flow_runbook.md`. Until v1 lands the
 nearest schema surface is `cash_deposits` + `deposit_requests` (operator
 tracks deposits manually and binds them to a `transactions` row). New
 money-flow tables (e.g. `mf_audit_log`, recipient registry,
@@ -343,7 +343,7 @@ above; the planned subsystem will draw its own ERD when it ships.
 
 ## Related docs
 
-- [`../Transactions.md`](../Transactions.md) — transaction flows and the
+- [`Transactions.md`](Transactions.md) — transaction flows and the
   shares ledger semantics (root-level, will be folded into `docs/` by the
   scaffold ticket).
 - [`credit_lines/fund_cashflow.md`](credit_lines/fund_cashflow.md) and
@@ -353,6 +353,6 @@ above; the planned subsystem will draw its own ERD when it ships.
   ED-0009/ED-0010/ED-0014/ED-0015 for the "why" behind testpool, repository
   pattern, net-shares, credit-line label, synthetic seeder, and management
   scoping.
-- [`../money_flow_plan.md`](../money_flow_plan.md) and
-  [`../money_flow_runbook.md`](../money_flow_runbook.md) — the planned
+- [`money_flow_plan.md`](money_flow_plan.md) and
+  [`runbooks/money_flow_runbook.md`](runbooks/money_flow_runbook.md) — the planned
   money-flow subsystem (no schema yet).

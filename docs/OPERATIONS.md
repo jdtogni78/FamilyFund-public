@@ -3,9 +3,9 @@
 Operator runbook index for FamilyFund: how to deploy, run the periodic work,
 recover from common incidents, and rotate the things that expire. Day-to-day
 **manual fund maintenance** (investment rebalancing, grantor/beneficiary
-support) lives in [../ManualMaintenance.md](../ManualMaintenance.md); the
+support) lives in [ManualMaintenance.md](ManualMaintenance.md); the
 money-flow subsystem has its own runbook at
-[../money_flow_runbook.md](../money_flow_runbook.md); the dstrader ⇄ FF service-
+[runbooks/money_flow_runbook.md](runbooks/money_flow_runbook.md); the dstrader ⇄ FF service-
 token rotation runbook is at
 [runbooks/ff-service-token-rotation.md](runbooks/ff-service-token-rotation.md).
 
@@ -212,14 +212,14 @@ default threshold is 5% — tighten when investigating a known issue.
 |---|---|---|
 | **Continuous** | `php artisan schedule:run` (must be installed as a 1-minute crontab somewhere — confirm; not committed in this repo) — drives `routes/console.php` schedules | Host or compose override |
 | **Daily 06:30** | `security:service-token --check-expiry --warn-days=14` (warns by email if a dstrader service token nears expiry) | `routes/console.php` |
-| **Daily** | Money-flow operator checks (reconciliation, flagged tx, pending-attribution, buffer signals) — **applies once money-flow ships** | [../money_flow_runbook.md](../money_flow_runbook.md) §1 |
+| **Daily** | Money-flow operator checks (reconciliation, flagged tx, pending-attribution, buffer signals) — **applies once money-flow ships** | [runbooks/money_flow_runbook.md](runbooks/money_flow_runbook.md) §1 |
 | **Weekly Mon 06:35** | `security:service-token --prune-expired` | `routes/console.php` |
 | **Weekly** | Stale DepositRequest cleanup, recipient verification queue, audit-log spot check | money_flow_runbook §2 |
 | **Every 60 days** | Rotate dstrader service tokens (TTL 90d) | [runbooks/ff-service-token-rotation.md](runbooks/ff-service-token-rotation.md) (cron lives in dstrader-docker per #82; script may not yet exist at HEAD) |
 | **Quarterly (months 3/6/9/12)** | Generate quarterly reports — runs as queued jobs from the `scheduled_jobs` table; preview first per money_flow_runbook §3 | `/operations` → Run Due Jobs, or the queue worker fires on its own |
-| **Quarterly** | Rebalance the IBKR investment account to target percentages | manual; see [../ManualMaintenance.md](../ManualMaintenance.md) |
+| **Quarterly** | Rebalance the IBKR investment account to target percentages | manual; see [ManualMaintenance.md](ManualMaintenance.md) |
 | **Yearly** | `holidays:sync <exchange>` (e.g. `nyse`) — refreshes the exchange-holiday table consumed by trade-portfolio scheduling | `SyncExchangeHolidays` command |
-| **Yearly** | Investment-board strategy/percentages review | manual; [../ManualMaintenance.md](../ManualMaintenance.md) |
+| **Yearly** | Investment-board strategy/percentages review | manual; [ManualMaintenance.md](ManualMaintenance.md) |
 
 ## 4. Incidents
 
@@ -352,7 +352,7 @@ system-admin-only — a non-admin token will 403 even with a fresh secret.
 ### 4.9 Money-flow incidents (reconciliation drift, webhook signature spike, vendor outage, ACH return, operator-role compromise)
 
 These apply once money-flow v1 ships. Each has a playbook in
-[../money_flow_runbook.md](../money_flow_runbook.md) §4. They're scoped to the
+[runbooks/money_flow_runbook.md](runbooks/money_flow_runbook.md) §4. They're scoped to the
 money-flow subsystem (Wise → checking → IBKR), not the core fund/portfolio
 code.
 
@@ -413,10 +413,10 @@ container with `docker --context rootless exec familyfund php artisan tinker
 These cover scopes too big to fit here without losing precision; this index
 does not duplicate them.
 
-- **Money-flow** (Wise → checking → IBKR) — [../money_flow_runbook.md](../money_flow_runbook.md). Daily/weekly/monthly checklists, incident playbooks (drift, webhook, vendor outage, ACH return, operator compromise), roles cheat-sheet, glossary. Companion design doc: [../money_flow_plan.md](../money_flow_plan.md).
+- **Money-flow** (Wise → checking → IBKR) — [runbooks/money_flow_runbook.md](runbooks/money_flow_runbook.md). Daily/weekly/monthly checklists, incident playbooks (drift, webhook, vendor outage, ACH return, operator compromise), roles cheat-sheet, glossary. Companion design doc: [money_flow_plan.md](money_flow_plan.md).
 - **dstrader ⇄ FamilyFund service-token rotation** — [runbooks/ff-service-token-rotation.md](runbooks/ff-service-token-rotation.md). Mint/rotate/revoke commands, the dstrader-docker cron, emergency rotation, verification, rollback.
-- **Manual fund maintenance** (investment cadence, grantor/beneficiary support, reports cadence) — [../ManualMaintenance.md](../ManualMaintenance.md).
-- **Credit-lines** (design + recurring ops scenarios) — [../credit_lines_plan.md](../credit_lines_plan.md) and the per-flow notes in [credit_lines/](credit_lines/). No standalone runbook today; the operations surface is the same `/operations` page plus admin-only credit-line write actions per ED-0016.
+- **Manual fund maintenance** (investment cadence, grantor/beneficiary support, reports cadence) — [ManualMaintenance.md](ManualMaintenance.md).
+- **Credit-lines** (design + recurring ops scenarios) — [credit_lines/credit_lines_plan.md](credit_lines/credit_lines_plan.md) and the per-flow notes in [credit_lines/](credit_lines/). No standalone runbook today; the operations surface is the same `/operations` page plus admin-only credit-line write actions per ED-0016.
 - **Engineering decisions** (the "why" behind operational choices — secrets, testing, scheduling) — [ENGINEERING_DECISIONS.md](ENGINEERING_DECISIONS.md).
 - **New-machine setup** (prereqs, env decrypt, DB load, deploy prereqs) — [../SETUP.md](../SETUP.md).
 - **Security exposure / incident-response template** — [security/SECURITY-EXPOSURE.md](security/SECURITY-EXPOSURE.md).

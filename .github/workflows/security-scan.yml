@@ -135,10 +135,13 @@ jobs:
         run: |
           # p/laravel dropped: the registry intermittently 404s for it, which
           # aborts the whole scan. Keep in sync with bin/security-scan.sh.
+          # FamilyFund-specific rules at .semgrep/familyfund.yml (#17/ED-0019)
+          # run alongside the registry packs.
           semgrep scan \
             --config p/php \
             --config p/owasp-top-ten \
             --config p/security-audit \
+            --config .semgrep/familyfund.yml \
             --sarif \
             --output semgrep.sarif \
             $APP_DIR

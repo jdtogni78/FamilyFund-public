@@ -171,7 +171,13 @@ run_semgrep_scan() {
   # Note: p/laravel was dropped — the registry returns an intermittent HTTP 404
   # for it, which aborted the whole scan (exit 7) before any rules ran. p/php +
   # p/owasp-top-ten + p/security-audit cover the same ground reliably.
+  # FamilyFund-specific rules live at repo-root .semgrep/familyfund.yml
+  # (issue #17 / ED-0019). They run alongside the registry packs; the local
+  # file never 404s, so it goes outside the retry loop's download-error path.
   local configs=(--config p/php --config p/owasp-top-ten --config p/security-audit)
+  if [[ -f "$REPO_ROOT/.semgrep/familyfund.yml" ]]; then
+    configs+=(--config "$REPO_ROOT/.semgrep/familyfund.yml")
+  fi
 
   # The registry download can still flake transiently; retry only on download/
   # config errors (never on real findings) so a hiccup doesn't fail the gate.

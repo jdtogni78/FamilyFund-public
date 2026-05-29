@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 
 use function Livewire\Volt\layout;
 use function Livewire\Volt\rules;
@@ -15,6 +18,22 @@ rules(['email' => ['required', 'string', 'email']]);
 
 $sendPasswordResetLink = function () {
     $this->validate();
+
+    $throttleKey = 'password-forgot|'.request()->ip();
+
+    if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+        event(new Lockout(request()));
+        $seconds = RateLimiter::availableIn($throttleKey);
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    RateLimiter::hit($throttleKey, 60);
 
     // We will send the password reset link to this user. Once we have attempted
     // to send the link, we will examine the response then see the message we

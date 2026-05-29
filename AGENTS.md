@@ -96,6 +96,12 @@ Security & runbooks:
 
 Process:
 
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to land a change: branch/PR
+  flow, the PR template, and **when a code change must update the
+  memory bank**. **Intentionally kept at repo root** (GitHub auto-surfaces
+  it on PRs).
+- [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) —
+  PR template (summary, test plan, memory-bank-sync checkbox).
 - [docs/GITHUB_PROJECTS.md](docs/GITHUB_PROJECTS.md) — GitHub Projects setup
   (boards over Jira); the **Trading & Fund** board (project #1) is the source
   of truth for FamilyFund work.

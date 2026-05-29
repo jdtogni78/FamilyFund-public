@@ -58,6 +58,11 @@ Architecture & decisions:
 - [docs/MONEY_SUBSYSTEM.md](docs/MONEY_SUBSYSTEM.md) — Memory-bank index for
   the money subsystem: ledger + credit-lines + inbound deposits + the ACL
   enforcement points that gate them.
+- [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — Memory-bank index for
+  cross-system integrations: IBKR cash-deposit pipeline, dstrader Sanctum
+  service tokens, internal HTTP sidecars (trading-calendar, quickchart),
+  outbound email, the SOPS+age secrets pipeline, and the planned BRL↔USD
+  money-flow (not yet built).
 - [docs/FUND_SETUP_GUIDE.md](docs/FUND_SETUP_GUIDE.md) — Operator guide for
   creating a new fund.
 - [docs/ManualMaintenance.md](docs/ManualMaintenance.md) — Manual fund

@@ -120,7 +120,7 @@ project root) or from anywhere when invoked through `docker exec familyfund …`
 # IMPORTANT: always use these scripts, never run `docker compose` directly.
 # FamilyFund:
 ssh dstrader "cd ~/dev/dstrader-docker && ./server/dev/run_familyfund.sh prod"
-# Wake prod server (if sleeping): ../dstrader-docker/local/wake_spirit.sh
+# Wake prod server (if sleeping): ../dstrader-docker/local/wake_dstrader.sh
 # DStrader (auto-runs weekdays 12:33 PM via cron, or manually):
 ssh dstrader "cd ~/dev/dstrader-docker/dstrader/runtime && \
   ./start_dstrader.sh restart prod -d"

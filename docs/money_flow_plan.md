@@ -3,7 +3,7 @@
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
 **Last Updated:** 2026-05-13 (rev 6 — folded accepted items from plan_recommendations.md: USD-only booking, pending-attribution state, CashDeposit coexistence plan, line-item reconciliation, RBAC matrix, PII email policy, 1-year idempotency, closure-block extended)
 **Branch:** `claude/plan-credit-lines-cCjWG`
-**Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines_plan.md`](credit_lines_plan.md), [`testing_plan.md`](testing_plan.md) — every MF-* below is mapped to a named test in `testing_plan.md` §4.2 (inbound) and §4.3 (outbound).
+**Related docs:** [`Transactions.md`](Transactions.md), [`app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md`](../app1/family-fund-app/docs/FAMILYFUND_TRANSACTION_SYSTEM.md), [`credit_lines/credit_lines_plan.md`](credit_lines/credit_lines_plan.md), [`testing_plan.md`](testing_plan.md) — every MF-* below is mapped to a named test in `testing_plan.md` §4.2 (inbound) and §4.3 (outbound).
 
 ---
 
@@ -11,7 +11,7 @@
 
 Design an end-to-end money-flow subsystem so that:
 
-1. **Inbound** — a beneficiary in Brazil can pay BRL from their Brazilian bank (PIX or otherwise), have it converted and routed to the fund's USD bank/broker account, and have the system **automatically detect** the arrival, attribute it to the beneficiary, and book the right `CashDeposit` / `Transaction` (likely a credit-line `REP` per `credit_lines_plan.md`).
+1. **Inbound** — a beneficiary in Brazil can pay BRL from their Brazilian bank (PIX or otherwise), have it converted and routed to the fund's USD bank/broker account, and have the system **automatically detect** the arrival, attribute it to the beneficiary, and book the right `CashDeposit` / `Transaction` (likely a credit-line `REP` per `credit_lines/credit_lines_plan.md`).
 2. **Outbound** — the fund can automatically (or semi-automatically) send USD/BRL to a beneficiary's Brazilian bank account (PIX or Wise transfer) when they take a credit-line draw or a withdrawal.
 3. **Registry** — the system stores Brazilian recipient information (PIX keys, bank/agency/account, CPF) so outbound transfers can be initiated programmatically.
 4. **Isolation** — the entire money-flow subsystem lives in its own namespace, has its own queue, its own audit log, and stricter access controls than the rest of the app.
@@ -75,7 +75,7 @@ ACH checking → Wise → BRL → PIX to recipient
 
 The full vendor evaluation (§3.6), recipient registry (§6), subsystem isolation (§7), and reconciliation reports (§4.4 three-way) all stay in v1 because they apply to the v1 path. The deferred items above are the elaborations that add value once v1 is running.
 
-**Operational counterpart.** Day-to-day operation of the v1 system is documented in the companion [`money_flow_runbook.md`](money_flow_runbook.md) — daily / weekly / monthly task lists plus incident playbooks.
+**Operational counterpart.** Day-to-day operation of the v1 system is documented in the companion [`runbooks/money_flow_runbook.md`](runbooks/money_flow_runbook.md) — daily / weekly / monthly task lists plus incident playbooks.
 
 ---
 

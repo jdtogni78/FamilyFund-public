@@ -53,6 +53,9 @@ Architecture & decisions:
   Whether REST API and Web UI share business logic; DB-state impact.
 - [docs/Transactions.md](docs/Transactions.md) — Transaction types and their
   effects on fund + beneficiary balances.
+- [docs/MONEY_SUBSYSTEM.md](docs/MONEY_SUBSYSTEM.md) — Memory-bank index for
+  the money subsystem: ledger + credit-lines + inbound deposits + the ACL
+  enforcement points that gate them.
 - [docs/FUND_SETUP_GUIDE.md](docs/FUND_SETUP_GUIDE.md) — Operator guide for
   creating a new fund.
 - [docs/ManualMaintenance.md](docs/ManualMaintenance.md) — Manual fund

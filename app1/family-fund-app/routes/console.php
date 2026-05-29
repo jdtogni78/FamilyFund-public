@@ -44,3 +44,13 @@ Schedule::command('security:service-token --prune-expired')
     ->weeklyOn(1, '06:35')
     ->name('service_token.prune_expired')
     ->withoutOverlapping();
+
+// Independent safety-net for the daily asset-price ingestion pipeline (#39 /
+// salvaged #31). Runs after the daily post would have landed and emails
+// ADMIN_EMAILS if the newest price for any tracked asset lags more than 5
+// trading days behind today — catches FF-down, dstrader-down, and
+// POST-rejected failures alike.
+Schedule::command('prices:check-staleness')
+    ->dailyAt('13:30')
+    ->name('prices.check_staleness')
+    ->withoutOverlapping();

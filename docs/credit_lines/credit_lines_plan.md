@@ -4,8 +4,8 @@
 **Last Updated:** 2026-05-13 (rev 7 — folded accepted items from plan_recommendations.md: admin-only writes, reversal flow, closure block, tax caveat, loans summary, share-value copy, imputed-interest field)
 **Branch:** `claude/plan-credit-lines-cCjWG`
 **Related sub-projects:**
-- [`money_flow_plan.md`](money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
-- [`testing_plan.md`](testing_plan.md) — Test strategy across unit / integration / browser layers, with every UC-* in this doc mapped to a named test in §4.1, plus reviewable-output and traceability conventions.
+- [`money_flow_plan.md`](../money_flow_plan.md) — Brazil ↔ US money flow, detection, recipient registry, and the isolated `App\MoneyFlow` subsystem. The fund-side cash flow described in §5 rule 2 and the receivable-handling design in §11 are owned by that doc.
+- [`testing_plan.md`](../testing_plan.md) — Test strategy across unit / integration / browser layers, with every UC-* in this doc mapped to a named test in §4.1, plus reviewable-output and traceability conventions.
 
 ---
 
@@ -204,7 +204,7 @@ The `transactions` table also gains a `reversed` boolean column (default false).
 2. **Shares, not money — but cash *does* move.** The debt is denominated in shares (same number out, same number back, regardless of price). At draw time the system must also **move cash out of the fund** equal to `principal_shares × share_price_at_draw`. This is a **new cash-flow path** the fund does not currently support and is a first-class part of this feature, not a UI concern:
    - The fund's cash position (and therefore portfolio total) drops by the disbursed amount.
    - On repayment, cash flows back into the fund equal to `shares_repaid × share_price_on_repayment_date` (price drift = fund's exposure).
-   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §11 risks. The actual external money movement (Wise / PIX / IBKR) is designed in the [money flow sub-project](money_flow_plan.md); this rule only covers how the *fund's books* reflect it.
+   - We need a way to **record cash leaving the fund** (and returning) without it being modeled as a share purchase/sale. Likely a new transaction type or a new ledger entry on the fund/portfolio side. See §11 risks. The actual external money movement (Wise / PIX / IBKR) is designed in the [money flow sub-project](../money_flow_plan.md); this rule only covers how the *fund's books* reflect it.
 3. **Repayment is line-targeted via auto-matching.** Every REP transaction carries an `account_credit_line_id` FK (§4.3) plus a `match_status` (see §4.4). When an account has **only one active line**, the REP is assigned to it automatically. When an account has **two or more active lines**, the matcher tries to assign the REP to exactly one line using this priority:
    1. **Exact share match** against any scheduled `CreditLinePayment.shares_due` on an active line (within a small tolerance, e.g., the decimal(19,4) precision).
    2. **Exact cash match** against `shares_due × share_value_at_transaction_date` on an active line (share-price drift makes this fuzzier, so used only if shares didn't match).
@@ -481,7 +481,7 @@ Pipeline stages per transaction:
    - User submission via web UI (existing flow)
    - API endpoint (existing flow)
    - System-generated: scheduler jobs, auto-matcher, draw confirmation, late-detection sweep (new for credit lines)
-   - **Future**: external feeds (bank API, CSV upload, email parsing) — designed in [`money_flow_plan.md`](money_flow_plan.md); not v1, but the seam supports them
+   - **Future**: external feeds (bank API, CSV upload, email parsing) — designed in [`money_flow_plan.md`](../money_flow_plan.md); not v1, but the seam supports them
 2. **Classify** — inspect `type` to decide which classifier(s) apply:
    - `BOR` / `REP` → credit-line matcher (§5 rule 3)
    - `PUR` (deposit) → existing matching-rule pipeline (find any `MatchingRule` that applies, create candidate `TransactionMatching` rows)
@@ -568,14 +568,14 @@ The plan was implemented across 10 phases over a few sessions:
 
 | Phase | Scope |
 |-------|-------|
-| 0 — Foundation | `AccountExt::sharesAsOf()` OWN−BOR fix (UC-24); migrations for `account_credit_lines`, `credit_line_payments`, `credit_line_adjustments`, `transaction_reversals`; FK + status columns on `transactions`; bare models + repositories; receivable-as-asset design (see [`docs/credit_lines/fund_cashflow.md`](docs/credit_lines/fund_cashflow.md)). |
+| 0 — Foundation | `AccountExt::sharesAsOf()` OWN−BOR fix (UC-24); migrations for `account_credit_lines`, `credit_line_payments`, `credit_line_adjustments`, `transaction_reversals`; FK + status columns on `transactions`; bare models + repositories; receivable-as-asset design (see [`fund_cashflow.md`](fund_cashflow.md)). |
 | 1 — Services (5 parallel waves) | Draw/Repay/Cancel + amortization (UC-01, 03, 05-07, 12, 13); CreditLineMatcher + MatchResolutionService with all 4 priorities (UC-25-31); ReadjustService + adjustment history (UC-09, 10, 40, 41, 43); TransactionDetectionService + 5 mailables + reminder/late jobs (UC-08, 18-20, 32-38); ReverseService (UC-45). |
 | 2 — Integration | Notification-settings columns; `is_admin()` via Spatie `system-admin`; ScheduleAdvancer binding; `Transaction::saved` observer; scheduler entries; 6 form requests; 3 WebV1 controllers; 11 named routes; `accounts/show` extension; minimal CRUD blade views; admin-only auth gates (UC-48). |
 | 3 — Reporting | TrajectoryBuilder (multi-generation overlay), FundReceivableCalculator, LoansSummaryBuilder, FundExposureBuilder; `FundExt::valueWithCreditLinesAsOf()`; QuickChart trajectory partial; account/fund page extensions; quarterly PDF templates; share-value clarification copy (UC-14-17, 22, 42, 44, 49, 50). |
 | 4 — Polish | New temporal `account_credit_line_balances` table + `CreditLineBalanceTracker` wired into Draw/Repay/Reverse (UC-21); per-generation chart colors; admin-only fund cash-position panel; schedule-snapshot + trajectory-through-this-point modals. |
 | 5 — Browser tests | Laravel Dusk install + Dusk happy-path tests covering UC-01/05/13/09/45/49/42. Bug-hunt during the UI tour caught two real defects (see "Notable issues found and fixed" below). |
 | 6 — Close audit gaps | UC-20 settings UI; UC-47 account closure block; UC-46 admin backdated-tx form; UC-37 contribution-classifier round-trip as a read-only adapter that observes the legacy `TransactionMatching` writer rather than duplicating it. |
-| 7 — Beyond plan | `applies_to_rep` toggle on `MatchingRule` (default `true`) — matching contributions allowed on REPs with `shares × shareValueAsOf` fallback when the REP value is 0. See [`docs/credit_lines/matching_on_repayment.md`](docs/credit_lines/matching_on_repayment.md). |
+| 7 — Beyond plan | `applies_to_rep` toggle on `MatchingRule` (default `true`) — matching contributions allowed on REPs with `shares × shareValueAsOf` fallback when the REP value is 0. See [`matching_on_repayment.md`](matching_on_repayment.md). |
 | 8 — Negative coverage | Gap-fill RepayService negative tests; 8 Dusk error-path tests (non-admin, validation, over-borrow, cancel-blocked, account-closure-blocked, no-change readjust, double-reverse); 5 exception types caught into flash errors in the controllers. |
 | 9 + 9b — Simulator | New `/credit-lines/{line}/simulator` admin page with two modes: payment-mode ("if I pay $X/mo, when does it pay off?") and time-mode ("if I want it paid off in N months, what $/mo do I need?"). Three growth scenarios using the existing `expected × 0.8 / 1.0 / 1.2` multipliers seen elsewhere in the codebase. |
 
@@ -618,7 +618,7 @@ This design is interest-free by intent. US trust loans below market rate may tri
 
 ### Reference docs
 
-The bulky per-phase tracking docs that drove the build (one per phase, plus a few audit/bug doc) have been removed now that this section captures the implementation summary. The substantive design notes that the plan references — [`docs/credit_lines/fund_cashflow.md`](docs/credit_lines/fund_cashflow.md) and [`docs/credit_lines/matching_on_repayment.md`](docs/credit_lines/matching_on_repayment.md) — remain in place.
+The bulky per-phase tracking docs that drove the build (one per phase, plus a few audit/bug doc) have been removed now that this section captures the implementation summary. The substantive design notes that the plan references — [`fund_cashflow.md`](fund_cashflow.md) and [`matching_on_repayment.md`](matching_on_repayment.md) — remain in place.
 
 ### Deploy note: `applies_to_rep` flip-on for existing rules
 

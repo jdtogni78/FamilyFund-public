@@ -3,9 +3,9 @@
 **Status:** Draft / sub-project proposal — not yet scoped for implementation
 **Last Updated:** 2026-05-13 (rev 3 — added test cases for the 18 accepted plan-review items: reversal flow, backdated creation, admin-only RBAC, closure-block, loans summary, share-value copy, USD-only booking, pending-attribution, line-item reconciliation, RBAC matrix, PII email policy, idempotency retention, two-phase coexistence)
 **Branch:** `claude/plan-credit-lines-cCjWG`
-**Related docs:** [`credit_lines_plan.md`](credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md); broader codebase test status lives in the CLAUDE.md Testing section.
+**Related docs:** [`credit_lines/credit_lines_plan.md`](credit_lines/credit_lines_plan.md), [`money_flow_plan.md`](money_flow_plan.md); broader codebase test status lives in the [AGENTS.md](../AGENTS.md) Testing section.
 
-This document defines the testing strategy for the two new subsystems planned on this branch (credit lines + money flow). It does not duplicate or replace the CLAUDE.md Testing section, which tracks coverage of the existing app.
+This document defines the testing strategy for the two new subsystems planned on this branch (credit lines + money flow). It does not duplicate or replace the AGENTS.md Testing section, which tracks coverage of the existing app.
 
 ---
 
@@ -43,7 +43,7 @@ Target proportions, by count, **for the new subsystems** (not the existing app):
           ╱─────────────────────────╲
 ```
 
-Note: the **existing** codebase targets 50% line coverage overall (see the CLAUDE.md Testing section). For the new subsystems we target **higher** — ≥80% line coverage on credit-line and money-flow code, because we're writing it from scratch and the math is unforgiving.
+Note: the **existing** codebase targets 50% line coverage overall (see the AGENTS.md Testing section). For the new subsystems we target **higher** — ≥80% line coverage on credit-line and money-flow code, because we're writing it from scratch and the math is unforgiving.
 
 **Speed budget.** A full local run (`docker exec familyfund php artisan test`) for the new tests must stay under 60 seconds for the unit tier and under 5 minutes for unit + integration. Browser tests run on demand or in CI, not in every local cycle.
 
@@ -78,7 +78,7 @@ tests/Feature/CreditLines/UC29AmbiguousRepTest.php
 
 Run output (via `--testdox`) reads like a spec keyed by the class name. The traceability table (§11.5) scans for `UC\d{2}` / `MF\d{2}` in class names to map back to the planning docs.
 
-**Command conventions** (matches `CLAUDE.md`):
+**Command conventions** (matches `AGENTS.md`):
 
 ```bash
 # All non-sandbox tests (default for local + CI)
@@ -129,7 +129,7 @@ The repo already has **164 test files across 5 suites**. The new work must exten
 
 Default exclusions (in `phpunit.xml`): the slow `@group nightly` tests. The `incomplete`/`needs-data-refactor` groups referenced in older runbooks now have no members, so `--exclude-group=incomplete,needs-data-refactor` is a no-op.
 
-The CLAUDE.md Testing section tracks the broader-codebase test status (1791 passing as of 2026-05-14). This document does not duplicate or replace it — **the CLAUDE.md Testing section is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
+The AGENTS.md Testing section tracks the broader-codebase test status. This document does not duplicate or replace it — **the AGENTS.md Testing section is the source of truth for the existing-suite status; this doc owns the new-subsystem additions.**
 
 ### 3.5.2 Existing tests that touch code we plan to change
 
@@ -172,7 +172,7 @@ Discovered during audit; not blockers, but worth knowing they exist:
 | `tests/Feature/TwoFactorAuthTest.php` | `markTestSkipped('Requires Livewire...')` |
 | Some `tests/Feature/TransactionControllerExtTest.php` | `markTestSkipped('View has template issues...')` |
 | Various `tests/Feature/PortfolioAssetControllerExtTest.php` | Conditional data-availability skips |
-| `tests/Feature/TransactionExtApiTest.php` | `@group needs-data-refactor` — excluded by `--exclude-group` in CLAUDE.md's recommended invocation |
+| `tests/Feature/TransactionExtApiTest.php` | `@group needs-data-refactor` — excluded by `--exclude-group` in AGENTS.md's recommended invocation |
 
 None of these are on our critical path. The §3.5.2 table is the actual coordination list.
 
@@ -483,7 +483,7 @@ class ShowPage extends Page {
 
 | Journey | Pages | Notes |
 |---|---|---|
-| Open a credit line on a single-line account | `/dev-login` → account show → new-line modal → submit | Uses the dev-login route from `CLAUDE.md` |
+| Open a credit line on a single-line account | `/dev-login` → account show → new-line modal → submit | Uses the dev-login route from `AGENTS.md` |
 | Open a second line, see aggregate panel update | account show → new-line × 2 | UC-02 + UC-14 |
 | Repay a line, watch schedule advance | account show → repay form | UC-05 |
 | Hit ambiguous match, resolve via banner | account show with seeded ambiguous REP → click Resolve | UC-29 + UC-31 |
@@ -830,7 +830,7 @@ For **new code only** (the credit-line and money-flow namespaces):
 | UC-* / MF-* coverage | 100% (every tracker row has at least one named test) | this doc's tables |
 | Mutation coverage *(stretch)* | ≥ 60% on the matcher service | Infection PHP, run weekly |
 
-The existing codebase coverage tracking (CLAUDE.md Testing section) remains its own metric — this doc doesn't try to raise it.
+The existing codebase coverage tracking (AGENTS.md Testing section) remains its own metric — this doc doesn't try to raise it.
 
 ---
 
@@ -856,7 +856,7 @@ After those scaffolds land, every subsequent PR is expected to add tests for the
 ## 14. Open questions
 
 1. **Dusk in CI** — do we have a CI host that can run headless Chrome? The current `docker-compose.dev.yml` does not include one. Likely need to add a `selenium-chrome` service for CI.
-2. **Coverage tool** — `phpunit --coverage-text` requires Xdebug or PCOV. Confirm one is enabled in the test container (CLAUDE.md mentions `php artisan test` but not the coverage path explicitly).
+2. **Coverage tool** — `phpunit --coverage-text` requires Xdebug or PCOV. Confirm one is enabled in the test container (AGENTS.md mentions `php artisan test` but not the coverage path explicitly).
 3. **Sandbox credentials in CI** — secret management for Wise / Mercury / Relay sandbox tokens. GitHub Actions secrets is the obvious answer; confirm the deployment workflow already has secret support.
 4. **Visual regression** — out of scope for v1. Revisit once the UI stabilizes.
 5. **Mutation testing** — listed as stretch. Worth piloting on the matcher service only.

@@ -256,5 +256,5 @@ The `source` field matches the portfolio source identifier.
 ## See Also
 
 - `README.md` - Full system documentation
-- `CLAUDE.md` (Testing section) - Testing procedures
+- `AGENTS.md` (Testing section) - Testing procedures
 - `/api/` endpoints - API documentation for programmatic access

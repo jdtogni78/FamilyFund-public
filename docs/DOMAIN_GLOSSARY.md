@@ -193,8 +193,8 @@ identity row. Avoid "member" in new docs unless quoting external sources.
 inbound bank/PIX deposits, attributes them to a beneficiary, and books the
 right `CashDeposit`/`Transaction`; symmetrically for outbound disbursements.
 v1 path: beneficiary Wise → fund US checking → IBKR. See
-[`money_flow_plan.md`](../money_flow_plan.md) and
-[`money_flow_runbook.md`](../money_flow_runbook.md). When v1 ships, revisit
+[`money_flow_plan.md`](money_flow_plan.md) and
+[`money_flow_runbook.md`](runbooks/money_flow_runbook.md). When v1 ships, revisit
 this entry against the shipped surface.
 
 ## N
@@ -242,7 +242,7 @@ Identified by `source` (≤30 chars, e.g. `IB_TAXABLE`, `COINBASE_CRYPTO`)
 used by external sync systems. Joined to `Fund` many-to-many via
 `fund_portfolio` (a 2026-01 migration replaced the older single
 `portfolios.fund_id` column — `FundExt` accesses portfolios through the
-pivot). For consolidation patterns, see [`FUND_SETUP_GUIDE.md`](../FUND_SETUP_GUIDE.md).
+pivot). For consolidation patterns, see [`FUND_SETUP_GUIDE.md`](FUND_SETUP_GUIDE.md).
 
 **Position** — `PortfolioAsset.position`: the number of asset units held in
 a portfolio over a `[start_dt, end_dt)` window. Decimal(8). A position is

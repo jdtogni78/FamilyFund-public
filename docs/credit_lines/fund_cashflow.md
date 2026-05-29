@@ -50,7 +50,7 @@ Wait — that's important to get right. The BOR row on the account is **also** a
 
 ## Recording cash movement out of the fund
 
-The disbursement itself — the actual cash leaving the fund to reach the borrower — is **modeled in the [money flow sub-project](../money_flow_plan.md)**. From the *fund's books* perspective, it's:
+The disbursement itself — the actual cash leaving the fund to reach the borrower — is **modeled in the [money flow sub-project](money_flow_plan.md)**. From the *fund's books* perspective, it's:
 
 1. A BOR `Transaction` row on the account (`type='BOR'`, `shares=principal_shares`, `value=principal_shares × share_price`). This already exists in the schema.
 2. The receivable derives from that BOR transaction via the active `AccountCreditLine`. No new transaction type needed on the fund side.

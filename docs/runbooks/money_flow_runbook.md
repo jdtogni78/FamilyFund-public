@@ -2,7 +2,7 @@
 
 **Status:** Draft — covers v1 of the money-flow subsystem
 **Last Updated:** 2026-05-13 (rev 1)
-**Companion to:** [`money_flow_plan.md`](../money_flow_plan.md) — the runbook describes what the operator does; the plan describes what the code does.
+**Companion to:** [`money_flow_plan.md`](money_flow_plan.md) — the runbook describes what the operator does; the plan describes what the code does.
 
 This doc is the operator's day-to-day reference for running the money-flow subsystem after v1 launch. It assumes the v1 scope per `money_flow_plan.md` §1.5: Wise → fund US checking → IBKR, attribution at the checking-webhook, admin role gates all credit-line writes.
 

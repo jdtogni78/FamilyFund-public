@@ -1,10 +1,28 @@
 # Setting up FamilyFund on a new computer
 
-## What's shared on melnick
+## Personal setup specifics
 
-Melnick (the Synology NAS at `REDACTED_NAS_HOST`, ssh as `jdtogni`) holds the
-files that are not in git but are needed for a working install. All live in
-`~/familyfund_db_backups/`:
+This doc uses placeholders for two internal hosts and one ssh user:
+
+- `<your-backup-host>` — wherever you keep the env-secrets bundle and DB dumps (e.g. a NAS).
+- `<your-prod-host>` — your FamilyFund prod-deploy target.
+- `<your-host-user>` — the ssh user on both of the above (single-identity setup).
+- `<your-new-machine>` — the machine you're setting up (the receiver in step 0(b)).
+
+If you're the **original maintainer**, see the private companion at
+`familyfund-secrets/docs/SETUP-host-details.md` for the actual hostnames, ssh
+user, bundle paths, and the dstrader-EC2 reference.
+
+If you're **standing up your own FamilyFund instance**, substitute your own
+equivalents (and the `REDACTED_*_HOST` placeholders) below — every step uses
+universally-applicable mechanics (docker, sops, php artisan, npm) once the
+host particulars are filled in.
+
+## What's shared on the backup host
+
+`<your-backup-host>` (e.g. a Synology NAS at `REDACTED_NAS_HOST`, ssh as
+`<your-host-user>`) holds the files that are not in git but are needed for a
+working install. All live in `~/familyfund_db_backups/`:
 
 | File | Purpose | Size |
 |---|---|---|
@@ -15,13 +33,13 @@ files that are not in git but are needed for a working install. All live in
 Pull commands (from the new machine, after step 1 below):
 
 ```bash
-scp -O melnick:~/familyfund_db_backups/familyfund_secrets.tar.gz.gpg /tmp/
-scp -O melnick:~/familyfund_db_backups/familyfund_dev_data_20260419.sql database/dev/
-scp -O melnick:~/familyfund_db_backups/familyfund_ddl_20260419.sql      database/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_secrets.tar.gz.gpg /tmp/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_dev_data_20260419.sql database/dev/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_ddl_20260419.sql      database/
 ```
 
-Synology drops the SFTP subsystem, so use `scp -O` (legacy protocol). `ssh`
-and `rsync` work fine.
+If your backup host is a Synology NAS it drops the SFTP subsystem, so use
+`scp -O` (legacy protocol). `ssh` and `rsync` work fine.
 
 ## Prerequisites on the new machine
 
@@ -29,40 +47,40 @@ and `rsync` work fine.
 - docker + docker compose v2
 - node 18+ and npm
 - [sops](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age) (recommended: decrypt the in-repo encrypted env secrets)
-- gpg (legacy fallback only — the melnick GPG bundle predates SOPS)
-- ssh access to melnick (REDACTED_NAS_HOST) as jdtogni — see step 0
-- ssh access to spirit (REDACTED_PROD_HOST) as jdtogni — needed for deploys, see step 0
+- gpg (legacy fallback only — the legacy bundle on `<your-backup-host>` predates SOPS)
+- ssh access to `<your-backup-host>` (`REDACTED_NAS_HOST`) as `<your-host-user>` — see step 0
+- ssh access to `<your-prod-host>` (`REDACTED_PROD_HOST`) as `<your-host-user>` — needed for deploys, see step 0
 
-## 0. Set up internal host access (melnick + spirit)
+## 0. Set up internal host access (backup host + prod host)
 
 Two internal hosts are referenced throughout this setup:
 
 | Host | IP | Purpose |
 |---|---|---|
-| `melnick` | REDACTED_NAS_HOST | Synology NAS — holds env bundle + DB dumps (step 2/3) |
-| `spirit`  | REDACTED_PROD_HOST | dstrader server — prod deploy target for FamilyFund |
+| `<your-backup-host>` | `REDACTED_NAS_HOST` | NAS / file host — holds env bundle + DB dumps (step 2/3) |
+| `<your-prod-host>`   | `REDACTED_PROD_HOST` | prod deploy target for FamilyFund |
 
 ### a) Add to /etc/hosts
 
 ```bash
 sudo tee -a /etc/hosts <<'EOF'
-REDACTED_NAS_HOST	melnick
-REDACTED_PROD_HOST	spirit
+REDACTED_NAS_HOST	<your-backup-host>
+REDACTED_PROD_HOST	<your-prod-host>
 EOF
 ```
 
 Verify:
 
 ```bash
-ping -c 1 melnick && ping -c 1 spirit
+ping -c 1 <your-backup-host> && ping -c 1 <your-prod-host>
 ```
 
 ### b) Get the SSH keys onto the new machine
 
 This is a single-operator setup that reuses one identity everywhere
-(melnick, spirit, GitHub, mariadb). The fastest path is to copy the
-existing `~/.ssh` bundle from a machine that already works, rather than
-generating fresh keys.
+(`<your-backup-host>`, `<your-prod-host>`, GitHub, mariadb). The fastest
+path is to copy the existing `~/.ssh` bundle from a machine that already
+works, rather than generating fresh keys.
 
 **Prereq:** sshd must be running on the *new* machine to receive the push
 (macOS: System Settings → General → Sharing → Remote Login, or
@@ -70,22 +88,22 @@ generating fresh keys.
 sender's `/etc/hosts` too.
 
 From the **existing** working machine (`~/.ssh`), push the bundle to the
-new machine (here called `macmini`):
+new machine (`<your-new-machine>`):
 
 ```bash
 cd ~/.ssh
 scp dstrader.pem id_* maria* mariapw authorized_keys config \
-    jdtogni@macmini:~/.ssh
+    <your-host-user>@<your-new-machine>:~/.ssh
 ```
 
 That transfers:
 
 | File | Used for |
 |---|---|
-| `id_rsa` / `id_rsa.pub` | melnick + spirit login |
-| `id_github` / `id_github.pub` | `git clone`/push to jdtogni78 repos |
+| `id_rsa` / `id_rsa.pub` | `<your-backup-host>` + `<your-prod-host>` login |
+| `id_github` / `id_github.pub` | `git clone`/push to your GitHub repos |
 | `mariadb` / `mariadb.pub` / `mariapw` | DB access keys + password file |
-| `dstrader.pem` | dstrader-aws / EC2 access |
+| `dstrader.pem` | access key for a separate cloud (e.g. AWS/EC2) account, if any |
 | `authorized_keys`, `config` | inbound auth + host aliases |
 
 On the **new** machine, lock down permissions (scp does not preserve them
@@ -100,18 +118,19 @@ chmod 644 ~/.ssh/*.pub
 Confirm passwordless login works:
 
 ```bash
-ssh jdtogni@melnick 'hostname'
-ssh jdtogni@spirit  'hostname'
+ssh <your-host-user>@<your-backup-host> 'hostname'
+ssh <your-host-user>@<your-prod-host>   'hostname'
 ```
 
 > Alternative (fresh key): `ssh-keygen -t ed25519` then
-> `ssh-copy-id jdtogni@melnick` / `ssh-copy-id jdtogni@spirit`. Only do
-> this if you can't reach an existing configured machine — a new key also
-> means re-registering with GitHub and the DB hosts.
+> `ssh-copy-id <your-host-user>@<your-backup-host>` /
+> `ssh-copy-id <your-host-user>@<your-prod-host>`. Only do this if you
+> can't reach an existing configured machine — a new key also means
+> re-registering with GitHub and the DB hosts.
 
-If `ssh` fails with `Host key verification failed` after editing `/etc/hosts`, the IP was already in `~/.ssh/known_hosts` with a different key. Either accept the new key on first connect, or remove the stale line: `ssh-keygen -R REDACTED_NAS_HOST` (and `-R melnick`).
+If `ssh` fails with `Host key verification failed` after editing `/etc/hosts`, the IP was already in `~/.ssh/known_hosts` with a different key. Either accept the new key on first connect, or remove the stale line: `ssh-keygen -R REDACTED_NAS_HOST` (and `-R <your-backup-host>`).
 
-You also need the melnick passphrase for the GPG-encrypted secrets bundle (step 2) — that is *not* the SSH password; it was set when the bundle was created. Ask the project owner if you don't have it.
+You also need the passphrase for the GPG-encrypted secrets bundle on the backup host (step 2) — that is *not* the SSH password; it was set when the bundle was created. Ask the project owner if you don't have it.
 
 ## 1. Clone the repo
 
@@ -177,7 +196,7 @@ git clone git@github.com:jdtogni78/familyfund-secrets.git ~/dev/familyfund-secre
 #    to EITHER repo — keep it in your password manager / a working machine):
 mkdir -p ~/.config/sops/age
 #   e.g. scp it from a working machine:
-scp -O melnick:~/familyfund_db_backups/age-keys.txt ~/.config/sops/age/keys.txt
+scp -O <your-backup-host>:~/familyfund_db_backups/age-keys.txt ~/.config/sops/age/keys.txt
 chmod 600 ~/.config/sops/age/keys.txt
 
 # 3. Materialize every plaintext env from its encrypted twin in the secrets repo
@@ -199,7 +218,7 @@ app1/family-fund-app/bin/secrets.sh encrypt dev
 ( cd ~/dev/familyfund-secrets && git add -A && git commit -m "rotate dev env" && git push )
 ```
 
-> `mailhog-outgoing.json` is not a secret env — it still comes from the melnick
+> `mailhog-outgoing.json` is not a secret env — it still comes from the backup-host
 > bundle (or is regenerated by Mailpit). Grab it from the fallback below if needed.
 
 ### Onboarding a machine that pre-dates the SOPS migration
@@ -220,12 +239,12 @@ Notebook / non-dev hosts that will never run the FF stack can skip the SOPS
 install entirely and just delete the stale plaintexts — they're gitignored, so
 the only risk is keeping a known-leaked dev password on disk.
 
-### Fallback: legacy GPG bundle from melnick
+### Fallback: legacy GPG bundle from the backup host
 
 Predates SOPS; use only if you can't get the age key.
 
 ```bash
-scp -O melnick:~/familyfund_db_backups/familyfund_secrets.tar.gz.gpg /tmp/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_secrets.tar.gz.gpg /tmp/
 gpg -d /tmp/familyfund_secrets.tar.gz.gpg | tar -xz -C /tmp/
 # → /tmp now has .env, .env.dev, .env.prod, .env.stage, mailhog-outgoing.json
 mv /tmp/.env /tmp/.env.dev /tmp/.env.prod /tmp/.env.stage app1/family-fund-app/
@@ -234,12 +253,12 @@ rm /tmp/familyfund_secrets.tar.gz.gpg
 cd app1/family-fund-app && ln -sf .env.dev .env && cd ../..   # .env symlink convention
 ```
 
-## 3. Pull the dev DB dump from melnick
+## 3. Pull the dev DB dump from the backup host
 
 ```bash
 mkdir -p database/dev
-scp -O melnick:~/familyfund_db_backups/familyfund_dev_data_20260419.sql database/dev/
-scp -O melnick:~/familyfund_db_backups/familyfund_ddl_20260419.sql database/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_dev_data_20260419.sql database/dev/
+scp -O <your-backup-host>:~/familyfund_db_backups/familyfund_ddl_20260419.sql database/
 ```
 
 ## 4. Bring up Docker
@@ -392,7 +411,7 @@ on a non-interactive shell's PATH — prefix `export PATH=/usr/local/bin:$PATH`.
 - **Vite manifest not found**: `cd app1/family-fund-app && npm run build`
 - **Tests fail with "Cant find asset CASH"**: the dev dump didn't load. Re-run step 7.
 - **Tests get 403s in `setUp`**: the system-admin role wasn't assigned. Re-run the tinker block in step 8.
-- **scp from melnick fails with "subsystem request failed"**: use `scp -O` (legacy protocol) — Synology drops the SFTP subsystem.
+- **scp from `<your-backup-host>` fails with "subsystem request failed"**: use `scp -O` (legacy protocol) — Synology NAS hosts drop the SFTP subsystem.
 - **Container name mismatch**: substitute whatever `docker ps` shows. The compose project name (default vs `-p ffacl`) determines the prefix.
 - **`secrets.sh decrypt` says "skip (no encrypted)"**: the `familyfund-secrets`
   clone is missing (or in a non-default path). Clone it to `~/dev/familyfund-secrets`
@@ -425,8 +444,8 @@ The plaintext `.env*` below are git-ignored and materialized by `secrets.sh decr
     │       ├── .env.stage              # git-ignored; decrypted from familyfund-secrets
     │       └── bin/test.sh             # test wrapper
     └── database/
-        ├── dev/familyfund_dev_data_20260419.sql   # restored from melnick
-        └── familyfund_ddl_20260419.sql            # restored from melnick
+        ├── dev/familyfund_dev_data_20260419.sql   # restored from <your-backup-host>
+        └── familyfund_ddl_20260419.sql            # restored from <your-backup-host>
 ```
 
 ## Updating the secrets bundle later
@@ -438,7 +457,7 @@ cd app1/family-fund-app
 tar -czf /tmp/familyfund_secrets.tar.gz .env .env.dev .env.prod .env.stage \
   -C ../ mailhog-outgoing.json
 gpg --batch --symmetric --cipher-algo AES256 -o /tmp/familyfund_secrets.tar.gz.gpg /tmp/familyfund_secrets.tar.gz
-scp -O /tmp/familyfund_secrets.tar.gz.gpg melnick:~/familyfund_db_backups/
+scp -O /tmp/familyfund_secrets.tar.gz.gpg <your-backup-host>:~/familyfund_db_backups/
 rm /tmp/familyfund_secrets.tar.gz /tmp/familyfund_secrets.tar.gz.gpg
 ```
 
@@ -451,6 +470,6 @@ cd app1/family-fund-app/generators
 DATE=$(date +%Y%m%d)
 ./dump_data.sh dev --host=127.0.0.1 --port=3306 --user=famfun_dev -p1234
 ./dump_ddl.sh  dev --host=127.0.0.1 --port=3306 --user=famfun_dev -p1234
-scp -O ../../../database/dev/familyfund_dev_data_${DATE}.sql melnick:~/familyfund_db_backups/
-scp -O ../../../database/familyfund_ddl_${DATE}.sql           melnick:~/familyfund_db_backups/
+scp -O ../../../database/dev/familyfund_dev_data_${DATE}.sql <your-backup-host>:~/familyfund_db_backups/
+scp -O ../../../database/familyfund_ddl_${DATE}.sql           <your-backup-host>:~/familyfund_db_backups/
 ```

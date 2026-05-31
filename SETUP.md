@@ -134,9 +134,16 @@ You also need the passphrase for the GPG-encrypted secrets bundle on the backup 
 
 ## 1. Clone the repo
 
+> **Note on URLs below.** The clone URLs in this section point at the
+> maintainer's repos under `jdtogni78`. If you're reading this from the
+> **public mirror** (`FamilyFund-public`), substitute that URL for the
+> private `FamilyFund` one. The `familyfund-secrets` companion (referenced
+> in §2) is **permanently private** — outside operators need to maintain
+> their own equivalent bundle (encrypted env files, age key, runbooks).
+
 ```bash
 mkdir -p ~/dev && cd ~/dev
-git clone git@github.com:jdtogni78/FamilyFund.git
+git clone git@github.com:jdtogni78/FamilyFund.git   # or jdtogni78/FamilyFund-public if you don't have private access
 cd FamilyFund
 ```
 

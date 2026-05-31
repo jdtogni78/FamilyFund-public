@@ -38,7 +38,7 @@ DROP TABLE IF EXISTS `users`;
 
 -- MySQL dump 10.13  Distrib 8.0.27, for macos11 (x86_64)
 --
--- Host: 10.0.0.86    Database: familyfund_dev
+-- Host: <lan-host-redacted>    Database: familyfund_dev
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.6.8-MariaDB
 

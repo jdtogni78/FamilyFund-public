@@ -152,7 +152,7 @@ jobs:
       # rely on the "Fail on … findings" step below to gate the build.
       - name: Upload Semgrep SARIF
         if: always() && hashFiles('semgrep.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: semgrep-sarif
           path: semgrep.sarif
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload Trivy config SARIF
         if: always() && hashFiles('trivy-config.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trivy-config-sarif
           path: trivy-config.sarif
@@ -231,7 +231,7 @@ jobs:
         run: php artisan route:list --json > route-list.json
 
       - name: Upload route inventory
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: familyfund-route-list
           path: ${{ env.APP_DIR }}/route-list.json
@@ -325,7 +325,7 @@ jobs:
 
       - name: Upload Trivy filesystem SARIF
         if: always() && hashFiles('trivy-fs.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trivy-filesystem-sarif
           path: trivy-fs.sarif
@@ -364,7 +364,7 @@ jobs:
 
       - name: Upload Trivy image SARIF
         if: always() && hashFiles('trivy-image.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trivy-image-sarif
           path: trivy-image.sarif
@@ -392,7 +392,7 @@ jobs:
           output-file: familyfund-sbom.cdx.json
 
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: familyfund-sbom
           path: familyfund-sbom.cdx.json
@@ -563,7 +563,7 @@ jobs:
 
       - name: Upload authenticated ZAP report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zap-authenticated-report
           path: app1/family-fund-app/storage/security/zap/zap-authenticated.*

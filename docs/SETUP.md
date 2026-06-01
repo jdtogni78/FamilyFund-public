@@ -144,34 +144,7 @@ backfill migration and the spatie permissions/QA-users seeders. The SQL itself
 resets passwords (`devpassword123`), anonymizes names/emails, and preserves
 `admin@dev.familyfund.local` and `claude@test.local`.
 
-## 11. Deploy to prod (spirit, REDACTED_PROD_HOST)
-
-See [../../dstrader-aws/docs/SETUP.md](../../dstrader-aws/docs/SETUP.md) for VPN/SSH/jumpbox prereqs first.
-
-```bash
-FFSERVER=spirit
-
-# Dry-run check
-rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir \
-    ~/dev/FamilyFund/app1/ ${FFSERVER}:~/dev/FamilyFund/app1/
-
-# Take ownership on server (sudoers should be set up — see dstrader-aws SETUP)
-ssh ${FFSERVER} "sudo chown jdtogni:jdtogni ~/dev/FamilyFund/app1/family-fund-app/ -R"
-
-# Push
-rsync -avc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir \
-    ~/dev/FamilyFund/app1/ ${FFSERVER}:~/dev/FamilyFund/app1/
-
-# Return ownership to docker user
-ssh ${FFSERVER} "sudo chown dockeruser:dockeruser ~/dev/FamilyFund/app1/family-fund-app/ -R"
-
-# Restart prod container
-ssh ${FFSERVER} "cd ~/dev/dstrader-docker && ./server/dev/run_familyfund.sh prod"
-```
-
-Alternatively: `~/dev/dstrader-aws/local/deploy_ff.sh`.
-
-## 12. Credentials checklist
+## 11. Credentials checklist
 
 - [ ] `.env.dev` filled in (DB pw `1234`, mail host `mail`, app URL `http://localhost:3000`)
 - [ ] `.env.prod` (on spirit only; never copy from prod to local)

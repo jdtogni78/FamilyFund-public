@@ -57,6 +57,7 @@ database/csv/*password*
 
 # --- Local tooling & scratch dirs (never committed) ---
 /.claude/worktrees/
+/.claude/scheduled_tasks.lock
 /.codex-worktrees/
 /.playwright-cli/
 /output/

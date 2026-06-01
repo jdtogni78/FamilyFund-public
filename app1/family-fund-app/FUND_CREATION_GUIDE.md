@@ -55,17 +55,17 @@ Or: **Funds** → **Create with Setup**
 
 **Fund Information:**
 - **Name**: Fund name (required, max 30 chars)
-  - Example: `Monarch Consolidated`
+  - Example: `Aggregated Portfolio`
 - **Goal**: Investment goal (optional, max 1024 chars)
-  - Example: `Consolidated view of all Monarch accounts`
+  - Example: `Aggregated view of multiple external broker accounts`
 
 **Fund Account:**
 - **Account Nickname**: Optional, auto-generated if blank
-  - Example: `Monarch Consolidated Fund Account`
+  - Example: `Aggregated Portfolio Fund Account`
 
 **Portfolio:**
 - **Portfolio Source**: Unique identifier (required, max 30 chars)
-  - Example: `MONARCH_IBKR_XXXX`
+  - Example: `EXAMPLE_IBKR_XXXX`
   - Used by sync scripts to identify the portfolio
 
 **Initial Transaction** (optional but recommended):
@@ -114,12 +114,12 @@ Verify:
 - Initial balance (if transaction created)
 - Portfolio listed
 
-### Example: Monarch Consolidated Fund
+### Example: Aggregated Portfolio Fund
 
 ```
-Name: Monarch Consolidated
-Goal: Consolidated view of all investment accounts from Monarch Money
-Portfolio Source: MONARCH_IBKR_XXXX
+Name: Aggregated Portfolio
+Goal: Aggregated view of investment accounts from an external sync provider
+Portfolio Source: EXAMPLE_IBKR_XXXX
 Initial Shares: 1
 Initial Value: 0.01
 Description: Initial fund setup
@@ -185,7 +185,7 @@ Navigate: **Portfolios** → **Create New Portfolio**
 
 Fill in:
 - **Fund**: Select your fund
-- **Source**: Unique identifier (e.g., `DWGIB`, `MONARCH_IBKR_XXXX`)
+- **Source**: Unique identifier (e.g., `DWGIB`, `EXAMPLE_IBKR_XXXX`)
 
 Click **Save**.
 
@@ -276,9 +276,9 @@ Creates just the fund entity.
 **Request:**
 ```json
 {
-  "name": "Monarch Consolidated",
-  "goal": "Consolidated view of all Monarch accounts",
-  "portfolio_source": "MONARCH_IBKR_XXXX",
+  "name": "Aggregated Portfolio",
+  "goal": "Aggregated view of multiple external broker accounts",
+  "portfolio_source": "EXAMPLE_IBKR_XXXX",
   "account_nickname": "Fund Account",
   "create_initial_transaction": true,
   "initial_shares": 1,
@@ -305,8 +305,8 @@ Creates just the fund entity.
   "data": {
     "fund": {
       "id": 1,
-      "name": "Monarch Consolidated",
-      "goal": "Consolidated view of all Monarch accounts"
+      "name": "Aggregated Portfolio",
+      "goal": "Aggregated view of multiple external broker accounts"
     },
     "account": {
       "id": 1,
@@ -319,7 +319,7 @@ Creates just the fund entity.
       {
         "id": 1,
         "fund_id": 1,
-        "source": "MONARCH_IBKR_XXXX"
+        "source": "EXAMPLE_IBKR_XXXX"
       }
     ],
     "transaction": {
@@ -508,9 +508,9 @@ Fund: "Trading Account"
 
 ## Common Scenarios
 
-### Scenario 1: Monarch Money Sync (16 Accounts)
+### Scenario 1: External Sync of Multiple Broker Accounts (16 Accounts)
 
-**Goal:** Create fund with 16 portfolios for Monarch accounts.
+**Goal:** Create fund with 16 portfolios for externally-synced broker accounts.
 
 **Recommended:** Web UI with Complete Setup
 

@@ -200,7 +200,7 @@ Matching rules allow automatic contribution matching (like employer 401k match).
 
 ## External Sync Considerations
 
-When syncing transactions from Monarch/Pluggy:
+When syncing transactions from an external sync provider:
 
 ### Deposit Mapping
 | External | FamilyFund | Notes |
@@ -224,7 +224,7 @@ FamilyFund doesn't have built-in deduplication. Strategies:
 
 ### Recommended Sync Flow
 
-1. **Identify new external transactions** from Monarch/Pluggy
+1. **Identify new external transactions** from an external sync provider
 2. **Check if already synced** (search by external ID in descr or separate table)
 3. **Determine transaction type**:
    - Deposit to fund → `PUR` with flag `C` (assume cash in account)

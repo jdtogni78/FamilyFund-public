@@ -248,6 +248,8 @@ the only risk is keeping a known-leaked dev password on disk.
 
 ### Fallback: legacy GPG bundle from the backup host
 
+> ⚠️ **ARCHIVED PATH — kept for completeness, not for new setups.** The active secrets path is SOPS+age (see §2 above). GPG-bundle onboarding is preserved here only as a fallback for hosts that pre-date the SOPS migration and can't yet obtain the age key. Maintainer-side historical context on the GPG setup is in the private companion at `familyfund-secrets/docs/archive/gpg-backup-encryption.md`. Outside operators should ignore this section and use SOPS+age.
+
 Predates SOPS; use only if you can't get the age key.
 
 ```bash

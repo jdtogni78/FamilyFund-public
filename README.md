@@ -247,34 +247,6 @@ php artisan tinker
     $user->save();
 
 
-### Jumpbox Setup
-
-A jump host (bastion) fronts remote access to the private server.
-
-General reference:
-https://davewpark.medium.com/securing-remote-access-with-a-jumpserver-in-10-steps-ce2d9cd328f6
-
-Connect / tunnel to the app server via the jump host (substitute your own
-hosts/ports for the placeholders):
-
-```bash
-JUMP_HOST=<JUMP_HOST>       # bastion hostname/IP
-JUMP_PORT=<JUMP_PORT>       # bastion SSH port
-FFSERVER=<PROD_HOST>        # app server LAN IP/hostname
-
-ssh -J <user>@${JUMP_HOST}:${JUMP_PORT} <user>@${FFSERVER} -p 22
-ssh -J <user>@${JUMP_HOST}:${JUMP_PORT} -N <user>@${FFSERVER} -L 3000:${FFSERVER}:3000
-```
-
-### Wake on LAN
-<router-model-redacted> setup: <wol-router-faq-redacted>
-setup server to wake up: https://www.cyberciti.biz/tips/linux-send-wake-on-lan-wol-magic-packets.html
-make sure to enable upon reboot:https://pimylifeup.com/ubuntu-enable-wake-on-lan/
-mac app: https://apps.apple.com/us/app/wakeoncommand/id1484204619?mt=12
-
-Could not make the WOL work from VPN, only inside the network.
-So, some server must be kept on, from that we can wake the other servers.
-
 ### Adding an account in FamilyFund
 
 * Create a user via the web interface
@@ -298,7 +270,6 @@ So, some server must be kept on, from that we can wake the other servers.
 ### Adding an account in IBKR
 
 * Add an additional account
-* <plaid-monarch-line-redacted>
 
 ### Server Setup
 sudo apt install mariadb-client
@@ -321,53 +292,12 @@ Follow the instructions for rootless docker:
 
 ### Optional: Passwordless sudo for deployments
 
-To allow the deploy user to run deployment commands without password prompts, create a sudoers file:
+Maintainer-only: see `familyfund-secrets/docs/passwordless-sudo-setup.md` for the deploy-user passwordless-sudo config. Outside operators set up their own deploy automation.
 
-```bash
-sudo visudo -f /etc/sudoers.d/<user>-deploy
-```
+### Deploying to prod
 
-Add these lines (substitute your deploy user for `<user>` and adjust paths if needed):
-```
-# Deployment chown commands for FamilyFund
-<user> ALL=(ALL) NOPASSWD: /bin/chown <user>\:<user> /home/<user>/dev/FamilyFund/app1/family-fund-app/ -R
-<user> ALL=(ALL) NOPASSWD: /bin/chown dockeruser\:dockeruser /home/<user>/dev/FamilyFund/app1/family-fund-app/ -R
+Deploys are handled by `dstrader-docker`'s deploy scripts — see the `dstrader-docker` repo.
 
-# Admin utilities
-<user> ALL=(ALL) NOPASSWD: /usr/bin/crontab
-<user> ALL=(ALL) NOPASSWD: /usr/bin/systemctl
-<user> ALL=(ALL) NOPASSWD: /usr/bin/journalctl
-```
-
-Set correct permissions:
-```bash
-sudo chmod 440 /etc/sudoers.d/<user>-deploy
-```
-
-### Deploying DSTrader to prod
-
-FFSERVER=<PROD_HOST>   # app server LAN IP/hostname
-
-* Copy DSTrader.jar from stage to prod
-* Review properties in stage and prod
-* Verify changes:
-  * rsync -avnc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ <user>@${FFSERVER}:~/dev/dstrader-docker/
-* Copy files:
-  * rsync -avc --exclude='.git' --exclude=.DS_Store ~/dev/dstrader-docker/ <user>@${FFSERVER}:~/dev/dstrader-docker/
-
-### Deploying FamilyFund to prod
-
-FFSERVER=<PROD_HOST>   # app server LAN IP/hostname
-
-* Verify changes
-  * rsync -avnc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ <user>@${FFSERVER}:~/dev/FamilyFund/app1/
-* Change ownership on server
-  * sudo chown <user>:<user> app1/family-fund-app/ -R
-* Transfer content of app1
-  * rsync -avc --exclude='.git' --exclude=.DS_Store --exclude='.idea' --exclude=datadir ~/dev/FamilyFund/app1/ <user>@${FFSERVER}:~/dev/FamilyFund/app1/
-* Restore ownership on server
-  * sudo chown dockeruser:dockeruser app1/family-fund-app/ -R
-  
 ## Backup to NAS
 
 * enable NAS: https://kb.synology.com/en-my/DSM/tutorial/How_to_back_up_Linux_computer_to_Synology_NAS
@@ -391,12 +321,11 @@ The backup script `dstrader/opt/backup.sh` runs via root crontab 3x daily:
 **What gets backed up (synced to NAS via NFS):**
 1. Rsyncs `/home/<user>`, `/var/log`, `/etc` to `/mnt/backup/dstrader_server/` on the NAS
 2. Monthly docker image snapshots (`dev-dstrader`, `dev-familyfund`)
-3. **Database backup** - dumps `familyfund_prod`, encrypts with GPG, gzips
+3. **Database backup** — dumps `familyfund_prod`, encrypts at rest, gzips. See the encryption-at-rest stub below.
 
 **Database backup requirements:**
 - Only needs `db` container running (NOT dstrader)
 - Uses `docker exec db mariadb-dump`
-- Encrypts with GPG key `docker@example.local`
 - Output: `dstrader/prod/backups/db-backup-prod-YYYY-MM-DD.sql.encr.gz`
 - Synced to the NAS via rsync of `/home/<user>/`
 
@@ -468,40 +397,9 @@ The FamilyFund container uses `bitnami/laravel` base image. Bitnami periodically
    cd ~/dev && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
    ```
 
-### GPG Encryption for Backups
+### Backup encryption-at-rest
 
-Database backups are encrypted using GPG before being stored. The encryption runs inside the dstrader container.
-
-**Configuration:**
-- GPG key: `docker@example.local`
-- Passphrase file: `dstrader/dstrader.passphrase`
-- Encryption lib: `dstrader/opt/encr_files_lib.sh`
-
-**Requirements:**
-- Host's `~/.gnupg` must be mounted in container (already configured in docker-compose.yml):
-  ```yaml
-  volumes:
-    - /home/<user>/.gnupg:/root/.gnupg
-  ```
-
-**If encryption fails with "Unusable public key":**
-
-1. Check if GPG keys are mounted:
-   ```bash
-   docker exec dstrader gpg --list-keys docker@example.local
-   ```
-
-2. If keys missing, verify docker-compose.yml has the gnupg volume mount
-
-3. If keys exist but not trusted, the mount worked but trust was lost. Run:
-   ```bash
-   docker exec -it dstrader bash -c "echo -e '5\ny\n' | gpg --command-fd 0 --edit-key docker@example.local trust"
-   ```
-
-**Test encryption manually:**
-```bash
-docker exec dstrader bash -c "echo test | gpg --batch --yes --trust-model always -e -r docker@example.local > /dev/null && echo OK"
-```
+Database backups are encrypted at rest before being synced to the NAS. The maintainer-side configuration (key material, container mounts, troubleshooting) lives in the private companion: historical GPG-based setup notes are at `familyfund-secrets/docs/archive/gpg-backup-encryption.md` (the active path is moving to SOPS+age; see `secrets.sh`). Outside operators choose their own backup-encryption mechanism.
 
 ### Server Disk Space Management
 
@@ -563,7 +461,7 @@ wakeonlan <PROD_MAC>
   * sudo ethtool enp3s0
   * sudo systemctl enable wol@enp3s0
   * sudo systemctl start wol@enp3s0
-* <wol-router-faq-redacted>
+* Router-side WoL forwarding (port-forward UDP 9 to a DHCP-reserved internal IP with a static ARP binding) — see your router's WoL / port-forwarding docs. Maintainer's vendor-agnostic notes are in `familyfund-secrets/docs/homelab-wol-setup.md`.
 
 ### VNC Server Setup
 
